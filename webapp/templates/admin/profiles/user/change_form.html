@@ -1,0 +1,66 @@
+{% extends "admin/change_form.html" %}
+{% load staticfiles %}
+{% load i18n admin_urls %}
+{% block object-tools %}
+    <div>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css">
+        <link rel="stylesheet" type="text/css" href="{% static 'css/ajax.css' %}">
+        <input type="submit" value="{% trans 'Resend email' %}" id="button_email" />
+        <input type="submit" value="{% trans 'Generate Investor Pdf' %}"  id="button_investor_pdf" />
+        <input type="submit" value="{% trans 'Generate Tiff' %}"  id="button_tiff" />
+        <input type="submit" value="{% trans 'Generate Kyc pdf' %}" id="button_kyc_pdf" />
+        <input type="submit" value="{% trans 'Generate Bank Mandate pdf' %}" id="bank_mandate_pdf" />
+        <div class="loader" style="display: none;">
+            <i class="fa fa-circle-o-notch fa-spin"></i>
+        </div>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+        <script>
+            window.onload=function(){
+                $('#button_email').click(function(){
+                    $(".loader").show();
+                    var element = document.getElementById("id_email");
+                    email = element.value;
+                    $.ajax({
+                        type: 'post',
+                        data: {"email" : email},
+                        url: "/v1.0/user/resend/verify/email/admin/",
+                        success: function(object) {
+                            $(".loader").hide();
+                            alert(object.response.message);
+                        }
+                    });
+                });
+
+                $('#button_investor_pdf').click(function(){
+                    var element = document.getElementById("id_email");
+                    email = element.value;
+                    console.log(email);
+                    // this opens a new window for the download of the private resource.
+                    window.open("/v1.0/open/generate/investor/info/pdf/?email="+email);
+                });
+
+                $('#button_kyc_pdf').click(function(){
+                    var element = document.getElementById("id_email");
+                    email = element.value;
+                    console.log(email);
+                    // this opens a new window for the download of the private resource.
+                    window.open("/v1.0/open/generate/kyc/info/pdf/?email="+email);
+                });
+
+                $('#button_tiff').click(function(){
+                    var element = document.getElementById("id_email");
+                    email = element.value;
+                    // this opens a new window for the download of the private resource.
+                    window.open("/v1.0/open/generate/bse/investor/tiff/?email="+email);
+                });
+
+                $('#bank_mandate_pdf').click(function(){
+                    var element = document.getElementById("id_email");
+                    email = element.value;
+                    // this opens a new window for the download of the private resource.
+                    window.open("/v1.0/open/generate/bank/mandate/pdf?email="+email);
+                });
+            }
+        </script>
+    </div>
+{% endblock %}

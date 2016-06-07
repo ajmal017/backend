@@ -1,0 +1,40 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="{% static 'css/404.css' %}">
+</head>
+<body>
+  <div class="p_logo">
+  	<a href='/'> <img src="/static/images/headerlogo.png" class="banner_image" /> </a>
+  </div>
+  <div class="p_border">
+  </div>
+  <br>
+  <div class="container">
+  	  <br/>
+	  <table class="table table-bordered">
+	    <thead>
+	      <tr>
+	        <th class="th_p_text">Fund House <br/></th>
+	        <th class="th_p_text">Scheme Related Documents <br/>
+			[ ODs (SID / SAI) & KIMs ]
+			</th>
+	        <!-- <th class="th_p_text">SAI / KIM / SID</th> -->
+	      </tr>
+	    </thead>
+	    <tbody>
+	    {% for fundhouse in fundhouses %}
+			<tr>
+			<td class="p_text">{{fundhouse.name}}</td>
+			<td><a class="p_text" href={{fundhouse.url1}} target="_blank"> Click here </a></td>
+			<!-- <td><a class="p_text" href={{fundhouse.url2}} target="_blank"> Click here </a></td> -->
+			</tr>
+		{% endfor %}
+	    </tbody>
+	  </table>
+  </div>
+</body>
+</html>

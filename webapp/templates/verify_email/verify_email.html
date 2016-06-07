@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Title</title>
+    </head>
+    <body>
+        <img align="left" src="{{ protocol }}://{{ domain }}/static/images/footerlogo.png" height="55" width="225">
+        <br><br><br>
+        <br><br><br>
+        <p align="left">
+            Dear {{ user.email }},
+            <br><br>
+            <a href="{{ protocol }}://{{ domain }}{% url 'api_urls:profiles_urls:check-email-code' token=token %}">Click here
+            </a> to verify your Email ID.
+            <br><br>
+            You can then use the Finaskus App to plan your goals, select your investments, and invest conveniently
+            with a completely secure and paperless process!
+            <br><br>
+            Thank you<br>
+            Finaskus Support<br><br>
+            Email: askus@finaskus.com
+            <br><br>
+        </p>
+        <hr color="blue">
+        <br><br>
+        <table width="100%">
+            <tr>
+                <td align="center"><a href="https://www.finaskus.com/">Home</a></td>
+                <td align="center"><a href="https://www.finaskus.com/terms/">Terms & Conditions</a> </td>
+                <td align="center"><a href="https://www.finaskus.com/">About</a></td>
+            </tr>
+        </table>
+        <br><br><br>
+    </body>
+</html>

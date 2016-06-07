@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Thanks for verifying the email</title>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" crossorigin="anonymous">
+    </head>
+    <body class="container">
+        <br>
+        <div class="media">
+        <div class="media-left">
+          <a href="{{ domain }}">
+            <img align="left" src="{{ domain }}/static/images/footerlogo.png" alt="logo" height="55" width="225">
+          </a>
+        </div>
+        </div>
+
+        <br><br>
+        <br><br><br>
+        <div>
+            {% if user == null %}
+                Invalid Link
+            {% else %}
+                {% if verification_allowed == false %}
+                    Sorry the link has expired. Please use the resend verification email to get a new link.
+                {% else %}
+                    <p align="left">
+                        Dear {{ user.email }},
+                        <br><br>
+                        Your email has been successfully verified.
+                        <br><br>
+                        Thank you<br>
+                        Finaskus Support<br>
+                        Email: askus@finaskus.com
+                        <br><br>
+                    </p>
+                {% endif %}
+            {% endif %}
+        </div>
+
+        <hr color="blue">
+        <br><br>
+        <table width="100%">
+            <tr>
+                <td align="center"><a href="https://www.finaskus.com/">Home</a></td>
+                <td align="center"><a href="https://www.finaskus.com/terms/">Terms & Conditions</a> </td>
+                <td align="center"><a href="https://www.finaskus.com/">About</a></td>
+            </tr>
+        </table>
+        <br><br><br>
+    <!-- javascript files -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" crossorigin="anonymous"></script>
+    </body>
+</html>
