@@ -1,0 +1,24 @@
+[Thu Mar 03 2016 11:03:55 GMT+0530 (IST)] Layer "Search Button.png copy 3": Expected end of input but "c" found.
+[Thu Mar 03 2016 11:03:55 GMT+0530 (IST)] Layer "askus@finaskus.com": Unsupported extension: com
+[Thu Mar 03 2016 11:03:55 GMT+0530 (IST)] Layer "Search Button.png copy": Expected end of input but "c" found.
+[Thu Mar 03 2016 11:03:55 GMT+0530 (IST)] Layer "Email us at askus@finaskus.com": Unsupported extension: com
+[Thu Mar 03 2016 11:03:55 GMT+0530 (IST)] Layer "expert_advice_for_free_icon.png'": Expected end of input but "'" found.
+[Thu Mar 03 2016 11:03:55 GMT+0530 (IST)] Layer "google_paly.png copy": Expected end of input but "c" found.
+[Thu Mar 03 2016 11:03:55 GMT+0530 (IST)] Layer "app_store.png copy": Expected end of input but "c" found.
+[Thu Mar 03 2016 11:03:55 GMT+0530 (IST)] Layer "Expert.png": Duplicate path: Expert.png
+[Thu Mar 03 2016 11:03:55 GMT+0530 (IST)] Layer "Bank Grade Security.png": Duplicate path: Bank Grade Security.png
+[Thu Mar 03 2016 11:03:55 GMT+0530 (IST)] Layer "Unbiased.png": Duplicate path: Unbiased.png
+[Thu Mar 03 2016 11:03:55 GMT+0530 (IST)] Layer "Intelligent.png": Duplicate path: Intelligent.png
+[Thu Mar 03 2016 11:03:55 GMT+0530 (IST)] Layer "Convenient.png": Duplicate path: Convenient.png
+[Thu Mar 03 2016 11:03:55 GMT+0530 (IST)] Layer "Simple.png": Duplicate path: Simple.png
+[Thu Mar 03 2016 11:03:55 GMT+0530 (IST)] Layer "Pattern.png": Duplicate path: Pattern.png
+[Thu Mar 03 2016 11:03:55 GMT+0530 (IST)] Layer "simple_icon.png": Duplicate path: simple_icon.png
+[Thu Mar 03 2016 11:03:55 GMT+0530 (IST)] Layer "google_paly.png copy": Expected end of input but "c" found.
+[Thu Mar 03 2016 11:03:55 GMT+0530 (IST)] Layer "app_store.png copy": Expected end of input but "c" found.
+[Thu Mar 03 2016 11:03:55 GMT+0530 (IST)] Layer "Email us at: askus@finaskus.com": Unsupported extension: com
+[Thu Mar 03 2016 11:03:55 GMT+0530 (IST)] Layer "google_paly.png": Duplicate path: google_paly.png
+[Thu Mar 03 2016 11:03:55 GMT+0530 (IST)] Layer "app_store.png": Duplicate path: app_store.png
+[Thu Mar 03 2016 11:03:55 GMT+0530 (IST)] Layer "Email us at: askus@finaskus.com": Unsupported extension: com
+[Thu Mar 03 2016 11:03:55 GMT+0530 (IST)] Layer "google_paly.png": Duplicate path: google_paly.png
+[Thu Mar 03 2016 11:03:55 GMT+0530 (IST)] Layer "app_store.png": Duplicate path: app_store.png
+[Thu Mar 03 2016 11:03:55 GMT+0530 (IST)] Layer "Email us at: askus@finaskus.com": Unsupported extension: com

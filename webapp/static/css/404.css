@@ -1,0 +1,21 @@
+#fof{display:block; width:100%; padding:150px 0; line-height:1.6em; text-align:center;}
+#fof .hgroup{margin-bottom:15px;}
+#fof .hgroup h1, #fof .hgroup h2{margin:0; padding:0; text-transform:uppercase;}
+#fof .hgroup h1{margin-bottom:15px; font-size:40px;}
+#fof .hgroup h2{display:inline-block; padding:0 0 15px 0; font-size:80px; border:solid #CCCCCC; border-width:1px 0; text-transform:lowercase;}
+#fof p{display:block; margin:15px 0 0 0; padding:0; font-size:16px;}
+#fof p:first-child{margin-top:0;}
+.logo{margin-left: 15%; padding-top: 66px; padding-bottom: 40px;}
+.logo_img {max-width: 350px; max-height: 90px;}
+.wrapper.row2{margin-top: -10%;}
+body{background-color: transparent;}
+thead{background-color: #E6EDF5;}
+.p_subtitle {color: #555; font-family: Source Sans Pro, sans-serif; font-size: 24px; font-weight: 400;
+    padding-bottom: 20px;}
+.p_text {color: #2EA3F2; font-family: Source Sans Pro, sans-serif; font-size: 16px; font-weight: 400; line-height: 30px;
+    padding-bottom: 25px;}
+.th_p_text {color: #4F76A3; font-family: Source Sans Pro, sans-serif; font-size: 18px; font-weight: 400; line-height: 30px;
+    padding-bottom: 25px;}
+.p_logo {margin-left: 7%; padding-top: 28px; padding-bottom: 28px;}
+.p_border {border-bottom: 1px solid;border-color: #808080;}
+tr:first-child > th:first-child {padding-bottom: 21px; padding-left: 21px;}
