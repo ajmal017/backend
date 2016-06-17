@@ -33,10 +33,9 @@ urlpatterns = [
     url(r'^portfolio/details/new/$', views.PortfolioDetails.as_view(), name='portfolio-details'),
     url(r'^portfolio/details/$', views.PortfolioDetailsNew.as_view(), name='portfolio-details-new'),
     url(r'^redemption/detail/$', views.TransactionDetail.as_view(), name='redemption-detail'),
-    url(r'^transaction/history/new/$', views.TransactionHistory.as_view(), name='transaction-history'),
     url(r'^transaction/history/$', views.TransactionHistoryNew.as_view(), name='transaction-history-new'),
     url(r'^invested/fund/get/$', views.GetInvestedFundReturn.as_view(), name='fund-return'),
-    url(r'^fund/redeem/add/$', views.IndividualFundRedeem.as_view(), name='fund_redeem_add'),
+    url(r'^fund/redeem/add/new/$', views.FundRedeem.as_view(), name='fund_redeem_add'),
     url(r'^dashboard/portfolio/historic/performance/$', views.DashboardPortfolioHistoricPerformance.as_view(),
         name='dashboard-portfolio-historic-performance'),
     url(r'^answer/delete/(?P<question_for>[a-z]+)/$', views.AnswerDelete.as_view(), name='delete-answer'),
@@ -45,5 +44,5 @@ urlpatterns = [
     url(r'^funds/distribution/validate/$', views.FundsDistributionValidate.as_view(), name='funds-distribution-validate'),
     url(r'^dashboard/v2/$', views.DashboardVersionTwo.as_view(), name='dashboard-v2'),
     url(r'^portfolio/details/v2/$', views.PortfolioDetailsVersionTwo.as_view(), name='portfolio-details-v2'),
-    url(r'^user/portfolio/performance/$', views.UserPerformance.as_view(), name='user-portfolio-performance')
+    url(r'^portfolio/tracker/$', views.PortfolioTracker.as_view(), name='portfolio-tracker')
 ]

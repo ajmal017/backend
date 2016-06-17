@@ -612,7 +612,7 @@ CM_FOR_COUNTRY = {
     "Zimbabwe": "24",
 }
 
-UNACCEPTABLE_PAN_NUMBER = "This pan number already is registered with our service."
+UNACCEPTABLE_PAN_NUMBER = "This PAN is already registered with another account."
 INDIA = 'India'
 STATIC = '/static/'
 
@@ -648,7 +648,7 @@ Redeem_EUIN_Number = "E148376"
 Redeem_EUIN_declaration = "Y"
 Redeem_MIN_redemption_Flag = "N"
 Redeem_DPC_Flag = "N"
-Redeem_All_Units = ""
+Redeem_All_Units = "N"
 
 ARN_CODE = "108537"
 MEMBER_CODE = "10382"
@@ -658,12 +658,18 @@ PHYS = "PHYS"
 UNSUPPORTED_BANK = "Payment is not supported through this bank as of now."
 
 #  various international standard values are defined for image resizing.
+# note it is width X height always, in real life too not just python.
+LANDSCAPE_SIZE = (1024, 512)  # international landscape is 1,024 x 512 these are minimum dimensions.
+PORTRAIT_SIZE = (800, 1200)  # international portrait is 800 x 1,200 these are minimum dimensions.
 PASSPORT_SIZE = (600, 600)  # international standard 600 pixels X 600 pixels
 SIGNATURE_SIZE = (1000, 300)  # international standard 1000 pixels X 300 pixels
 TIFF_SIGNATURE_SIZE = (900, 220)  # international standard 1000 pixels X 300 pixels
+TIFF_LANDSCAPE_SIZE = (1920, 1080)
+TIFF_PORTRAIT_SIZE = (1080, 1920)
 WALLPAPER_SIZE = (1920, 1080)  # standard wallpaper publishing 1920 X 1080 pixels
 SEMI_WALLPAPER_SIZE = (900, 900)  # standard semi_wallpaper publishing 1920 X 1080 pixels
-ORIGINAL_SIZE = 1
+ORIGINAL_SIZE = 1  # maintain original size.
+FIT_SIZE = 2  # page fit size.
 WIDTH = 3.5
 HEIGHT = 4.5
 TIFF_HEIGHT = 4

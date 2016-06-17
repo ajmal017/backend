@@ -4,11 +4,11 @@ from fdfgen import forge_fdf
 from num2words import num2words
 
 from profiles import models, utils
-from core.models import PortfolioItem
-from external_api.kyc_generator import kyc_fdf_generator
+
 from .models import Pincode
 from .utils import embed_images
 from external_api import constants as cons
+from .kyc_pdf_generator import generate_kyc_pdf
 
 from datetime import datetime
 import time
@@ -119,42 +119,27 @@ def investor_info_generator(user_id):
             investor_dict[key] = str(value).upper()
 
     timestamp = time.strftime("%Y%m%d-%H%M%S")
-
     fields = [(key, value) for key, value in investor_dict.items()]
     fdf = forge_fdf("", fields, [], [], [])
     temp_file_name = "temp" + timestamp + ".fdf"
-    out_file_name = "out" + timestamp + ".pdf"
     fdf_file = open(temp_file_name, "wb")
     fdf_file.write(fdf)
     fdf_file.close()
 
     base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps', '')
-    investor_pdf_path = base_dir + '/bse_docs/'
+    pdf_path = base_dir + '/bse_docs/'
     output_path = base_dir + '/webapp/static/'
-
-    call(("pdftk " + investor_pdf_path + "investor.pdf fill_form %s output " % temp_file_name + output_path + "%s flatten" % out_file_name
+    investor_pdf_name = pdf_path + "investor.pdf"
+    out_file_name = "out" + timestamp + ".pdf"
+    call(("pdftk " + investor_pdf_name + " fill_form %s output " % temp_file_name + output_path + "%s flatten" % out_file_name
           ).split())
 
     remove_command = "rm %s" % temp_file_name
 
-    kyc_fdf = kyc_fdf_generator(user, investor, nominee, contact, investor_bank, curr_date)
-
-    final_out_file_name = out_file_name
-    if len(kyc_fdf) != 0:
-        fdf = forge_fdf("", kyc_fdf, [], [], [])
-        kyc_temp_file_name = "kyc_temp" + timestamp + ".fdf"
-        kyc_out_file_name = "kyc_out" + timestamp + ".pdf"
-        final_out_file_name = "final_out" + timestamp + ".pdf"
-        fdf_file = open(kyc_temp_file_name, "wb")
-        fdf_file.write(fdf)
-        fdf_file.close()
-        create_kyc = "pdftk " + investor_pdf_path + "kyc.pdf fill_form %s output " % kyc_temp_file_name + output_path + "%s flatten" % kyc_out_file_name
-        call((create_kyc).split())
-        merge_kyc = "pdftk " + output_path + "%s " % out_file_name + output_path +  "%s cat output " % kyc_out_file_name + output_path + final_out_file_name
-        call((merge_kyc).split())
-        call(("rm %s" % kyc_temp_file_name).split())
-
     prefix = "webapp"  # prefix is needed to access the images from media directory.
+    exist = output_path + out_file_name
+    investor_only = output_path + "investor_only" + timestamp + ".pdf"
+    combined_pdf_path = output_path + "investor_form_final" + timestamp + ".pdf"
     # the list of images to be embedded into the pdf follows
     list_of_embeddable_images = []
 
@@ -179,27 +164,27 @@ def investor_info_generator(user_id):
 
     if investor.pan_image:
         list_of_embeddable_images.append(prefix + investor.pan_image.url)
-        image_sizes.append(cons.WALLPAPER_SIZE)
-        coords.append((10, 150))
+        image_sizes.append(cons.FIT_SIZE)
+        coords.append((100, 270))
         target_pages.append(2)
         images_count_each_page.append(1)
 
     if investor_bank.bank_cheque_image:
         list_of_embeddable_images.append(prefix + investor_bank.bank_cheque_image.url)
-        image_sizes.append(cons.WALLPAPER_SIZE)
-        coords.append((10, 150))
+        image_sizes.append(cons.FIT_SIZE)
+        coords.append((100, 300))
         target_pages.append(4)
         images_count_each_page.append(1)
 
     if contact.front_image:
         list_of_embeddable_images.append(prefix + contact.front_image.url)
-        image_sizes.append(cons.SEMI_WALLPAPER_SIZE)
+        image_sizes.append(cons.FIT_SIZE)
         coords.append((100, 400))
         target_pages.append(5)
 
     if contact.back_image:
-        list_of_embeddable_images.append(prefix + investor.pan_image.url)
-        image_sizes.append(cons.SEMI_WALLPAPER_SIZE)
+        list_of_embeddable_images.append(prefix + contact.back_image.url)
+        image_sizes.append(cons.FIT_SIZE)
         coords.append((100, 50))
         target_pages.append(5)
 
@@ -208,22 +193,9 @@ def investor_info_generator(user_id):
     else:
         images_count_each_page.append(1)
     call(remove_command.split())
+    embed_images(list_of_embeddable_images, image_sizes, coords, target_pages, images_count_each_page, investor_only,
+                 exist)
 
-    user_identity = prefix + user.identity_info_image.url if user.identity_info_image != "" else cons.DEFAULT_IMAGE  # identity_info image location.
-    list_of_embeddable_images.extend([user_identity, user_signature])
-
-    image_sizes.extend([cons.PASSPORT_SIZE, cons.SIGNATURE_SIZE])
-
-    destination_file_name = "destination" + timestamp + ".pdf"
-
-    dest = output_path + destination_file_name  # the final pdf with all images in place.
-    exist = output_path + final_out_file_name   # the source pdf without the images.
-    coords.extend([(470.14, 620.3), (410.17, 90.03)])
-
-    target_pages.extend((6, 6))
-
-    images_count_each_page.extend([2])
-
-    embed_images(list_of_embeddable_images, image_sizes, coords, target_pages, images_count_each_page, dest, exist)
-
-    return output_path + destination_file_name
+    kyc_pdf = generate_kyc_pdf(user_id)
+    call(("pdftk " + investor_only + " " + kyc_pdf + " cat output " + combined_pdf_path).split())
+    return combined_pdf_path

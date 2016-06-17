@@ -67,7 +67,7 @@ def generate_user_pipe_file(user, order_items):
                                       ('Frequency Allowed', cons.Frequency_Allowed),
                                       ('Installment Amount', str(agreed_sip)),
                                       ('Status', cons.Xsip_status),
-                                      ('Member Code', cons.DEMO_MEMBER_CODE),
+                                      ('Member Code', cons.MEMBER_CODE),
                                       ('Folio No.', str(folio_number)),
                                       ('SIP Remarks', ''),
                                       ('Installment No.', str(installment_no)),

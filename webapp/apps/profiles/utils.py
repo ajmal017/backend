@@ -279,6 +279,53 @@ def is_investable(user):
         return False
 
 
+def check_existing_user(**kwargs):
+    """
+    utility to check if existing user is present with a given email id or phone number
+    If a user exists with either email or phone and neither the email and phone number is verified then delete the
+    existing user
+
+    :param kwargs: contains email and phone number
+    :return:
+    """
+    email = kwargs['email']
+    phone = kwargs['phone_number']
+
+    try:
+        user1 = profile_models.User.objects.get(email=email)
+    except profile_models.User.DoesNotExist:
+        user1 = None
+
+    try:
+        user2 = profile_models.User.objects.get(phone_number=phone)
+    except profile_models.User.DoesNotExist:
+        user2 = None
+
+    if user1 is None and user2 is None:
+        return
+
+    if user1 == user2:
+        if not user1.email_verified and not user1.phone_number_verified:
+            user1.delete()
+            return
+
+    if user1 is None:
+        if not user2.email_verified and not user2.phone_number_verified:
+            user2.delete()
+            return
+
+    if user2 is None:
+        if not user1.email_verified and not user1.phone_number_verified:
+            user1.delete()
+            return
+
+    if user1 != user2 and user1 is not None:
+            if not user1.email_verified and not user1.phone_number_verified and not user2.email_verified and not user2.phone_number_verified:
+                user1.delete()
+                user2.delete()
+                return
+
+
 def get_situation(**kwargs):
     """
     This method takes email, phone_number and password to handle various cases of Registering User.

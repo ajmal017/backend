@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 from rest_framework import permissions
 
 from . import investor_info_generation, bse_investor_info_generation, bulk_order_entry, kyc_pdf_generator, xsip_registration, bank_mandate
-from core.models import OrderDetail, RedeemDetail
+from core.models import OrderDetail, RedeemDetail, GroupedRedeemDetail
 from . import models, constants, serializers, cvl
 from api import utils as api_utils
 from profiles.utils import is_investable
@@ -315,16 +315,16 @@ class GenerateBseRedeemPipe(View):
         # makes sure that only superuser can access this file.
 
         if request.user.is_superuser:
-            redeem_detail = RedeemDetail.objects.get(redeem_id=request.GET.get('redeem_id'))
-            redeem_items = redeem_detail.fund_redeem_items.all()
-            if is_investable(redeem_detail.user):
-                output_file = bulk_order_entry.generate_redeem_pipe_file(redeem_detail.user, redeem_items).split('/')[-1]
+            group_redeem_detail = GroupedRedeemDetail.objects.get(id=request.GET.get('group_redeem_id'))
+            redeem_items = group_redeem_detail.redeem_details.all()
+            if is_investable(group_redeem_detail.user):
+                output_file = bulk_order_entry.generate_redeem_pipe_file(group_redeem_detail.user, redeem_items).split('/')[-1]
                 prefix = 'webapp'
                 my_file_path = prefix+constants.STATIC + output_file
                 my_file = open(my_file_path, "rb")
                 content_type = 'text/plain'
                 response = HttpResponse(my_file, content_type=content_type, status=200)
-                response['Content-Disposition'] = 'attachment;filename=%s' % str(redeem_detail.id)+'redeem.txt'
+                response['Content-Disposition'] = 'attachment;filename=%s' % str(group_redeem_detail.id)+'redeem.txt'
                 my_file.close()
                 return response  # contains the pdf of the pertinent user
             else:

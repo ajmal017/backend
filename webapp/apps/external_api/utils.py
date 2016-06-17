@@ -115,17 +115,38 @@ def generate_tiff(pdf_name, bank_cheque_image):
     ghostscript.Ghostscript(*args)
 
     if bank_cheque_image:
-        img = Image.open("webapp" + bank_cheque_image.url)
-        resized_image = img.resize(constants.WALLPAPER_SIZE, Image.ANTIALIAS)
+        actual_image = Image.open("webapp" + bank_cheque_image.url)
+        original_size = actual_image.size  # actual image dimensions (width, height)
+        size = constants.TIFF_LANDSCAPE_SIZE  # assume by default landscape.
+        if original_size[1] >= 1200:
+            # the original image is portrait.
+            size = constants.TIFF_PORTRAIT_SIZE
+            if settings.ROTATE_IMAGE:
+                # settings set to mandatory rotate the portrait image to landscape image.
+                actual_image = actual_image.rotate(90)
+                size = constants.TIFF_LANDSCAPE_SIZE
+
+        # aspect ratio maintenance logic.
+        image_w, image_h = actual_image.size
+        aspect_ratio = image_w / float(image_h)
+        new_height = int(size[0] / aspect_ratio)
+        # note it is width X height always, in real life too not just python.
+        # portrait is 800 x 1,200 these are minimum dimensions.
+        # landscape is 1,024 x 512 these are minimum dimensions.
+        if new_height < 1200:
+            size = constants.TIFF_LANDSCAPE_SIZE
+        else:
+            # the given image is portrait
+            size = constants.TIFF_PORTRAIT_SIZE
+        resized_image = actual_image.resize(size, Image.ANTIALIAS)
         outfile = open(out_image_pdf_file, 'wb')
         # save the image as pdf for input to ghostscript
         resized_image.save(outfile, "PDF", resolution=100.0)
         outfile.close()
-        img.close()
+        actual_image.close()
         resized_image.close()
         args = [b'gs', b'-q', b'-dNOPAUSE', b'-sDEVICE=tiff32nc', b'-sOutputFile=' + bytes(out_image_tiff_file, 'utf-8'),
                 bytes(out_image_pdf_file, 'utf-8'), b'-c', b'quit']  # this converts img to tiff with colored-scaling.
-        #import ipdb; ipdb.set_trace()
         ghostscript.Ghostscript(*args)
         # concatenates the 2 tiff files. pdf-tiff + img-tiff
         call(("tiffcp " + out_pdf_tiff_file + " " + out_image_tiff_file + " " + uncompressed_combined_tiff_file).split())
@@ -154,35 +175,62 @@ def embed_images(images_list, sizes, coords, target_pages, images_count_each_pag
     def generate_img_canvas(the_image, size, coord_block):
         """
 
+        :param size: One of several standard types of sizes as mentioned in the constants file.
         :param the_image: Individual image that is converted into a canvas element
         :param coord_block: The co-ordinates for the pertinent image.
         Co-ordinates must be (x,y) of the lower left corner of the area in which the image should be inserted
         :return: the generated image canvas
         """
+
         img_temp = BytesIO()
         actual_image = Image.open(the_image)
-        if size != constants.ORIGINAL_SIZE:
-            resized_image = actual_image.resize(size, Image.ANTIALIAS)
-        else:
-            resized_image = actual_image.resize(actual_image.size, Image.ANTIALIAS)
-        img_reader = ImageReader(resized_image)
-        can = canvas.Canvas(img_temp)
+        width = constants.SEMI_WALLPAPER_WIDTH * cm
+        height = constants.SEMI_WALLPAPER_HEIGHT * cm
+
         if size == constants.PASSPORT_SIZE or size == constants.SIGNATURE_SIZE:
             width = constants.WIDTH*cm
             height = constants.HEIGHT*cm
+            resized_image = actual_image.resize(size, Image.ANTIALIAS)
         elif size == constants.TIFF_SIGNATURE_SIZE:
             width = constants.WIDTH*cm
             height = constants.TIFF_HEIGHT*cm
-        elif size == constants.WALLPAPER_SIZE:
-            width = constants.WALLPAPER_WIDTH*cm
-            height = constants.WALLPAPER_HEIGHT*cm
-        elif size == constants.SEMI_WALLPAPER_SIZE:
-            width = constants.SEMI_WALLPAPER_WIDTH*cm
-            height = constants.SEMI_WALLPAPER_HEIGHT*cm
-        else:
+            resized_image = actual_image.resize(size, Image.ANTIALIAS)
+        elif size == constants.ORIGINAL_SIZE:
+            resized_image = actual_image.resize(actual_image.size, Image.ANTIALIAS)
             width = (constants.ORIGINAL_WIDTH*resized_image.width)*cm
             height = (constants.ORIGINAL_HEIGHT*resized_image.height)*cm
+        else:
+            # in case of size==constants.FIT_SIZE
+            original_size = actual_image.size  # actual image dimensions (width, height)
+            size = constants.LANDSCAPE_SIZE  # assume by default landscape.
+            if original_size[1] >= 1200:
+                # the original image is portrait.
+                size = constants.PORTRAIT_SIZE
+                if settings.ROTATE_IMAGE:
+                    # settings set to mandatory rotate the portrait image to landscape image.
+                    actual_image = actual_image.rotate(90)
+                    size = constants.LANDSCAPE_SIZE
+            
+            # aspect ratio maintenance logic.
+            image_w, image_h = actual_image.size
+            aspect_ratio = image_w / float(image_h)
+            new_height = int(size[0] / aspect_ratio)
+            # note it is width X height always, in real life too not just python.
+            # portrait is 800 x 1,200 these are minimum dimensions.
+            # landscape is 1,024 x 512 these are minimum dimensions.
+            if new_height < 1200:
+                # the given image is landscape
+                final_width = size[0]
+                final_height = new_height
+            else:
+                # the given image is portrait
+                final_width = int(aspect_ratio * size[1])
+                final_height = size[1]
 
+            resized_image = actual_image.resize((final_width, final_height), Image.ANTIALIAS)
+        
+        img_reader = ImageReader(resized_image)
+        can = canvas.Canvas(img_temp)
         can.drawImage(img_reader, coord_block[0], coord_block[1], preserveAspectRatio=True, width=width, height=height)
         can.save()
         img_temp.seek(0)
@@ -192,10 +240,11 @@ def embed_images(images_list, sizes, coords, target_pages, images_count_each_pag
         """
 
         :param canvas_list: The list of canvases of the images
-        :param existing: the exisiting/source pdf
+        :param existing: the existing/source pdf
         :param pages: the list of target page nos. onto which the images are embedded.
         :return: the PdfWriter's output object with all correctly generated pages with images embedded.
         """
+
         existing_pdf = PdfFileReader(open(existing, "rb"))
         pdf_list = []  # list of PdfReader objects for each of the images.
         for i in canvas_list:
@@ -230,9 +279,9 @@ def embed_images(images_list, sizes, coords, target_pages, images_count_each_pag
 
     # finally, write "output" to a real output file
 
-    outputStream = open(destination, "wb")
-    output.write(outputStream)
-    outputStream.close()
+    output_stream = open(destination, "wb")
+    output.write(output_stream)
+    output_stream.close()
     return None
 
 
@@ -246,19 +295,45 @@ def attach_images(images_list, source_pdf, output_location):
     """
 
     timestamp = time.strftime("%Y%m%d-%H%M%S")
-    size = constants.SEMI_WALLPAPER_SIZE
     string_of_attachable_pdf = ""
     count = 0
     for image in images_list:
         if image:
-            img = Image.open(image, "r")
-            img = img.resize(size, Image.ANTIALIAS)  # resize the image to match pdf page width
+            actual_image = Image.open(image, "r")
+            # in case of size==constants.FIT_SIZE
+            original_size = actual_image.size  # actual image dimensions (width, height)
+            size = constants.LANDSCAPE_SIZE  # assume by default landscape.
+            if original_size[1] >= 1200:
+                # the original image is portrait.
+                size = constants.PORTRAIT_SIZE
+                if settings.ROTATE_IMAGE:
+                    # settings set to mandatory rotate the portrait image to landscape image.
+                    actual_image.rotate(90)
+                    size = constants.LANDSCAPE_SIZE
+
+            # aspect ratio maintenance logic.
+            image_w, image_h = actual_image.size
+            aspect_ratio = image_w / float(image_h)
+            new_height = int(size[0] / aspect_ratio)
+            # note it is width X height always, in real life too not just python.
+            # portrait is 800 x 1,200 these are minimum dimensions.
+            # landscape is 1,024 x 512 these are minimum dimensions.
+            if new_height < 1200:
+                # the given image is landscape
+                final_width = size[0]
+                final_height = new_height
+            else:
+                # the given image is portrait
+                final_width = int(aspect_ratio * size[1])
+                final_height = size[1]
+
+            resized_image = actual_image.resize((final_width, final_height), Image.ANTIALIAS)
             temp_file_name = str(count) + timestamp + ".pdf"
             outfile = open(temp_file_name, 'wb')
-            img.save(outfile, "PDF")  # converts image to pdf
+            resized_image.save(outfile, "PDF")  # converts image to pdf
             outfile.close()
             string_of_attachable_pdf = string_of_attachable_pdf+" "+temp_file_name
-            img.close()
+            resized_image.close()
             count += 1
 
     # command constructed to append the image pdfs with data filled kyc_pdf

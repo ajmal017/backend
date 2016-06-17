@@ -21,6 +21,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from core import views
 from profiles import views as profile_views
+from django.views.generic import TemplateView
 
 handler404 = 'core.views.my_custom_page_not_found_view'
 handler500 = 'core.views.server_error'
@@ -41,6 +42,7 @@ urlpatterns = [
     url(r'^robots.txt', views.robots, name='robots'),
     url(r'^sitemap.xml', views.sitemap, name='sitemap'),
     url(r'^mutual-fund-scheme-related-documents', views.blank, name='blank'),
+    url(r'^google59199aa04156c0bc.html$', TemplateView.as_view(template_name='google59199aa04156c0bc.html')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 admin.site.unregister(oauth_models.AccessToken)

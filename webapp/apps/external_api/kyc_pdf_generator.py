@@ -33,8 +33,9 @@ def generate_kyc_pdf(user_id):
         nominee.nominee_address = blank_address
 
     base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps', '')
-    kyc_pdf_path = base_dir + '/bse_docs/'
+    pdf_path = base_dir + '/bse_docs/'
     output_path = base_dir + '/webapp/static/'
+    kyc_pdf_name = pdf_path + "kyc.pdf"
 
     timestamp = time.strftime("%Y%m%d-%H%M%S")
 
@@ -47,7 +48,7 @@ def generate_kyc_pdf(user_id):
         fdf_file = open(kyc_temp_file_name, "wb")
         fdf_file.write(fdf)
         fdf_file.close()
-        create_kyc = "pdftk " + kyc_pdf_path + "kyc.pdf fill_form %s output " % kyc_temp_file_name + output_path + \
+        create_kyc = "pdftk " + kyc_pdf_name + " fill_form %s output " % kyc_temp_file_name + output_path + \
                      "%s flatten" % kyc_middle_file_name
         call(create_kyc.split())
 
@@ -71,31 +72,54 @@ def generate_kyc_pdf(user_id):
     user_identity = prefix + user.identity_info_image.url if user.identity_info_image != "" else constants.DEFAULT_IMAGE  # identity_info image location.
     user_signature = prefix + user.signature.url if user.signature != "" else constants.DEFAULT_IMAGE  # signature_image location.
     list_of_embeddable_images.extend([user_identity, user_signature])
-
     image_sizes.extend([constants.PASSPORT_SIZE, constants.SIGNATURE_SIZE])
-
-    kyc_destination_middle_file_name = "kyc_destination_middle" + timestamp + ".pdf"
-    kyc_middle_file_name = "kyc_middle" + timestamp + ".pdf"
-
-    dest = output_path + kyc_destination_middle_file_name  # the final pdf with all images in place.
-    exist = output_path + kyc_middle_file_name   # the source pdf without the images.
     coords.extend([(470.14, 620.3), (410.17, 90.03)])
-
     target_pages.extend((0, 0))
-
     images_count_each_page.extend([2])
 
-    embed_images(list_of_embeddable_images, image_sizes, coords, target_pages, images_count_each_page, dest, exist)
-
-    attachable_images = []
-    investor_image = prefix + investor.pan_image.url if investor.pan_image != "" else None
-    contact_front = prefix + contact.front_image.url if contact.front_image != "" else None
-    contact_back = prefix + contact.back_image.url if contact.back_image != "" else None
-    attachable_images.extend((investor_image, contact_front, contact_back))
+    # file initializations.
+    kyc_middle_file_name = "kyc_middle" + timestamp + ".pdf"
+    exist = output_path + kyc_middle_file_name  # the source pdf without the images.
     kyc_destination_file_name = "kyc_destination" + timestamp + ".pdf"
     output_file = output_path + kyc_destination_file_name  # final_output of the completed kyc_pdf.
 
-    # finally append the images to the end of the generated pdf.
-    attach_images(attachable_images, dest, output_file)
+    if kyc_pdf_name.endswith("kyc.pdf"):
+        # additional pan card and address_proof embeds.
+        if investor.pan_image:
+            list_of_embeddable_images.append(prefix + investor.pan_image.url)
+            image_sizes.append(constants.FIT_SIZE)
+            coords.append((100, 270))
+            target_pages.append(2)
+            images_count_each_page.append(1)
 
-    return output_path + kyc_destination_file_name
+        if contact.front_image:
+            list_of_embeddable_images.append(prefix + contact.front_image.url)
+            image_sizes.append(constants.FIT_SIZE)
+            coords.append((100, 400))
+            target_pages.append(3)
+
+        if contact.back_image:
+            list_of_embeddable_images.append(prefix + contact.back_image.url)
+            image_sizes.append(constants.FIT_SIZE)
+            coords.append((100, 50))
+            target_pages.append(3)
+
+        if contact.front_image and contact.back_image:
+            images_count_each_page.append(2)
+        else:
+            images_count_each_page.append(1)
+
+        # finally_embed the images.
+        embed_images(list_of_embeddable_images, image_sizes, coords, target_pages, images_count_each_page, output_file, exist)
+
+    else:
+        # if not embed mode,  then attach pan and contact images at the end.
+        attachable_images = []
+        investor_image = prefix + investor.pan_image.url if investor.pan_image != "" else None
+        contact_front = prefix + contact.front_image.url if contact.front_image != "" else None
+        contact_back = prefix + contact.back_image.url if contact.back_image != "" else None
+        attachable_images.extend((investor_image, contact_front, contact_back))
+        # finally append the images to the end of the generated pdf.
+        attach_images(attachable_images, exist, output_file)
+
+    return output_file

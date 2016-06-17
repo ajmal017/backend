@@ -89,6 +89,10 @@ class User(AbstractBaseUser, TimeStampedModel):
     tiff_accepted = models.BooleanField(default=False)
     kyc_mailed = models.BooleanField(default=False)
     kyc_accepted = models.BooleanField(default=False)
+    is_virtual_seen = models.BooleanField(default=False)
+    is_real_seen = models.BooleanField(default=False)
+    user_video = models.FileField(upload_to="user_video/", max_length=700, blank=True, null=True)
+    user_video_thumbnail = models.FileField(upload_to="user_video/thumbnail/", max_length=700, blank=True, null=True)
     USERNAME_FIELD = 'email'
 
     objects = manager.CustomUserManager()
@@ -248,7 +252,7 @@ class InvestorInfo(TimeStampedModel):
             return self.dob
         else:
             age = self.user.age if self.user.age != None else 0
-            dob = date.today() - relativedelta(year=age)
+            dob = date.today() - relativedelta(years=age)
             return dob
 
 

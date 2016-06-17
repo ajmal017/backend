@@ -63,7 +63,7 @@ class OrderDetailAdmin(admin.ModelAdmin):
     2. custom list display
     """
     list_filter = ['order_status', 'is_lumpsum', UserFilter]
-    list_display = ['user', 'order_id', 'order_status', 'user_is_investor_info', 'button3', 'button4', 'bank_mandate']
+    list_display = ['user', 'order_id', 'order_status', 'created_at', 'button3', 'button4', 'bank_mandate']
     search_fields = ['order_id', 'user__email']
     readonly_fields = ('user', 'transaction', 'order_id', 'list_of_fund_order_items')
     exclude = ('fund_order_items', )
@@ -90,11 +90,6 @@ class OrderDetailAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
-    def user_is_investor_info(self, obj):
-        """
-        returns investor info alongside each user
-        """
-        return obj.user.is_investor_info
 
     def button3(self, obj):
         """
@@ -123,11 +118,8 @@ class OrderDetailAdmin(admin.ModelAdmin):
         """
 
         return mark_safe('<input type="button" class="bank_mandate" value="Generate Bank mandate">')
-    bank_mandate.short_description = 'Generate Bank mandate'
+    bank_mandate.short_description = 'Generate Bank Mandate Pipe File'
     bank_mandate.allow_tags = True
-
-    user_is_investor_info.admin_order_field = 'user'
-    user_is_investor_info.short_description = 'Investor Info'
 
 
 class RedeemDetailAdmin(admin.ModelAdmin):
@@ -137,7 +129,7 @@ class RedeemDetailAdmin(admin.ModelAdmin):
     make the fields readonly
     """
     list_filter = ['redeem_status']
-    list_display = ['user', 'redeem_id', 'redeem_status', 'button4']
+    list_display = ['user', 'redeem_id', 'redeem_status']
     search_fields = ['redeem_id', 'user__email']
     readonly_fields = ('user', 'redeem_id', 'list_of_fund_redeem_items')
     exclude = ('fund_redeem_items', )
@@ -164,17 +156,51 @@ class RedeemDetailAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
-    def button4(self, obj):
+
+class GroupedRedeemDetailAdmin(admin.ModelAdmin):
+    """
+    including list display and filters in admin
+    disable the delete option
+    make the fields readonly
+    """
+    list_filter = ['redeem_status']
+    list_display = ['user', 'redeem_status', 'id', 'redeem_detail_button']
+    search_fields = ['user__email']
+    readonly_fields = ('user', 'list_of_redeem_details')
+    exclude = ('redeem_details', )
+    actions = None
+
+    def form_url(self, id, redeem_id):
+        """
+        returns a url formed for a particular redeem detail
+        :param id: id associated with a redeem_detail
+        """
+        url = reverse("admin:core_redeemdetail_change", args=[id])
+        return mark_safe(u'<a href=%s target="_blank">%s</a>' % (url, redeem_id))
+
+    def list_of_redeem_details(self, obj):
+        """
+        returns list of redeem details related to a grouped redeemed detail
+        :param obj: contains an instance to grouped redeem detail object
+        """
+        for redeem_detail in obj.redeem_details.all():
+            return mark_safe(u"<br>".join([self.form_url(redeem_detail.id, redeem_detail.redeem_id) for redeem_detail in obj.redeem_details.all()]))
+
+    list_of_redeem_details.allow_tags = True
+    form_url.allow_tags = True
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def redeem_detail_button(self, obj):
         """
         :param obj: an obj of user Admin
         :return: a button
         """
 
         return mark_safe('<input type="button" class="redeem_pipe" value="Generate Redeem File">')
-    button4.short_description = 'Generate Redeem Pipe File'
-    button4.allow_tags = True
-
-
+    redeem_detail_button.short_description = 'Generate Redeem Pipe File'
+    redeem_detail_button.allow_tags = True
 
 
 class FundAdmin(admin.ModelAdmin):
@@ -293,7 +319,7 @@ class FundOrderItemAdmin(admin.ModelAdmin):
     """
     defining list editable
     """
-    list_display = ['portfolio_item', 'order_amount', 'allotment_date', 'orderid']
+    list_display = ['portfolio_item', 'order_amount', 'created_at', 'allotment_date', 'orderid']
     list_editable = ['allotment_date']
     search_fields = ['portfolio_item__portfolio__user__email', 'portfolio_item__portfolio__user__phone_number']
     readonly_fields = ('portfolio_item', )
@@ -343,6 +369,7 @@ class FolioNumberAdmin(admin.ModelAdmin):
     search fields: user's email, user's phone number
     """
     search_fields = ['user__email', 'user__phone_number']
+    list_display = ['user', 'fund_house', 'folio_number']
 
 
 class AnswerAdmin(admin.ModelAdmin):
@@ -466,6 +493,7 @@ admin.site.register(models.FundDataPointsChangeMonthly, FundDataPointsChangeMont
 admin.site.register(models.Portfolio, PortfolioAdmin)
 admin.site.register(models.OrderDetail, OrderDetailAdmin)
 admin.site.register(models.RedeemDetail, RedeemDetailAdmin)
+admin.site.register(models.GroupedRedeemDetail, GroupedRedeemDetailAdmin)
 admin.site.register(models.FundRedeemItem, FundRedeemItemAdmin)
 admin.site.register(models.FundOrderItem, FundOrderItemAdmin)
 admin.site.register(models.PortfolioItem, PortfolioItemAdmin)

@@ -79,7 +79,7 @@ TEST_API_URL = 'http://api.morningstar.com/service/mf/Price/mstarid/F0GBR06SDC?a
 
 ALLOCATION_PROPERTY_LIST = ["retirement", "tax", "property", "education", "wedding", "event", "invest"]
 
-TAX_DEFAULT_TERM = 10
+TAX_DEFAULT_TERM = 3
 
 DUMMY_THREE_YEAR_RETURN = 13.5
 
@@ -234,8 +234,9 @@ MESSAGE = 'message'
 SUCCESS = 'success'
 SIP_OR_LUMPSUM_TOO_LOW_ERROR = 'Sip or Lumpsum is too low. Please go to DEFINE FINANCIAL GOALS to increase them. '
 DATE = 'date'
-CURRENT_AMOUNT = 'curren_amount'
+CURRENT_AMOUNT = 'current_amount'
 INVESTED_AMOUNT = 'invested_amount'
+XIRR = 'xirr'
 
 USER_PORTOFOLIO_NOT_PRESENT = 'user portfolio is not present'
 USER_PERFORMANCE_PORTOFOLIO_NOT_PRESENT = 'user performance portfolio is not present'
@@ -336,3 +337,5 @@ DEFAULT_OCCUPATION = 4
 CHECK_PORTFOLIO_DISTRIBUTION_MESSAGE = 'You have modified your portfolio and selected the following scheme {}. ' \
                                        'The above selection is invalid due to minimum amount restrictions. Select ' \
                                        'another scheme.'
+
+MOST_POPULAR_FUND = "most_popular_funds"

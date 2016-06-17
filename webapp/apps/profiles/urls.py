@@ -49,4 +49,7 @@ urlpatterns = [
     url(r'^verify/forgot/password/otp/$', views.VerifyForgotPasswordOTP.as_view(), name='verify-forgot-password-otp'),
     url(r'^change/phone/number/$', views.ChangePhoneNumber.as_view(), name='change-phone-number'),
     url(r'^confirm/change/phone/number/$', views.ConfirmChangeInPhoneNumber.as_view(), name='confirm-change-in-phone-number'),
+    url(r'^video/upload/$', views.VideoUpload.as_view(), name='user-video-upload'),
+    url(r'^video/get/$', views.VideoGet.as_view(), name='user-video-get'),
+    url(r'^signature/get/$', views.Signature.as_view(), name='user-signature-get'),
 ]

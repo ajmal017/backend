@@ -29,6 +29,18 @@ def generate_order_pipe_file(user, order_items):
         rgts_code = ""
         if item.portfolio_item.fund.bse_rgts_scheme_code:
             rgts_code = item.portfolio_item.fund.bse_rgts_scheme_code
+
+        fund_house = ""
+        folio_number = ""
+        if item.portfolio_item.fund.fund_house:
+            fund_house = item.portfolio_item.fund.fund_house
+            try:
+                f_number = models.FolioNumber.objects.get(user=user, fund_house=fund_house).folio_number
+                if f_number:
+                    folio_number = f_number
+            except models.FolioNumber.DoesNotExist:
+                folio_number = ""
+
         if int(order_items[i].agreed_lumpsum) > 0:
             bulk_order_dict = OrderedDict([('SCHEME CODE', neft_code if item.order_amount < 200000 else rgts_code),
                                            ('Purchase / Redeem', cons.Order_Purchase),
@@ -36,7 +48,7 @@ def generate_order_pipe_file(user, order_items):
                                            ('Client Code', str(user.finaskus_id)),
                                            ('Demat / Physical', cons.Order_Demat),
                                            ('Order Val AMOUNT', str(order_items[i].agreed_lumpsum)),
-                                           ('Folio No (10 digits)', ''),  # TODO:
+                                           ('Folio No (10 digits)', str(folio_number)),
                                            ('Remarks', cons.Order_Remarks),
                                            ('KYC Flag Char', cons.Order_KYC_Flag),
                                            ('Sub Broker ARN Code', ''),
@@ -47,7 +59,7 @@ def generate_order_pipe_file(user, order_items):
                                            ('All Units', cons.Order_All_Units),  # TODO:
                                            ('Redemption Units', '')])  # TODO:
             outfile.write("|".join(bulk_order_dict.values()))
-            if i < len(order_items)-1:
+            if i < len(order_items) - 1:
                 outfile.write("\r")
             bulk_order_dict.clear()
     outfile.close()
@@ -70,30 +82,33 @@ def generate_redeem_pipe_file(user, redeem_items):
     for i, item in enumerate(redeem_items):
 
         neft_code = ''
-        if item.portfolio_item.fund.bse_neft_scheme_code:
-            neft_code = item.portfolio_item.fund.bse_neft_scheme_code
+        if item.fund.bse_neft_scheme_code:
+            neft_code = item.fund.bse_neft_scheme_code
         rgts_code = ""
-        if item.portfolio_item.fund.bse_rgts_scheme_code:
-            rgts_code = item.portfolio_item.fund.bse_rgts_scheme_code
+        if item.fund.bse_rgts_scheme_code:
+            rgts_code = item.fund.bse_rgts_scheme_code
 
         fund_house = ""
         folio_number = ""
-        if item.portfolio_item.fund.fund_house:
-            fund_house = item.portfolio_item.fund.fund_house
+        if item.fund.fund_house:
+            fund_house = item.fund.fund_house
             try:
                 f_number = models.FolioNumber.objects.get(user=user, fund_house=fund_house).folio_number
                 if f_number:
                     folio_number = f_number
             except models.FolioNumber.DoesNotExist:
                 folio_number = ""
-
-
+        redeem_value = str(redeem_items[i].redeem_amount)
+        all_units = cons.Redeem_All_Units
+        if redeem_items[i].is_all_units_redeemed:
+            redeem_value = ""
+            all_units = "Y"
         bulk_redeem_dict = OrderedDict([('SCHEME CODE', neft_code if item.redeem_amount < 200000 else rgts_code),
                                        ('Purchase / Redeem', cons.Redeem_Purchase),
                                        ('Buy Sell Type', cons.Redeem_Buy_Type),
                                        ('Client Code', str(user.finaskus_id)),
                                        ('Demat / Physical', cons.Redeem_Demat),
-                                       ('Redeem Val AMOUNT', str(redeem_items[i].redeem_amount)),
+                                       ('Redeem Val AMOUNT', redeem_value),
                                        ('Folio No (10 digits)', str(folio_number)),
                                        ('Remarks', cons.Redeem_Remarks),
                                        ('KYC Flag Char', cons.Redeem_KYC_Flag),
@@ -102,7 +117,7 @@ def generate_redeem_pipe_file(user, redeem_items):
                                        ('EUIN Declaration', cons.Redeem_EUIN_declaration),
                                        ('MIN redemption flag', cons.Redeem_MIN_redemption_Flag),
                                        ('DPC Flag', cons.Redeem_DPC_Flag),  # TODO:
-                                       ('All Units', cons.Redeem_All_Units),  # TODO:
+                                       ('All Units', all_units),
                                        ('Redemption Units', '')])  # TODO:
         outfile.write("|".join(bulk_redeem_dict.values()))
         if i < len(redeem_items)-1:

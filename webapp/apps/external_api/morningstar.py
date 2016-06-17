@@ -193,6 +193,7 @@ class MorningStarBackend(BaseFundBackend):
                         logger.error(helpers.generate_logger_message(field, fund))
                         if field == constants.BETA:
                             fields[field] = self._calulate_beta(fund_object)
+                            # fields[field] = 0
                         else:
                             if does_exist:
                                 fields[field] = getattr(earlier_fund_data, field)

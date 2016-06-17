@@ -232,11 +232,19 @@ class LeaderBoardUserSerializer(serializers.ModelSerializer):
 
 class RedeemSerializer(serializers.Serializer):
     """
-    Investor Information Serializer used to display investor leader board ranking
+    Inner serailizer for redeem data
     """
 
     fund_id = serializers.IntegerField(required=True)
     redeem_amount = serializers.FloatField(required=True)
+
+
+class AllUnitsSerializer(serializers.Serializer):
+    """
+    Inner serailizer for redeem all_units
+    """
+
+    fund_id = serializers.IntegerField(required=True)
 
 
 class RedeemAddSerializer(serializers.Serializer):
@@ -246,6 +254,15 @@ class RedeemAddSerializer(serializers.Serializer):
 
     data = RedeemSerializer(many=True)
     total_amount = serializers.FloatField(required=True)
+
+
+class NewRedeemAddSerializer(serializers.Serializer):
+    """
+    Investor Information Serializer used to display investor leader board ranking
+    """
+
+    data = RedeemSerializer(many=True)
+    all_units = AllUnitsSerializer(many=True)
 
 
 class FundOrderItemSerializer(serializers.ModelSerializer):
@@ -279,6 +296,24 @@ class FundRedeemItemSerializer(serializers.ModelSerializer):
         model = models.FundRedeemItem
         fields = ('id', 'fund_name', 'unit_alloted', 'allotment_date', 'is_verified', 'order_amount',
                   'transaction_date')
+
+
+class RedeemDetailSerializer(serializers.ModelSerializer):
+    """
+    Fund order item Serializer used to display fund order item detail
+    """
+
+    fund_name = serializers.CharField(source='fund.fund_name')
+    transaction_date = serializers.DateField(source='get_transaction_date')
+    allotment_date = serializers.CharField(source='get_redeem_date')
+    unit_alloted = serializers.CharField(source='get_unit_redeemed')
+    order_amount = serializers.FloatField(source='get_redeem_amount')
+
+    class Meta:
+        model = models.RedeemDetail
+        fields = ('id', 'fund_name', 'unit_alloted', 'allotment_date', 'is_verified', 'order_amount',
+                  'transaction_date')
+
 
 
 class FutureFundOrderItemSerializer(serializers.ModelSerializer):
@@ -322,9 +357,11 @@ class FutureFundOrderItemSerializer(serializers.ModelSerializer):
         returns next allotment date when asked for transaction date
         """
         if obj.next_allotment_date:
-            return obj.next_allotment_date.date().strftime("%d-%m-%y")
+            return obj.next_allotment_date.strftime("%Y-%m-%d")
+        elif obj.allotment_date:
+            return helpers.get_valid_start_date(obj.portfolio_item.fund.id, obj.allotment_date).strftime("%Y-%m-%d")
         else:
-            return helpers.get_valid_start_date(obj.portfolio_item.fund.id).date().strftime("%d-%m-%y")
+            return helpers.get_valid_start_date(obj.portfolio_item.fund.id, obj.created_at).date().strftime("%Y-%m-%d")
 
     class Meta:
         model = models.FundOrderItem

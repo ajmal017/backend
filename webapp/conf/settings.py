@@ -303,6 +303,9 @@ LOGIN_URL = '/login/'
 DEFAULT_CHARSET = 'ISO-8859-1'
 AUTH_USER_MODEL = 'profiles.User'
 USE_HTTPS = True
+ROTATE_IMAGE = False  # True means rotation of portrait size image to landscape is mandatory. False means does
+# not rotate the portrait images.
+ATTACH_IMAGE = False  # True means attaches images at appropriate pages instead of embedding them. False embeds.
 
 # ====================================================================================================================
 CLIENT_ID = "zTfCegJvxFQE1yxb2ga7sXHPwptm0im78dmFP6AD"

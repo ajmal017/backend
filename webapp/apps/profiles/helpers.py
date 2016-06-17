@@ -268,7 +268,7 @@ def send_phone_number_change_email(user_email, previous_number, new_number, doma
               html_email_template_name=html_email_template_name)
 
 
-def send_redeem_completed_email(redeem_detail, redeem_amount, domain_override=None, subject_template_name='transaction/subject.txt',
+def send_redeem_completed_email(redeem_detail, domain_override=None, subject_template_name='transaction/subject.txt',
                                      email_template_name='transaction/redeem_completed.html', use_https=False,
                                      token_generator=default_token_generator, from_email=None,
                                      request=None,html_email_template_name=None, extra_email_context=None):
@@ -277,7 +277,6 @@ def send_redeem_completed_email(redeem_detail, redeem_amount, domain_override=No
     """
     context = {
         'redeem_detail': redeem_detail,
-        'redeem_amount': redeem_amount,
         'domain': settings.SITE_BASE_URL,
         'site_name': "Finaskus",
         'protocol': 'https' if use_https else 'http',

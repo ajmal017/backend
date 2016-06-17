@@ -174,6 +174,7 @@ class Register(APIView):
         password = serializer.initial_data.get("password")
         phone = serializer.initial_data.get("phone_number")
         kwargs = {'email': email, 'phone_number': phone, 'password': password}
+        utils.check_existing_user(**kwargs)
         result = utils.get_situation(**kwargs)
         kwargs.pop('password')
         # print(result)
@@ -304,6 +305,7 @@ class Login(APIView):
             return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": login_error},
                                       status.HTTP_404_NOT_FOUND, generate_error_message(serializer.errors))
 
+
 class ProfileCompleteness(APIView):
     """
     ProfileCompleteness user api
@@ -332,8 +334,11 @@ class ProfileCompleteness(APIView):
 
             flag_data['track'] = False
             flag_data['vault_locked'] = user.vault_locked
+            flag_data['bse_registered'] = user.bse_registered
             flag_data['vault'] = False if request.user.signature == "" else True
             flag_data['process_choice'] = None if request.user.process_choice == "" else request.user.process_choice
+            flag_data['is_virtual_seen'] = user.is_virtual_seen
+            flag_data['is_real_seen'] = user.is_real_seen
 
             try:
                 investor_info = models.InvestorInfo.objects.get(user=request.user)
@@ -891,7 +896,12 @@ class ContactInfo(APIView):
             if contact.permanent_address:
                 permanent_address_pincode_serializer = serializers.PincodeSerializer(contact.permanent_address.pincode)
                 serializer.data['permanent_address'].update(permanent_address_pincode_serializer.data)
-            return api_utils.response(serializer.data)
+            response = serializer.data
+            if not serializer.data["phone_number"]:
+                response.update({"phone_number": request.user.phone_number})
+            if not serializer.data["email"]:
+                response.update({"email": request.user.email})
+            return api_utils.response(response)
         return api_utils.response({}, status.HTTP_400_BAD_REQUEST, generate_error_message(serializer.errors))
 
     def post(self, request):
@@ -1187,14 +1197,8 @@ class NomineeInfo(APIView):
         with transaction.atomic():
             if not request.data.get('nominee_absent'):
                 if request.data.get('address_are_equal'):
-                    try:
-                        contact_info = models.ContactInfo.objects.get(user=request.user)
-                        nominee_addr_obj = contact_info.communication_address
-                    except models.ContactInfo.DoesNotExist:
-                        return api_utils.response({}, status.HTTP_400_BAD_REQUEST, constants.CONTACT_INFO_DOES_NOT_EXIST)
-
                     models.NomineeInfo.objects.update_or_create(
-                        user=request.user, defaults={"nominee_address_id": nominee_addr_obj.id,
+                        user=request.user, defaults={"nominee_address_id": None,
                                                      "nominee_name": request.data.get('nominee_name'),
                                                      "nominee_dob": request.data.get('nominee_dob'),
                                                      "guardian_name": request.data.get('guardian_name'),
@@ -1539,3 +1543,62 @@ class ConfirmChangeInPhoneNumber(APIView):
         except models.UserChangedPhoneNumber.DoesNotExist:
             return api_utils.response({"message": constants.NON_EXISTENT_USER_ERROR}, status.HTTP_404_NOT_FOUND,
                                       constants.NON_EXISTENT_USER_ERROR)
+
+
+class VideoUpload(APIView):
+    """
+    To save user video and its thumbnail
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        :param request:
+        :return:
+        """
+        serializer = serializers.SaveUserVideoSerializer(data=request.data)
+        if serializer.is_valid():
+            request.user.user_video = request.FILES.get("user_video", None)
+            request.user.user_video_thumbnail = request.FILES.get("user_video_thumbnail", None)
+            request.user.save()
+            return api_utils.response({"message": constants.USER_VIDEO_SAVED,
+                                       "user_video_thumbnail": request.user.user_video_thumbnail.url,
+                                       "user_video": request.user.user_video.url}, status.HTTP_200_OK)
+        return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(serializer.errors))
+
+
+class VideoGet(APIView):
+    """
+    API to get user video and user video thumbnail
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        """
+        :param request:
+        :return:
+        """
+        serializer = serializers.SaveUserVideoSerializer(request.user)
+        if serializer.is_valid:
+            response = serializer.data
+            response.update({"has_uploaded": False})
+            response.update({"name": request.user.investorinfo.applicant_name})
+            if serializer.data.get("user_video") is not None and serializer.data.get("user_video_thumbnail") is not None:
+                response.update({"has_uploaded": True})
+            return api_utils.response(response)
+        return api_utils.response({}, status.HTTP_400_BAD_REQUEST, generate_error_message(serializer.errors))
+
+
+class Signature(APIView):
+    """
+    API to get signature of a user
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        """
+        :param request:
+        :return:
+        """
+        return api_utils.response({"signature":request.user.signature})
+

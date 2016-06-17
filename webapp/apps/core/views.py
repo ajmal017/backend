@@ -17,8 +17,9 @@ from profiles import models as profile_models
 from profiles import helpers as profiles_helpers
 
 from dateutil.relativedelta import relativedelta
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, date
 import logging
+import copy
 
 
 def index(request):
@@ -499,7 +500,7 @@ class PortfolioPerformance(APIView):
                                       status.HTTP_400_BAD_REQUEST, constants.USER_PORTOFOLIO_NOT_PRESENT)
         portfolio_items = models.PortfolioItem.objects.filter(portfolio=portfolio).order_by('fund_id')
         portfolio_items_fund_ids = [portfolio_item.fund_id for portfolio_item in portfolio_items]
-        latest_date = utils.get_latest_date()
+        latest_date = utils.get_latest_date_funds_only()
         nav_dates = utils.get_dates_for_nav(latest_date)
         nav_list = models.HistoricalFundData.objects.filter(
             fund_id__in=portfolio_items_fund_ids, date__in=nav_dates).order_by('fund_id_id', '-date')
@@ -690,30 +691,6 @@ class DashboardNew(APIView):
         return api_utils.response(utils.get_portfolio_overview(portfolio_items), status.HTTP_200_OK)
 
 
-class LeaderFunds(APIView):
-    """
-    API to return funds of a leader profile
-    """
-    permission_classes = [permissions.IsAuthenticated]
-
-    def post(self, request):
-        """
-        takes leader_user_id as an argument and returns the portfolio items of that user with annualized returns
-        :param request:
-        :return:
-        """
-        leader_user_id = request.data.get('leader_user_id')
-        portfolio_items = models.PortfolioItem.objects.filter(portfolio__user_id=leader_user_id
-                                                              ).select_related('portfolio', 'fund')
-        if portfolio_items.count() == 0:
-            return api_utils.response({constants.MESSAGE: constants.USER_PORTOFOLIO_NOT_PRESENT},
-                                      status.HTTP_400_BAD_REQUEST, constants.USER_PORTOFOLIO_NOT_PRESENT)
-        elif portfolio_items[0].portfolio.has_invested is False:
-            return api_utils.response({constants.MESSAGE: constants.USER_HAS_NOT_INVESTED},
-                                      status.HTTP_400_BAD_REQUEST, constants.USER_HAS_NOT_INVESTED)
-        return api_utils.response(utils.get_portfolio_details(portfolio_items, True), status.HTTP_200_OK)
-
-
 class PopularFunds(APIView):
     """
     API to return most popular funds of among the funds
@@ -724,10 +701,8 @@ class PopularFunds(APIView):
         """
         :returns: a list of most popular funds of among all the funds
         """
-        cases = {'E': 'equity', 'D': 'debt', 'T': 'elss'}
-        popular_funds = dict()
-        for k, v in cases.items():
-            popular_funds[v] = dict(data=utils.get_most_popular_funds(k))
+        popular_funds = eval(models.CachedData.objects.get(key=constants.MOST_POPULAR_FUND).value[
+                               constants.MOST_POPULAR_FUND])
         return api_utils.response(popular_funds, status.HTTP_200_OK)
 
 
@@ -748,7 +723,7 @@ class PortfolioHistoricPerformance(APIView):
             return api_utils.response({constants.MESSAGE: constants.USER_PORTOFOLIO_NOT_PRESENT},
                                       status.HTTP_400_BAD_REQUEST, constants.USER_PORTOFOLIO_NOT_PRESENT)
         portfolio_funds = [portfolio_item.fund for portfolio_item in portfolio_items]
-        latest_date = utils.get_latest_date()
+        latest_date = utils.get_latest_date_funds_only()
         historic_data = {
             'five_year':
                 utils.get_portfolio_historic_data(utils.get_fund_historic_data(
@@ -937,7 +912,12 @@ class LeaderBoard(APIView):
         if sal != constants.DEFAULT_SAL:
             query["user__investorinfo__income"] = sal
         if occupation_choice != constants.DEFAULT_OCCUPATION:
-            occupation = occupation_choices[occupation_choice]
+            if type(occupation_choice) == list:
+                occupation = []
+                for occ in occupation_choice:
+                    occupation += occupation_choices[occ]
+            else:
+                occupation = occupation_choices[occupation_choice]
             query["user__investorinfo__occupation_type__in"] = occupation
 
         leader_list = profile_models.AggregatePortfolio.objects.filter(**query).order_by('-total_xirr')
@@ -985,9 +965,10 @@ class GetInvestedFundReturn(APIView):
         :param request:
         :return:the return value of fund
         """
-        portfolio_items = models.PortfolioItem.objects.filter(
-            portfolio__user=request.user, portfolio__has_invested=True, portfolio__is_deleted=False
-        ).select_related('fund')
+        fund_order_items = models.FundOrderItem.objects.filter(portfolio_item__portfolio__user=request.user,
+            portfolio_item__portfolio__has_invested=True, portfolio_item__portfolio__is_deleted=False, is_verified=True,
+            is_cancelled=False).distinct('portfolio_item').select_related('portfolio_item')
+        portfolio_items = [fund_order_item.portfolio_item for fund_order_item in fund_order_items]
         equity_funds, debt_funds, elss_funds = [], [], []
         equity_funds_id, debt_funds_id, elss_funds_id = [], [], []
         for portfolio_item in portfolio_items:
@@ -1012,7 +993,13 @@ class GetInvestedFundReturn(APIView):
         invested_fund_return = [{"key": constants.EQUITY, "value": equity_funds},
                                 {"key": constants.DEBT, "value": debt_funds},
                                 {"key": constants.ELSS, "value": elss_funds}]
-        return api_utils.response(invested_fund_return, status.HTTP_200_OK)
+
+        invested_fund_return_new = copy.deepcopy(invested_fund_return)
+        for index in range(3):
+            for fund_object in invested_fund_return[index][constants.VALUE]:
+                if utils.find_if_not_eligible_for_display(fund_object, request.user):
+                    invested_fund_return_new[index][constants.VALUE].remove(fund_object)
+        return api_utils.response(invested_fund_return_new, status.HTTP_200_OK)
 
 
 class TransactionDetail(APIView):
@@ -1049,39 +1036,6 @@ class TransactionDetail(APIView):
         return api_utils.response(redeem_data, status.HTTP_200_OK)
 
 
-class TransactionHistory(APIView):
-    """
-    API to get details of fund order item
-    """
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get(self, request):
-        """
-        :param request:
-        :return:the detail of fund order items
-        """
-        txn_history = []
-        order_details = models.OrderDetail.objects.filter(user=request.user)
-        fund_order_details = models.FundOrderItem.objects.filter(
-            orderdetail__in=order_details).exclude(order_amount=0).order_by('-created_at')
-        order_serializer = serializers.FundOrderItemSerializer(fund_order_details, many=True)
-        if order_serializer.is_valid:
-            txn_history = order_serializer.data
-        else:
-            return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(order_serializer.errors))
-
-        redeem_details = models.RedeemDetail.objects.filter(user=request.user)
-        fund_redeem_details = models.FundRedeemItem.objects.filter(
-            redeemdetail__in=redeem_details).order_by('-created_at')
-        redeem_serializer = serializers.FundRedeemItemSerializer(fund_redeem_details, many=True)
-        if redeem_serializer.is_valid:
-            txn_history += redeem_serializer.data
-        else:
-            return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(redeem_serializer.errors))
-        sorted_txn_history = sorted(txn_history, key=lambda k: k['transaction_date'], reverse=True)
-        return api_utils.response(sorted_txn_history, status.HTTP_200_OK)
-
-
 class TransactionHistoryNew(APIView):
     """
     API to get details of fund order item
@@ -1103,18 +1057,22 @@ class TransactionHistoryNew(APIView):
         else:
             return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(order_serializer.errors))
 
-        redeem_details = models.RedeemDetail.objects.filter(user=request.user)
-        fund_redeem_details = models.FundRedeemItem.objects.filter(
-            redeemdetail__in=redeem_details).order_by('-created_at')
-        redeem_serializer = serializers.FundRedeemItemSerializer(fund_redeem_details, many=True)
+        redeem_details = models.RedeemDetail.objects.filter(user=request.user).order_by('-created_at')
+        # fund_redeem_details = models.FundRedeemItem.objects.filter(redeemdetail__in=redeem_details).order_by('-created_at')
+        # redeem_serializer = serializers.FundRedeemItemSerializer(fund_redeem_details, many=True)
+        redeem_serializer = serializers.RedeemDetailSerializer(redeem_details, many=True)
 
         if redeem_serializer.is_valid:
             txn_history += redeem_serializer.data
         else:
             return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(redeem_serializer.errors))
 
-        portfolio_items = models.PortfolioItem.objects.filter(
-            portfolio__user=request.user, portfolio__has_invested=True, portfolio__is_deleted=False)
+        # portfolio_items = models.PortfolioItem.objects.filter(
+        #     portfolio__user=request.user, portfolio__has_invested=True, portfolio__is_deleted=False)
+        fund_order_items_list = models.FundOrderItem.objects.filter(portfolio_item__portfolio__user=request.user,
+            portfolio_item__portfolio__has_invested=True, portfolio_item__portfolio__is_deleted=False, is_verified=True,
+            is_cancelled=False).distinct('portfolio_item').select_related('portfolio_item')
+        portfolio_items = [fund_order_item.portfolio_item for fund_order_item in fund_order_items_list]
         latest_fund_order_item = []
         if portfolio_items:
             for portfolio_item in portfolio_items:
@@ -1134,57 +1092,37 @@ class TransactionHistoryNew(APIView):
         return api_utils.response(sorted_txn_history, status.HTTP_200_OK)
 
 
-class IndividualFundRedeem(APIView):
+class FundRedeem(APIView):
     """
-
+    For this api the expected data structure is sent is
+    {"data": [{"fund_id": 3, "redeem_amount": 1300}], "all_units":[{"fund_id": 2}]}
     """
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self,request):
         """
-
         :param request:
         :return:
         """
-        serializer = serializers.RedeemAddSerializer(data=request.data)
+        serializer = serializers.NewRedeemAddSerializer(data=request.data)
         if serializer.is_valid():
-            redeem_fund_details = request.data.get('data')
-            total_redeem_amount = request.data.get('total_amount')
-            redeem_amount_count = 0
-            for i in redeem_fund_details:
-                redeem_amount_count += i["redeem_amount"]
+            # processes funds in data
+            redeem_detail_list = utils.add_redeem_details_by_amount(request.data.get('data', []), request.user)
+            # process funds in all_units
+            redeem_detail_list = utils.add_redeem_details_by_units(request.data.get('all_units', []), request.user,
+                                                                 redeem_detail_list)
 
-            # Go inside for loop only if total amounts match
-            if total_redeem_amount == redeem_amount_count:
-                fund_redeem_items = []
-                for i in redeem_fund_details:
-                    portfolio_items = models.PortfolioItem.objects.filter(
-                        portfolio__user=request.user, portfolio__is_deleted= False, fund__id=i["fund_id"])
-                    redeem = {}
-                    total = 0.0
-                    for portfolio_item in portfolio_items:
-                        sum = utils.sum_invested_in_portfolio_item(portfolio_item)
-                        redeem[portfolio_item.id] = sum
-                        total += sum
+            # creates groupedredeemdetail with redeem details created above added
+            grouped_redeem_detail = models.GroupedRedeemDetail.objects.create(user=request.user)
+            grouped_redeem_detail.redeem_details.add(*redeem_detail_list)
 
-                    # Get the total value invested for a fund for a person
-
-                    for portfolio_item in portfolio_items:
-                        fund_redeem_item = models.FundRedeemItem.objects.create(
-                            portfolio_item=portfolio_item,
-                            redeem_amount=round(i["redeem_amount"]*redeem[portfolio_item.id]/total, 2))
-                        fund_redeem_items.append(fund_redeem_item)
-
-                redeem_detail = models.RedeemDetail.objects.create(user=request.user)
-                redeem_detail.fund_redeem_items.add(*fund_redeem_items)
-                profiles_helpers.send_redeem_completed_email(redeem_detail, total_redeem_amount, use_https=settings.USE_HTTPS)
-                return api_utils.response({constants.MESSAGE: "success"})
-            else:
-                return api_utils.response({constants.MESSAGE: constants.TOTAL_NOT_EQUAL},
-                                          status.HTTP_400_BAD_REQUEST, constants.TOTAL_NOT_EQUAL)
+            # Sends a email informing admin of a new groupredeem item creation
+            profiles_helpers.send_redeem_completed_email(grouped_redeem_detail, use_https=settings.USE_HTTPS)
+            return api_utils.response({constants.MESSAGE: "success"})
         else:
             return api_utils.response({constants.MESSAGE: serializer.errors}, status.HTTP_400_BAD_REQUEST,
                                       generate_error_message(serializer.errors))
+
 
 
 class DashboardPortfolioHistoricPerformance(APIView):
@@ -1423,10 +1361,15 @@ class DashboardVersionTwo(APIView):
                     utils.club_investment_redeem_together(transactions_to_be_considered, [])
                 is_transient_dashboard = True
 
-            # utility to get the json response for the api
-            return api_utils.response(
-                utils.get_dashboard_version_two(transaction_fund_map, today_portfolio, portfolios_to_be_considered,
-                                                is_transient_dashboard), status.HTTP_200_OK)
+            # utility to get the json response for the api and change user flag
+            portfolio_overview = utils.get_dashboard_version_two(
+                transaction_fund_map, today_portfolio, portfolios_to_be_considered, is_transient_dashboard)
+            request.user.is_real_seen = True
+            request.user.save()
+            total_xirr = utils.get_xirr_value_from_dashboard_response(portfolio_overview)
+            profile_models.AggregatePortfolio.objects.update_or_create(
+            user=request.user, defaults={'total_xirr': round(total_xirr, 1), 'update_date': datetime.now()})
+            return api_utils.response(portfolio_overview, status.HTTP_200_OK)
 
         # for virtual dashboard
         portfolio_items = models.PortfolioItem.objects.filter(
@@ -1435,7 +1378,66 @@ class DashboardVersionTwo(APIView):
         if not portfolio_items:
             return api_utils.response({constants.MESSAGE: constants.USER_PORTOFOLIO_NOT_PRESENT},
                                       status.HTTP_400_BAD_REQUEST, constants.USER_PORTOFOLIO_NOT_PRESENT)
-        return api_utils.response(utils.get_portfolio_overview(portfolio_items), status.HTTP_200_OK)
+        portfolio_overview = utils.get_portfolio_overview(portfolio_items)
+        request.user.is_virtual_seen = True
+        request.user.save()
+        total_xirr = utils.get_xirr_value_from_dashboard_response(portfolio_overview)
+        profile_models.AggregatePortfolio.objects.update_or_create(
+            user=request.user ,defaults={'total_xirr': round(total_xirr, 1), 'update_date': datetime.now()})
+        return api_utils.response(portfolio_overview, status.HTTP_200_OK)
+
+
+class LeaderFunds(APIView):
+    """
+    API to return funds of a leader profile
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        takes leader_user_id as an argument and returns the portfolio items of that user with annualized returns
+        :param request:
+        :return:
+        """
+        leader_user_id = request.data.get('leader_user_id')
+
+        # query all fund_order_items of a user
+        all_investments_of_user = models.FundOrderItem.objects.filter(
+            portfolio_item__portfolio__user=leader_user_id, is_cancelled=False)
+
+        # for real and transient portfolio details
+        if all_investments_of_user:
+            # for real dashboard
+            if all_investments_of_user.filter(is_verified=True):
+                # query all redeems of user
+                all_redeems_of_user = models.FundRedeemItem.objects.filter(
+                    portfolio_item__portfolio__user=leader_user_id)
+                transaction_fund_map, today_portfolio, portfolios = utils.club_investment_redeem_together(
+                    all_investments_of_user.filter(is_verified=True), all_redeems_of_user.filter(is_verified=True))
+            # for transient dashboard
+            else:
+                user_portfolios = models.Portfolio.objects.filter(
+                    user=leader_user_id, is_deleted=False).order_by('created_at')
+                transactions_to_be_considered = all_investments_of_user.filter(
+                    portfolio_item__portfolio=user_portfolios[0])
+                transaction_fund_map, today_portfolio, portfolios = utils.club_investment_redeem_together(
+                    transactions_to_be_considered, [])
+
+            # utility to get the json response for the api
+            portfolio_detail = utils.make_xirr_calculations_for_dashboard_version_two(
+                transaction_fund_map, constants.PORTFOLIO_DETAILS, False)
+
+            return api_utils.response(utils.convert_dashboard_to_leaderboard(portfolio_detail), status.HTTP_200_OK)
+
+        # for virtual portfolio details
+        portfolio_items = models.PortfolioItem.objects.filter(
+            portfolio__user=leader_user_id, portfolio__has_invested=False, portfolio__is_deleted=False).select_related(
+            'portfolio', 'fund')
+        if not portfolio_items:
+            return api_utils.response({constants.MESSAGE: constants.USER_PORTOFOLIO_NOT_PRESENT},
+                                      status.HTTP_400_BAD_REQUEST, constants.USER_PORTOFOLIO_NOT_PRESENT)
+        portfolio_detail = utils.get_portfolio_details(portfolio_items)
+        return api_utils.response(utils.convert_dashboard_to_leaderboard(portfolio_detail), status.HTTP_200_OK)
 
 
 class PortfolioDetailsVersionTwo(APIView):
@@ -1459,7 +1461,7 @@ class PortfolioDetailsVersionTwo(APIView):
 
         # for real and transient portfolio details
         if all_investments_of_user:
-            # for rel dashboard
+            # for real dashboard
             if all_investments_of_user.filter(is_verified=True):
                 # query all redeems of user
                 all_redeems_of_user = models.FundRedeemItem.objects.filter(portfolio_item__portfolio__user=request.user)
@@ -1487,7 +1489,7 @@ class PortfolioDetailsVersionTwo(APIView):
         return api_utils.response(utils.get_portfolio_details(portfolio_items), status.HTTP_200_OK)
 
 
-class UserPerformance(APIView):
+class PortfolioTracker(APIView):
     """
     API to return the current/invested amount of user
     """
@@ -1498,16 +1500,52 @@ class UserPerformance(APIView):
         :param request:
         :return: current/invested amount of user
         """
-        weekends = [5, 6]
-        dates, current_amount, invested_amount = [], [], []
-        user_performances = models.PortfolioPerformance.objects.filter(user=request.user).exclude(date__day__in = weekends)
+        dates, current_amount, invested_amount, xirr, portfolio_funds = [], [], [], [], []
+        virtual_invested_lumpsum, virtual_invested_sip = 0, 0
+        weekends = [1, 7]
+        # read https://docs.djangoproject.com/en/dev/ref/models/querysets/#week-day for more details
+        user_performances = models.PortfolioPerformance.objects.filter(
+            user=request.user, date__lte=utils.get_dashboard_change_date()
+        ).exclude(date__week_day__in=weekends).order_by('date')
         if user_performances:
             for user_performance in user_performances:
-                dates.append(user_performance.date)
+                dates.append(user_performance.date.strftime('%d-%m-%y'))
                 current_amount.append(user_performance.current_amount)
                 invested_amount.append(user_performance.invested_amount)
-            return api_utils.response({constants.DATE: dates, constants.CURRENT_AMOUNT: current_amount, constants.INVESTED_AMOUNT: invested_amount},
+                xirr.append(user_performance.xirr)
+            return api_utils.response({constants.DATE: dates, constants.CURRENT_AMOUNT: current_amount, constants.INVESTED_AMOUNT: invested_amount, constants.XIRR: xirr},
                                           status.HTTP_200_OK)
         else:
-            return api_utils.response({constants.MESSAGE: constants.USER_PERFORMANCE_PORTOFOLIO_NOT_PRESENT},
-                                      status.HTTP_400_BAD_REQUEST, constants.USER_PERFORMANCE_PORTOFOLIO_NOT_PRESENT)
+            try:
+                user_portfolio = models.Portfolio.objects.get(user=request.user, has_invested=False, is_deleted= False)
+            except models.Portfolio.DoesNotExist:
+                return api_utils.response({constants.MESSAGE: constants.USER_PERFORMANCE_PORTOFOLIO_NOT_PRESENT},
+                                          status.HTTP_400_BAD_REQUEST, constants.USER_PERFORMANCE_PORTOFOLIO_NOT_PRESENT)
+            portfolio_items = user_portfolio.portfolioitem_set.all()
+            for portfolio_item in portfolio_items:
+                virtual_invested_lumpsum += portfolio_item.lumpsum
+                virtual_invested_sip += portfolio_item.sip
+                portfolio_funds.append(portfolio_item.fund)
+
+            latest_date = utils.get_dashboard_change_date()
+            historic_performance, dates = utils.get_portfolio_historic_data(utils.get_fund_historic_data_tracker(
+                portfolio_funds, user_portfolio.modified_at.date(), latest_date), portfolio_items, True)
+
+            investment_date = user_portfolio.modified_at.date()
+            for index in range(len(dates)):
+                date_to_consider = datetime.strptime(dates[index], '%d-%m-%y').date()
+                months = relativedelta(date_to_consider, investment_date).months
+                days = relativedelta(date_to_consider, investment_date).days
+                time_since_invest = months + (1 if days >= 0 else 0)
+                duration_date = investment_date + relativedelta(months=months, days=days)
+                time_since_invest += relativedelta(date_to_consider, duration_date).years * 12
+
+                virtual_invested_total = virtual_invested_lumpsum + (virtual_invested_sip * time_since_invest)
+                gain = historic_performance[index] - virtual_invested_total
+                xirr.append(round(utils.generate_xirr(gain / virtual_invested_total,
+                                                      (date_to_consider - user_portfolio.modified_at.date()).days), 2))
+                invested_amount.append(virtual_invested_total)
+
+            return api_utils.response({constants.DATE: dates, constants.CURRENT_AMOUNT: historic_performance,
+                                       constants.INVESTED_AMOUNT: invested_amount, constants.XIRR: xirr},
+                                      status.HTTP_200_OK)

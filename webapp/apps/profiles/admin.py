@@ -107,11 +107,11 @@ class UserAdmin(admin.ModelAdmin):
     }
     search_fields = ['phone_number', 'email']
     list_display = ['id', 'email', 'phone_number', 'get_vault_complete', 'get_kra_verification', 'bse_registered',
-                    'tiff_mailed', 'tiff_accepted', 'kyc_mailed', 'kyc_accepted', 'mandate_status', 'xsip_status', 'finaskus_id',
-                    'mandate_reg_no', 'remarks', 'button', 'button1', 'button2', 'button3', 'button4']
+                    'tiff_mailed', 'tiff_accepted', 'kyc_mailed', 'kyc_accepted', 'mandate_status', 'xsip_status',
+                    'finaskus_id', 'mandate_reg_no', 'remarks', 'button', 'button1', 'button2', 'button3', 'button4']
     list_editable = ['email', 'phone_number', 'remarks', 'finaskus_id', 'mandate_reg_no']
     list_filter = ['phone_number_verified', 'email_verified', 'mandate_status', BseOrKra, VaultComplete, KraVerified]
-    exclude = ('password', 'id', 'username')
+    exclude = ('password', 'id', 'username', 'last_login', )
     empty_value_display = 'unknown'
     actions = ['generate_client_pipe_file']
 

@@ -4,6 +4,7 @@ from dateutil.relativedelta import relativedelta
 
 from django.contrib.postgres.fields import HStoreField, ArrayField
 from django.db import models
+from django.db.models import Sum
 from django.utils.translation import ugettext_lazy as _
 from djutil.models import TimeStampedModel
 
@@ -153,6 +154,8 @@ class Fund(TimeStampedModel):
     is_enabled = models.BooleanField(_('is enabled'), default=False)
     fund_house = models.ForeignKey(FundHouse, null=True, blank=True)
     analysis = models.TextField(null=True, blank=True)
+    minimum_withdrawal = models.FloatField(null=True, blank=True)
+    minimum_balance = models.FloatField(null=True, blank=True)
     objects = manager.FundManager()
 
     def __str__(self):
@@ -245,15 +248,36 @@ class PortfolioItem(TimeStampedModel):
         return str(self.portfolio.user.email + " " + self.fund.fund_name + " " + self.broad_category_group + '' +
                    str(self.fund_id))
 
-    def set_values(self):
+    def set_values(self, latest_index_date=None):
+        # find latest nav and date from fund data points change daily table
         fund_latest_nav_object = FundDataPointsChangeDaily.objects.get(fund_id=self.fund)
         fund_latest_nav = fund_latest_nav_object.day_end_nav
         fund_latest_nav_date = fund_latest_nav_object.day_end_date
+
+        # if fund latest date is more then latest index date get nav on latest index date
+        if latest_index_date is not None:
+            if fund_latest_nav_date > latest_index_date:
+                fund_latest_nav_object = HistoricalFundData.objects.get(fund_id=self.fund, date=latest_index_date)
+                fund_latest_nav = fund_latest_nav_object.nav
+                fund_latest_nav_date = fund_latest_nav_object.date
+
+        # get one previous working day date and nav
+        if fund_latest_nav_date.isoweekday() == 7:
+            fund_one_previous_date = fund_latest_nav_date - timedelta(days=3)
+        elif fund_latest_nav_date.isoweekday() == 6:
+            fund_one_previous_date = fund_latest_nav_date - timedelta(days=2)
+        else:
+            fund_one_previous_date = fund_latest_nav_date - timedelta(days=1)
+        one_previous_nav = HistoricalFundData.objects.get(fund_id=self.fund, date=fund_one_previous_date).nav
+
+        # get nav on investment date(portfolios modified at is considered as investment date fr virtual dashboard)
         investment_date = self.portfolio.modified_at.date()
+        if investment_date > latest_index_date:
+            investment_date = latest_index_date
         months = relativedelta(date.today(), investment_date).months
         days = relativedelta(date.today(), investment_date).days
         time_since_invest = months + (1 if days >= 0 else 0)
-        duration_date = investment_date +  relativedelta(months=months, days=days)
+        duration_date = investment_date + relativedelta(months=months, days=days)
         time_since_invest += relativedelta(date.today(), duration_date).years * 12
 
         try:
@@ -265,14 +289,6 @@ class PortfolioItem(TimeStampedModel):
         normal_return_percentage = (fund_latest_nav - fund_nav_on_investment) / fund_nav_on_investment
         self._generate_xirr(normal_return_percentage, (fund_latest_nav_date - investment_date).days)
         self.returns_value = self.sum_invested * normal_return_percentage
-
-        if fund_latest_nav_date.isoweekday() == 7:
-            fund_one_previous_date = fund_latest_nav_date - timedelta(days=3)
-        elif fund_latest_nav_date.isoweekday() == 6:
-            fund_one_previous_date = fund_latest_nav_date - timedelta(days=2)
-        else:
-            fund_one_previous_date = fund_latest_nav_date - timedelta(days=1)
-        one_previous_nav = HistoricalFundData.objects.get(fund_id=self.fund, date=fund_one_previous_date).nav
         self.one_day_return = (fund_latest_nav - one_previous_nav) * self.sum_invested / fund_nav_on_investment
         self.one_day_previous_portfolio_value = self.sum_invested * (
             1 + (one_previous_nav - fund_nav_on_investment)/ fund_nav_on_investment)
@@ -491,6 +507,7 @@ class FundRedeemItem(TimeStampedModel):
     redeem_date = models.DateField(null=True, blank=True, default=None)
     is_verified = models.BooleanField(_('is verified'), default=False)
     is_cancelled = models.BooleanField(_('is cancelled'), default=False)
+    is_all_units_redeemed = models.BooleanField(_('Redeem all units ?'), default=False)
 
 
     def __str__(self):
@@ -546,11 +563,11 @@ class FundRedeemItem(TimeStampedModel):
 
 class RedeemDetail(TimeStampedModel):
     """
-
+    A model to group all FundRedeemItem which are related to same fund for any redeem order placed.
     """
     class RedeemStatus(IntEnum):
         """
-        this is used for the choices of relationship_with_investor field.
+        this is used for the choices of redeem detail status field.
         """
         Pending = 0
         Ongoing = 1
@@ -559,21 +576,141 @@ class RedeemDetail(TimeStampedModel):
 
     redeem_id = models.CharField(max_length=10, unique=True, default=0000000000, verbose_name=_('Redeem Id'))
     user = models.ForeignKey(settings.AUTH_USER_MODEL)
+    fund = models.ForeignKey(Fund, null=True, blank=True, default=None)
     fund_redeem_items = models.ManyToManyField(FundRedeemItem)
+    redeem_amount = models.FloatField(default=0.00)
+    unit_redeemed = models.FloatField(null=True, blank=True)
+    redeem_date = models.DateField(null=True, blank=True, default=None)
+    is_verified = models.BooleanField(_('is verified'), default=False)
+    is_cancelled = models.BooleanField(_('is cancelled'), default=False)
+    is_all_units_redeemed = models.BooleanField(_('Redeem all units ?'), default=False)
     redeem_status = models.IntegerField(choices=[(x.value, x.name) for x in RedeemStatus],
                                         default=RedeemStatus.Pending.value)
 
     def __str__(self):
         return str(self.redeem_id + ' ' + self.user.email)
 
+    def get_transaction_date(self):
+        """
+        Returns the date of redeem
+        """
+        return self.created_at.date()
+
+    def get_redeem_date(self):
+        """
+        Returns the date of redeem
+        """
+        redeem_status = self.groupedredeemdetail_set.all()[0].redeem_status
+        if self.is_cancelled == True:
+            return "Cancelled"
+        elif redeem_status == constants.PENDING:
+            return '-'
+        elif redeem_status == constants.ONGOING:
+            return "Pending"
+        elif redeem_status == constants.CANCELLED:
+            return "Cancelled"
+        return str(self.redeem_date.strftime("%d-%m-%y"))
+
+    def get_unit_redeemed(self):
+        """
+        Returns the units redeemed, rounded off to 3 decimal points
+        """
+        if self.is_all_units_redeemed and not self.is_verified and not self.is_cancelled:
+            return "All units"
+        if self.unit_redeemed:
+            try:
+                return str("-" + format(self.unit_redeemed, '.3f'))
+            except ValueError:
+                return self.unit_redeemed
+        return "-"
+
+    def get_redeem_amount(self):
+        return round((self.redeem_amount) * -1.0, 2)
+
+    def units_invested_in_portfolio_item(self, portfolio_item):
+        """
+        """
+        unit_alloted__sum = FundOrderItem.objects.filter(
+        portfolio_item=portfolio_item, is_verified=True).aggregate(Sum('unit_alloted'))['unit_alloted__sum']
+        if unit_alloted__sum == None:
+            unit_alloted__sum = 0.0
+        unit_redeemed__sum = FundRedeemItem.objects.filter(
+            portfolio_item=portfolio_item, is_verified=True).aggregate(Sum('unit_redeemed'))['unit_redeemed__sum']
+        if unit_redeemed__sum == None:
+            unit_redeemed__sum = 0.0
+
+        return unit_alloted__sum - unit_redeemed__sum
+
     def save(self, *args, **kwargs):
+        # Makes sure a redeem_id is generated when any Pending state Redeem detail is created.
         if self.redeem_id == 0:
             self.redeem_id = "RR" + str(random_with_N_digits(8))
+
+        # Makes sure all fund_redeem_items are marked called when anyone changes redeem status to  Cancelled state
         if self.redeem_status == 3:
             for fund_redeem_item in self.fund_redeem_items.all():
                 fund_redeem_item.is_cancelled = True
                 fund_redeem_item.save()
+
+        # Makes sure when redeem date is changed its reflected in fund redeem
+        if self.redeem_date:
+            for fund_redeem_item in self.fund_redeem_items.all():
+                fund_redeem_item.redeem_date = self.redeem_date
+                fund_redeem_item.save()
+
+        # Makes sure when redeem date is changed its reflected in fund redeem
+        if self.unit_redeemed or self.unit_redeemed == 0.0:
+            redeem = {}
+            total_units = 0.0
+            for fund_redeem_item in self.fund_redeem_items.all():
+                units = self.units_invested_in_portfolio_item(fund_redeem_item.portfolio_item)
+                redeem[fund_redeem_item.portfolio_item.id] = units
+                total_units += units
+
+            for fund_redeem_item in self.fund_redeem_items.all():
+                fund_redeem_item.unit_redeemed = self.unit_redeemed * redeem[fund_redeem_item.portfolio_item.id] / \
+                                                                    total_units
+                fund_redeem_item.save()
+
         return super(RedeemDetail, self).save(*args, **kwargs)
+
+
+class GroupedRedeemDetail(TimeStampedModel):
+    """
+    A model to group all RedeemDetail of one order
+    """
+    class RedeemStatus(IntEnum):
+        """
+        this is used for the choices of grouped redeem detail status field.
+        """
+        Pending = 0
+        Ongoing = 1
+        Complete = 2
+        Cancelled = 3
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL)
+    redeem_details = models.ManyToManyField(RedeemDetail)
+    redeem_status = models.IntegerField(choices=[(x.value, x.name) for x in RedeemStatus],
+                                        default=RedeemStatus.Pending.value)
+
+    def __str__(self):
+        return str(self.id) + ' ' + self.user.email
+
+    def save(self, *args, **kwargs):
+
+        # Makes sure all redeem details are marked cancelled when anyone changes redeem status to Cancelled state
+        if self.redeem_status == 3:
+            for redeem_detail in self.redeem_details.all():
+                redeem_detail.is_cancelled = True
+                redeem_detail.redeem_status = 3
+                redeem_detail.save()
+
+        # Makes sure all redeem details are marked ongoing too when anyone changes redeem status to Ongoing state
+        if self.redeem_status == 1:
+            for redeem_detail in self.redeem_details.all():
+                redeem_detail.redeem_status = 1
+                redeem_detail.save()
+        return super(GroupedRedeemDetail, self).save(*args, **kwargs)
 
 
 class FundOrderItem(TimeStampedModel):
@@ -710,9 +847,22 @@ class PortfolioPerformance(models.Model):
     date = models.DateField(default=None)
     current_amount = models.FloatField()
     invested_amount = models.FloatField()
+    xirr = models.FloatField(default=0.00)
 
     class Meta:
         unique_together = (('user', 'date'),)
 
     def __str__(self):
         return str(self.user.email)
+
+
+class CachedData(TimeStampedModel):
+    """
+    A model for maintaining key value pairs of Cache data
+    It is used right now for most popular funds with key set as "most_popular_funds"
+    """
+    key = models.CharField(max_length=100, null=True, blank=True, unique=True)
+    value = HStoreField(blank=True, null=True)
+
+    def __str__(self):
+        return str(self.id)

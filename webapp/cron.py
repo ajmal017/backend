@@ -1,3 +1,5 @@
+from django.db.models import Min
+
 from external_api import morningstar
 from core import utils, models
 from profiles import utils as profile_utils
@@ -30,14 +32,14 @@ def daily_cron():
     mail_logger = logging.getLogger('django.info')
     is_error, errors = False, ''
     try:
-        generate_log_message(morningstar_object.get_data_points_for_fund_data_points_change_daily(), 'daily', 30,
+        generate_log_message(morningstar_object.get_data_points_for_fund_data_points_change_daily(), 'daily', 56,
                              mail_logger)
     except Exception as e:
         is_error = True
         error_entry = str(e) + ' get_data_points_for_fund_data_points_change_daily; '
         errors += error_entry
     try:
-        generate_log_message(morningstar_object.get_daily_nav_for_indices_new(), 'index_nav', 11, mail_logger)
+        generate_log_message(morningstar_object.get_daily_nav_for_indices_new(), 'index_nav', 14, mail_logger)
     except Exception as e:
         is_error = True
         error_entry = str(e) + ' get_daily_nav_for_indices_new; '
@@ -78,24 +80,40 @@ def daily_cron():
         errors += error_entry
 
     try:
-        generate_log_message(utils.tracking_funds_bse_nse(), 'Tracking MS', 32, mail_logger)
+        generate_log_message(utils.tracking_funds_bse_nse(), 'Tracking MS', 58, mail_logger)
     except Exception as e:
         is_error = True
-        error_entry = str(e) + ' set_portfolio_values; '
+        error_entry = str(e) + 'tracking_bse'
         errors += error_entry
 
-    # try:
-    #     order_details = models.OrderDetail.objects.all().distinct('user')
-    #     for user in order_details:
-    #         amount = utils.get_current_invested_value_date(datetime.now(), user.user)
-    #         models.PortfolioPerformance.objects.update_or_create(
-    #                          user=user.user, defaults={'date': datetime.now(), 'current_amount': amount['current_amount'],
-    #                          'invested_amount': amount['invested_amount']})
-    #         generate_log_message(len(amount), 'fund_order_items', 0, mail_logger)
-    # except Exception as e:
-    #     is_error = True
-    #     error_entry = str(e) + 'generates invested and current amount of user on particular date; '
-    #     errors += error_entry
+    try:
+        generate_log_message(utils.store_most_popular_fund_data(), 'updating most pouplar funds', 0, mail_logger)
+    except Exception as e:
+        is_error = True
+        error_entry = str(e) + 'updating most pouplar funds'
+        errors += error_entry
+
+    try:
+        count = 0
+        order_details = models.OrderDetail.objects.filter(order_status=2).distinct('user')
+        for user in order_details:
+            order_ids = models.OrderDetail.objects.filter(user=user.user, order_status=2).values_list('id', flat=True)
+            inception_date = models.FundOrderItem.objects.filter(orderdetail__in=order_ids).aggregate(Min('allotment_date'))
+            if inception_date["allotment_date__min"]:
+                count +=1
+                dashboard_date = utils.get_dashboard_change_date()
+                amount = utils.get_current_invested_value_date(
+                    datetime(dashboard_date.year, dashboard_date.month, dashboard_date.day), user.user)
+                if inception_date["allotment_date__min"] == dashboard_date:
+                    amount['xirr'] = 0.0
+                models.PortfolioPerformance.objects.update_or_create(date=dashboard_date, user=user.user, defaults={
+                    'current_amount': amount['current_amount'], 'invested_amount': amount['invested_amount'],
+                    'xirr': round(amount['xirr']*100, 1)})
+        generate_log_message(count, 'Portfolio tracker cron', 0, mail_logger)
+    except Exception as e:
+        is_error = True
+        error_entry = str(e) + 'generates invested, current amount and xirr of user on particular date; '
+        errors += error_entry
 
     if is_error:
         mail_logger.info(errors)

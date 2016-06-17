@@ -352,3 +352,12 @@ class PhoneNumberSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.User
         fields = ('name', 'phone_number')
+
+
+class SaveUserVideoSerializer(serializers.ModelSerializer):
+    """
+    Video upload API serializer
+    """
+    class Meta:
+        model = models.User
+        fields = ('user_video', 'user_video_thumbnail')
