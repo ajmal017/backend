@@ -271,7 +271,6 @@ LOGGING = {
 SERVER_EMAIL = 'askus@finaskus.com'
 
 ADMINS = (
-    ('Paras', 'paras.mungali@kuliza.com'),
     ('Umang', 'umang.shukla@kuliza.com'),
     ('Finaskus', 'techops@finaskus.com')
 )
@@ -347,6 +346,7 @@ CRONJOBS = [
     ('00 14 * * *', 'webapp.cron.daily_cron'),
     ('00 22 * * *', 'webapp.cron.daily_cron'),
     ('59 23 * * *', 'webapp.cron.daily_cron'),
+    ('00 7 * * *', 'webapp.cron.daily_once_cron'),
 ]
 
 START_DATE = None

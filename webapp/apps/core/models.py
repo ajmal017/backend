@@ -250,9 +250,9 @@ class PortfolioItem(TimeStampedModel):
 
     def set_values(self, latest_index_date=None):
         # find latest nav and date from fund data points change daily table
-        fund_latest_nav_object = FundDataPointsChangeDaily.objects.get(fund_id=self.fund)
-        fund_latest_nav = fund_latest_nav_object.day_end_nav
-        fund_latest_nav_date = fund_latest_nav_object.day_end_date
+        fund_latest_nav_object = HistoricalFundData.objects.filter(fund_id=self.fund).latest('created_at')
+        fund_latest_nav = fund_latest_nav_object.nav
+        fund_latest_nav_date = fund_latest_nav_object.date
 
         # if fund latest date is more then latest index date get nav on latest index date
         if latest_index_date is not None:
@@ -503,6 +503,7 @@ class FundRedeemItem(TimeStampedModel):
     """
     portfolio_item = models.ForeignKey(PortfolioItem)
     redeem_amount = models.FloatField(default=0.00)
+    invested_redeem_amount = models.FloatField(default=0.00)
     unit_redeemed = models.FloatField(null=True, blank=True)
     redeem_date = models.DateField(null=True, blank=True, default=None)
     is_verified = models.BooleanField(_('is verified'), default=False)
@@ -579,6 +580,7 @@ class RedeemDetail(TimeStampedModel):
     fund = models.ForeignKey(Fund, null=True, blank=True, default=None)
     fund_redeem_items = models.ManyToManyField(FundRedeemItem)
     redeem_amount = models.FloatField(default=0.00)
+    invested_redeem_amount = models.FloatField(default=0.00)
     unit_redeemed = models.FloatField(null=True, blank=True)
     redeem_date = models.DateField(null=True, blank=True, default=None)
     is_verified = models.BooleanField(_('is verified'), default=False)
@@ -604,9 +606,9 @@ class RedeemDetail(TimeStampedModel):
         if self.is_cancelled == True:
             return "Cancelled"
         elif redeem_status == constants.PENDING:
-            return '-'
+            return 'Pending'
         elif redeem_status == constants.ONGOING:
-            return "Pending"
+            return "In Process"
         elif redeem_status == constants.CANCELLED:
             return "Cancelled"
         return str(self.redeem_date.strftime("%d-%m-%y"))
@@ -641,6 +643,7 @@ class RedeemDetail(TimeStampedModel):
 
         return unit_alloted__sum - unit_redeemed__sum
 
+
     def save(self, *args, **kwargs):
         # Makes sure a redeem_id is generated when any Pending state Redeem detail is created.
         if self.redeem_id == 0:
@@ -659,18 +662,19 @@ class RedeemDetail(TimeStampedModel):
                 fund_redeem_item.save()
 
         # Makes sure when redeem date is changed its reflected in fund redeem
-        if self.unit_redeemed or self.unit_redeemed == 0.0:
-            redeem = {}
-            total_units = 0.0
-            for fund_redeem_item in self.fund_redeem_items.all():
-                units = self.units_invested_in_portfolio_item(fund_redeem_item.portfolio_item)
-                redeem[fund_redeem_item.portfolio_item.id] = units
-                total_units += units
+        if self.pk:
+            if self.unit_redeemed or self.unit_redeemed == 0.0:
+                redeem = {}
+                total_units = 0.0
+                for fund_redeem_item in self.fund_redeem_items.all():
+                    units = self.units_invested_in_portfolio_item(fund_redeem_item.portfolio_item)
+                    redeem[fund_redeem_item.portfolio_item.id] = units
+                    total_units += units
 
-            for fund_redeem_item in self.fund_redeem_items.all():
-                fund_redeem_item.unit_redeemed = self.unit_redeemed * redeem[fund_redeem_item.portfolio_item.id] / \
-                                                                    total_units
-                fund_redeem_item.save()
+                for fund_redeem_item in self.fund_redeem_items.all():
+                    fund_redeem_item.unit_redeemed = self.unit_redeemed * redeem[fund_redeem_item.portfolio_item.id] / \
+                                                                        total_units
+                    fund_redeem_item.save()
 
         return super(RedeemDetail, self).save(*args, **kwargs)
 
@@ -740,9 +744,9 @@ class FundOrderItem(TimeStampedModel):
         if self.is_cancelled == True:
             return "Cancelled"
         elif order_status == constants.PENDING:
-            return '-'
+            return 'Pending'
         elif order_status == constants.ONGOING:
-            return "Pending"
+            return "In Process"
         elif order_status == constants.CANCELLED:
             return "Cancelled"
         return str(self.allotment_date.strftime("%d-%m-%y"))

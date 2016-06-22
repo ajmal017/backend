@@ -95,10 +95,10 @@ def make_past_portfolio_values():
                     defaults={'current_amount': amount['current_amount'], 'invested_amount': amount['invested_amount'],
                               'xirr': round(amount['xirr']*100, 1)})
 
-# Upload data from csv file
+
+# Upload funds data from csv file which we dont have from MS
 def read_csv_and_populate_fund_data():
     """
-
     :return:
     """
     csv_file_name = 'webapp/fixtures/funds.csv'  # name of the csv file
@@ -131,5 +131,23 @@ def read_csv_and_populate_fund_data():
                 fund.save()
                 fund_monthly_object.save()
 
+
 # Creates a row to be updated using cron
 models.CachedData.objects.create(key="most_popular_funds", value={})
+
+
+# Use the MS provided risk o meter data to fill
+def add_riskometer_data(fund):
+    """
+    :return:
+    """
+    csv_file_name = 'webapp/fixtures/risk_levels.csv'  # name of the csv file
+    data_reader = csv.reader(open(csv_file_name), delimiter=',', quotechar='"')  # open the csv file
+    for row in data_reader:
+        if row[2] == fund.fund.mstar_id:
+            fund.risk = row[1]
+            fund.save()
+
+# fund_monthly_objects = models.FundDataPointsChangeMonthly.objects.all()
+# for fund in fund_monthly_objects:
+#     add_riskometer_data(fund)

@@ -52,4 +52,6 @@ urlpatterns = [
     url(r'^video/upload/$', views.VideoUpload.as_view(), name='user-video-upload'),
     url(r'^video/get/$', views.VideoGet.as_view(), name='user-video-get'),
     url(r'^signature/get/$', views.Signature.as_view(), name='user-signature-get'),
+    url(r'^lock/vault/$', views.LockVault.as_view(), name='lock-vault'),
+    url(r'^deletee/$', views.DeleteUser.as_view(), name='user-delete-get'),
 ]

@@ -353,10 +353,25 @@ class ProfileCompleteness(APIView):
             try:
                 portfolio = core_models.Portfolio.objects.get(user=request.user, has_invested=False)
                 flag_data['portfolio'] = True
+                portfolio_last_modified = portfolio.modified_at
+                try:
+                    answer_last_modified = core_models.Answer.objects.filter(
+                        user=request.user, portfolio=None).latest("modified_at").modified_at
+                    if answer_last_modified > portfolio_last_modified:
+                        flag_data['rebuild_portfolio'] = True
+                    elif request.user.rebuild_portfolio:
+                        flag_data['rebuild_portfolio'] = True
+                    else:
+                        flag_data['rebuild_portfolio'] = False
+                except core_models.Answer.DoesNotExist as e:
+                    flag_data['rebuild_portfolio'] = True
+
 
             except core_models.Portfolio.DoesNotExist:
                 flag_data['portfolio'] = False
                 flag_data['invest_redeem'] = False
+                flag_data['rebuild_portfolio'] = True
+
 
             if core_models.OrderDetail.objects.filter(user=request.user):
                 flag_data['invest_redeem'] = True
@@ -703,7 +718,6 @@ class SaveImage(APIView):
             if serializer.is_valid():
                 request.user.signature = request.FILES.get('signature', None)
                 request.user.finaskus_id = core_utils.get_finaskus_id(request.user)
-                request.user.vault_locked = True
                 request.user.save()
                 helpers.send_vault_completion_email(request.user.email, use_https=settings.USE_HTTPS)
                 return api_utils.response({"message": constants.SIGNATURE_SAVED,
@@ -816,7 +830,7 @@ class InvestorInfo(APIView):
                 "other_tax_payer": False,
                 "pan_image": None
             }
-            return api_utils.response(response, status.HTTP_400_BAD_REQUEST, constants.INVESTOR_DOES_NOT_EXIST)
+            return api_utils.response(response)
         serializer = serializers.InvestorInfoDateSerializer(investor)
         if serializer.is_valid:
             return api_utils.response(serializer.data)
@@ -1123,6 +1137,8 @@ class IsCompleteView(APIView):
             serializer = serializers.IsCompletePostSerializer(request.user, data=request.data)
             if serializer.is_valid():
                 serializer.save()
+                request.user.vault_locked = True
+                request.user.save()
                 return api_utils.response({'finaskus_id': request.user.finaskus_id,
                                            'process_choice': request.user.process_choice})
             return api_utils.response({}, status.HTTP_400_BAD_REQUEST, generate_error_message(serializer.errors))
@@ -1602,3 +1618,32 @@ class Signature(APIView):
         """
         return api_utils.response({"signature":request.user.signature})
 
+
+class DeleteUser(APIView):
+    """
+    API to delete user by phonenumber
+    """
+
+    def get(self, request):
+        """
+        :param request:
+        :return:
+        """
+        models.User.objects.get(email=request.query_params.get('email')).delete()
+        return api_utils.response({"success":"ok"})
+
+
+class LockVault(APIView):
+    """
+    API to lock vault for a user
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        :param request:
+        :return:
+        """
+        request.user.vault_locked = True
+        request.user.save()
+        return api_utils.response({constants.MESSAGE:constants.SUCCESS})

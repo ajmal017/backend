@@ -176,7 +176,7 @@ KEY_PERFORMANCE_MAP = {
     INCEPTION_DATE: 'Inception Date',
     BENCHMARK: 'Benchmark',
     MINIMUM_INVESTMENT: 'Minimum Investment',
-    MINIMUM_SIP_INVESTMENT: 'Minimum Sip Investment',
+    MINIMUM_SIP_INVESTMENT: 'Minimum SIP Investment',
     MAX_FRONT_LOAD: 'Max Front Load',
     MAX_DEFERRED_LOAD: 'Max Deferred Load',
     EXPENSE_RATIO: 'Expense Ratio %',

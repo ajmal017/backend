@@ -827,7 +827,7 @@ def get_scheme_details(fund, monthly_data_points, daily_data_points):
         if type(scheme_details[field]) is float and field != constants.DAY_END_NAV:
             scheme_details[field] = round(scheme_details[field], 2)
         if field == constants.DAY_END_NAV:
-            scheme_details[field] = format(scheme_details[field], '.3f')
+            scheme_details[field] = format(scheme_details[field], '.4f')
 
     return scheme_details
 
@@ -1270,26 +1270,16 @@ def get_fund_historic_data_tracker(funds, start_date, end_date):
     :return: two arrays - dates, historic data of fund on these dates
     """
     funds_historic_data, category_historic_data = [], []
-    latest_date_fund_only = get_latest_date_funds_only()
-    original_end_date = end_date
-    if end_date > latest_date_fund_only:
-        end_date = latest_date_fund_only
 
     date_list = [start_date + timedelta(days=num_of_days) for num_of_days in range((end_date - start_date).days + 1)
                  if (start_date + timedelta(num_of_days)).isoweekday() < 6]  # 6,7 is for saturday, sunday
     for fund in funds:
-        historic_data = models.HistoricalFundData.objects.filter(
-            fund_id=fund, date__in=date_list).order_by(constants.DATE).values_list(constants.NAV, flat=True)
-        if original_end_date > latest_date_fund_only:
-            number_of_days = 0
-            for i in range((original_end_date-latest_date_fund_only).days):
-                new_date = latest_date_fund_only + timedelta(days=i+1)
-                if new_date.isoweekday() < 6:
-                    number_of_days += 1
-                    date_list.append(new_date)
-            for i in range(len(number_of_days)):
-                historic_data.append(historic_data[-1])
+        historic_data = list(models.HistoricalFundData.objects.filter(
+            fund_id=fund, date__in=date_list).order_by(constants.DATE).values_list(constants.NAV, flat=True))
+        for i in range(len(date_list)-len(historic_data)):
+            historic_data.append(historic_data[-1])
         funds_historic_data.append({constants.ID: fund.fund_name, constants.VALUE: historic_data})
+    date_list = change_date_format(date_list)
     return {constants.DATES: date_list, constants.FUND: funds_historic_data}
 
 
@@ -2006,7 +1996,7 @@ def make_xirr_calculations_for_dashboard(amount_invested_fund_map, api_type, is_
     for category in array_for_category_gain_calculation:
         if not is_today_portfolio and array_for_category_gain_calculation.get(category)[0]:
             array_for_category_gain_calculation.get(category)[0].append(
-                (get_latest_date_funds_only(), -array_for_category_gain_calculation.get(category)[2]))
+                (get_dashboard_change_date(), -array_for_category_gain_calculation.get(category)[2]))
             try:
                 category_gain = xirr.xirr(array_for_category_gain_calculation.get(category)[0])
             except Exception as e:
@@ -2018,7 +2008,7 @@ def make_xirr_calculations_for_dashboard(amount_invested_fund_map, api_type, is_
         else:
             array_for_category_gain_calculation.get(category)[3] = 0
     if not is_today_portfolio and array_for_portfolio_gain_calculation:
-        array_for_portfolio_gain_calculation.append((get_latest_date_funds_only(), -portfolio_total_value))
+        array_for_portfolio_gain_calculation.append((get_dashboard_change_date(), -portfolio_total_value))
         try:
             portfolio_gain = xirr.xirr(array_for_portfolio_gain_calculation)
         except Exception as e:
@@ -2169,7 +2159,7 @@ def append_category_cal_arrays(array_for_category_gain_calculation, fund, array_
     :return:
     """
     array_for_category_gain_calculation.get(fund.type_of_fund)[0] += array_for_gain_cal
-    array_for_gain_cal.append((get_latest_date_funds_only(), -fund_current_value))
+    array_for_gain_cal.append((get_dashboard_change_date(), -fund_current_value))
     try:
         fund_gain = xirr.xirr(array_for_gain_cal)
     except Exception as e:
@@ -2459,7 +2449,9 @@ def get_fund_detail(portfolio_item):
     portfolio_detail_dict = {'name': portfolio_item.fund.fund_name,
                              'fund_id': portfolio_item.fund.id,
                              'return_value': round(return_value, 2),
-                             'is_enabled': get_is_enabled(portfolio_item)
+                             'is_enabled': get_is_enabled(portfolio_item),
+                             'minimum_withdrawal': portfolio_item.fund.minimum_withdrawal,
+                             'minimum_balance': portfolio_item.fund.minimum_balance
                              }
     return portfolio_detail_dict
 
@@ -2706,7 +2698,7 @@ def xirr_calculation(fund_data, start_date, end_date):
                     final_amount += round(i.get('sip_amount', 0))
         temp_start_date += timedelta(30)
         count += 1
-    cashflows.append((get_latest_date_funds_only(), -final_amount))
+    cashflows.append((get_dashboard_change_date(), -final_amount))
     return cashflows, final_amount, total_cashflow
 
 
@@ -2903,6 +2895,8 @@ def generate_units_allotment():
     """
     historical_fund_data_objects = models.HistoricalFundData.objects.order_by('fund_id__id', '-date').distinct('fund_id__id').select_related('fund_id')
     historical_fund_id = {historical_object.fund_id.id: historical_object.date for historical_object in historical_fund_data_objects}
+
+    # Add units alloted on FundOrderItem Level
     fund_order_items = models.FundOrderItem.objects.filter(~Q(allotment_date=None) & Q(unit_alloted=None) & Q(is_cancelled=False)).select_related('portfolio_item')
     for fund_order_item in  fund_order_items:
         if fund_order_item.allotment_date <= historical_fund_id[fund_order_item.portfolio_item.fund.id]:
@@ -2915,6 +2909,7 @@ def generate_units_allotment():
                 fund_order_item.next_allotment_date = next_allotment_date
             fund_order_item.save()
 
+    # Add units redeemed on FundRedeemItem Level
     redeem_items = models.FundRedeemItem.objects.filter(~Q(redeem_date=None) & Q(unit_redeemed=None) & Q(is_cancelled=False)).select_related('portfolio_item')
     for redeem_item in redeem_items:
         if redeem_item.redeem_date <= historical_fund_id[redeem_item.portfolio_item.fund.id]:
@@ -2925,6 +2920,7 @@ def generate_units_allotment():
             redeem_item.save()
 
     redeem_details = models.RedeemDetail.objects.filter(~Q(redeem_date=None) & Q(unit_redeemed=None) & Q(is_cancelled=False))
+    # Adds units redeemed at RedeemDetail level
     for redeem_detail in redeem_details:
         if redeem_detail.redeem_date <= historical_fund_id[redeem_detail.fund.id]:
             nav = models.HistoricalFundData.objects.get(date=redeem_detail.redeem_date, fund_id=redeem_detail.fund).nav
@@ -2933,18 +2929,9 @@ def generate_units_allotment():
             redeem_detail.is_verified = True
             redeem_detail.save()
 
-    redeem_items_new = models.FundRedeemItem.objects.filter(is_cancelled=False, is_verified=False, redeem_amount=0.00
-                                                            ).exclude(unit_redeemed=None)
-    for redeem_item in redeem_items_new:
-        if redeem_item.redeem_date is not None:
-            nav_on_redeem_date = models.HistoricalFundData.objects.get(fund_id=redeem_item.portfolio_item.fund,
-                                                                       date=redeem_item.redeem_date)
-            redeem_item.redeem_amount = redeem_item.unit_redeemed * nav_on_redeem_date.nav
-            redeem_item.is_verified = True
-            redeem_item.save()
-
     redeem_details_new = models.RedeemDetail.objects.filter(is_cancelled=False, is_verified=False, redeem_amount=0.00
                                                             ).exclude(unit_redeemed=None)
+    # Adds redeem_amount at RedeemDetail level
     for redeem_detail in redeem_details_new:
         if redeem_detail.redeem_date is not None:
             nav_on_redeem_date = models.HistoricalFundData.objects.get(fund_id=redeem_detail.fund,
@@ -2952,6 +2939,17 @@ def generate_units_allotment():
             redeem_detail.redeem_amount = redeem_detail.unit_redeemed * nav_on_redeem_date.nav
             redeem_detail.is_verified = True
             redeem_detail.save()
+
+    redeem_items_new = models.FundRedeemItem.objects.filter(is_cancelled=False, is_verified=False, redeem_amount=0.00
+                                                            ).exclude(unit_redeemed=None)
+    # Adds redeem_amount at FundRedeemItem level
+    for redeem_item in redeem_items_new:
+        if redeem_item.redeem_date is not None:
+            nav_on_redeem_date = models.HistoricalFundData.objects.get(fund_id=redeem_item.portfolio_item.fund,
+                                                                       date=redeem_item.redeem_date)
+            redeem_item.redeem_amount = redeem_item.unit_redeemed * nav_on_redeem_date.nav
+            redeem_item.is_verified = True
+            redeem_item.save()
 
     return len(fund_order_items) + len(redeem_items) + len(redeem_details) + len(redeem_items_new) + len(redeem_details_new)
 
@@ -3505,7 +3503,7 @@ def make_xirr_calculations_for_dashboard_version_two(transaction_fund_map, api_t
             category_dashboard_map[constants.FUND_MAP_REVERSE[fund.type_of_fund]][2] += current_verified_value_of_fund
             # 3 corresponds to array for category gain calculation
             category_dashboard_map[constants.FUND_MAP_REVERSE[fund.type_of_fund]][3] += array_for_fund_gain_calculation
-            array_for_fund_gain_calculation.append((get_latest_date_funds_only(), -current_verified_value_of_fund))
+            array_for_fund_gain_calculation.append((get_dashboard_change_date(), -current_verified_value_of_fund))
             try:
                 gain_percentage_of_a_fund = xirr.xirr(array_for_fund_gain_calculation)
             except Exception as e:
@@ -3564,7 +3562,7 @@ def make_current_portfolio_for_dashboard(portfolio_current_value, array_for_port
     :return:
     """
     if array_for_portfolio_gain_calculation:
-        array_for_portfolio_gain_calculation.append((get_latest_date_funds_only(), -portfolio_current_verified_value))
+        array_for_portfolio_gain_calculation.append((get_dashboard_change_date(), -portfolio_current_verified_value))
         try:
             gain = round(xirr.xirr(array_for_portfolio_gain_calculation) * 100, 1)
         except Exception as e:
@@ -3592,7 +3590,7 @@ def make_portfolio_overview_new(portfolio_current_value, portfolio_invested_valu
     :return:
     """
     if array_for_portfolio_gain_calculation:
-        array_for_portfolio_gain_calculation.append((get_latest_date_funds_only(), -portfolio_current_verified_value))
+        array_for_portfolio_gain_calculation.append((get_dashboard_change_date(), -portfolio_current_verified_value))
         try:
             gain = round(xirr.xirr(array_for_portfolio_gain_calculation) * 100, 1)
         except Exception as e:
@@ -3607,7 +3605,7 @@ def make_portfolio_overview_new(portfolio_current_value, portfolio_invested_valu
         constants.CURRENT_VALUE:{
             constants.VALUE: round(portfolio_current_value),
             constants.GAIN_PERCENTAGE: gain,
-            constants.IS_GAIN: True if gain >= 0 else False
+            constants.IS_GAIN: True if round(portfolio_current_value - portfolio_invested_value) >= 0 else False
         }
     }
     return portfolio_overview
@@ -3633,7 +3631,7 @@ def make_asset_class_overview_new(category_dashboard_map, portfolio_current_valu
         # 3 corresponds to array for gain calculation
         array_for_category_gain_calculation = category_dashboard_map[category][3]
         if array_for_category_gain_calculation:
-            array_for_category_gain_calculation.append((get_latest_date_funds_only(), -current_verified_value_of_category))
+            array_for_category_gain_calculation.append((get_dashboard_change_date(), -current_verified_value_of_category))
             try:
                 category_gain_percentage = round(xirr.xirr(array_for_category_gain_calculation) * 100, 1)
             except Exception as e:

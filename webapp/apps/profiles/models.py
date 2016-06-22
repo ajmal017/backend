@@ -91,6 +91,7 @@ class User(AbstractBaseUser, TimeStampedModel):
     kyc_accepted = models.BooleanField(default=False)
     is_virtual_seen = models.BooleanField(default=False)
     is_real_seen = models.BooleanField(default=False)
+    rebuild_portfolio = models.BooleanField(default=False)
     user_video = models.FileField(upload_to="user_video/", max_length=700, blank=True, null=True)
     user_video_thumbnail = models.FileField(upload_to="user_video/thumbnail/", max_length=700, blank=True, null=True)
     USERNAME_FIELD = 'email'
@@ -109,6 +110,9 @@ class User(AbstractBaseUser, TimeStampedModel):
     def save(self, *args, **kwargs):
         if not self.id:
             self.id = api_utils.gen_hash(api_utils.expires())
+        if self.vault_locked==False:
+            self.is_terms = False
+            self.is_declaration = False
         super(User, self).save(*args, **kwargs)
 
     @property
@@ -320,7 +324,7 @@ class InvestorBankDetails(TimeStampedModel):
 
     ifsc_code = models.ForeignKey(BankDetails, blank=True, null=True)
     user = models.OneToOneField(settings.AUTH_USER_MODEL)
-    account_number = models.CharField(max_length=50, unique=True)
+    account_number = models.CharField(max_length=50)
     account_holder_name = models.CharField(max_length=100)
     account_type = models.CharField(max_length=1, choices=[(x.value, x.name.title()) for x in AccountType])
     sip_check = models.BooleanField(default=False)

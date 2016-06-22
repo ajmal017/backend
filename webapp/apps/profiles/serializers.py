@@ -329,6 +329,9 @@ class InvestorBankInfoPostSerializer(serializers.ModelSerializer):
     """
     Serializer for investor account info get api
     """
+    account_number = serializers.CharField(
+        max_length=50, validators=[UniqueValidator(queryset=models.InvestorBankDetails.objects.all(),
+                                                   message="InvestorBankDetails with this account number already exists")])
 
     class Meta:
         model = models.InvestorBankDetails

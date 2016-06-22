@@ -51,13 +51,6 @@ def daily_cron():
         error_entry = str(e) + ' get_daily_nav_categories_new; '
         errors += error_entry
 
-    try:
-        generate_log_message(utils.create_order_items_based_on_next_allotment_date(), 'order_items', 0, mail_logger)
-    except Exception as e:
-        is_error = True
-        error_entry = str(e) + ' create_order_items_based_on_next_allotment_date; '
-        errors += error_entry
-
     # try:
     #     generate_log_message(utils.generate_total_xirr(), 'portfolio', 0, mail_logger)
     # except Exception as e:
@@ -113,6 +106,24 @@ def daily_cron():
     except Exception as e:
         is_error = True
         error_entry = str(e) + 'generates invested, current amount and xirr of user on particular date; '
+        errors += error_entry
+
+    if is_error:
+        mail_logger.info(errors)
+
+
+def daily_once_cron():
+    """
+    :return:
+    """
+    mail_logger = logging.getLogger('django.info')
+    is_error, errors = False, ''
+
+    try:
+        generate_log_message(utils.create_order_items_based_on_next_allotment_date(), 'order_items', 0, mail_logger)
+    except Exception as e:
+        is_error = True
+        error_entry = str(e) + ' create_order_items_based_on_next_allotment_date; '
         errors += error_entry
 
     if is_error:

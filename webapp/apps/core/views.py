@@ -64,6 +64,38 @@ def privacy(request):
     return render(request, 'base/privacy_policy.html')
 
 
+def faq(request):
+    """
+    :param request:
+    :return:
+    """
+    return render(request, 'base/faqs.html')
+
+
+def mfprimer(request):
+    """
+    :param request:
+    :return:
+    """
+    return render(request, 'base/mutual-fund-primer.html')
+
+
+def mfarticles(request):
+    """
+    :param request:
+    :return:
+    """
+    return render(request, 'base/mutual-fund-articles.html')
+
+
+def aboutus(request):
+    """
+    :param request:
+    :return:
+    """
+    return render(request, 'base/aboutus.html')
+
+
 def terms(request):
     """
     :param request:
@@ -155,6 +187,8 @@ class RecommendedPortfolios(APIView):
         portfolio_items, errors = utils.get_portfolio_items(request.user.id, overall_allocation, sip_lumpsum_allocation)
         if portfolio_items is not None:
             portfolio_items.update(overall_allocation)
+            request.user.rebuild_portfolio = False
+            request.user.save()
             return api_utils.response(portfolio_items, status.HTTP_200_OK)
         else:
             return api_utils.response({constants.MESSAGE: errors},
@@ -1187,7 +1221,8 @@ class AnswerDelete(APIView):
                 models.Portfolio.objects.get(user=request.user, has_invested=False).delete()
             except models.Portfolio.DoesNotExist:
                 pass
-
+        request.user.rebuild_portfolio = True
+        request.user.save()
         models.Answer.objects.filter(user=request.user, question__question_for=constants.MAP[question_for],
                                      portfolio=None).delete()
         return api_utils.response({constants.MESSAGE: constants.SUCCESS}, status.HTTP_200_OK)
