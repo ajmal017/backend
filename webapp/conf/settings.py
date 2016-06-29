@@ -310,33 +310,7 @@ ATTACH_IMAGE = False  # True means attaches images at appropriate pages instead 
 CLIENT_ID = "zTfCegJvxFQE1yxb2ga7sXHPwptm0im78dmFP6AD"
 CLIENT_SECRET = "IecZLwFOrOmncFgBXBst38DmY5UJhioVcUSbZvYE19Esr9zOBMaW0HnstnzRXYmKZGCQoixgyhEfXKl5xx97rnqrUkWxX13oGgOmWi3qYMjWyFQKo5l3ydytkwMHiWNj"
 BASE_URL = "http://localhost:8000"
-#
-# if DEBUG:
-#     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-#     EMAIL_HOST = 'smtp.gmail.com'
-#     EMAIL_PORT = 587
-#     EMAIL_HOST_USER = 'ankitjain01129@gmail.com'
-#     EMAIL_HOST_PASSWORD = 'kuliza123'
-#     EMAIL_USE_TLS = True
-#     DEFAULT_FROM_EMAIL = 'ankitjain01129@gmail.com'
 
-try:
-    from .local_settings import SITE_BASE_URL
-    # you can add SITE_BASE_URL = "localhost:8000" in a file called local_settings.py
-except:
-    # Ideally this should be the base url of the site since there is no domain name its like this
-    SITE_BASE_URL = "www.finaskus.com"
-
-
-MGAGE_USERNAME = "FINASKUST"
-MGAGE_PASSWORD = "C2P3B@n@"
-MGAGE_FROM_NUMBER = 918050248326
-
-MORNING_STAR_UNIVERSE_ID = "wlwhm2lfm9boisdt"
-MORNING_STAR_ACCESS_CODE = "zy46g7rbbzici5cci8nau20l930zgg5c"
-MORNING_STAR_UNIVERSE_ID_EQUITY = 'x28l3ltc7hrsrrdq'
-MORNING_STAR_UNIVERSE_ID_DEBT = 'f351pmwnr55evt0j'
-MORNING_STAR_UNIVERSE_ID_INDICES = 'ttr83nzvyxn4lrvs'
 
 CRONJOBS = [
     ('30 8 16 * *', 'webapp.cron.monthly_cron'),

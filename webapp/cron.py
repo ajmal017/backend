@@ -45,7 +45,7 @@ def daily_cron():
         error_entry = str(e) + ' get_daily_nav_for_indices_new; '
         errors += error_entry
     try:
-        generate_log_message(morningstar_object.get_daily_nav_categories_new(), 'category_nav', 7, mail_logger)
+        generate_log_message(morningstar_object.get_daily_nav_categories_new(), 'category_nav', 8, mail_logger)
     except Exception as e:
         is_error = True
         error_entry = str(e) + ' get_daily_nav_categories_new; '
@@ -66,10 +66,18 @@ def daily_cron():
         errors += error_entry
 
     try:
-        generate_log_message(utils.set_xirr_values_for_users_having_investment(), 'xirr', 0, mail_logger)
+        generate_log_message(utils.set_xirr_values_for_users_not_having_investment(), 'xirr non-invested', 0,
+                             mail_logger)
     except Exception as e:
         is_error = True
-        error_entry = str(e) + ' set_portfolio_values; '
+        error_entry = str(e) + ' XIRR for non invested users '
+        errors += error_entry
+
+    try:
+        generate_log_message(utils.set_xirr_values_for_users_having_investment(), 'xirr-invested', 0, mail_logger)
+    except Exception as e:
+        is_error = True
+        error_entry = str(e) + ' XIRR for invested users'
         errors += error_entry
 
     try:
@@ -99,9 +107,13 @@ def daily_cron():
                     datetime(dashboard_date.year, dashboard_date.month, dashboard_date.day), user.user)
                 if inception_date["allotment_date__min"] == dashboard_date:
                     amount['xirr'] = 0.0
+                if amount['xirr'] == "inf" or type(amount['xirr']) == complex:
+                    xirr = 0.0
+                else:
+                    xirr = round(amount['xirr']*100, 1)
                 models.PortfolioPerformance.objects.update_or_create(date=dashboard_date, user=user.user, defaults={
                     'current_amount': amount['current_amount'], 'invested_amount': amount['invested_amount'],
-                    'xirr': round(amount['xirr']*100, 1)})
+                    'xirr': xirr})
         generate_log_message(count, 'Portfolio tracker cron', 0, mail_logger)
     except Exception as e:
         is_error = True

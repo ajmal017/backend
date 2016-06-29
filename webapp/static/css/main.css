@@ -116,9 +116,21 @@ input, select {
     padding-bottom: 40px;
 }
 .logo_img {
-    max-width: 350px;
-    max-height: 90px;
+    max-width: 65%;
+    max-height: 100%;
 }
+.bannerimage 
+{
+    width: 100%; 
+/*     max-height: 380px; */
+}
+
+.cardimage {
+    max-width: 100%;
+    padding: .5em;
+/*     max-height: 380px; */
+}
+
 .launch {
     font-family: 'Oxygen', sans-serif;
     font-size: 44px;
@@ -204,6 +216,46 @@ input, select {
 }
 .container-fluid {
     padding-bottom: 30px;
+}
+.container-fluid2 {
+    padding-bottom: 0px;
+    background-color: #247bbc;
+    padding-right:3em;
+}
+.navbar-white
+{
+	color: #fff;
+}
+.center
+{
+	text-align:center;
+}
+.marginbottomzero
+{
+	margin-bottom: 0px;
+}
+
+.navbar-white > a
+{
+	color: #fff;
+}
+
+
+.navbar-toggle .icon-bar {
+    background-color: #eee;
+}
+.navbar-toggle .icon-bar {
+    display: block;
+    width: 22px;
+    height: 2px;
+    border-radius: 1px;
+    
+    }
+
+
+.active1
+{
+	text-decoration-line: underline;
 }
 .subtitle { 
     color: #227abd;
@@ -330,12 +382,17 @@ input, select {
 }
 .p_logo {
     margin-left: 7%;
-    padding-top: 28px;
-    padding-bottom: 28px;
+    padding-top: 20px;
+    padding-bottom: 20px;
 }
 .p_border {
     border-bottom: 1px solid;
     border-color: #808080;
+}
+#summary
+{
+
+	background:#888;
 }
 .p_title {
     margin-left: 7%;
@@ -343,7 +400,7 @@ input, select {
     font-size: 36px;
     font-family: 'Oxygen', sans-serif;
     font-weight: 300;
-    padding-bottom: 20px;
+    padding-bottom: 2px;
     padding-top: 40px;
 }
 .update {
@@ -365,6 +422,7 @@ input, select {
     font-weight: 400;
     line-height: 30px;
     padding-bottom: 25px;
+    text-indent:1px;
 }
 .p_inside_text {
     text-indent: -20px;
@@ -375,6 +433,7 @@ input, select {
 }
 .p_ulist {
     list-style-type: circle;
+    transition: all 0.3s ease 0s
 }
 .p_subtitle {
     color: #227abd;
@@ -383,7 +442,41 @@ input, select {
     font-weight: 400;
     padding-bottom: 20px;
 }
+.cardlayout {
+    color: #227abd;
+    font-family: Source Sans Pro, sans-serif;
+    font-size: 24px;
+    padding:0.5em;
+    font-weight: 400;
+    background-color: #f6f6f6;
 
+}
+.card_text {
+    color: #808080;
+    font-family: Source Sans Pro, sans-serif; 
+    font-size:16px;
+    font-weight: 400;
+    line-height: 30px;
+    text-indent:1px;
+}
+.faq_inside_title {
+    text-indent: -20px;
+    margin-left: 20px;
+    color:#000;
+    font-size: .8em;
+}
+.article_subtitle
+{
+
+}
+.share-buttons img
+ {
+width: 45px;
+padding: 5px;
+border: 0;
+box-shadow: 0;
+display: inline;
+}
 @media screen and (max-width: 1400px) {
     .rights {
         padding-right: 52%;
@@ -524,8 +617,8 @@ input, select {
         padding-bottom: 10px;
     }
     .logo_img {
-        width: 230px;
-        height: 55px;
+        width: 65%;
+        height: 100%;
     }
     .launch {
         font-size: 24px;
@@ -663,8 +756,8 @@ input, select {
         font-size: 10px;
     }
     .logo_img {
-        width:185px;
-        height: 40px;
+        width:65%;
+        height: 100%;
     }
     .contact {
         font-size:12px;

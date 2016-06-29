@@ -1605,20 +1605,6 @@ class VideoGet(APIView):
         return api_utils.response({}, status.HTTP_400_BAD_REQUEST, generate_error_message(serializer.errors))
 
 
-class Signature(APIView):
-    """
-    API to get signature of a user
-    """
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get(self, request):
-        """
-        :param request:
-        :return:
-        """
-        return api_utils.response({"signature":request.user.signature})
-
-
 class DeleteUser(APIView):
     """
     API to delete user by phonenumber

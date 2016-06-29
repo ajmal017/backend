@@ -2003,7 +2003,7 @@ def make_xirr_calculations_for_dashboard(amount_invested_fund_map, api_type, is_
                 print("XIRR failed for following input")
                 print(array_for_category_gain_calculation.get(category)[0])
                 category_gain = 0.0
-            category_gain = 0 if type(category_gain) is complex else category_gain
+            category_gain = 0 if type(category_gain) is complex or category_gain == float('inf') else category_gain
             array_for_category_gain_calculation.get(category)[3] = round(category_gain * 100)
         else:
             array_for_category_gain_calculation.get(category)[3] = 0
@@ -2182,7 +2182,7 @@ def make_fund_dict_for_portfolio_detail(fund_name, fund_current_value, fund_gain
     :return:
     """
     return {constants.FUND_NAME: fund_name, constants.RETURN_PERCENTAGE: round(fund_gain * 100, 1),
-            constants.IS_GAIN: True if float(fund_gain) >= 0 else False,
+            constants.IS_GAIN: True if float(round(fund_current_value - sum_invested_in_fund)) >= 0 else False,
             constants.CURRENT_VALUE: round(fund_current_value),
             constants.INVESTED_VALUE: round(sum_invested_in_fund),
             constants.GAIN: round(fund_current_value - sum_invested_in_fund)}
@@ -2293,6 +2293,28 @@ def set_xirr_values_for_users_having_investment():
             profile_models.AggregatePortfolio.objects.update_or_create(
                 user=user, defaults={'total_xirr': user_xirr, 'update_date': date.today()})
             count += 1
+    return count
+
+
+def set_xirr_values_for_users_not_having_investment():
+    """
+    :return: calculates and stores xirr for all users who have not invested
+    """
+    count = 0
+    non_invested_users = []
+    for user in profile_models.User.objects.all():
+        if models.Portfolio.objects.filter(user=user, has_invested=False):
+            non_invested_users.append(user)
+
+    for non_invested_user in non_invested_users:
+        count += 1
+        portfolio_items = models.PortfolioItem.objects.filter(
+            portfolio__user=non_invested_user, portfolio__has_invested=False, portfolio__is_deleted=False).select_related(
+            'portfolio','fund')
+        portfolio_overview = get_portfolio_overview(portfolio_items)
+        total_xirr = get_xirr_value_from_dashboard_response(portfolio_overview)
+        profile_models.AggregatePortfolio.objects.update_or_create(
+            user=non_invested_user ,defaults={'total_xirr': round(total_xirr, 1), 'update_date': datetime.now()})
     return count
 
 
@@ -2438,7 +2460,7 @@ def get_fund_detail(portfolio_item):
 
     # Subtracts all unverified unit redeem requested
     unverified_units_redeemed__sum = models.FundRedeemItem.objects.filter(
-        portfolio_item_id=portfolio_item.id, is_verified=False, is_cancelled=False
+        portfolio_item_id=portfolio_item.id, is_verified=False, is_cancelled=False, is_all_units_redeemed=True
     ).aggregate(Sum('unit_redeemed'))['unit_redeemed__sum']
     if unverified_units_redeemed__sum == None:
         unverified_units_redeemed__sum = 0.0
@@ -2910,7 +2932,7 @@ def generate_units_allotment():
             fund_order_item.save()
 
     # Add units redeemed on FundRedeemItem Level
-    redeem_items = models.FundRedeemItem.objects.filter(~Q(redeem_date=None) & Q(unit_redeemed=None) & Q(is_cancelled=False)).select_related('portfolio_item')
+    redeem_items = models.FundRedeemItem.objects.filter(~Q(redeem_date=None) & (Q(unit_redeemed=None) | Q(unit_redeemed=0.0)) & Q(is_cancelled=False)).select_related('portfolio_item')
     for redeem_item in redeem_items:
         if redeem_item.redeem_date <= historical_fund_id[redeem_item.portfolio_item.fund.id]:
             nav = models.HistoricalFundData.objects.get(date=redeem_item.redeem_date, fund_id=redeem_item.portfolio_item.fund).nav
@@ -2919,7 +2941,7 @@ def generate_units_allotment():
             redeem_item.is_verified = True
             redeem_item.save()
 
-    redeem_details = models.RedeemDetail.objects.filter(~Q(redeem_date=None) & Q(unit_redeemed=None) & Q(is_cancelled=False))
+    redeem_details = models.RedeemDetail.objects.filter(~Q(redeem_date=None) & (Q(unit_redeemed=None) | Q(unit_redeemed=0.0)) & Q(is_cancelled=False))
     # Adds units redeemed at RedeemDetail level
     for redeem_detail in redeem_details:
         if redeem_detail.redeem_date <= historical_fund_id[redeem_detail.fund.id]:
@@ -2933,7 +2955,7 @@ def generate_units_allotment():
                                                             ).exclude(unit_redeemed=None)
     # Adds redeem_amount at RedeemDetail level
     for redeem_detail in redeem_details_new:
-        if redeem_detail.redeem_date is not None:
+        if redeem_detail.redeem_date and redeem_detail.redeem_date <= historical_fund_id[redeem_detail.fund.id]:
             nav_on_redeem_date = models.HistoricalFundData.objects.get(fund_id=redeem_detail.fund,
                                                                        date=redeem_detail.redeem_date)
             redeem_detail.redeem_amount = redeem_detail.unit_redeemed * nav_on_redeem_date.nav
@@ -2944,7 +2966,7 @@ def generate_units_allotment():
                                                             ).exclude(unit_redeemed=None)
     # Adds redeem_amount at FundRedeemItem level
     for redeem_item in redeem_items_new:
-        if redeem_item.redeem_date is not None:
+        if redeem_item.redeem_date and redeem_item.redeem_date <= historical_fund_id[redeem_item.portfolio_item.fund.id]:
             nav_on_redeem_date = models.HistoricalFundData.objects.get(fund_id=redeem_item.portfolio_item.fund,
                                                                        date=redeem_item.redeem_date)
             redeem_item.redeem_amount = redeem_item.unit_redeemed * nav_on_redeem_date.nav
@@ -3427,7 +3449,6 @@ def convert_dashboard_to_leaderboard(dashboard_data):
             funds.pop(constants.CURRENT_VALUE)
             funds.pop(constants.GAIN)
             funds.pop(constants.INVESTED_VALUE)
-            funds.pop(constants.IS_GAIN)
     return dashboard_data
 
 
@@ -3703,7 +3724,7 @@ def get_current_value_of_a_fund(transactions_in_a_fund, latest_fund_data_nav, fu
                 previous_day_value_of_fund_for_yesterday_change += transaction.order_amount
         # same as above just deduct the respective amounts rather than adding them
         elif isinstance(transaction, models.FundRedeemItem):
-            sum_invested_in_the_fund -= transaction.redeem_amount
+            sum_invested_in_the_fund -= transaction.invested_redeem_amount
             if transaction.is_verified:
                 current_verified_value_of_fund -= transaction.unit_redeemed * latest_fund_data_nav
                 current_value_of_a_fund -= transaction.unit_redeemed * latest_fund_data_nav
@@ -3767,7 +3788,7 @@ def get_current_invested_value_date(date, user):
         for fund_redeem_item in redeem_items:
             if fund_redeem_item.unit_redeemed:
                 fund_id_to_user_map[fund_redeem_item.portfolio_item.fund.id] -= fund_redeem_item.unit_redeemed
-            invested_amount -= fund_redeem_item.redeem_amount
+            invested_amount -= fund_redeem_item.invested_redeem_amount
             cashflows.append((fund_redeem_item.redeem_date, -fund_redeem_item.redeem_amount))
 
 

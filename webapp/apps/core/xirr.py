@@ -69,10 +69,17 @@ def xirr(cashflows, guess=0.1):
     """
     # return secant_method(0.0001, lambda r: xnpv(r, cashflows), guess)
     print(cashflows)  # Not commented to find error cases cash flow.
-    try:
-        return optimize.newton(lambda r: xnpv(r, cashflows), 0.0001)
-    except:
+
+    # If current_amount tends to zero send xirr as 0.0
+    EP = 0.00999
+    current_amount = cashflows[-1][1]
+    if -EP < current_amount < EP:
+        return 0.0
+    else:
         try:
-            return optimize.newton(lambda r: xnpv(r, cashflows), 0.1)
+            return optimize.newton(lambda r: xnpv(r, cashflows), 0.0001)
         except:
-            return optimize.brentq(lambda r: xnpv(r, cashflows), -1.0, 1e10)
+            try:
+                return optimize.newton(lambda r: xnpv(r, cashflows), 0.1)
+            except:
+                return optimize.brentq(lambda r: xnpv(r, cashflows), -1.0, 1e10)

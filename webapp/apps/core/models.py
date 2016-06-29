@@ -559,6 +559,24 @@ class FundRedeemItem(TimeStampedModel):
             self.unit_redeemed = None
             self.redeem_date = None
             self.is_verified = False
+
+        if self.pk:
+            historical_fund_data_objects = HistoricalFundData.objects.order_by('fund_id__id', '-date').distinct('fund_id__id').select_related('fund_id')
+            historical_fund_id = {historical_object.fund_id.id: historical_object.date for historical_object in historical_fund_data_objects}
+
+            if self.redeem_date and not self.unit_redeemed and not self.is_cancelled:
+                if self.redeem_date <= historical_fund_id[self.portfolio_item.fund.id]:
+                    nav = HistoricalFundData.objects.get(date=self.redeem_date, fund_id=self.portfolio_item.fund).nav
+                    unit_redeemed = round(self.redeem_amount / nav, 3)
+                    self.unit_redeemed = unit_redeemed
+                    self.is_verified = True
+
+            if self.redeem_date and not self.is_verified and not self.is_cancelled and self.redeem_amount==0.00:
+                if self.redeem_date <= historical_fund_id[self.portfolio_item.fund.id]:
+                    nav_on_redeem_date = HistoricalFundData.objects.get(fund_id=self.portfolio_item.fund,
+                                                                        date=self.redeem_date)
+                    self.redeem_amount = self.unit_redeemed * nav_on_redeem_date.nav
+                    self.is_verified = True
         return super(FundRedeemItem, self).save(*args, **kwargs)
 
 
@@ -643,7 +661,6 @@ class RedeemDetail(TimeStampedModel):
 
         return unit_alloted__sum - unit_redeemed__sum
 
-
     def save(self, *args, **kwargs):
         # Makes sure a redeem_id is generated when any Pending state Redeem detail is created.
         if self.redeem_id == 0:
@@ -653,12 +670,6 @@ class RedeemDetail(TimeStampedModel):
         if self.redeem_status == 3:
             for fund_redeem_item in self.fund_redeem_items.all():
                 fund_redeem_item.is_cancelled = True
-                fund_redeem_item.save()
-
-        # Makes sure when redeem date is changed its reflected in fund redeem
-        if self.redeem_date:
-            for fund_redeem_item in self.fund_redeem_items.all():
-                fund_redeem_item.redeem_date = self.redeem_date
                 fund_redeem_item.save()
 
         # Makes sure when redeem date is changed its reflected in fund redeem
@@ -672,9 +683,64 @@ class RedeemDetail(TimeStampedModel):
                     total_units += units
 
                 for fund_redeem_item in self.fund_redeem_items.all():
-                    fund_redeem_item.unit_redeemed = self.unit_redeemed * redeem[fund_redeem_item.portfolio_item.id] / \
-                                                                        total_units
+                    if total_units:
+                        fund_redeem_item.unit_redeemed = self.unit_redeemed * redeem[fund_redeem_item.portfolio_item.id]/total_units
+                    else:
+                        fund_redeem_item.unit_redeemed = total_units
                     fund_redeem_item.save()
+
+        if self.pk:
+            if self.invested_redeem_amount:
+                redeem = {}
+                total_units = 0.0
+                for fund_redeem_item in self.fund_redeem_items.all():
+                    units = self.units_invested_in_portfolio_item(fund_redeem_item.portfolio_item)
+                    redeem[fund_redeem_item.portfolio_item.id] = units
+                    total_units += units
+                if total_units:
+                    for fund_redeem_item in self.fund_redeem_items.all():
+                        fund_redeem_item.invested_redeem_amount = self.invested_redeem_amount * redeem[
+                            fund_redeem_item.portfolio_item.id] / total_units
+                        fund_redeem_item.save()
+
+        if self.pk:
+            if self.redeem_amount:
+                redeem = {}
+                total_units = 0.0
+                for fund_redeem_item in self.fund_redeem_items.all():
+                    units = self.units_invested_in_portfolio_item(fund_redeem_item.portfolio_item)
+                    redeem[fund_redeem_item.portfolio_item.id] = units
+                    total_units += units
+
+                if total_units:
+                    for fund_redeem_item in self.fund_redeem_items.all():
+                        fund_redeem_item.redeem_amount = self.redeem_amount * redeem[
+                            fund_redeem_item.portfolio_item.id] / total_units
+                        fund_redeem_item.save()
+
+        historical_fund_data_objects = HistoricalFundData.objects.order_by('fund_id__id', '-date').distinct('fund_id__id').select_related('fund_id')
+        historical_fund_id = {historical_object.fund_id.id: historical_object.date for historical_object in historical_fund_data_objects}
+
+        # Makes sure when redeem date is changed its reflected in fund redeem
+        if self.redeem_date:
+            for fund_redeem_item in self.fund_redeem_items.all():
+                fund_redeem_item.redeem_date = self.redeem_date
+                fund_redeem_item.save()
+
+        if self.pk:
+            if self.redeem_date and not self.is_cancelled and not self.is_verified and not self.unit_redeemed:
+                if self.redeem_date <= historical_fund_id[self.fund.id]:
+                    nav = HistoricalFundData.objects.get(date=self.redeem_date, fund_id=self.fund).nav
+                    unit_redeemed = round(self.redeem_amount / nav, 3)
+                    self.unit_redeemed = unit_redeemed
+                    self.is_verified = True
+
+        if self.pk:
+            if not self.is_cancelled and not self.is_verified and self.redeem_amount==0.00:
+                if self.redeem_date and self.redeem_date <= historical_fund_id[self.fund.id]:
+                    nav_on_redeem_date = HistoricalFundData.objects.get(fund_id=self.fund, date=self.redeem_date)
+                    self.redeem_amount = self.unit_redeemed * nav_on_redeem_date.nav
+                    self.is_verified = True
 
         return super(RedeemDetail, self).save(*args, **kwargs)
 
@@ -768,6 +834,25 @@ class FundOrderItem(TimeStampedModel):
         """
         return self.created_at.date()
 
+    def get_valid_start_date(self, fund_id, send_date):
+        """
+        generates valid start date for a prticular fund
+        :param fund_id: id of a particular fund
+        :param send_date: base date to be used as base date for finding valid start date
+        :return: next valid start date
+        """
+        sip_dates = Fund.objects.get(id=fund_id).sip_dates
+        sip_dates.sort()
+        next_month = (send_date + timedelta(30))
+        day = next_month.day
+        if day > sip_dates[-1]:
+            next_month += timedelta(30)
+            next_month = next_month.replace(day=sip_dates[0])
+            return next_month
+        modified_day = next(date[1] for date in enumerate(sip_dates) if date[1] >= day)
+        next_month = next_month.replace(day=modified_day)
+        return next_month
+
     def save(self, *args, **kwargs):
         """
         creates a check while saving instance of model, if is_verified is True then unit must be alloted.
@@ -779,6 +864,20 @@ class FundOrderItem(TimeStampedModel):
             self.next_allotment_date = None
             self.is_verified = False
             self.allotment_date = None
+
+        # Code to set alloment date if possible and also assigns next_allotment_date
+        historical_fund_data_objects = HistoricalFundData.objects.order_by('fund_id__id', '-date').distinct('fund_id__id').select_related('fund_id')
+        historical_fund_id = {historical_object.fund_id.id: historical_object.date for historical_object in historical_fund_data_objects}
+        if self.allotment_date and not self.unit_alloted and not self.is_cancelled:
+            if self.allotment_date <= historical_fund_id[self.portfolio_item.fund.id]:
+                nav = HistoricalFundData.objects.get(date=self.allotment_date, fund_id=self.portfolio_item.fund).nav
+                unit_alloted = round(self.order_amount / nav, 3)
+                self.unit_alloted = unit_alloted
+                self.is_verified = True
+                if not self.orderdetail_set.all()[0].is_lumpsum:
+                    next_allotment_date = self.get_valid_start_date(self.portfolio_item.fund.id, self.allotment_date)
+                    self.next_allotment_date = next_allotment_date
+
         return super(FundOrderItem, self).save(*args, **kwargs)
 
 

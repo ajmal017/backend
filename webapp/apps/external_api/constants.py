@@ -684,3 +684,10 @@ DEFAULT_NOMINEE_SIGNATURE = "webapp/static/images/dummy_nominee_signature.png"
 FORBIDDEN_ERROR = "access is forbidden."  # to prevent unauthorized access of private files.
 
 DEFAULT_IMAGE = "webapp/static/images/dummy_image.jpg"
+
+
+TO_URL = 'http://bsestarmfdemo.bseindia.com/MFUploadService/MFUploadService.svc/Basic'
+GET_PASSWORD_URL = 'http://tempuri.org/IMFUploadService/getPassword'
+
+BSE_ORDER_WSDL = 'http://bsestarmfdemo.bseindia.com/MFOrderEntry/MFOrder.svc?singleWsdl'
+BSE_ORDER_GET_PASSWORD_URL = 'http://bsestarmf.in/MFOrderEntry/getPassword'

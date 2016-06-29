@@ -667,64 +667,6 @@ class Billdesk(APIView):
         return render(request, 'base/billdesk_status.html')
 
 
-class Dashboard(APIView):
-    """
-    API for dashboard page
-    """
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get(self, request):
-        """
-        :param request:
-        :return:
-        """
-        portfolio_items = models.PortfolioItem.objects.filter(portfolio__user=request.user).select_related('portfolio',
-                                                                                                           'fund')
-        if len(portfolio_items) == 0:
-            return api_utils.response({constants.MESSAGE: constants.USER_PORTOFOLIO_NOT_PRESENT},
-                                      status.HTTP_400_BAD_REQUEST, constants.USER_PORTOFOLIO_NOT_PRESENT)
-        return api_utils.response(utils.get_portfolio_overview(portfolio_items), status.HTTP_200_OK)
-
-
-class DashboardNew(APIView):
-    """
-    API for new dashboard new
-    """
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get(self, request):
-        """
-        :param request:
-        :return:
-        """
-        # query all investments(fund order item) and redeem( fund redeem item) by a user
-        all_investments_of_user = models.FundOrderItem.objects.filter(portfolio_item__portfolio__user=request.user)
-        fund_id_dict = utils.get_fund_id_map(all_investments_of_user.filter(is_verified=False))
-        all_redeem_of_user = models.FundRedeemItem.objects.filter(portfolio_item__portfolio__user=request.user)
-
-        if all_investments_of_user.filter(is_verified=True):
-            # utility to club the investments and redeems together on basis of funds
-            amount_invested_fund_map, today_portfolio = utils.club_investment_redeem_together(
-                all_investments_of_user, all_redeem_of_user)
-
-            if not today_portfolio:
-                # utility to get the json response for the api
-                return api_utils.response(utils.get_dashboard_new(amount_invested_fund_map, today_portfolio,
-                                                                  request.user.id),status.HTTP_200_OK)
-                # portfolio_detail = utils.get_dashboard_new(amount_invested_fund_map, today_portfolio,
-                #                                                   request.user.id)
-                # portfolio_detail = utils.add_order_amount_to_portofolio(portfolio_detail, fund_id_dict)
-                # return api_utils.response(portfolio_detail, status.HTTP_200_OK)
-
-        # for virtual dashboard
-        portfolio_items = models.PortfolioItem.objects.filter(
-            portfolio__user=request.user, portfolio__has_invested=False).select_related('portfolio','fund')
-        if not portfolio_items:
-            return api_utils.response({constants.MESSAGE: constants.USER_PORTOFOLIO_NOT_PRESENT},
-                                      status.HTTP_400_BAD_REQUEST, constants.USER_PORTOFOLIO_NOT_PRESENT)
-        return api_utils.response(utils.get_portfolio_overview(portfolio_items), status.HTTP_200_OK)
-
-
 class PopularFunds(APIView):
     """
     API to return most popular funds of among the funds
@@ -781,67 +723,6 @@ class PortfolioHistoricPerformance(APIView):
         historic_data.update({'is_modified': False})
         historic_data.update({'message': ''})
         return api_utils.response(historic_data, status.HTTP_200_OK)
-
-
-class PortfolioDetails(APIView):
-    """
-    API to return portfolio details for dashboard
-    """
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get(self, request):
-        """
-        :param request:
-        :return:
-        """
-        portfolio_items = models.PortfolioItem.objects.filter(
-            portfolio__user=request.user, portfolio__has_invested=False).select_related('portfolio',
-                                                                                               'fund')
-        if len(portfolio_items) == 0:
-            return api_utils.response({constants.MESSAGE: constants.USER_PORTOFOLIO_NOT_PRESENT},
-                                      status.HTTP_400_BAD_REQUEST, constants.USER_PORTOFOLIO_NOT_PRESENT)
-        return api_utils.response(utils.get_portfolio_details(portfolio_items), status.HTTP_200_OK)
-
-
-class PortfolioDetailsNew(APIView):
-    """
-    New API for portfolio details for dashboard
-    """
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get(self, request):
-        """
-
-        :param request:
-        :return:
-        """
-        # query all investments(fund order item) and redeem( fund redeem item) by a user
-        all_investments_of_user = models.FundOrderItem.objects.filter(portfolio_item__portfolio__user=request.user)
-        all_redeem_of_user = models.FundRedeemItem.objects.filter(portfolio_item__portfolio__user=request.user)
-        fund_id_dict = utils.get_fund_id_map(all_investments_of_user)
-
-        # for users who have had invested (at least one fund order verified item)
-        if all_investments_of_user.filter:
-            # utility to club the investments and redeems together on basis of funds
-            amount_invested_fund_map, today_portfolio = utils.club_investment_redeem_together(
-                all_investments_of_user, all_redeem_of_user)
-            portfolio_detail = utils.get_portfolio_details_new(amount_invested_fund_map, today_portfolio)
-            portfolio_detail = utils.add_order_amount_to_schemes(portfolio_detail, fund_id_dict)
-
-            # utility to calculate different values required by the api for funds in the dict above
-            # return api_utils.response(portfolio_detail, status.HTTP_200_OK)
-            return api_utils.response(utils.get_portfolio_details_new(amount_invested_fund_map, today_portfolio),
-                                      status.HTTP_200_OK)
-
-        # for virtual portfolio details
-        else:
-            portfolio_items = models.PortfolioItem.objects.filter(
-                portfolio__user=request.user, portfolio__has_invested=False).select_related(
-                'portfolio', 'fund')
-            if not portfolio_items:
-                return api_utils.response({constants.MESSAGE: constants.USER_PORTOFOLIO_NOT_PRESENT},
-                                          status.HTTP_400_BAD_REQUEST, constants.USER_PORTOFOLIO_NOT_PRESENT)
-            return api_utils.response(utils.get_portfolio_details(portfolio_items), status.HTTP_200_OK)
 
 
 class LeaderBoard(APIView):

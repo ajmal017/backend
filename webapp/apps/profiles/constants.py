@@ -9,14 +9,14 @@ PHONE_VERIFIED = "You phone number has been verified."
 LOGIN_ERROR = "Incorrect password."
 SIGNUP_ERROR = "Failed to register user."
 PHONE_ALREADY_VERIFIED = "This user has already been verified!"
-OTP = "Welcome to Finaskus. To complete signup," \
+OTP = "Welcome to FinAskus. To complete signup," \
       " please use {} as one time password (OTP). Do not share this OTP with anyone for security reasons."
 
-FORGOT_PASSWORD_OTP = "You have requested for a password change for your Finaskus account. " \
+FORGOT_PASSWORD_OTP = "You have requested for a password change for your FinAskus account. " \
                       "For verification, please use {} as One Time Password (OTP). " \
                       "Do not share this OTP with anyone for security reasons."
 
-RESET_PHONE_NUMBER_OTP = "You have requested for a phone number change for your Finaskus account." \
+RESET_PHONE_NUMBER_OTP = "You have requested for a phone number change for your FinAskus account." \
                          " For verification, please use {} as One Time Password (OTP). " \
                          "Do not share this OTP with anyone for security reasons."
 
