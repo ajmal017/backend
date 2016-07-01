@@ -83,6 +83,7 @@ class Option(TimeStampedModel):
 class RiskProfile(models.Model):
     """
     Model for risk profiles description
+    DEPRECATED
     """
     name = models.CharField(max_length=200)
     min_score = models.FloatField(blank=False, null=False)
@@ -903,12 +904,21 @@ class OrderDetail(TimeStampedModel):
     transaction = models.ForeignKey(payment_models.Transaction, null=True, blank=True)
 
     def save(self, *args, **kwargs):
+        # If order_id is zero set to a OO+random 8 digit number
         if self.order_id == 0:
             self.order_id = "OO" + str(random_with_N_digits(8))
+
+        # If order_status is marked as cancelled all fundorderitems are made is_cancelled True
         if self.order_status == 3:
             for fund_order_item in self.fund_order_items.all():
                 fund_order_item.is_cancelled = True
                 fund_order_item.save()
+
+            # If the all orderdetail of the user are in cancelled state then remove from ledearboard
+            if not OrderDetail.objects.exclude(order_status=3).filter(user=self.user):
+                profile_models.AggregatePortfolio.objects.get(user=self.user).delete()
+
+            # If the cancelled order is lumpsum order then mark portfolio as deleted
             if self.is_lumpsum:
                 related_portfolio = self.fund_order_items.all()[0].portfolio_item.portfolio
                 related_portfolio.is_deleted = True

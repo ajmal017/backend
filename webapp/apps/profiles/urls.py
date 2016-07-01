@@ -43,7 +43,6 @@ urlpatterns = [
     url(r'^confirm/change/phone/number/$', views.ConfirmChangeInPhoneNumber.as_view(), name='confirm-change-in-phone-number'),
     url(r'^video/upload/$', views.VideoUpload.as_view(), name='user-video-upload'),
     url(r'^video/get/$', views.VideoGet.as_view(), name='user-video-get'),
-    url(r'^lock/vault/$', views.LockVault.as_view(), name='lock-vault'),
 
     # ================================DEPRECATED APIS ===================================================
 
@@ -55,5 +54,7 @@ urlpatterns = [
     url(r"^identity/info/add/skip/$", views.IdentityInfoSkip.as_view(), name='identity-info-add-skip'),
     url(r"^appointment/get/$", views.AppointmentSchedule.as_view(), name='appointment-get'),
     url(r"^appointment/add/$", views.AppointmentSchedule.as_view(), name='appointment-add'),
+    url(r'^lock/vault/$', views.LockVault.as_view(), name='lock-vault'),
+
 
 ]

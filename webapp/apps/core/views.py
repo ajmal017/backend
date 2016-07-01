@@ -71,6 +71,13 @@ def faq(request):
     """
     return render(request, 'base/faqs.html')
 
+def indexnew(request):
+    """
+    :param request:
+    :return:
+    """
+    return render(request, 'base/index-new.html')
+
 
 def mfprimer(request):
     """
@@ -78,6 +85,27 @@ def mfprimer(request):
     :return:
     """
     return render(request, 'base/mutual-fund-primer.html')
+
+def whymf(request):
+    """
+    :param request:
+    :return:
+    """
+    return render(request, 'base/why-invest-in-mutual-funds.html')
+
+def debtfundsrisk(request):
+    """
+    :param request:
+    :return:
+    """
+    return render(request, 'base/debt-funds-risk-free.html')
+
+def retirementplanning(request):
+    """
+    :param request:
+    :return:
+    """
+    return render(request, 'base/retirement-planning.html')
 
 
 def mfarticles(request):

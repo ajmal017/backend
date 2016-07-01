@@ -116,8 +116,8 @@ input, select {
     padding-bottom: 40px;
 }
 .logo_img {
-    max-width: 65%;
-    max-height: 100%;
+    max-width: 350px;
+    max-height: 90px;
 }
 .bannerimage 
 {
@@ -221,10 +221,12 @@ input, select {
     padding-bottom: 0px;
     background-color: #247bbc;
     padding-right:3em;
+    z-index:99;
 }
 .navbar-white
 {
 	color: #fff;
+	text-align:right;
 }
 .center
 {
@@ -465,18 +467,21 @@ input, select {
     color:#000;
     font-size: .8em;
 }
-.article_subtitle
+.main_logo_img
 {
+	margin-top: -20em;
+    padding-left: 5em;
+    max-width: 30%;
+    position: absolute;
+}
 
+.main_banner_text {
+    
+    font-size: 34px;
+    font-weight: 400;
+    color: #227abd;
 }
-.share-buttons img
- {
-width: 45px;
-padding: 5px;
-border: 0;
-box-shadow: 0;
-display: inline;
-}
+
 @media screen and (max-width: 1400px) {
     .rights {
         padding-right: 52%;
@@ -553,7 +558,7 @@ display: inline;
         padding-right: 6%;
     }
     .footer1 {
-        height: 412px;
+        height: 488px;
     }
     .blockright {
         padding-top: 20px;
@@ -593,6 +598,12 @@ display: inline;
     .contact_email {
         font-size: 20px;
     }
+    .main_logo_img
+	{
+		padding-top:2em;
+		padding-left:3.5em;
+		width:50%
+	}
 }
 @media screen and (max-width: 768px) {
     .footer2 {
@@ -650,6 +661,12 @@ display: inline;
     .col-lg-4 {
         margin-bottom: 0px;
     }
+    .main_logo_img
+	{
+		padding-top:5em;
+		padding-left:3em;
+		width:40%
+	}
 }
 @media screen and (max-width: 568px) {
     .banner {
@@ -713,7 +730,7 @@ display: inline;
         padding-top: 0px;
         text-align: center;
         font-size: 14px;
-        height: 80px;
+        height: 85px;
         line-height: 20px;
     }
     .rights {
@@ -724,6 +741,12 @@ display: inline;
         display:block;
         padding-right: 0%;
     }
+    .main_logo_img
+	{
+		padding-top:10em;
+		padding-left:2.5em;
+		width:45%
+	}
 }
 @media screen and (max-width: 420px) {
     .launch {
@@ -820,6 +843,13 @@ display: inline;
     .address_text {
         padding-left: 8px;
     }
+     .main_logo_img
+	{
+	
+	padding-top:12em;
+		padding-left:2.5em;
+		max-width:55%
+	}
 }
 @media screen and (max-width: 319px) {
     body {

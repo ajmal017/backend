@@ -19,6 +19,8 @@ import re
 import hmac
 import hashlib
 
+debug_logger = logging.getLogger('django.debug')
+
 
 def get_answers(answers, questions, id):
     """
@@ -2682,7 +2684,10 @@ def club_investment_redeem_together(all_investments_of_user, all_redeem_of_user)
     if len(distinct_dates) == 1 and distinct_dates.pop() == get_dashboard_change_date():
         today_portfolio = True
 
-    return amount_invested_fund_map, today_portfolio, list(set(portfolios_to_be_considered))
+    sorted_portfolios_to_be_considered = list(set(portfolios_to_be_considered))
+    sorted_portfolios_to_be_considered.sort(key=lambda x: x.investment_date)
+    return amount_invested_fund_map, today_portfolio, sorted_portfolios_to_be_considered
+
 
 
 def xirr_calculation(fund_data, start_date, end_date):
@@ -2918,6 +2923,7 @@ def generate_units_allotment():
     historical_fund_data_objects = models.HistoricalFundData.objects.order_by('fund_id__id', '-date').distinct('fund_id__id').select_related('fund_id')
     historical_fund_id = {historical_object.fund_id.id: historical_object.date for historical_object in historical_fund_data_objects}
 
+    debug_logger.debug("The Fund Order items whose units were alloted are\n")
     # Add units alloted on FundOrderItem Level
     fund_order_items = models.FundOrderItem.objects.filter(~Q(allotment_date=None) & Q(unit_alloted=None) & Q(is_cancelled=False)).select_related('portfolio_item')
     for fund_order_item in  fund_order_items:
@@ -2930,7 +2936,10 @@ def generate_units_allotment():
                 next_allotment_date = get_valid_start_date(fund_order_item.portfolio_item.fund.id, fund_order_item.allotment_date)
                 fund_order_item.next_allotment_date = next_allotment_date
             fund_order_item.save()
+            debug_logger.debug("ID " + str(fund_order_item.id) + " for user " +
+                               str(fund_order_item.portfolio_item.portfolio.user.email))
 
+    debug_logger.debug("The Fund Redeem items whose units are alloted are\n")
     # Add units redeemed on FundRedeemItem Level
     redeem_items = models.FundRedeemItem.objects.filter(~Q(redeem_date=None) & (Q(unit_redeemed=None) | Q(unit_redeemed=0.0)) & Q(is_cancelled=False)).select_related('portfolio_item')
     for redeem_item in redeem_items:
@@ -2940,7 +2949,10 @@ def generate_units_allotment():
             redeem_item.unit_redeemed = unit_redeemed
             redeem_item.is_verified = True
             redeem_item.save()
+            debug_logger.debug("ID " + str(redeem_item.id) + " for user " + str(
+                redeem_item.portfolio_item.portfolio.user.email))
 
+    debug_logger.debug("The Redeem details whose units are alloted are\n")
     redeem_details = models.RedeemDetail.objects.filter(~Q(redeem_date=None) & (Q(unit_redeemed=None) | Q(unit_redeemed=0.0)) & Q(is_cancelled=False))
     # Adds units redeemed at RedeemDetail level
     for redeem_detail in redeem_details:
@@ -2950,7 +2962,10 @@ def generate_units_allotment():
             redeem_detail.unit_redeemed = unit_redeemed
             redeem_detail.is_verified = True
             redeem_detail.save()
+            debug_logger.debug("ID " + str(redeem_detail.id) + " for user " + str(redeem_detail.user.email))
 
+
+    debug_logger.debug("The Redeem details whose amounts verified are\n")
     redeem_details_new = models.RedeemDetail.objects.filter(is_cancelled=False, is_verified=False, redeem_amount=0.00
                                                             ).exclude(unit_redeemed=None)
     # Adds redeem_amount at RedeemDetail level
@@ -2961,7 +2976,9 @@ def generate_units_allotment():
             redeem_detail.redeem_amount = redeem_detail.unit_redeemed * nav_on_redeem_date.nav
             redeem_detail.is_verified = True
             redeem_detail.save()
+            debug_logger.debug("ID " + str(redeem_detail.id) + " for user " + str(redeem_detail.user.email))
 
+    debug_logger.debug("The Fund Redeem items whose redeem amount are alloted are\n")
     redeem_items_new = models.FundRedeemItem.objects.filter(is_cancelled=False, is_verified=False, redeem_amount=0.00
                                                             ).exclude(unit_redeemed=None)
     # Adds redeem_amount at FundRedeemItem level
@@ -2972,6 +2989,7 @@ def generate_units_allotment():
             redeem_item.redeem_amount = redeem_item.unit_redeemed * nav_on_redeem_date.nav
             redeem_item.is_verified = True
             redeem_item.save()
+            debug_logger.debug("ID " + str(redeem_item.id) + " for user " + str(redeem_item.portfolio_item.portfolio.user.email))
 
     return len(fund_order_items) + len(redeem_items) + len(redeem_details) + len(redeem_items_new) + len(redeem_details_new)
 

@@ -232,14 +232,14 @@ EMPTY_lIST_FOR_DATA = []
 
 MESSAGE = 'message'
 SUCCESS = 'success'
-SIP_OR_LUMPSUM_TOO_LOW_ERROR = 'Sip or Lumpsum is too low. Please go to DEFINE FINANCIAL GOALS to increase them. '
+SIP_OR_LUMPSUM_TOO_LOW_ERROR = 'Sip or Lumpsum is too low. Please go to DEFINE FINANCIAL GOALS to increase them.'
 DATE = 'date'
 CURRENT_AMOUNT = 'current_amount'
 INVESTED_AMOUNT = 'invested_amount'
 XIRR = 'xirr'
 
-USER_PORTOFOLIO_NOT_PRESENT = 'user portfolio is not present'
-USER_PERFORMANCE_PORTOFOLIO_NOT_PRESENT = 'user performance portfolio is not present'
+USER_PORTOFOLIO_NOT_PRESENT = 'User portfolio is not present.'
+USER_PERFORMANCE_PORTOFOLIO_NOT_PRESENT = 'User performance portfolio is not present'
 USER_HAS_NOT_INVESTED = 'user has not invested'
 FUND_NOT_PRESENT = 'Fund related to ID not present'
 FUND_LIST_INCORRECT = 'FUND list was incorrect'

@@ -6,7 +6,6 @@ urlpatterns = [
     url(r'^leader/board/$', views.LeaderBoard.as_view(), name='leader-board'),
     url(r'^(?P<type>^[a-z]+)/response/add/$', views.AssessAnswerNew.as_view(), name='assess-answers-add'),
     url(r'^recommended/portfolios/$', views.RecommendedPortfolios.as_view(), name='recommended-portfolios'),
-    url(r'^swap/funds/$', views.SwapFunds.as_view(), name='swap-funds'),
     url(r'^(?P<fund_id>^[0-9]+)/schema/fact-sheet/$', views.SchemaFactSheet.as_view(), name='schema-fact-sheet'),
     url(r'^assess/new/response/add/$', views.AssessAnswer.as_view(), name='assess-new-answers-add'),
     url(r'^retirement/new/response/add/$', views.RetirementAnswer.as_view(), name='retirement-new-answers-add'),
@@ -23,14 +22,13 @@ urlpatterns = [
     url(r'^popular/funds/get/$', views.PopularFunds.as_view(), name='get-popular-funds'),
     url(r'^portfolio/historic/performance/', views.PortfolioHistoricPerformance.as_view(),
         name='portfolio-historic-performance'),
-    url(r'^redemption/detail/$', views.TransactionDetail.as_view(), name='redemption-detail'),
     url(r'^transaction/history/$', views.TransactionHistoryNew.as_view(), name='transaction-history-new'),
     url(r'^invested/fund/get/$', views.GetInvestedFundReturn.as_view(), name='fund-return'),
     url(r'^fund/redeem/add/new/$', views.FundRedeem.as_view(), name='fund_redeem_add'),
     url(r'^dashboard/portfolio/historic/performance/$', views.DashboardPortfolioHistoricPerformance.as_view(),
         name='dashboard-portfolio-historic-performance'),
     url(r'^answer/delete/(?P<question_for>[a-z]+)/$', views.AnswerDelete.as_view(), name='delete-answer'),
-    url(r'^reset/$', views.GetCategorySchemes.as_view(), name='category-funds-reset'),
+    url(r'^reset/$', views.GetCategorySchemes.as_view(), name='category-funds-reset'),   ## ???
     url(r'^portfolio/change/$', views.ChangePortfolio.as_view(), name='change-portfolio'),
     url(r'^funds/distribution/validate/$', views.FundsDistributionValidate.as_view(), name='funds-distribution-validate'),
     url(r'^dashboard/v2/$', views.DashboardVersionTwo.as_view(), name='dashboard-v2'),
@@ -44,6 +42,10 @@ urlpatterns = [
     url(r'^billdesk/success/$', views.Billdesk.as_view(), name='billdesk-success'),
     url(r'^billdesk/fail/$', views.Billdesk.as_view(), name='billdesk-fail'),
     url(r'^plan/new/response/add/$', views.PlanAnswer.as_view(), name='plan-new-answers-add'),
+    url(r'^redemption/detail/$', views.TransactionDetail.as_view(), name='redemption-detail'),
+    url(r'^swap/funds/$', views.SwapFunds.as_view(), name='swap-funds'),
+
+
 
 
 ]

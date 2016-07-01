@@ -3,7 +3,7 @@ from django.conf import settings
 from oauth2_provider.models import Application
 
 from profiles.models import User
-from core.models import ExchangeRate
+from core.models import ExchangeRate, CachedData
 
 import time
 
@@ -17,3 +17,6 @@ application.save()
 time.sleep(1)
 
 ExchangeRate.objects.get_or_create(key="exchange_rate", value="66")
+
+# Creates a row to be updated using cron
+CachedData.objects.create(key="most_popular_funds", value={})

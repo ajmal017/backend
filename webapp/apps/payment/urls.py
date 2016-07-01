@@ -8,7 +8,10 @@ from . import views
 
 
 urlpatterns = [
-    url(r"^get/checksum/$", views.TransactionString.as_view(), name='get-checksum'),
-    url(r'^pay/', views.Pay.as_view(), name='pay')
+
+    url(r'^pay/', views.Pay.as_view(), name='pay'),
+
+    # ======== DEPRECATED ==========
+    # url(r"^get/checksum/$", views.TransactionString.as_view(), name='get-checksum')
 
 ]

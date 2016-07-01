@@ -7,6 +7,7 @@ BSE = "BSE"
 LUMPSUM = "L"
 LIQUID = "NONLIQUID"
 MALFORMED_REQUEST = "Malformed request is sent"
+ORDER_CREATION_FAILED = "Order creation failed. Please try again after sometime."
 MESSAGE = 'message'
 USER_BANK_DETAIL_NOT_PRESENT = 'user bank detail is not present'
 USER_IFSC_CODE_INCORRECT = 'ifsc code in user bank details is incorrect'
