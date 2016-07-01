@@ -45,11 +45,13 @@ urlpatterns = [
     url(r'^faq', views.faq, name='faq'),
     url(r'^index-new', views.indexnew, name='indexnew'),
     url(r'^mutual-fund-primer', views.mfprimer, name='mfprimer'),
+    url(r'^mutual-fund-basics', views.mfbasics, name='mfbasics'),
     url(r'^retirement-planning', views.retirementplanning, name='retirementplanning'),
     url(r'^why-invest-in-mutual-funds', views.whymf, name='whymf'),
     url(r'^debt-funds-risk-free', views.debtfundsrisk, name='debtfundsrisk'),
     url(r'^aboutus', views.aboutus, name='aboutus'),
     url(r'^mutual-fund-articles', views.mfarticles, name='mfarticles'),
+    url(r'^blog', views.blog, name='blog'),
     url(r'^google59199aa04156c0bc.html$', TemplateView.as_view(template_name='google59199aa04156c0bc.html')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

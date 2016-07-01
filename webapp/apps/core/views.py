@@ -78,6 +78,13 @@ def indexnew(request):
     """
     return render(request, 'base/index-new.html')
 
+def mfbasics(request):
+    """
+    :param request:
+    :return:
+    """
+    return render(request, 'base/mutual-fund-basics.html')
+
 
 def mfprimer(request):
     """
@@ -106,6 +113,13 @@ def retirementplanning(request):
     :return:
     """
     return render(request, 'base/retirement-planning.html')
+
+def blog(request):
+    """
+    :param request:
+    :return:
+    """
+    return render(request, 'base/blog.html')
 
 
 def mfarticles(request):
