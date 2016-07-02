@@ -197,7 +197,7 @@ input, select {
 .title {
     text-align: center;
     color: #227abd;
-    font-size: 36px;
+    font-size: 30px;
     font-family: 'Oxygen', sans-serif;
     font-weight: 300;
     padding-bottom: 40px;
@@ -261,16 +261,16 @@ input, select {
 }
 .subtitle { 
     color: #227abd;
-    font-family: Source Sans Pro, sans-serif;
-    font-size: 26px;
-    font-weight: 400;
-    padding-top: 40px;
+    font-family: 'Oxygen', sans-serif;
+    font-size: 22px;
+    font-weight: 200;
+    padding-top: 10px;
     padding-bottom: 10px;
 }
 .text {
     color: #808080;
     font-family: Source Sans Pro, sans-serif; 
-    font-size:16px;
+    font-size:15px;
     font-weight: 400;
     line-height: 30px;
     padding-left: 50px;
@@ -480,6 +480,32 @@ input, select {
     font-size: 34px;
     font-weight: 400;
     color: #227abd;
+}
+.about_person_img
+{
+	width: 60%;
+	max-width:350px;
+	padding-bottom:2em;
+}
+.about_person_img2
+{
+	width: 40%;
+	max-width:350px;
+}
+.about_person_text
+{
+	padding-top:1em;
+	font-size:20px;
+	padding-bottom:2em;
+
+}
+.half_space
+{
+  padding-top:1em;
+}
+.minus_half_space
+{
+	padding-top:-3px;
 }
 
 @media screen and (max-width: 1400px) {
