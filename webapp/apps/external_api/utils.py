@@ -231,7 +231,7 @@ def embed_images(images_list, sizes, coords, target_pages, images_count_each_pag
         
         img_reader = ImageReader(resized_image)
         can = canvas.Canvas(img_temp)
-        can.drawImage(img_reader, coord_block[0], coord_block[1], preserveAspectRatio=True, width=width, height=height)
+        can.drawImage(img_reader, coord_block[0], coord_block[1], preserveAspectRatio=True, width=width, height=height, mask='auto')
         can.save()
         img_temp.seek(0)
         return img_temp

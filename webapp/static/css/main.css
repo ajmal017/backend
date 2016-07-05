@@ -357,7 +357,7 @@ input, select {
     color: #FFFFFF;
 }
 .rights {
-    padding-right: 53%;
+    padding-right: 50%;
 }
 .terms {
     padding-right: 3%;
@@ -426,6 +426,15 @@ input, select {
     padding-bottom: 25px;
     text-indent:1px;
 }
+.p_text_basics {
+    color: #808080;
+    font-family: Source Sans Pro, sans-serif; 
+    font-size:13px;
+    font-weight: 400;
+    line-height: 30px;
+    padding-bottom: 5px;
+    text-indent:1px;
+}
 .p_text_faq {
     color: #808080;
     font-family: Source Sans Pro, sans-serif; 
@@ -472,7 +481,7 @@ input, select {
 .card_text {
     color: #808080;
     font-family: Source Sans Pro, sans-serif; 
-    font-size:16px;
+    font-size:.6em;
     font-weight: 400;
     line-height: 30px;
     text-indent:1px;
