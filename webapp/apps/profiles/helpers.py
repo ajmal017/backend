@@ -14,6 +14,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 from . import constants as profile_constants
+import logging
 
 
 def make_dictionary(question_value, answer_text_value, answer_metadata_value):
@@ -37,7 +38,12 @@ def get_access_token(user, password):
     data = {'grant_type': 'password', 'username': user.username, 'password': password}
     auth = HTTPBasicAuth(settings.CLIENT_ID, settings.CLIENT_SECRET)
     response = requests.post(settings.BASE_URL + '/o/token/', auth=auth, data=data)
-    return response.json()
+    responseJSON = response.json()
+    if not responseJSON.access_token:
+        logger = logging.getLogger('django.error')
+        logger.error("Profiles: access_token: Access token failed for user with id: " + user.id)
+            
+    return responseJSON
 
 
 def send_mail(subject_template_name, email_template_name, context, from_email, to_email, html_email_template_name=None):

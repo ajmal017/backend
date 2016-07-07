@@ -33,6 +33,7 @@ from dateutil.relativedelta import relativedelta
 from copy import deepcopy
 import functools
 import warnings
+import logging
 
 
 def deprecate_current_app(func):
@@ -70,6 +71,9 @@ def password_reset_confirm(request, uidb64=None, token=None,
     View that checks the hash in a password reset link and presents a
     form for entering a new password.
     """
+    logger = logging.getLogger('django.debug')
+    logger.debug("Profiles: views: password_reset_confirm")
+    
     UserModel = get_user_model()
     assert uidb64 is not None and token is not None  # checked by URLconf
     if post_reset_redirect is None:
@@ -84,6 +88,7 @@ def password_reset_confirm(request, uidb64=None, token=None,
         user = None
 
     if user is not None and token_generator.check_token(user, token):
+        logger.debug("Profiles: views: password_reset_confirm: Valid link")
         validlink = True
         title = _('Enter new password')
         if request.method == 'POST':
@@ -97,6 +102,7 @@ def password_reset_confirm(request, uidb64=None, token=None,
         else:
             form = set_password_form(user)
     else:
+        logger.debug("Profiles: views: password_reset_confirm: Invalid link")
         validlink = False
         form = None
         title = _('Password reset unsuccessful')

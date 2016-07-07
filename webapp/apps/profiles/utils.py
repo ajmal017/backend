@@ -7,6 +7,7 @@ from profiles import constants as cons
 from profiles import models as profile_models
 from webapp.apps import random_with_N_digits
 from . import helpers
+import logging
 
 from datetime import datetime
 
@@ -291,6 +292,9 @@ def check_existing_user(**kwargs):
     email = kwargs['email']
     phone = kwargs['phone_number']
 
+    logger = logging.getLogger('django.info')
+    logger.info("Profiles: check_existing_user")
+
     try:
         user1 = profile_models.User.objects.get(email=email)
     except profile_models.User.DoesNotExist:
@@ -306,21 +310,25 @@ def check_existing_user(**kwargs):
 
     if user1 == user2:
         if not user1.email_verified and not user1.phone_number_verified:
+            logger.info("Profiles: check_existing_user: Deleting user: " + user1.id)
             user1.delete()
             return
 
     if user1 is None:
         if not user2.email_verified and not user2.phone_number_verified:
+            logger.info("Profiles: check_existing_user: Deleting user2: " + user2.id)
             user2.delete()
             return
 
     if user2 is None:
         if not user1.email_verified and not user1.phone_number_verified:
+            logger.info("Profiles: check_existing_user: Deleting user1: " + user1.id)
             user1.delete()
             return
 
     if user1 != user2 and user1 is not None:
             if not user1.email_verified and not user1.phone_number_verified and not user2.email_verified and not user2.phone_number_verified:
+                logger.info("Profiles: check_existing_user: Deleting users: " + user1.id + " " + user2.id)
                 user1.delete()
                 user2.delete()
                 return

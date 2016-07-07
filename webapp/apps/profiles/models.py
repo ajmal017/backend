@@ -113,8 +113,14 @@ class User(AbstractBaseUser, TimeStampedModel):
         if self.vault_locked==False:
             self.is_terms = False
             self.is_declaration = False
+        self.clean()
         super(User, self).save(*args, **kwargs)
 
+    def clean(self):
+        if self.email:
+            self.email = self.email.strip()
+        super(User, self).clean()
+    
     @property
     def is_superuser(self):
         return self.is_staff
