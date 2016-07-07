@@ -486,6 +486,18 @@ input, select {
     line-height: 30px;
     text-indent:1px;
 }
+
+.article_card_text
+{
+
+  color: #808080;
+  font-family: Source Sans Pro, sans-serif;
+  font-size:13px;
+  font-weight:400;
+  line-height:30px;
+  text-indent:1px;
+}
+
 .faq_inside_title {
     text-indent: -20px;
     margin-left: 20px;
@@ -798,6 +810,12 @@ input, select {
 		padding-left:2.5em;
 		width:45%
 	}
+   	.about_person_img2
+	{
+ 		width: 60%;
+		max-width:350px;
+	}
+
 }
 @media screen and (max-width: 420px) {
     .launch {
@@ -901,6 +919,13 @@ input, select {
 		padding-left:2.5em;
 		max-width:55%
 	}
+
+	.about_person_img2
+	{
+ 		width: 60%;
+		max-width:350px;
+	}
+
 }
 @media screen and (max-width: 319px) {
     body {

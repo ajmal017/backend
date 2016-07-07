@@ -39,7 +39,7 @@ def get_access_token(user, password):
     auth = HTTPBasicAuth(settings.CLIENT_ID, settings.CLIENT_SECRET)
     response = requests.post(settings.BASE_URL + '/o/token/', auth=auth, data=data)
     responseJSON = response.json()
-    if not responseJSON.access_token:
+    if not responseJSON.get('access_token'):
         logger = logging.getLogger('django.error')
         logger.error("Profiles: access_token: Access token failed for user with id: " + user.id)
             

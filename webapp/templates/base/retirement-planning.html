@@ -1,14 +1,15 @@
+{% load staticfiles %}
 <!DOCTYPE html>
 <!-- saved from url=(0031)https://www.finaskus.com/terms/ -->
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
 		<title>Retirement Planning</title>
 		
-		<meta name="description" content="">
+		<meta name="description" content=" Retirement planning explained, why should you invest for your retirement ? best funds to invest in Retirement ">
 		<meta http-equiv="X-UA-Compatible" content="IE=Edge">
-		<meta name="keywords" content="">
+		<meta name="keywords" content="Retirement planning explained, best funds to invest in mutual funds">
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-		<link href="https://www.finaskus.com/static/css" rel="stylesheet" type="text/css">
-		<link rel="stylesheet" type="text/css" href="https://www.finaskus.com/static/css/main.css">
+		<link href="{% static 'css/main.css' %}" rel="stylesheet" type="text/css">
+		<link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
 
 		  
@@ -28,54 +29,41 @@
 
 
 		<div class="p_logo">
-			<a href="https://www.finaskus.com"><img src="https://www.finaskus.com/static/images/headerlogo.png" class="logo_img"></a>
+			<a href="https://www.finaskus.com"><img src="{% static 'images/headerlogo.png' %}" class="logo_img"></a>
 		</div>
-		<!-- Navigation -->
-<nav class="navbar-white nav">
-  <div class="container-fluid2">
-    <div class="navbar-header">
-      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-      <!-- <a class="navbar-brand" href="#">Finaskus</a> -->
-    </div>
-    <div class="collapse navbar-collapse" id="myNavbar">
-      <ul class="navbar-white nav navbar-nav navbar-right">
-        <!-- 
-<li class="dropdown navbar-white">
-          <a class="dropdown-toggle" data-toggle="dropdown" href="#">Page 1 <span class="caret"></span></a>
-          <ul class="dropdown-menu">
-            
-               <li>  <a href="https://www.finaskus.com/aboutus/" class="terms">About Us</a> </li>
-
-				 <li><a href="https://www.finaskus.com/careers/" class="terms">Careers</a></li>
-				 <li><a href="https://www.finaskus.com/#why-finaskus" class="terms">Why Finaskus</a></li>
-				 <li><a href="https://www.finaskus.com/support/" class="terms">Support</a></li>
-				 <li><a href="https://www.finaskus.com/FAQs class="terms">Resources</a></li>
-
-				 <li><a href="https://www.finaskus.com/blog/#" class="terms" >Blog</a></li>
-
-				 <li><a href="https://www.finaskus.com/#contactus" class="terms">Contact us</a> </li>
+<!-- Navigation -->
+		  <nav class="navbar-white nav">
+			<div class="container-fluid2">
+			  <div class="navbar-header">
+				<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+				  <span class="icon-bar"></span>
+				  <span class="icon-bar"></span>
+				  <span class="icon-bar"></span>
+				</button>
+				<!-- <a class="navbar-brand" href="#">Finaskus</a> -->
+			  </div>
+			  <div class="collapse navbar-collapse" id="myNavbar">
+				<ul class="navbar-white nav navbar-nav navbar-right">
 				 
-				
-          </ul>
-        </li>
- --> 			
- 				<li class="navbar-white"><a href="https://www.finaskus.com/#why-finaskus" class="terms">Why FinAskus</a></li>
-				 <li class="navbar-white"><a href="https://www.finaskus.com/#how-it-works" class="terms">How It Works</a></li>
-        		 <li class="navbar-white"><a href="https://www.finaskus.com/aboutus/" class="active">About Us</a></li>
-				 <li class="navbar-white"><a href="https://www.finaskus.com/blog/" class="terms">Resource Center</a></li>
-				 <li class="navbar-white"><a href="https://www.finaskus.com/faq/" class="terms">FAQ</a></li>				
-				 <li class="navbar-white"><a href="https://www.finaskus.com/#contactus" class="terms">Contact Us</a></li>
+						   <li class="navbar-white"><a href="https://www.finaskus.com/#why-finaskus" class="terms">Why FinAskus</a></li>
+						   <li class="navbar-white"><a href="https://www.finaskus.com/#how-it-works" class="terms">How It Works</a></li>
+						   <li class="navbar-white"><a href="https://www.finaskus.com/aboutus/" class="active">About Us</a></li>
+						   <li class="dropdown">
+							 <a class="dropdown-toggle navbar-white" data-toggle="dropdown" href="#">Resource Center
+							   <span class="caret"></span></a>
+								<ul class="dropdown-menu">
+									<li><a href="https://www.finaskus.com/mutual-fund-basics/" class="navbar-white terms">MF Basics</a></li>
+									<li><a href="https://www.finaskus.com/blog/" class="navbar-white terms">Blog</a></li>
+								</ul>
+						  </li>
+						   <li class="navbar-white"><a href="https://www.finaskus.com/faq/" class="terms">FAQ</a></li>
+						   <li class="navbar-white"><a href="https://www.finaskus.com/contact/" class="terms">Contact Us</a></li>			 
+				</ul>			
+			  </div>
+			</div>
+		  </nav>
 
-      </ul>
-      
-    </div>
-  </div>
-</nav>
-  
+   <!-- End of Navigation -->
 	
 			<div >
 
@@ -97,7 +85,7 @@
         		
         		<div class="col-md-9">
         		  <ul>   			
-					<p>  Retirement planning pitfalls?</p>
+					<p class="p_subtitle">  Retirement planning pitfalls?</p>
 
 					<ul class="p_inside_text p_ulist">
 					 	<ol>
@@ -107,7 +95,7 @@
      	  		 </ul>    	   
      	  	    </div>
      	  </div>
-     	  <p class="card_text">
+     	  <p class="article_card_text">
 			<br>
 
 			In retirement, timing is everything. And timing your retirement plan too late is a very unfortunate circumstance.
@@ -121,7 +109,7 @@
 
 				Another major pitfall that comes with that is a too aggressive asset allocation. Now that your time is constrained, you want to raise as much money as quickly as you can, but it doesn&#39t always work out that way.
 			</div>
-<p class="card_text">
+<p class="article_card_text">
 That&#39s the problem. We think many people who are starting late for retirement do kind of want to put the pedal
  to the metal. They want to invest in the asset class with the highest potential return   that tends to be equities, 
  over long periods of time. But you do need to have a sufficiently long time horizon to have equities work for your benefit.
@@ -141,7 +129,7 @@ particular are barely going to keep up with inflation going forward. So you do n
 <div class="p_subtitle">
 Let&#39s say the retiree&#39s assets are all in order. They have the money, but they don't know what to do with it. <br>
 </div>
-<p class="card_text">
+<p class="article_card_text">
 A big retirement pitfall is not having a clearly articulated withdrawal strategy. Once you get close to retirement it is intimidating to start thinking about pulling out of that portfolio that you spent such a long time building. But it&#39s important to have a clearly articulated withdrawal strategy.
  So think about what is the sustainable withdrawal rate, given my time horizon in retirement, given my asset allocation, as well as how from a logistical standpoint I'll go about withdrawing money from this portfolio.
 <br>
@@ -224,8 +212,8 @@ var isMobile = {
 				<div class="blockleft">
 					<img src="https://www.finaskus.com/static/images/footerlogo.png" class="footerlogo">
 					<div>
-						<img src="https://www.finaskus.com/static/images/app_store.png" class="bottom_img"> 
-						<img src="https://www.finaskus.com/static/images/finaskus-app-google-play-badge_small.png" class="bottom_img">
+						<img src="{% static 'images/app_store.png' %}" class="bottom_img"> 
+					 <a href="https://play.google.com/store/apps/details?id=com.finaskus.finaskus_android">	<img src="https://www.finaskus.com/static/images/finaskus-app-google-play-badge_small.png" class="bottom_img"> </a>
 
 						<table width="135" border="0" cellpadding="2" cellspacing="0"
 							   title="Click to Verify - This site chose GeoTrust SSL for secure e-commerce and confidential communications."
@@ -252,7 +240,7 @@ var isMobile = {
 								<div class="text">C-1002, Mantri Espana</div>
 								<div class="text">Kariyamma Agrahara</div>
 								<div class="text">Marathalli Outer Ring Road</div>
-								<div class="text">Bengaluru 560103</div>
+								<div class="text">Bengaluru, India 560103</div>
 							</div>
 							<br><br>
 						</div>
@@ -265,7 +253,9 @@ var isMobile = {
 							<div>
 								<img src="https://www.finaskus.com/static/images/email_us_at_icon.png" class="call_email_img">
 									<span class="contact_subtitle">Email us at:</span>
-									<span class="text">askus@finaskus.com</span>
+							    
+                                      <a href="mailto:askus@finaskus.com"><span class="text">askus@finaskus.com</span> </a>
+
 							</div>
 						</div>
 					</div>
