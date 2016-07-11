@@ -107,6 +107,13 @@ def debtfundsrisk(request):
     """
     return render(request, 'base/debt-funds-risk-free.html')
 
+def sipintime(request):
+    """
+    :param request:
+    :return:
+    """
+    return render(request, 'base/a-sip-in-time-saves-nine.html')
+
 def retirementplanning(request):
     """
     :param request:

@@ -49,6 +49,7 @@ urlpatterns = [
     url(r'^retirement-planning', views.retirementplanning, name='retirementplanning'),
     url(r'^why-invest-in-mutual-funds', views.whymf, name='whymf'),
     url(r'^debt-funds-risk-free', views.debtfundsrisk, name='debtfundsrisk'),
+    url(r'^a-sip-in-time-saves-nine', views.sipintime, name='sipintime'),
     url(r'^aboutus', views.aboutus, name='aboutus'),
     url(r'^mutual-fund-articles', views.mfarticles, name='mfarticles'),
     url(r'^blog', views.blog, name='blog'),

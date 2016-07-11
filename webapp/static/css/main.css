@@ -130,6 +130,12 @@ input, select {
     padding: .5em;
 /*     max-height: 380px; */
 }
+.articlecardimage
+{
+    max-width: 60%;
+    padding: .5em;
+/*     max-height: 380px; */
+}
 
 .launch {
     font-family: 'Oxygen', sans-serif;
@@ -399,7 +405,7 @@ input, select {
 .p_title {
     margin-left: 7%;
     color: #227abd;
-    font-size: 36px;
+    font-size: 34px;
     font-family: 'Oxygen', sans-serif;
     font-weight: 300;
     padding-bottom: 2px;
@@ -446,7 +452,7 @@ input, select {
 }
 .p_inside_text {
     text-indent: -20px;
-    margin-left: 20px;
+    
 }
 .p_inside_text li span {
     padding-left: 20px;
@@ -458,9 +464,9 @@ input, select {
 .p_subtitle {
     color: #227abd;
     font-family: Source Sans Pro, sans-serif;
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 400;
-    padding-bottom: 20px;
+    padding-bottom: 5px;
 }
 .p_subtitle_faq {
     color: #227abd;
@@ -481,7 +487,7 @@ input, select {
 .card_text {
     color: #808080;
     font-family: Source Sans Pro, sans-serif; 
-    font-size:.6em;
+    font-size:14px;
     font-weight: 400;
     line-height: 30px;
     text-indent:1px;
@@ -492,7 +498,7 @@ input, select {
 
   color: #808080;
   font-family: Source Sans Pro, sans-serif;
-  font-size:13px;
+  font-size:14px;
   font-weight:400;
   line-height:30px;
   text-indent:1px;
@@ -926,6 +932,10 @@ input, select {
 		max-width:350px;
 	}
 
+	.articlecardimage
+	{
+	    max-width: 100%;
+	}
 }
 @media screen and (max-width: 319px) {
     body {
