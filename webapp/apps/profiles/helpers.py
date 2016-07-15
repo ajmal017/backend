@@ -130,7 +130,7 @@ def send_kra_verified_email(user, domain_override=None, subject_template_name='k
               html_email_template_name=html_email_template_name)
 
     if user.vault_locked:
-        send_mail("vault_completion/user_kyc_subject.txt", email_template_name=None, context, from_email, user.email,
+        send_mail("vault_completion/user_kyc_subject.txt", None, context, from_email, user.email,
               html_email_template_name="vault_completion/vault_complete_kyc_verified.html")
         
 
@@ -210,9 +210,9 @@ def send_transaction_completed_email(order_detail, domain_override=None, subject
         'protocol': 'https' if use_https else 'http',
     }
     send_mail(subject_template_name, email_template_name, context, from_email, settings.DEFAULT_TO_EMAIL,
-              html_email_template_name=html_email_template_name)
+              html_email_template_name=None)
     
-    send_mail('transaction/user-subject.txt', email_template_name=None, context, from_email, order_detail.user.email,
+    send_mail('transaction/user-subject.txt', None, context, from_email, order_detail.user.email,
               html_email_template_name=html_email_template_name)
     
 
