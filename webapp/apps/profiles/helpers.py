@@ -166,7 +166,7 @@ def send_vault_completion_email_user(user, user_email, domain_override=None,
         'user': user,
         'protocol': 'https' if use_https else 'http',
     }
-    send_vault_completion_email(request.user, request.user.email, use_https=settings.USE_HTTPS)
+    send_vault_completion_email(user, user_email, use_https=settings.USE_HTTPS)
     
     if user.get_kra_verified() == True:
         send_mail(subject_template_name, email_template_name, context, from_email, user.email,

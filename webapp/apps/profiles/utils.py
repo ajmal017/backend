@@ -449,9 +449,8 @@ def update_kyc_status():
         new_status = True if pan_status[-2:] == "02" else False
         if new_status is True:
             investor.kra_verified = True
-            if investor.applicant_name is None:
-                investor.applicant_name = name
             investor.save()
+
 
 def get_investor_mandate_amount(user):
         """
