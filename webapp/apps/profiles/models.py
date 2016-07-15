@@ -256,17 +256,14 @@ class InvestorInfo(TimeStampedModel):
             if self.kra_verified is True:
                 orig = InvestorInfo.objects.get(pk=self.pk)
                 if orig.kra_verified is False:
-                    helpers.send_kra_verified_email(orig.user.email, use_https=settings.USE_HTTPS)
+                    helpers.send_kra_verified_email(orig.user, use_https=settings.USE_HTTPS)
         super(InvestorInfo, self).save(*args, **kwargs)
 
     def get_dob(self):
         if self.dob:
             return self.dob
         else:
-            age = self.user.age if self.user.age != None else 0
-            dob = date.today() - relativedelta(years=age)
-            return dob
-
+            return None
 
 class Address(models.Model):
     """

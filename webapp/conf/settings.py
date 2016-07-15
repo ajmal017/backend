@@ -288,7 +288,7 @@ ADMINS = (
 OAUTH2_PROVIDER = {
     # this is the list of available scopes
     'SCOPES': {'read': 'Read scope', 'write': 'Write scope', 'groups': 'Access to your groups'},
-    'ACCESS_TOKEN_EXPIRE_SECONDS': 31536000  # TODO: revert to 1 week once refresh token is implemented
+    'ACCESS_TOKEN_EXPIRE_SECONDS': 86400  # TODO: revert to 1 week once refresh token is implemented
 }
 
 

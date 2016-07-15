@@ -1241,7 +1241,7 @@ class ChangePortfolio(APIView):
         if fund_id_map[constants.EQUITY]:
             if category_sip_lumpsum_map[constants.EQUITY][constants.SIP] !=0:
                 defected_funds = utils.find_funds_with_sip_lower_than_minimum_sip(
-                    category_sip_lumpsum_map[constants.EQUITY][constants.SIP], fund_id_map[constants.EQUITY])
+                    category_sip_lumpsum_map[constants.EQUITY][constants.SIP], category_sip_lumpsum_map[constants.EQUITY][constants.SIP_COUNT], fund_id_map[constants.EQUITY])
 
                 if defected_funds != '':
                     # string_to_return = constants.CHECK_PORTFOLIO_DISTRIBUTION_MESSAGE.format(defected_funds)
@@ -1280,7 +1280,7 @@ class FundsDistributionValidate(APIView):
         if equity_funds:
             if category_sip_lumpsum_map[constants.EQUITY][constants.SIP] !=0:
                 defected_funds = utils.find_funds_with_sip_lower_than_minimum_sip(
-                    category_sip_lumpsum_map[constants.EQUITY][constants.SIP], equity_funds)
+                    category_sip_lumpsum_map[constants.EQUITY][constants.SIP], category_sip_lumpsum_map[constants.EQUITY][constants.SIP_COUNT], equity_funds)
 
                 if defected_funds != '':
                     # string_to_return = constants.CHECK_PORTFOLIO_DISTRIBUTION_MESSAGE.format(defected_funds)

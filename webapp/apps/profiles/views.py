@@ -725,7 +725,7 @@ class SaveImage(APIView):
                 request.user.signature = request.FILES.get('signature', None)
                 request.user.finaskus_id = core_utils.get_finaskus_id(request.user)
                 request.user.save()
-                helpers.send_vault_completion_email(request.user.email, use_https=settings.USE_HTTPS)
+                helpers.send_vault_completion_email(request.user, request.user.email, use_https=settings.USE_HTTPS)
                 return api_utils.response({"message": constants.SIGNATURE_SAVED,
                                            "signature": request.user.signature.url}, status.HTTP_200_OK)
             return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(serializer.errors))
@@ -1142,9 +1142,12 @@ class IsCompleteView(APIView):
         if utils.is_investable(request.user):
             serializer = serializers.IsCompletePostSerializer(request.user, data=request.data)
             if serializer.is_valid():
+                vaultLocked = request.user.vault_locked 
                 serializer.save()
                 request.user.vault_locked = True
                 request.user.save()
+                if vaultLocked == False:
+                    helpers.send_vault_completion_email_user(request.user, request.user.email, use_https=settings.USE_HTTPS)
                 return api_utils.response({'finaskus_id': request.user.finaskus_id,
                                            'process_choice': request.user.process_choice})
             return api_utils.response({}, status.HTTP_400_BAD_REQUEST, generate_error_message(serializer.errors))
@@ -1636,6 +1639,11 @@ class LockVault(APIView):
         :param request:
         :return:
         """
+        
+        vaultLocked = request.user.vault_locked 
         request.user.vault_locked = True
         request.user.save()
+        if vaultLocked == False:
+            helpers.send_vault_completion_email_user(request.user, request.user.email, use_https=settings.USE_HTTPS)
+
         return api_utils.response({constants.MESSAGE:constants.SUCCESS})

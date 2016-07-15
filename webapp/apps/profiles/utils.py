@@ -5,6 +5,7 @@ from core import models as core_models
 from core import constants
 from profiles import constants as cons
 from profiles import models as profile_models
+from external_api import cvl 
 from webapp.apps import random_with_N_digits
 from . import helpers
 import logging
@@ -440,6 +441,17 @@ def send_daily_mails_for_kyc_verification():
     if len(final_list) != 0:
         helpers.send_kyc_verification_email(final_list, use_https=settings.USE_HTTPS)
 
+def update_kyc_status():
+    investor_list = profile_models.InvestorInfo.objects.filter(kra_verified=False, pan_number__isnull=False)
+    for investor in investor_list:
+        password = cvl.get_cvl_password()
+        pan_status, name = cvl.get_pancard_status(password, investor.pan_number)
+        new_status = True if pan_status[-2:] == "02" else False
+        if new_status is True:
+            investor.kra_verified = True
+            if investor.applicant_name is None:
+                investor.applicant_name = name
+            investor.save()
 
 def get_investor_mandate_amount(user):
         """

@@ -3093,17 +3093,22 @@ def calculate_sip_lumpsum_category_wise_for_a_portfolio(portfolio):
     as respective values
     """
     category_sip_lumpsum_map = {
-        constants.EQUITY: {constants.LUMPSUM: 0, constants.SIP: 0},
-        constants.DEBT: {constants.LUMPSUM: 0, constants.SIP: 0},
-        constants.ELSS: {constants.LUMPSUM: 0, constants.SIP: 0}
+        constants.EQUITY: {constants.LUMPSUM: 0, constants.SIP: 0, constants.SIP_COUNT: 0, constants.LUMPSUM_COUNT: 0},
+        constants.DEBT: {constants.LUMPSUM: 0, constants.SIP: 0, constants.SIP_COUNT: 0, constants.LUMPSUM_COUNT: 0},
+        constants.ELSS: {constants.LUMPSUM: 0, constants.SIP: 0, constants.SIP_COUNT: 0, constants.LUMPSUM_COUNT: 0}
     }
 
     # loop through all portfolio items of a portfolio and increase category sip/lumpsum if portfolio item's fund type is
     # as category
     for portfolio_item in portfolio.portfolioitem_set.all():
         sip_lump = category_sip_lumpsum_map[portfolio_item.fund.get_type_of_fund_display().lower()]
-        sip_lump[constants.LUMPSUM] += portfolio_item.lumpsum
-        sip_lump[constants.SIP] += portfolio_item.sip
+        if portfolio_item.lumpsum > 0:
+            sip_lump[constants.LUMPSUM] += portfolio_item.lumpsum
+            sip_lump[constants.LUMPSUM_COUNT] += 1
+            
+        if portfolio_item.sip > 0:
+            sip_lump[constants.SIP] += portfolio_item.sip
+            sip_lump[constants.SIP_COUNT] += 1
 
     return category_sip_lumpsum_map
 
@@ -3208,17 +3213,21 @@ def get_valid_start_date(fund_id, send_date=datetime.now()):
     return next_month
 
 
-def find_funds_with_sip_lower_than_minimum_sip(total_category_sip, fund_ids):
+def find_funds_with_sip_lower_than_minimum_sip(total_category_sip, sip_count, fund_ids):
     """
     checks if sip investment for each fund is more than its minimum sip investment
     :param total_category_sip: the total sip allotted to a category
-    :param fund_ids: the fund ids to which the amount is to be distribued
+    :param sip_count: the number of funds to which the amount is to be distributed
+    :param fund_ids: the fund ids to which the amount is to be distributed
     :return:
     """
     defected_funds = ''
 
+    if sip_count == 0:
+        sip_count = len(fund_ids)
+        
     # loop through the new funds selected and check the minimum sip condition
-    sip_allocation_to_each_fund = total_category_sip / len(fund_ids)
+    sip_allocation_to_each_fund = total_category_sip / sip_count
     user_selected_funds = models.Fund.objects.filter(id__in=fund_ids)
     for fund in user_selected_funds:
         if fund.minimum_sip_investment > sip_allocation_to_each_fund:

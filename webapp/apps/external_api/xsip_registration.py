@@ -27,7 +27,7 @@ def generate_user_pipe_file(user, order_items):
             rgts_code = item.portfolio_item.fund.bse_rgts_scheme_code
         agreed_sip = 0
         sip_tenure = user.get_sip_tenure(item.portfolio_item.portfolio)
-        installment_no = 0 if sip_tenure is None else (sip_tenure * 12) - 1
+        installment_no = 0 if sip_tenure is None else (sip_tenure * 12)
         if item.agreed_sip:
             agreed_sip = item.agreed_sip
         internal_ref_no = ""

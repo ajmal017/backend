@@ -112,7 +112,7 @@ def send_bse_registration_email(user_email_list, domain_override=None,
               html_email_template_name=html_email_template_name)
 
 
-def send_kra_verified_email(user_email, domain_override=None, subject_template_name='kra_verified/subject.txt',
+def send_kra_verified_email(user, domain_override=None, subject_template_name='kra_verified/subject.txt',
                             email_template_name='kra_verified/kra_verified_email.html', use_https=False,
                             token_generator=default_token_generator, from_email=None, request=None,
                             html_email_template_name=None, extra_email_context=None):
@@ -120,7 +120,8 @@ def send_kra_verified_email(user_email, domain_override=None, subject_template_n
     Sends email when a users kra is verified
     """
     context = {
-        'email': user_email,
+        'user': user,
+        'email': user.email,
         'domain': settings.SITE_BASE_URL,
         'site_name': "Finaskus",
         'protocol': 'https' if use_https else 'http',
@@ -128,6 +129,10 @@ def send_kra_verified_email(user_email, domain_override=None, subject_template_n
     send_mail(subject_template_name, email_template_name, context, from_email, settings.DEFAULT_TO_EMAIL,
               html_email_template_name=html_email_template_name)
 
+    if user.vault_locked:
+        send_mail("vault_completion/user_kyc_subject.txt", "vault_completion/vault_complete_kyc_verified.html", context, from_email, user.email,
+              html_email_template_name=html_email_template_name)
+        
 
 def send_kyc_verification_email(user_email_list, domain_override=None,
                                 subject_template_name='kyc_verify_pending/subject.txt',
@@ -146,8 +151,33 @@ def send_kyc_verification_email(user_email_list, domain_override=None,
     send_mail(subject_template_name, email_template_name, context, from_email, settings.DEFAULT_TO_EMAIL,
               html_email_template_name=html_email_template_name)
 
+def send_vault_completion_email_user(user, user_email, domain_override=None,
+                                subject_template_name='vault_completion/user_kyc_subject.txt',
+                                email_template_name='vault_completion/vault_complete_kyc_verified.html', use_https=False,
+                                token_generator=default_token_generator, from_email=None, request=None,
+                                html_email_template_name=None, extra_email_context=None):
+    """
+     Sends an email when vault is completed to user.
+    """
+    context = {
+        'domain': settings.SITE_BASE_URL,
+        'site_name': "Finaskus",
+        'user_email': user_email,
+        'user': user,
+        'protocol': 'https' if use_https else 'http',
+    }
+    send_vault_completion_email(request.user, request.user.email, use_https=settings.USE_HTTPS)
+    
+    if user.get_kra_verified() == True:
+        send_mail(subject_template_name, email_template_name, context, from_email, user.email,
+              html_email_template_name=html_email_template_name)
+    else:
+        if user.user_video is not None:
+            send_mail('vault_completion/user_nonkyc_subject.txt', 'vault_completion/vault_complete_kyc_unverified.html', context, from_email, user.email,
+              html_email_template_name=html_email_template_name)
 
-def send_vault_completion_email(user_email, domain_override=None,
+    
+def send_vault_completion_email(user, user_email, domain_override=None,
                                 subject_template_name='vault_completion/subject.txt',
                                 email_template_name='vault_completion/vault_completed_email.html', use_https=False,
                                 token_generator=default_token_generator, from_email=None, request=None,
@@ -159,11 +189,12 @@ def send_vault_completion_email(user_email, domain_override=None,
         'domain': settings.SITE_BASE_URL,
         'site_name': "Finaskus",
         'user_email': user_email,
+        'user': user,
         'protocol': 'https' if use_https else 'http',
     }
     send_mail(subject_template_name, email_template_name, context, from_email, settings.DEFAULT_TO_EMAIL,
               html_email_template_name=html_email_template_name)
-
+    
 
 def send_transaction_completed_email(order_detail, domain_override=None, subject_template_name='transaction/subject.txt',
                                      email_template_name='transaction/transaction_completed.html', use_https=False,
@@ -180,6 +211,10 @@ def send_transaction_completed_email(order_detail, domain_override=None, subject
     }
     send_mail(subject_template_name, email_template_name, context, from_email, settings.DEFAULT_TO_EMAIL,
               html_email_template_name=html_email_template_name)
+    
+    send_mail('transaction/user-subject.txt', 'transaction/user-confirm-pay.html', context, from_email, order_detail.user.email,
+              html_email_template_name=html_email_template_name)
+    
 
 
 def send_reset_email(user, domain_override=None, subject_template_name='registration/password_reset_request_subject.txt',
