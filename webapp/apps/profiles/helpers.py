@@ -130,8 +130,8 @@ def send_kra_verified_email(user, domain_override=None, subject_template_name='k
               html_email_template_name=html_email_template_name)
 
     if user.vault_locked:
-        send_mail("vault_completion/user_kyc_subject.txt", "vault_completion/vault_complete_kyc_verified.html", context, from_email, user.email,
-              html_email_template_name=html_email_template_name)
+        send_mail("vault_completion/user_kyc_subject.txt", email_template_name=None, context, from_email, user.email,
+              html_email_template_name="vault_completion/vault_complete_kyc_verified.html")
         
 
 def send_kyc_verification_email(user_email_list, domain_override=None,
@@ -153,9 +153,9 @@ def send_kyc_verification_email(user_email_list, domain_override=None,
 
 def send_vault_completion_email_user(user, user_email, domain_override=None,
                                 subject_template_name='vault_completion/user_kyc_subject.txt',
-                                email_template_name='vault_completion/vault_complete_kyc_verified.html', use_https=False,
+                                email_template_name=None, use_https=False,
                                 token_generator=default_token_generator, from_email=None, request=None,
-                                html_email_template_name=None, extra_email_context=None):
+                                html_email_template_name='vault_completion/vault_complete_kyc_verified.html', extra_email_context=None):
     """
      Sends an email when vault is completed to user.
     """
@@ -173,8 +173,8 @@ def send_vault_completion_email_user(user, user_email, domain_override=None,
               html_email_template_name=html_email_template_name)
     else:
         if user.user_video is not None:
-            send_mail('vault_completion/user_nonkyc_subject.txt', 'vault_completion/vault_complete_kyc_unverified.html', context, from_email, user.email,
-              html_email_template_name=html_email_template_name)
+            send_mail('vault_completion/user_nonkyc_subject.txt', email_template_name, context, from_email, user.email,
+              html_email_template_name='vault_completion/vault_complete_kyc_unverified.html')
 
     
 def send_vault_completion_email(user, user_email, domain_override=None,
@@ -199,7 +199,7 @@ def send_vault_completion_email(user, user_email, domain_override=None,
 def send_transaction_completed_email(order_detail, domain_override=None, subject_template_name='transaction/subject.txt',
                                      email_template_name='transaction/transaction_completed.html', use_https=False,
                                      token_generator=default_token_generator, from_email=None,
-                                     request=None,html_email_template_name=None, extra_email_context=None):
+                                     request=None,html_email_template_name='transaction/user-confirm-pay.html', extra_email_context=None):
     """
     Sends email when a transaction is completed
     """
@@ -212,7 +212,7 @@ def send_transaction_completed_email(order_detail, domain_override=None, subject
     send_mail(subject_template_name, email_template_name, context, from_email, settings.DEFAULT_TO_EMAIL,
               html_email_template_name=html_email_template_name)
     
-    send_mail('transaction/user-subject.txt', 'transaction/user-confirm-pay.html', context, from_email, order_detail.user.email,
+    send_mail('transaction/user-subject.txt', email_template_name=None, context, from_email, order_detail.user.email,
               html_email_template_name=html_email_template_name)
     
 
