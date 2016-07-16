@@ -137,6 +137,13 @@ def daily_once_cron():
         is_error = True
         error_entry = str(e) + ' create_order_items_based_on_next_allotment_date; '
         errors += error_entry
+    
+    try:
+        profile_utils.update_kyc_status()
+    except Exception as e:
+        is_error = True
+        error_entry = str(e) + ' update_kyc_status; '
+        errors += error_entry
 
     if is_error:
         mail_logger.info(errors)

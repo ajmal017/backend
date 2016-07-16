@@ -442,12 +442,21 @@ def send_daily_mails_for_kyc_verification():
         helpers.send_kyc_verification_email(final_list, use_https=settings.USE_HTTPS)
 
 def update_kyc_status():
+    """
+    Update kyc verification status by checking with cvl
+    :return:
+    """
+
+    logger = logging.getLogger('django.debug')
+    logger.debug("Profiles: update_kyc_status")
+
     investor_list = profile_models.InvestorInfo.objects.filter(kra_verified=False, pan_number__isnull=False)
     for investor in investor_list:
         password = cvl.get_cvl_password()
-        pan_status, name = cvl.get_pancard_status(password, investor.pan_number)
+        pan_status = cvl.get_pancard_status(password, investor.pan_number)
         new_status = True if pan_status[-2:] == "02" else False
         if new_status is True:
+            logger.debug("Profiles: update_kyc_status: KYC Verified for user id: " + investor.user.id)
             investor.kra_verified = True
             investor.save()
 
