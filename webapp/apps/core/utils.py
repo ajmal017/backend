@@ -3227,14 +3227,14 @@ def find_funds_with_sip_lower_than_minimum_sip(total_category_sip, sip_count, fu
         sip_count = len(fund_ids)
         
     logger = logging.getLogger('django.debug')
-    logger.debug("find_funds_with_sip_lower_than_minimum_sip: SIP count: " + sip_count)
+    logger.debug("find_funds_with_sip_lower_than_minimum_sip: SIP count: " + str(sip_count))
 
     # loop through the new funds selected and check the minimum sip condition
     sip_allocation_to_each_fund = total_category_sip / sip_count
     user_selected_funds = models.Fund.objects.filter(id__in=fund_ids)
     for index, fund in enumerate(user_selected_funds):
         if index >= sip_count:
-            logger.debug("find_funds_with_sip_lower_than_minimum_sip: Break at SIP count: " + sip_count)
+            logger.debug("find_funds_with_sip_lower_than_minimum_sip: Break at SIP count: " + str(sip_count))
             break
         if fund.minimum_sip_investment > sip_allocation_to_each_fund:
             defected_funds += '\n' + fund.legal_name

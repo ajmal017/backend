@@ -820,11 +820,9 @@ class InvestorInfo(APIView):
         try:
             investor = models.InvestorInfo.objects.get(user=request.user)
         except models.InvestorInfo.DoesNotExist:
-            age = request.user.age if request.user.age != None else 0
-            dob = date.today() - relativedelta(years=age)
             response = {
                 "id": None,
-                "dob": dob,
+                "dob": None,
                 "investor_status": "Resident Individual",
                 "pan_number": None,
                 "applicant_name": None,
