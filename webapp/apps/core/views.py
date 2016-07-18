@@ -584,6 +584,9 @@ class PortfolioPerformance(APIView):
         portfolio_items = models.PortfolioItem.objects.filter(portfolio=portfolio).order_by('fund_id')
         portfolio_items_fund_ids = [portfolio_item.fund_id for portfolio_item in portfolio_items]
         latest_date = utils.get_latest_date_funds_only()
+        latest_dashboard_date = utils.get_dashboard_change_date()
+        if latest_dashboard_date < latest_date:
+            latest_date = latest_dashboard_date
         nav_dates = utils.get_dates_for_nav(latest_date)
         nav_list = models.HistoricalFundData.objects.filter(
             fund_id__in=portfolio_items_fund_ids, date__in=nav_dates).order_by('fund_id_id', '-date')
