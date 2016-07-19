@@ -34,7 +34,7 @@ from copy import deepcopy
 import functools
 import warnings
 import logging
-
+import threading
 
 def deprecate_current_app(func):
     """
@@ -212,7 +212,9 @@ class Register(APIView):
             user_response['risk_score'], user_response['name'] = None, ""
             sms_code = utils.get_sms_verification_code(user)
             # TODO : add provisions to add country code?
-            sms_code_sent = api.send_sms(constants.OTP.format(sms_code), int(phone))
+            send_sms_thread = threading.Thread(target=api.send_sms, args=(constants.OTP.format(sms_code), int(phone),))
+            send_sms_thread.start()
+            #sms_code_sent = api.send_sms(constants.OTP.format(sms_code), int(phone))
             code = code_generator(50)
             models.EmailCode.objects.update_or_create(
                 user=user, defaults={'code': code, 'expires_at': datetime.now() + timedelta(hours=24)})
