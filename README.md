@@ -49,9 +49,13 @@ webapp/fixtures/pincode_modified.json webapp/fixtures/ifsc_codes.json`
 
 
 ## Server updates process
+*  Log in to AWS
+*  'cd ~/projects/finaskus'
+*  'source finaskus-env/bin/activate'
+*  cd backend-finaskus
 * `sudo git pull origin <branch_name>` (ex master is the branch that needs to be pulled)
-* If any changes are done in static files run `python manage.py collectstatic`
-* `ps -ef | grep gunicorn` will list down the workers with their pids
-* `sudo kill -9 <all the pids space seperated>` This will kill all the process with that pid
+*  If any changes are done in static files(images & CSS( anything in static folder)) run `python manage.py collectstatic`
+* `ps -ef | grep gunicorn` will list down the workers with their pids ( find gunicorn process & kill them)
+* `sudo kill -9 <all the pids space seperated>` This will kill all the gunicorn process with that pid
 *  ALTERNATELY it can be killed by `pkill -9 gunicorn` if we are sure gunicorn is only running our project alone
 * from the location `/projects/finaskus/backend-finaskus` on current server run `nohup ./../finaskus-env/bin/gunicorn_start.sh &` to run the server again
