@@ -2360,6 +2360,7 @@ def convert_to_investor(txn):
     :return:
     """
     #TODO intil amount fixing
+
     user = txn.user
     portfolio = models.Portfolio.objects.get(user=user, has_invested=False)
     order_detail = save_portfolio_snapshot(txn)

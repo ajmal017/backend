@@ -152,10 +152,10 @@ def send_kyc_verification_email(user_email_list, domain_override=None,
               html_email_template_name=html_email_template_name)
 
 def send_vault_completion_email_user(user, user_email, domain_override=None,
-                                subject_template_name='vault_completion/user_kyc_subject.txt',
+                                subject_template_name='vault_completion/user_account_active.txt',
                                 email_template_name=None, use_https=False,
                                 token_generator=default_token_generator, from_email=None, request=None,
-                                html_email_template_name='vault_completion/vault_complete_kyc_verified.html', extra_email_context=None):
+                                html_email_template_name='vault_completion/vault_complete_account_active.html', extra_email_context=None):
     """
      Sends an email when vault is completed to user.
     """

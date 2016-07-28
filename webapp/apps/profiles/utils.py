@@ -454,7 +454,7 @@ def update_kyc_status():
     for investor in investor_list:
         password = cvl.get_cvl_password()
         pan_status = cvl.get_pancard_status(password, investor.pan_number)
-        new_status = True if pan_status[-2:] == "02" else False
+        new_status = True if pan_status[-2:] in ["02", "002"] else False
         if new_status is True:
             logger.debug("Profiles: update_kyc_status: KYC Verified for user id: " + investor.user.id)
             investor.kra_verified = True
