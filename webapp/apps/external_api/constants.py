@@ -654,6 +654,10 @@ ARN_CODE = "108537"
 MEMBER_CODE = "10382"
 DEMO_MEMBER_CODE = "10236"
 PHYS = "PHYS"
+CLIENT_TYPE_P = "P"
+DEFAULT_BANK_Y = "Y"
+DEFAULT_BANK_N = "N"
+
 
 UNSUPPORTED_BANK = "Payment is not supported through this bank as of now."
 
