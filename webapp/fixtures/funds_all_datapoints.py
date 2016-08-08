@@ -39,6 +39,14 @@ morningstar_object = morningstar.MorningStarBackend()
 
 DUMMY_ANALYSIS = "A fund with top-of-mind recall in the large-cap category, this fund stayed true-to-label through three market cycles over the last 20 years. It has rarely slipped below four-five stars throughout its 20-year tenure. The fund typically holds about 35-40 stocks, striving to maintain adequate diversification across companies and sectors. It adopts a buy-hold approach, with the average holding period for individual stocks at around two years. The fund's investment style leans towards growth at a reasonable price. The fund selects stocks based on classic fundamental metrics such as high RoCE, good management and the ability to deliver sustainable earnings growth."
 
+def read_csv_and_populate_indices_data(csv_file_name):
+    data_reader = csv.reader(open(csv_file_name), delimiter=',', quotechar='"')
+    for row in data_reader:
+        if row[0] != 'mstar_id':
+            inception_date = datetime.datetime.strptime(row[2], "%Y-%m-%d").date()
+            models.Indices.objects.create(mstar_id=row[0], index_name=row[1], inception_date=inception_date)
+
+
 def read_csv_and_populate_fund_data(csv_file_name):
     """
     :return:
@@ -79,6 +87,9 @@ def add_riskometer_data(fund):
             fund.risk = row[1]
             fund.save()
 
+NON_MS_DATA_FOR_INDICES = 'webapp/fixtures/indices.csv'
+read_csv_and_populate_indices_data(NON_MS_DATA_FOR_INDICES)
+
 # Till this step you have created an object of morning star backend and defined few function that will be need to populate data
 morningstar_object.get_data_points_for_funds()
 
@@ -100,9 +111,10 @@ read_csv_and_populate_fund_data(NON_MS_DATA_FOR_FUNDS)
 # For one funds it can take upto 20 minutes. If you want to start from a particular date then edit the settings
 # constants named START_DATE and set it to a date string of the format "yyyy-mm-dd"
 
-MSTAR_ID = "XXXXXXXXX" # replace this
-fund = models.Fund.objects.get(mstar_id=MSTAR_ID)
-morningstar_object.get_historical_data_points(fund.mstar_id)
+#MSTAR_ID = "XXXXXXXXX" # replace this
+funds = models.Fund.objects.all()
+for fund in funds:
+    morningstar_object.get_historical_data_points(fund.mstar_id)
 
 
 # Run the next 5 line to populate the daily, monthly, equity, debt and sector related data in those tables after the

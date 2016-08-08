@@ -5,6 +5,7 @@ from collections import OrderedDict
 from datetime import datetime
 from subprocess import call
 from fdfgen import forge_fdf
+from . import constants as cons
 import os
 import time
 
@@ -25,11 +26,11 @@ def generate_bank_mandate_file(user, order_items):
     for item in order_items:
         total_sip += item.agreed_sip
     total_sip = max(total_sip, 100000)
-    bank_mandate_dict = OrderedDict([('UCC', str(user.finaskus_id)),
-                                      ('Client Name', user.investorinfo.applicant_name),
+    bank_mandate_dict = OrderedDict([('Member Code', cons.MEMBER_CODE),
+                                      ('UCC', str(user.finaskus_id)),
                                       ('Amount', str(total_sip)),
-                                      ('Bank Name', user.investorbankdetails.ifsc_code.name),
-                                      ('Branch', user.investorbankdetails.ifsc_code.bank_branch), ])
+                                      ('IFSC Code', user.investorbankdetails.ifsc_code.ifsc_code),
+                                      ('Account Number', user.investorbankdetails.account_number), ])
     outfile.write("|".join(bank_mandate_dict.values()))
     outfile.write("\r")
     outfile.close()
