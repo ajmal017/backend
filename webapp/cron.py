@@ -139,7 +139,7 @@ def daily_once_cron():
         errors += error_entry
     
     try:
-        profile_utils.update_kyc_status()
+        generate_log_message(profile_utils.update_kyc_status(), 'update_kyc_status', 0, mail_logger)
     except Exception as e:
         is_error = True
         error_entry = str(e) + ' update_kyc_status; '
