@@ -257,10 +257,14 @@ class Login(APIView):
         login_error = constants.LOGIN_ERROR_0  # login_error holds the type of error generated.
         username = request.data.get('username')
         password = request.data.get('password')
+        phone_number = None
+        email_id = None
         try:
             if '@' in username:
+                email_id = username
                 user = models.User.objects.get(email__iexact=username)
             else:
+                phone_number = username
                 user = models.User.objects.get(phone_number=username)
         except models.User.DoesNotExist:
             login_error = constants.LOGIN_ERROR_1
@@ -272,12 +276,12 @@ class Login(APIView):
             return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": login_error},
                                       status.HTTP_404_NOT_FOUND,
                                       constants.PHONE_AND_EMAIL_NOT_VERIFIED)
-        if kwargs.get('phone_number') and not user.phone_number_verified:
+        if phone_number and not user.phone_number_verified:
             login_error = constants.LOGIN_ERROR_3
             return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": login_error},
                                       status.HTTP_404_NOT_FOUND,
                                       constants.PHONE_NOT_VERIFIED)
-        if kwargs.get('email') and not user.email_verified:
+        if email_id and not user.email_verified:
             login_error = constants.LOGIN_ERROR_4
             return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": login_error},
                                       status.HTTP_404_NOT_FOUND,
