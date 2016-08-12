@@ -120,6 +120,13 @@ def daily_cron():
         error_entry = str(e) + 'generates invested, current amount and xirr of user on particular date; '
         errors += error_entry
 
+    try:
+        generate_log_message(profile_utils.update_kyc_status(), 'update_kyc_status', 0, mail_logger)
+    except Exception as e:
+        is_error = True
+        error_entry = str(e) + ' update_kyc_status; '
+        errors += error_entry
+
     if is_error:
         mail_logger.info(errors)
 
@@ -138,13 +145,6 @@ def daily_once_cron():
         error_entry = str(e) + ' create_order_items_based_on_next_allotment_date; '
         errors += error_entry
     
-    try:
-        generate_log_message(profile_utils.update_kyc_status(), 'update_kyc_status', 0, mail_logger)
-    except Exception as e:
-        is_error = True
-        error_entry = str(e) + ' update_kyc_status; '
-        errors += error_entry
-
     if is_error:
         mail_logger.info(errors)
 
