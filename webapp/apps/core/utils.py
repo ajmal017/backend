@@ -344,7 +344,7 @@ def calculate_overall_allocation(user_id, investment_date=None):
                 term = float(answer_map[constants.MAP[asset] + category_questions[3][0]].text)
                 actual_term = term
                 if asset == 'invest':
-                    term = term if term > constants.INVEST_MINIMUM_TERM else constants.INVEST_MINIMUM_TERM
+                    term = term if term > 0 else constants.INVEST_MINIMUM_TERM
             if category_questions[4] is not None:
                 growth = float(answer_map[constants.MAP[asset] + category_questions[4]].text)
             if asset == 'tax':
@@ -1386,7 +1386,7 @@ def new_expected_corpus(type, sip, lumpsum, debt_asset_allocation, equity_asset_
     """
     starting_amount_debt, starting_amount_equity, total_end_of_month, monthly_sip = 0, 0, 0, sip
     sip_paying_term = term
-    if type == 'invest' and term < constants.INVEST_MINIMUM_TERM:
+    if type == 'invest' and term <= 0:
         sip_paying_term = term
         term = constants.INVEST_MINIMUM_TERM
     year_count = 1
@@ -1920,7 +1920,7 @@ def calculate_corpus_and_investment_till_date(answer_map, portfolio, category, c
         term = float(answer_map[str(portfolio.id) + constants.MAP[category] + category_questions[3][0]].text)
         actual_term = term
         if category == 'invest':
-            term = term if term > constants.INVEST_MINIMUM_TERM else constants.INVEST_MINIMUM_TERM
+            term = term if term > 0 else constants.INVEST_MINIMUM_TERM
     if category_questions[4] is not None:
         growth = float(answer_map[str(portfolio.id) + constants.MAP[category] + category_questions[4]].text)
     if category == 'tax':
