@@ -1569,7 +1569,8 @@ def _append_to_dict(type, portfolio_item, funds_into_category, total_sum_investe
     """
     return funds_into_category[type].append({constants.FUND_NAME: portfolio_item.fund.fund_name,
                                              constants.ALLOCATION: portfolio_item.sum_invesed / total_sum_invested,
-                                             constants.ONE_YEAR_RETURN: portfolio_item.fund.get_one_year_return()})
+                                             constants.ONE_YEAR_RETURN: portfolio_item.fund.get_one_year_return(),
+                                             constants.ID: portfolio_item.fund.id})
 
 
 def get_average_holding(fund):
@@ -1992,7 +1993,7 @@ def make_xirr_calculations_for_dashboard(amount_invested_fund_map, api_type, is_
         for category in fund_map_based_on_type:
             if category.get(constants.KEY) == constants.FUND_MAP_REVERSE[fund.type_of_fund]:
                 category.get(constants.VALUE).append(make_fund_dict_for_portfolio_detail(
-                    fund.fund_name, fund_current_value, fund_gain, sum_invested_in_fund))
+                    fund.fund_name, fund_current_value, fund_gain, sum_invested_in_fund, fund.id))
 
     # calculating gain percentage for categories and the portfolio
     for category in array_for_category_gain_calculation:
@@ -2174,7 +2175,7 @@ def append_category_cal_arrays(array_for_category_gain_calculation, fund, array_
     return array_for_category_gain_calculation, fund_gain
 
 
-def make_fund_dict_for_portfolio_detail(fund_name, fund_current_value, fund_gain, sum_invested_in_fund):
+def make_fund_dict_for_portfolio_detail(fund_name, fund_current_value, fund_gain, sum_invested_in_fund, fund_id):
     """
     utility to make a dict
     :param fund_name: the name of fund
@@ -2187,7 +2188,8 @@ def make_fund_dict_for_portfolio_detail(fund_name, fund_current_value, fund_gain
             constants.IS_GAIN: True if float(round(fund_current_value - sum_invested_in_fund)) >= 0 else False,
             constants.CURRENT_VALUE: round(fund_current_value),
             constants.INVESTED_VALUE: round(sum_invested_in_fund),
-            constants.GAIN: round(fund_current_value - sum_invested_in_fund)}
+            constants.GAIN: round(fund_current_value - sum_invested_in_fund),
+            constants.ID: fund_id}
 
 
 def make_array_for_gain_calculation(fund_transactions):
@@ -3571,7 +3573,7 @@ def make_xirr_calculations_for_dashboard_version_two(transaction_fund_map, api_t
         for category in asset_class_overview:
             if category.get(constants.KEY) == constants.FUND_MAP_REVERSE[fund.type_of_fund]:
                 category.get(constants.VALUE).append(make_fund_dict_for_portfolio_detail(
-                    fund.fund_name, current_value_of_a_fund, gain_percentage_of_a_fund, sum_invested_in_the_fund))
+                    fund.fund_name, current_value_of_a_fund, gain_percentage_of_a_fund, sum_invested_in_the_fund, fund.id))
 
     if api_type == constants.DASHBOARD:
         portfolio_overview = make_portfolio_overview_new(
