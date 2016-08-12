@@ -332,7 +332,7 @@ class FutureFundOrderItemSerializer(serializers.ModelSerializer):
         """
         returns future sip
         """
-        return "Future Sip"
+        return "Future SIP"
 
     def get_unit_alloted(self, obj):
         """
