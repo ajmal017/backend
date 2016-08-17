@@ -86,6 +86,13 @@ def mfbasics(request):
     return render(request, 'base/mutual-fund-basics.html')
 
 
+def commission(request):
+    """
+    :param request:
+    :return:
+    """
+    return render(request, 'base/commission.html')
+
 def mfprimer(request):
     """
     :param request:

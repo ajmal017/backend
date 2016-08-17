@@ -271,6 +271,7 @@ class FundOrderItemSerializer(serializers.ModelSerializer):
     """
 
     fund_name = serializers.CharField(source='portfolio_item.fund.fund_name')
+    fund_id = serializers.CharField(source='portfolio_item.fund.id')
     transaction_date = serializers.DateField(source='get_transaction_date')
     allotment_date = serializers.CharField(source='get_allotment_date')
     unit_alloted = serializers.CharField(source='get_unit_alloted')
@@ -278,7 +279,7 @@ class FundOrderItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.FundOrderItem
         fields = ('id', 'fund_name', 'unit_alloted', 'allotment_date', 'is_verified', 'order_amount',
-                  'transaction_date')
+                  'transaction_date', 'fund_id')
 
 
 class FundRedeemItemSerializer(serializers.ModelSerializer):
@@ -287,6 +288,7 @@ class FundRedeemItemSerializer(serializers.ModelSerializer):
     """
 
     fund_name = serializers.CharField(source='portfolio_item.fund.fund_name')
+    fund_id = serializers.CharField(source='portfolio_item.fund.id')
     transaction_date = serializers.DateField(source='get_transaction_date')
     allotment_date = serializers.CharField(source='get_redeem_date')
     unit_alloted = serializers.CharField(source='get_unit_redeemed')
@@ -295,7 +297,7 @@ class FundRedeemItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.FundRedeemItem
         fields = ('id', 'fund_name', 'unit_alloted', 'allotment_date', 'is_verified', 'order_amount',
-                  'transaction_date')
+                  'transaction_date', 'fund_id')
 
 
 class RedeemDetailSerializer(serializers.ModelSerializer):
@@ -304,6 +306,7 @@ class RedeemDetailSerializer(serializers.ModelSerializer):
     """
 
     fund_name = serializers.CharField(source='fund.fund_name')
+    fund_id = serializers.CharField(source='fund.id')
     transaction_date = serializers.DateField(source='get_transaction_date')
     allotment_date = serializers.CharField(source='get_redeem_date')
     unit_alloted = serializers.CharField(source='get_unit_redeemed')
@@ -312,7 +315,7 @@ class RedeemDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.RedeemDetail
         fields = ('id', 'fund_name', 'unit_alloted', 'allotment_date', 'is_verified', 'order_amount',
-                  'transaction_date')
+                  'transaction_date', 'fund_id')
 
 
 
@@ -322,6 +325,7 @@ class FutureFundOrderItemSerializer(serializers.ModelSerializer):
     """
 
     fund_name = serializers.CharField(source='portfolio_item.fund.fund_name')
+    fund_id = serializers.CharField(source='portfolio_item.fund.id')
     transaction_date = serializers.SerializerMethodField()
     allotment_date = serializers.SerializerMethodField()
     unit_alloted = serializers.SerializerMethodField()
@@ -366,4 +370,4 @@ class FutureFundOrderItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.FundOrderItem
         fields = ('id', 'fund_name', 'unit_alloted', 'allotment_date', 'is_verified', 'order_amount',
-                  'transaction_date')
+                  'transaction_date', 'fund_id')

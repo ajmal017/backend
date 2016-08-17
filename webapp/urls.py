@@ -44,6 +44,7 @@ urlpatterns = [
     url(r'^mutual-fund-scheme-related-documents', views.blank, name='blank'),
     url(r'^faq', views.faq, name='faq'),
     url(r'^index-new', views.indexnew, name='indexnew'),
+    url(r'^commission', views.commission, name='commission'),
     url(r'^mutual-fund-primer', views.mfprimer, name='mfprimer'),
     url(r'^mutual-fund-basics', views.mfbasics, name='mfbasics'),
     url(r'^retirement-planning', views.retirementplanning, name='retirementplanning'),
