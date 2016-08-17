@@ -1,5 +1,11 @@
 # Initial requirements: #
-* python 3
+* python 3 - sudo apt-get install python3
+
+# Ubuntu has the default python version 2.7 , to point to the new version 3
+
+* alias python='/usr/bin/python3'
+
+* pip3 - sudo apt-get install python3-pip
 * postgres
 * sudo apt-get install zlib1g-dev libtiff5-dev libjpeg8-dev libfreetype6-dev liblcms2-dev libwebp-dev
 
