@@ -18,6 +18,12 @@ from enum import Enum
 from enum import IntEnum
 from datetime import date
 
+class S3PrivateFileField(models.FileField):
+
+    def __init__(self, verbose_name=None, name=None, upload_to='', storage=None, **kwargs):
+        super(S3PrivateFileField, self).__init__(verbose_name=verbose_name,
+                name=name, upload_to=upload_to, storage=storage, **kwargs)
+        self.storage.default_acl = "private"
 
 class User(AbstractBaseUser, TimeStampedModel):
     """
@@ -67,7 +73,7 @@ class User(AbstractBaseUser, TimeStampedModel):
     phone_number_verified = models.BooleanField(_('phone number verification status'), default=False)
     email_verified = models.BooleanField(_('email verification status'), default=False)
     age = models.IntegerField(_('age'), blank=True, null=True)
-    identity_info_image = models.FileField(upload_to="identity/image/", max_length=700, blank=True, null=True)
+    identity_info_image = S3PrivateFileField(upload_to="identity/image/", max_length=700, blank=True, null=True)
     marital_status = models.CharField(choices=MARITAL_STATUS_CHOICES, max_length=1, default="")
     is_investor_info = models.BooleanField(_('is investor info complete'), default=False)
     is_contact_info = models.BooleanField(_('is contact info complete'), default=False)
