@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponseRedirect, QueryDict
 from django.core.urlresolvers import reverse
 from django.conf import settings
+from django.shortcuts import redirect
 
 from rest_framework import status
 from rest_framework.views import APIView
@@ -99,6 +100,21 @@ def mfprimer(request):
     :return:
     """
     return render(request, 'base/mutual-fund-primer.html')
+
+def deeplinking(request, *args, **kwargs):
+    """
+    :param request:
+    :return:
+    """
+    customScheme = request.GET.get('customScheme', None)
+    if customScheme is None and 'schemeUri' in kwargs:
+        customScheme = kwargs.get('schemeUri')
+        if not customScheme:
+            customScheme = "finaskus.define.financial.goals"
+        if customScheme:
+            return redirect(reverse('deeplinking', kwargs={'schemeUri':''}) + '?customScheme=' + customScheme)
+    return render(request, 'base/deeplinking.html')
+
 
 def whymf(request):
     """

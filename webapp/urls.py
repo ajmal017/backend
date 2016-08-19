@@ -54,6 +54,7 @@ urlpatterns = [
     url(r'^aboutus', views.aboutus, name='aboutus'),
     url(r'^mutual-fund-articles', views.mfarticles, name='mfarticles'),
     url(r'^blog', views.blog, name='blog'),
+    url(r'^deep-linking/(?P<schemeUri>.*)/', views.deeplinking, name='deeplinking'),
     url(r'^google59199aa04156c0bc.html$', TemplateView.as_view(template_name='google59199aa04156c0bc.html')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

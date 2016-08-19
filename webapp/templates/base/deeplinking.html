@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width,minimum-scale=1.0, maximum-scale=1.0" />
+    <title>Site Name</title>
+    <style>@media screen and (max-device-width:480px){body{-webkit-text-size-adjust:none}}</style>
+ 
+    <!-- implement javascript on web page that first first tries to open the deep link
+        1. if user has app installed, then they would be redirected to open the app to specified screen
+        2. if user doesn't have app installed, then their browser wouldn't recognize the URL scheme
+        and app wouldn't open since it's not installed. In 1 second (1000 milliseconds) user is redirected
+        to download app from app store.
+     -->
+    <script>
+
+    var getParameterByName = function(name, url) {
+    if (!url) url = window.location.href;
+    name = name.replace(/[\[\]]/g, "\\$&");
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
+};
+    window.onload = function() 
+    {
+var ua = navigator.userAgent.toLowerCase(),
+    isChrome = ua.indexOf('chrome') > -1,
+    isAndroidMobile = false,
+    appstoreLink = "https://play.google.com/store/apps/details?id=com.finaskus.finaskus_android",
+    gotoLink = appstoreLink,
+    customScheme = getParameterByName("customScheme");
+
+if(/Android|webOS|BlackBerry/i.test(ua))
+    isAndroidMobile = true;
+console.log("isChrome: " + isChrome + " isAndroidMobile: " + isAndroidMobile + " customScheme: " + customScheme);
+
+if (isAndroidMobile) {
+	if (isChrome) {
+		gotoLink = "intent://scan/#Intent;scheme=" + customScheme + ";package=com.finaskus.finaskus_android;end";
+	}
+	else {
+		gotoLink = appstoreLink + "&referrer=" + customScheme;//customScheme + "://app.com/?screen=xxxxx";
+	}
+	
+}
+window.location = gotoLink;
+
+	if (!isAndroidMobile || !isChrome) {
+//		setTimeout(function() { window.location=appstoreLink; }, 1000); 
+	}
+
+    };
+    
+    var onBodyLoaded = function() {
+	window.location="https://play.google.com/store/apps/details?id=com.finaskus.finaskus_android";
+	};
+
+	
+    </script>
+</head>
+<body>
+
+</body>
+</html>
+
