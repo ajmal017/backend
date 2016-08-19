@@ -73,7 +73,7 @@ class User(AbstractBaseUser, TimeStampedModel):
     phone_number_verified = models.BooleanField(_('phone number verification status'), default=False)
     email_verified = models.BooleanField(_('email verification status'), default=False)
     age = models.IntegerField(_('age'), blank=True, null=True)
-    identity_info_image = S3PrivateFileField(upload_to="identity/image/" + id, max_length=700, blank=True, null=True)
+    identity_info_image = S3PrivateFileField(upload_to=helpers.unique_filename("identity/image/", id), max_length=700, blank=True, null=True)
     marital_status = models.CharField(choices=MARITAL_STATUS_CHOICES, max_length=1, default="")
     is_investor_info = models.BooleanField(_('is investor info complete'), default=False)
     is_contact_info = models.BooleanField(_('is contact info complete'), default=False)
