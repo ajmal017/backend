@@ -3229,6 +3229,8 @@ def find_funds_with_sip_lower_than_minimum_sip(total_category_sip, sip_count, fu
     if sip_count == 0:
         sip_count = len(fund_ids)
         
+    sip_count = min(sip_count, len(fund_ids))
+        
     logger = logging.getLogger('django.debug')
     logger.debug("find_funds_with_sip_lower_than_minimum_sip: SIP count: " + str(sip_count))
 
