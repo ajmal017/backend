@@ -131,7 +131,28 @@ def password_reset_complete(request,
     request.session['email'] = None
     return TemplateResponse(request, template_name, context)
 
+#investor info check
+def investor_info_check(user):
+    flag_data = {}
+    try:
+        investor_info = models.InvestorInfo.objects.get(user=user)
+                
+        if investor_info is not None:
+            if investor_info.applicant_name is not None:
+                flag_data['applicant_name'] = investor_info.applicant_name
+            else:
+                flag_data['applicant_name'] = False   
+        else:
+            flag_data['applicant_name'] = False
+                    
+    except models.InvestorInfo.DoesNotExist:
+            flag_data['applicant_name'] = False
+                
+    applicant_name = flag_data['applicant_name']
+    return applicant_name
 
+
+        
 class UserInfo(APIView):
     """
     Retrieve, update or delete a profile instance.
@@ -218,7 +239,11 @@ class Register(APIView):
             code = code_generator(50)
             models.EmailCode.objects.update_or_create(
                 user=user, defaults={'code': code, 'expires_at': datetime.now() + timedelta(hours=24)})
-            helpers.send_verify_email(user, code, use_https=settings.USE_HTTPS)
+            
+            # check the user has invester info 
+            applicant_name = investor_info_check(request.user)
+            
+            helpers.send_verify_email(user, applicant_name, code, use_https=settings.USE_HTTPS)
 
             return api_utils.response({"user": user_response, "tokens": helpers.get_access_token(user, password),
                                        "assess": core_utils.get_assess_answer(user),
@@ -417,7 +442,8 @@ class ResetPassword(APIView):
                                       constants.INCORRECT_EMAIL)
         if user.is_active:
             if user.email_verified:
-                helpers.send_reset_email(user=user, use_https=settings.USE_HTTPS)
+                applicant_name = investor_info_check(user)
+                helpers.send_reset_email(user=user,applicant_name=applicant_name,use_https=settings.USE_HTTPS)
                 return api_utils.response({"message": constants.RESET_EMAIL_SENT, "case": 1})
             else:
                 sms_code = utils.get_sms_verification_code(user)
@@ -498,12 +524,17 @@ class ResendVerifyEmail(APIView):
         :param request:
         :return:
         """
+        flag_data = {}
+        
         user = request.user
         if user.is_active:
             code = code_generator(50)
             models.EmailCode.objects.update_or_create(
                 user=user, defaults={'code': code, 'expires_at': datetime.now() + timedelta(hours=24)})
-            helpers.send_verify_email(user=user, code=code, use_https=settings.USE_HTTPS)
+            
+            applicant_name = investor_info_check(request.user)
+            
+            helpers.send_verify_email(user=user,applicant_name=applicant_name,code=code, use_https=settings.USE_HTTPS)
             return api_utils.response({"message": constants.VERIFY_EMAIL_SENT})
         else:
             return api_utils.response({"message": constants.NON_ACTIVE_USER_ERROR}, status.HTTP_404_NOT_FOUND,
@@ -570,12 +601,18 @@ class ResendVerifyEmailAdmin(APIView):
         :param request:
         :return:
         """
+        flag_data = {}
+        
         user = models.User.objects.get(email=request.data.get('email'))
         if user.is_active:
             code = code_generator(50)
             models.EmailCode.objects.update_or_create(
                 user=user, defaults={'code': code, 'expires_at': datetime.now() + timedelta(hours=24)})
-            helpers.send_verify_email(user=user, code=code, use_https=settings.USE_HTTPS)
+            
+            # Check user info in Invest info table
+            applicant_name = investor_info_check(request.user)
+            
+            helpers.send_verify_email(user=user,applicant_name=applicant_name, code=code, use_https=settings.USE_HTTPS)
             return api_utils.response({"message": constants.RESEND_MAIL_SUCCESS})
         else:
             return api_utils.response({"message": constants.RESEND_MAIL_FAILURE}, status.HTTP_404_NOT_FOUND,
@@ -795,17 +832,21 @@ class ChangeEmail(APIView):
         :param request:
         :return:  Sends the current email verification status of a user
         """
+        flag_data={}
         serializer = serializers.EmailStatusSerializer(request.user, data=request.data)
         if serializer.is_valid():
             old_email = request.user.email
-            helpers.send_email_change_notify_to_old_email(old_email, serializer.validated_data.get('email'),
+            # check user information in investor information 
+            applicant_name = investor_info_check(request.user)
+            helpers.send_email_change_notify_to_old_email(old_email,applicant_name, serializer.validated_data.get('email'),
                                                           use_https=settings.USE_HTTPS)
             user = serializer.save(email_verified=False, username=serializer.validated_data.get('email'))
             code = code_generator(50)
 
             models.EmailCode.objects.update_or_create(
                 user=user, defaults={'code': code, 'expires_at': datetime.now() + timedelta(hours=24)})
-            helpers.send_verify_email(user=user, code=code, use_https=settings.USE_HTTPS)
+            
+            helpers.send_verify_email(user=user,applicant_name=applicant_name, code=code, use_https=settings.USE_HTTPS)
             return api_utils.response(serializer.data)
         return api_utils.response({}, status.HTTP_400_BAD_REQUEST, generate_error_message(serializer.errors))
 
@@ -1150,8 +1191,16 @@ class IsCompleteView(APIView):
                 serializer.save()
                 request.user.vault_locked = True
                 request.user.save()
+                
+                investor = models.InvestorInfo.objects.get(user=request.user)
+                
+                if investor.applicant_name is not None:
+                    user_name = investor.applicant_name
+                else:
+                    user_name = request.user.email
+                    
                 if vaultLocked == False:
-                    helpers.send_vault_completion_email_user(request.user, request.user.email, use_https=settings.USE_HTTPS)
+                    helpers.send_vault_completion_email_user(request.user, user_name,request.user.email, use_https=settings.USE_HTTPS)
                 return api_utils.response({'finaskus_id': request.user.finaskus_id,
                                            'process_choice': request.user.process_choice})
             return api_utils.response({}, status.HTTP_400_BAD_REQUEST, generate_error_message(serializer.errors))
@@ -1507,7 +1556,8 @@ class VerifyForgotPasswordOTP(APIView):
             except models.VerificationSMSCode.DoesNotExist:
                 return api_utils.response({}, status.HTTP_400_BAD_REQUEST, constants.VERIFICATION_CODE_NOT_PRESENT)
             if verification_object.sms_code == serializer.data.get('otp'):
-                helpers.send_reset_email(user=user, use_https=settings.USE_HTTPS)
+                applicant_name = investor_info_check(request.user)
+                helpers.send_reset_email(user=user,applicant_name=applicant_name, use_https=settings.USE_HTTPS)
                 user.email_verified = True
                 user.save()
                 return api_utils.response({"message": constants.RESET_EMAIL_SENT})
@@ -1564,7 +1614,8 @@ class ConfirmChangeInPhoneNumber(APIView):
                 request.user.save()
                 verification_object.delete()
                 if request.user.email_verified:
-                    helpers.send_phone_number_change_email(user_email=request.user.email, previous_number=old_phone_number[-5:], new_number=verification_object.phone_number[-5:], use_https=settings.USE_HTTPS)
+                    applicant_name = investor_info_check(request.user)
+                    helpers.send_phone_number_change_email(user_email=request.user.email,applicant_name=applicant_name, previous_number=old_phone_number[-5:], new_number=verification_object.phone_number[-5:], use_https=settings.USE_HTTPS)
                 return api_utils.response({"message": constants.PHONE_VERIFIED})
             else:
                 return api_utils.response({"message": constants.INCORRECT_SMS_CODE}, status.HTTP_404_NOT_FOUND,
@@ -1648,6 +1699,14 @@ class LockVault(APIView):
         request.user.vault_locked = True
         request.user.save()
         if vaultLocked == False:
-            helpers.send_vault_completion_email_user(request.user, request.user.email, use_https=settings.USE_HTTPS)
+            
+            investor = models.InvestorInfo.objects.get(user=request.user)
+                
+            if investor.applicant_name is not None:
+                user_name = investor.applicant_name
+            else:
+                user_name = request.user.email
+                    
+            helpers.send_vault_completion_email_user(request.user, user_name,request.user.email, use_https=settings.USE_HTTPS)
 
         return api_utils.response({constants.MESSAGE:constants.SUCCESS})

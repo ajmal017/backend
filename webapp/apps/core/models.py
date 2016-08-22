@@ -9,6 +9,7 @@ from django.utils.translation import ugettext_lazy as _
 from djutil.models import TimeStampedModel
 
 import profiles.models as profile_models
+import profiles.helpers as profile_helpers
 from webapp.conf import settings
 from webapp.apps import random_with_N_digits
 from . import manager, constants
@@ -923,6 +924,17 @@ class OrderDetail(TimeStampedModel):
                 related_portfolio = self.fund_order_items.all()[0].portfolio_item.portfolio
                 related_portfolio.is_deleted = True
                 related_portfolio.save()
+                
+        #check Order Details information
+        if self.pk is not None:
+            if self.order_status == 2:
+                try:
+                    orig = OrderDetail.objects.get(pk=self.pk)
+                    if orig is not None:
+                        if orig.order_status is not None:
+                            profiles_helpers.send_transaction_completed_email(order_detail=self,applicant_name='J Paul',user_email='jineshpaul@finaskus.com',use_https=settings.USE_HTTPS)
+                except OrderDetail.DoesNotExist:
+                    return False
         return super(OrderDetail, self).save(*args, **kwargs)
 
     def __str__(self):

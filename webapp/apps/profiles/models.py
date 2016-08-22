@@ -256,7 +256,7 @@ class InvestorInfo(TimeStampedModel):
             if self.kra_verified is True:
                 orig = InvestorInfo.objects.get(pk=self.pk)
                 if orig.kra_verified is False:
-                    helpers.send_kra_verified_email(orig.user, use_https=settings.USE_HTTPS)
+                    helpers.send_kra_verified_email(orig.user, self.applicant_name, use_https=settings.USE_HTTPS)
         super(InvestorInfo, self).save(*args, **kwargs)
 
     def get_dob(self):

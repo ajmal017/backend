@@ -2385,7 +2385,22 @@ def convert_to_investor(txn):
     allocation_asset.save()
     profile_models.AggregatePortfolio.objects.update_or_create(
         user=txn.user, defaults={"update_date":datetime.now().date()})
-    profiles_helpers.send_transaction_completed_email(order_detail, use_https=settings.USE_HTTPS)
+    
+    
+    try:
+        investor_info = profile_models.InvestorInfo.objects.get(user=user)
+                
+        if investor_info.applicant_name is not None:
+          flag_data['applicant_name'] = investor_info.applicant_name
+        else:
+            flag_data['applicant_name'] = False
+                    
+    except profile_models.InvestorInfo.DoesNotExist:
+            flag_data['applicant_name'] = False
+                
+    applicant_name = flag_data['applicant_name']
+    
+    profiles_helpers.send_transaction_completed_email(order_detail,applicant_name,user.email,use_https=settings.USE_HTTPS)
 
 
 def save_portfolio_snapshot(txn):

@@ -1,0 +1,5 @@
+.settings
+**/__pycache__
+error_log
+webapp/media
+*.swp

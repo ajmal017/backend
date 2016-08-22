@@ -45,7 +45,7 @@ def read_csv_and_populate_indices_data(csv_file_name):
         if row[0] != 'mstar_id':
             inception_date = datetime.datetime.strptime(row[2], "%Y-%m-%d").date()
             models.Indices.objects.create(mstar_id=row[0], index_name=row[1], inception_date=inception_date)
-
+            morningstar_object.get_historical_index_data_points(row[0], datetime.date(2006, 1, 1) , datetime.datetime.now().date())
 
 def read_csv_and_populate_fund_data(csv_file_name):
     """
@@ -146,7 +146,7 @@ for fund in fund_monthly_objects:
 
 # For all newly created Indices run the next two lines to pull historical data of new indexes
 MSTAR_ID = "XXXX" # replace this to mstar id of index not fund!
-morningstar_object.get_historical_index_data_points(MSTAR_ID, datetime.date(2006, 1, 1) , datetime.datetime.now().date())
+#morningstar_object.get_historical_index_data_points(MSTAR_ID, datetime.date(2006, 1, 1) , #datetime.datetime.now().date())
 
 
 # We can add data off category average history by running the next lines
@@ -162,7 +162,7 @@ for fund in all_funds:
 for category in category_code_set:
     if  models.HistoricalCategoryData.objects.filter(category_code=str(category)).count() == 0:
         print("completed for "+str(category))
-        morningstar_object.get_historical_category_data(str(category), datetime.date(2006, 1, 1), datetime.datetime.now().date())
+        morningstar_object.get_historical_category_data(str(category), datetime.date(2006, 1, 1),  datetime.datetime.now().date())
 
 
 # deletes records from historical index data which are older than 2006 Ideally there should not be any unless you

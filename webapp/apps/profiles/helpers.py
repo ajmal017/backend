@@ -72,7 +72,7 @@ def send_mail(subject_template_name, email_template_name, context, from_email, t
     email_message.send()
 
 
-def send_email_change_notify_to_old_email(old_email, new_email, subject_template_name='notify_old_email/subject.txt',
+def send_email_change_notify_to_old_email(old_email,applicant_name, new_email, subject_template_name='notify_old_email/subject.txt',
                                           email_template_name=None, use_https=False, from_email=None,
                                           html_email_template_name='notify_old_email/email.html'):
     """
@@ -87,9 +87,14 @@ def send_email_change_notify_to_old_email(old_email, new_email, subject_template
     :param html_email_template_name:
     :return:
     """
+    if applicant_name is not None:
+       userName = applicant_name
+    else:
+       userName = old_email
     context = {
         'old_email': old_email,
         'new_email': new_email,
+        'user_name':userName,
         'domain': settings.SITE_BASE_URL,
         'site_name': profile_constants.SITE_NAME,
         'protocol': 'https' if use_https else 'http',
@@ -116,16 +121,28 @@ def send_bse_registration_email(user_email_list, domain_override=None,
               html_email_template_name=html_email_template_name)
 
 
-def send_kra_verified_email(user, domain_override=None, subject_template_name='kra_verified/subject.txt',
+def send_kra_verified_email(user,applicant_name, domain_override=None, subject_template_name='kra_verified/subject.txt',
                             email_template_name='kra_verified/kra_verified_email.html', use_https=False,
                             token_generator=default_token_generator, from_email=None, request=None,
                             html_email_template_name=None, extra_email_context=None):
     """
     Sends email when a users kra is verified
     """
+    
+    
+    if applicant_name is not None:
+       userName = applicant_name
+    else:
+       userName = user.email
+    
+       
+    """
+    check for applicant name exist or not
+    """
     context = {
         'user': user,
         'email': user.email,
+        'user_name':userName,
         'domain': settings.SITE_BASE_URL,
         'site_name': "Finaskus",
         'protocol': 'https' if use_https else 'http',
@@ -155,7 +172,7 @@ def send_kyc_verification_email(user_email_list, domain_override=None,
     send_mail(subject_template_name, email_template_name, context, from_email, settings.DEFAULT_TO_EMAIL,
               html_email_template_name=html_email_template_name)
 
-def send_vault_completion_email_user(user, user_email, domain_override=None,
+def send_vault_completion_email_user(user, applicant_name,user_email, domain_override=None,
                                 subject_template_name='vault_completion/user_account_active.txt',
                                 email_template_name=None, use_https=False,
                                 token_generator=default_token_generator, from_email=None, request=None,
@@ -164,6 +181,7 @@ def send_vault_completion_email_user(user, user_email, domain_override=None,
      Sends an email when vault is completed to user.
     """
     context = {
+        'user_name':applicant_name,
         'domain': settings.SITE_BASE_URL,
         'site_name': "Finaskus",
         'user_email': user_email,
@@ -200,14 +218,21 @@ def send_vault_completion_email(user, user_email, domain_override=None,
               html_email_template_name=html_email_template_name)
     
 
-def send_transaction_completed_email(order_detail, domain_override=None, subject_template_name='transaction/subject.txt',
+def send_transaction_completed_email(order_detail,applicant_name,user_email, domain_override=None, subject_template_name='transaction/subject.txt',
                                      email_template_name='transaction/transaction_completed.html', use_https=False,
                                      token_generator=default_token_generator, from_email=None,
                                      request=None,html_email_template_name='transaction/user-confirm-pay.html', extra_email_context=None):
     """
     Sends email when a transaction is completed
     """
+    if applicant_name is not False:
+        user_name = applicant_name
+    else:
+        user_name = user_email
+    
+    
     context = {
+        'user_name':user_name,
         'order_detail': order_detail,
         'domain': settings.SITE_BASE_URL,
         'site_name': "Finaskus",
@@ -221,7 +246,7 @@ def send_transaction_completed_email(order_detail, domain_override=None, subject
     
 
 
-def send_reset_email(user, domain_override=None, subject_template_name='registration/password_reset_request_subject.txt',
+def send_reset_email(user,applicant_name,domain_override=None, subject_template_name='registration/password_reset_request_subject.txt',
                      email_template_name=None, use_https=False,
                      token_generator=default_token_generator, from_email=None, request=None,
                      html_email_template_name='registration/password_reset_email.html', extra_email_context=None):
@@ -229,8 +254,14 @@ def send_reset_email(user, domain_override=None, subject_template_name='registra
         Generates a one-use only link for resetting password and sends to the
         user.
         """
+        if applicant_name is not False:
+            user_name = applicant_name
+        else:
+            user_name=user.email
+            
         context = {
             'email': user.email,
+            'user_name':user_name,
             'domain': settings.SITE_BASE_URL,
             'site_name': "Finaskus",
             'uid': urlsafe_base64_encode(force_bytes(user.pk)),
@@ -242,7 +273,7 @@ def send_reset_email(user, domain_override=None, subject_template_name='registra
                   html_email_template_name=html_email_template_name)
 
 
-def send_verify_email(user, code, domain_override=None, subject_template_name='verify_email/verify_email_subject.txt',
+def send_verify_email(user, applicant_name, code, domain_override=None, subject_template_name='verify_email/verify_email_subject.txt',
                       email_template_name=None, use_https=False,
                       token_generator=default_token_generator, from_email=None, request=None,
                       html_email_template_name='verify_email/verify_email.html', extra_email_context=None):
@@ -261,7 +292,14 @@ def send_verify_email(user, code, domain_override=None, subject_template_name='v
     :param extra_email_context:
     :return:
     """
+    if applicant_name is not False:
+        user_name = applicant_name
+    else:
+        user_name=user.email
+    
+    
     context = {
+        'user_name':user_name,      
         'email': user.email,
         'domain': settings.SITE_BASE_URL,
         'site_name': profile_constants.SITE_NAME,
@@ -293,7 +331,7 @@ def send_mail_with_attachment(subject_template_name, email_template_name, contex
     email_message.send()
 
 
-def send_phone_number_change_email(user_email, previous_number, new_number, domain_override=None,
+def send_phone_number_change_email(user_email,applicant_name,previous_number, new_number, domain_override=None,
                                 subject_template_name='registration/phone_number_reset.txt',
                                 email_template_name=None, use_https=False,
                                 token_generator=default_token_generator, from_email=None, request=None,
@@ -301,10 +339,16 @@ def send_phone_number_change_email(user_email, previous_number, new_number, doma
     """
      Sends an email when user has successfully changed his phone number.
     """
+    if applicant_name is not None:
+       userName = applicant_name
+    else:
+       userName = user.email
+       
     context = {
         'domain': settings.SITE_BASE_URL,
         'site_name': "Finaskus",
         'user_email': user_email,
+        'user_name':userName,
         'previous_number': previous_number,
         'new_number': new_number,
         'protocol': 'https' if use_https else 'http',

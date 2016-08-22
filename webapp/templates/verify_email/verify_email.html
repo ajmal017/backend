@@ -9,7 +9,7 @@
         <br><br><br>
         <br><br><br>
         <p align="left">
-            Dear {{ user.email }},
+            Dear {{ user_name }},
             <br><br>
             <a href="{{ protocol }}://{{ domain }}{% url 'api_urls:profiles_urls:check-email-code' token=token %}">Click here
             </a> to verify your Email ID.
