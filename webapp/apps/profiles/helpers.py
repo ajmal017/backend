@@ -16,6 +16,11 @@ from requests.auth import HTTPBasicAuth
 from . import constants as profile_constants
 import logging
 
+def unique_filename(path, context):
+    if path and context:
+        newPath = path + "/" + str(context)
+        return newPath
+    return path
 
 def make_dictionary(question_value, answer_text_value, answer_metadata_value):
     """

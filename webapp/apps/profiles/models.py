@@ -18,6 +18,55 @@ from enum import Enum
 from enum import IntEnum
 from datetime import date
 
+def unique_identity_image(instance, filename):
+    return "user/" + instance.id + "/identity/image/" + filename
+
+def unique_profile_image(instance, filename):
+    return "user/" + instance.id + "/profile/image/" + filename
+
+def unique_signature_image(instance, filename):
+    return "user/" + instance.id + "/signature/image/" + filename
+
+def unique_kyc_video(instance, filename):
+    return "user/" + instance.id + "/kyc/video/" + filename    
+
+def unique_kycvideo_image(instance, filename):
+    return "user/" + instance.id + "/kycvideo/image/" + filename    
+
+def unique_pan_image(instance, filename):
+    return "user/" + instance.id + "/pan/image/" + filename
+
+def unique_permanentaddress_front_image(instance, filename):
+    return "user/" + instance.id + "/permanentaddressfront/image/" + filename
+    
+def unique_permanentaddress_back_image(instance, filename):
+    return "user/" + instance.id + "/permanentaddressback/image/" + filename
+
+def unique_addressfront_image(instance, filename):
+    return "user/" + instance.id + "/addressfront/image/" + filename
+
+def unique_addressback_image(instance, filename):
+    return "user/" + instance.id + "/addressback/image/" + filename
+
+def unique_nomineesignature_image(instance, filename):
+    return "user/" + instance.id + "/nomineesignature/image/" + filename
+
+def unique_cheque_image(instance, filename):
+    return "user/" + instance.id + "/cheque/image/" + filename
+    
+class S3PrivateFileField(models.FileField):
+
+    def __init__(self, verbose_name=None, name=None, upload_to='', storage=None, **kwargs):
+        super(S3PrivateFileField, self).__init__(verbose_name=verbose_name,
+                name=name, upload_to=upload_to, storage=storage, **kwargs)
+        self.storage.default_acl = "private"
+
+class S3PrivateImageField(models.ImageField):
+
+    def __init__(self, verbose_name=None, name=None, upload_to='', storage=None, **kwargs):
+        super(S3PrivateImageField, self).__init__(verbose_name=verbose_name,
+                name=name, upload_to=upload_to, storage=storage, **kwargs)
+        self.storage.default_acl = "private"
 
 class User(AbstractBaseUser, TimeStampedModel):
     """
@@ -58,7 +107,7 @@ class User(AbstractBaseUser, TimeStampedModel):
     is_active = models.BooleanField(_('active'), default=False,
     help_text=_('Designates whether this user should be treated as active. Unselect it instead of deleting accounts.'))
     vault_locked = models.BooleanField(help_text=_('Is vault locked?'), default=False)
-    image = models.ImageField(upload_to="profile/image/", max_length=700, blank=True, null=True)
+    image = S3PrivateImageField(upload_to=unique_profile_image, max_length=700, blank=True, null=True)
     country_of_birth = models.CharField(_('country of birth'), max_length=254, blank=True, default="")
     nationality = models.CharField(_('nationality'), max_length=254, blank=True, default="")
     tax_status = models.CharField(_('tax status'), max_length=254, blank=True, default="",
@@ -67,7 +116,7 @@ class User(AbstractBaseUser, TimeStampedModel):
     phone_number_verified = models.BooleanField(_('phone number verification status'), default=False)
     email_verified = models.BooleanField(_('email verification status'), default=False)
     age = models.IntegerField(_('age'), blank=True, null=True)
-    identity_info_image = models.FileField(upload_to="identity/image/", max_length=700, blank=True, null=True)
+    identity_info_image = S3PrivateImageField(upload_to=unique_identity_image, max_length=700, blank=True, null=True)
     marital_status = models.CharField(choices=MARITAL_STATUS_CHOICES, max_length=1, default="")
     is_investor_info = models.BooleanField(_('is investor info complete'), default=False)
     is_contact_info = models.BooleanField(_('is contact info complete'), default=False)
@@ -79,7 +128,7 @@ class User(AbstractBaseUser, TimeStampedModel):
     process_choice = models.CharField(max_length=1, choices=PROCESS_CHOICES, blank=True, default="")
     mandate_status = models.CharField(max_length=1, choices=MANDATE_STATUS, blank=True, default=constants.LEVEL_0)
     xsip_status = models.CharField(max_length=1, choices=MANDATE_STATUS, blank=True, default=constants.LEVEL_0)
-    signature = models.FileField(upload_to="user/signature/", max_length=700, blank=True, null=True)
+    signature = S3PrivateImageField(upload_to=unique_signature_image, max_length=700, blank=True, null=True)
     remarks = models.TextField(blank=True, null=True)
     finaskus_id = models.CharField(max_length=40, default=None, blank=True, null=True)
     mandate_reg_no = models.CharField(_('Mandate Registration Number'), max_length=100, default=None, blank=True,
@@ -92,8 +141,8 @@ class User(AbstractBaseUser, TimeStampedModel):
     is_virtual_seen = models.BooleanField(default=False)
     is_real_seen = models.BooleanField(default=False)
     rebuild_portfolio = models.BooleanField(default=False)
-    user_video = models.FileField(upload_to="user_video/", max_length=700, blank=True, null=True)
-    user_video_thumbnail = models.FileField(upload_to="user_video/thumbnail/", max_length=700, blank=True, null=True)
+    user_video = S3PrivateFileField(upload_to=unique_kyc_video, max_length=700, blank=True, null=True)
+    user_video_thumbnail = S3PrivateImageField(upload_to=unique_kycvideo_image, max_length=700, blank=True, null=True)
     USERNAME_FIELD = 'email'
 
     objects = manager.CustomUserManager()
@@ -245,7 +294,7 @@ class InvestorInfo(TimeStampedModel):
                                        choices=OCCUPATION_TYPE_CHOICE)
     occupation_specific = models.CharField(max_length=512, blank=True, null=True)
     other_tax_payer = models.BooleanField(default=False,help_text=_(u'Do you pay tax in country other than India'))
-    pan_image = models.FileField(upload_to="investor_info/pan/image", max_length=700, blank=True, null=True)
+    pan_image = S3PrivateImageField(upload_to=unique_pan_image, max_length=700, blank=True, null=True)
     kra_verified = models.BooleanField(default=False)
 
     def __str__(self):
@@ -306,13 +355,13 @@ class ContactInfo(TimeStampedModel):
     email = models.EmailField(_('email address'), max_length=254, blank=True, null=True)
     phone_number = models.CharField(_('phone_number'), max_length=12, blank=True, null=True)
     # front image of the address proof.
-    front_image = models.FileField(upload_to="contact/address_proof/", max_length=1023, blank=True, null=True)
+    front_image = S3PrivateImageField(upload_to=unique_addressfront_image, max_length=1023, blank=True, null=True)
     # back image of the address proof.
-    back_image = models.FileField(upload_to="contact/address_proof/", max_length=1023, blank=True, null=True)
+    back_image = S3PrivateImageField(upload_to=unique_addressback_image, max_length=1023, blank=True, null=True)
     # front image of the permanent address proof.
-    permanent_front_image = models.FileField(upload_to="contact/permanent_address_proof/", max_length=1023, blank=True, null=True)
+    permanent_front_image = S3PrivateImageField(upload_to=unique_permanentaddress_front_image, max_length=1023, blank=True, null=True)
     # back image of the permanent address proof.
-    permanent_back_image = models.FileField(upload_to="contact/permanent_address_proof/", max_length=1023, blank=True, null=True)
+    permanent_back_image = S3PrivateImageField(upload_to=unique_permanentaddress_front_image, max_length=1023, blank=True, null=True)
 
 
     def __str__(self):
@@ -333,7 +382,7 @@ class InvestorBankDetails(TimeStampedModel):
     account_holder_name = models.CharField(max_length=100)
     account_type = models.CharField(max_length=1, choices=[(x.value, x.name.title()) for x in AccountType])
     sip_check = models.BooleanField(default=False)
-    bank_cheque_image = models.FileField(upload_to="cheque/image/", max_length=1023, blank=True, null=True)
+    bank_cheque_image = S3PrivateImageField(upload_to=unique_cheque_image, max_length=1023, blank=True, null=True)
 
     def __str__(self):
         return str(self.user) + " " + str(self.ifsc_code) + " " + str(self.account_holder_name)
@@ -363,7 +412,7 @@ class NomineeInfo(models.Model):
     nominee_absent = models.BooleanField(_('is nominee is absent'), default=False)
     address_are_equal = models.BooleanField(default=False, help_text=_(u'Is nominee address same as investor '
                                                                        u'communication address'))
-    nominee_signature = models.FileField(upload_to="nominee/signature/", max_length=700, blank=True, null=True)
+    nominee_signature = S3PrivateImageField(upload_to=unique_nomineesignature_image, max_length=700, blank=True, null=True)
 
     def __str__(self):
         return str(self.user) + " " + str(self.nominee_name)

@@ -17,6 +17,8 @@ from payment import models as payment_models
 
 from datetime import timedelta, date
 
+def unique_fund_image(instance, filename):
+    return "fund/" + instance.id + "/image/" + filename
 
 class Question(TimeStampedModel):
     """
@@ -145,7 +147,7 @@ class Fund(TimeStampedModel):
     minimum_investment = models.FloatField(null=False, blank=True)  # The minimum amount an investor must invest when purchasing a fund.
     minimum_sip_investment = models.FloatField(null=False, blank=True) # The minimum amount an investor must invest when buying additional shares of a fund.
     fund_rank = models.IntegerField(null=True)
-    image_url = models.ImageField(upload_to=constants.FUND_IMAGE_PATH, max_length=700, blank=True, null=True)
+    image_url = profile_models.S3PrivateImageField(upload_to=unique_fund_image, max_length=700, blank=True, null=True)
     category_code = models.CharField(max_length=100, null=True, blank=True)
     bse_neft_scheme_code = models.CharField(_('Scheme Code when investment amount is below Rs. 2 lakhs '),
                                             max_length=50, null=True, blank=True)
