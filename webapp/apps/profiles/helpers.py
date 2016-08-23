@@ -139,6 +139,7 @@ def send_kra_verified_email(user,applicant_name, domain_override=None, subject_t
          userName = applicant_name.title()
     else:
          userName = user.email
+
     
        
     """
