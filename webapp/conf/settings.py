@@ -309,7 +309,7 @@ ATTACH_IMAGE = False  # True means attaches images at appropriate pages instead 
 # ====================================================================================================================
 CLIENT_ID = "zTfCegJvxFQE1yxb2ga7sXHPwptm0im78dmFP6AD"
 CLIENT_SECRET = "IecZLwFOrOmncFgBXBst38DmY5UJhioVcUSbZvYE19Esr9zOBMaW0HnstnzRXYmKZGCQoixgyhEfXKl5xx97rnqrUkWxX13oGgOmWi3qYMjWyFQKo5l3ydytkwMHiWNj"
-BASE_URL = "http://10.0.2.15:8000"
+BASE_URL = "http://localhost:8000"
 
 
 CRONJOBS = [
@@ -336,7 +336,7 @@ try:
     # you can add SITE_BASE_URL = "localhost:8000" in a file called local_settings.py
 except:
     # Ideally this should be the base url of the site since there is no domain name its like this
-    SITE_BASE_URL="http://10.97.11.86"
+    SITE_BASE_URL = "www.finaskus.com"
 
 if os.environ.get('ENV_VAR') == 'prod':
     from .aws_settings import *
