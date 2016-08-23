@@ -37,22 +37,22 @@ def unique_pan_image(instance, filename):
     return "user/" + instance.id + "/pan/image/" + filename
 
 def unique_permanentaddress_front_image(instance, filename):
-    return "user/" + instance.id + "/permanentaddressfront/image/" + filename
+    return "user/" + instance.user.id + "/permanentaddressfront/image/" + filename
     
 def unique_permanentaddress_back_image(instance, filename):
-    return "user/" + instance.id + "/permanentaddressback/image/" + filename
+    return "user/" + instance.user.id + "/permanentaddressback/image/" + filename
 
 def unique_addressfront_image(instance, filename):
-    return "user/" + instance.id + "/addressfront/image/" + filename
+    return "user/" + instance.user.id + "/addressfront/image/" + filename
 
 def unique_addressback_image(instance, filename):
-    return "user/" + instance.id + "/addressback/image/" + filename
+    return "user/" + instance.user.id + "/addressback/image/" + filename
 
 def unique_nomineesignature_image(instance, filename):
-    return "user/" + instance.id + "/nomineesignature/image/" + filename
+    return "user/" + instance.user.id + "/nomineesignature/image/" + filename
 
 def unique_cheque_image(instance, filename):
-    return "user/" + instance.id + "/cheque/image/" + filename
+    return "user/" + instance.user.id + "/cheque/image/" + filename
     
 class S3PrivateFileField(models.FileField):
 
