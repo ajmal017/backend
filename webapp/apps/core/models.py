@@ -928,6 +928,7 @@ class OrderDetail(TimeStampedModel):
                 related_portfolio.save()
                 
         #check Order Details information
+        '''
         if self.pk is not None:
             if self.order_status == 2:
                 try:
@@ -937,6 +938,7 @@ class OrderDetail(TimeStampedModel):
                             profiles_helpers.send_transaction_completed_email(order_detail=self,applicant_name='J Paul',user_email='jineshpaul@finaskus.com',use_https=settings.USE_HTTPS)
                 except OrderDetail.DoesNotExist:
                     return False
+        '''
         return super(OrderDetail, self).save(*args, **kwargs)
 
     def __str__(self):
