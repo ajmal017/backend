@@ -34,7 +34,7 @@ def unique_kycvideo_image(instance, filename):
     return "user/" + instance.id + "/kycvideo/image/" + filename    
 
 def unique_pan_image(instance, filename):
-    return "user/" + instance.id + "/pan/image/" + filename
+    return "user/" + instance.user.id + "/pan/image/" + filename
 
 def unique_permanentaddress_front_image(instance, filename):
     return "user/" + instance.user.id + "/permanentaddressfront/image/" + filename
