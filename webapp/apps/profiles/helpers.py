@@ -93,7 +93,7 @@ def send_email_change_notify_to_old_email(old_email,applicant_name, new_email, s
     :return:
     """
     if applicant_name is not None:
-       userName = applicant_name
+       userName = applicant_name.title()
     else:
        userName = old_email
     context = {
@@ -136,9 +136,9 @@ def send_kra_verified_email(user,applicant_name, domain_override=None, subject_t
     
     
     if applicant_name is not None:
-       userName = applicant_name
+         userName = applicant_name.title()
     else:
-       userName = user.email
+         userName = user.email
     
        
     """
@@ -185,8 +185,12 @@ def send_vault_completion_email_user(user, applicant_name,user_email, domain_ove
     """
      Sends an email when vault is completed to user.
     """
+    if applicant_name is not None:
+         userName = applicant_name.title()
+    else:
+         userName = user.email
     context = {
-        'user_name':applicant_name,
+        'user_name':userName,
         'domain': settings.SITE_BASE_URL,
         'site_name': "Finaskus",
         'user_email': user_email,
@@ -223,17 +227,21 @@ def send_vault_completion_email(user, user_email, domain_override=None,
               html_email_template_name=html_email_template_name)
     
 
-def send_transaction_completed_email(order_detail,applicant_name,user_email, domain_override=None, subject_template_name='transaction/subject.txt',
+def send_transaction_completed_email(order_detail_lumpsum,order_detail_sip,applicant_name,user_email, domain_override=None, subject_template_name='transaction/subject.txt',
                                      email_template_name='transaction/transaction_completed.html', use_https=False,
                                      token_generator=default_token_generator, from_email=None,
                                      request=None,html_email_template_name='transaction/user-confirm-pay.html', extra_email_context=None):
     """
     Sends email when a transaction is completed
     """
-    if applicant_name is not False:
-        user_name = applicant_name
+    if applicant_name is not None:
+        user_name = applicant_name.title()
     else:
         user_name = user_email
+    
+    
+    
+    
     
     
     context = {
@@ -259,8 +267,8 @@ def send_reset_email(user,applicant_name,domain_override=None, subject_template_
         Generates a one-use only link for resetting password and sends to the
         user.
         """
-        if applicant_name is not False:
-            user_name = applicant_name
+        if applicant_name is not None:
+            user_name = applicant_name.title()
         else:
             user_name=user.email
             
@@ -297,8 +305,8 @@ def send_verify_email(user, applicant_name, code, domain_override=None, subject_
     :param extra_email_context:
     :return:
     """
-    if applicant_name is not False:
-        user_name = applicant_name
+    if applicant_name is not None:
+        user_name = applicant_name.title()
     else:
         user_name=user.email
     
@@ -345,7 +353,7 @@ def send_phone_number_change_email(user_email,applicant_name,previous_number, ne
      Sends an email when user has successfully changed his phone number.
     """
     if applicant_name is not None:
-       userName = applicant_name
+       userName = applicant_name.title()
     else:
        userName = user.email
        
