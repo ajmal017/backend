@@ -147,7 +147,7 @@ class Fund(TimeStampedModel):
     minimum_investment = models.FloatField(null=False, blank=True)  # The minimum amount an investor must invest when purchasing a fund.
     minimum_sip_investment = models.FloatField(null=False, blank=True) # The minimum amount an investor must invest when buying additional shares of a fund.
     fund_rank = models.IntegerField(null=True)
-    if settings.USING_S3:
+    if settings.USING_S3 is True:
         image_url = profile_models.S3PrivateImageField(upload_to=unique_fund_image, max_length=700, blank=True, null=True)
     else:
         image_url = models.ImageField(upload_to=constants.FUND_IMAGE_PATH, max_length=700, blank=True, null=True)

@@ -310,7 +310,7 @@ class InvestorInfo(TimeStampedModel):
                                        choices=OCCUPATION_TYPE_CHOICE)
     occupation_specific = models.CharField(max_length=512, blank=True, null=True)
     other_tax_payer = models.BooleanField(default=False,help_text=_(u'Do you pay tax in country other than India'))
-    if settings.USING_S3:
+    if settings.USING_S3 is True:
         pan_image = S3PrivateImageField(upload_to=unique_pan_image, max_length=700, blank=True, null=True)
     else:
         pan_image = models.FileField(upload_to="investor_info/pan/image", max_length=700, blank=True, null=True)
@@ -373,7 +373,7 @@ class ContactInfo(TimeStampedModel):
                                                        null=True)
     email = models.EmailField(_('email address'), max_length=254, blank=True, null=True)
     phone_number = models.CharField(_('phone_number'), max_length=12, blank=True, null=True)
-    if settings.USING_S3:
+    if settings.USING_S3 is True:
         # front image of the address proof.
         front_image = S3PrivateImageField(upload_to=unique_addressfront_image, max_length=1023, blank=True, null=True)
         # back image of the address proof.
@@ -410,7 +410,7 @@ class InvestorBankDetails(TimeStampedModel):
     account_holder_name = models.CharField(max_length=100)
     account_type = models.CharField(max_length=1, choices=[(x.value, x.name.title()) for x in AccountType])
     sip_check = models.BooleanField(default=False)
-    if settings.USING_S3:
+    if settings.USING_S3 is True:
         bank_cheque_image = S3PrivateImageField(upload_to=unique_cheque_image, max_length=1023, blank=True, null=True)
     else:
         bank_cheque_image = models.FileField(upload_to="cheque/image/", max_length=1023, blank=True, null=True)
@@ -443,7 +443,7 @@ class NomineeInfo(models.Model):
     address_are_equal = models.BooleanField(default=False, help_text=_(u'Is nominee address same as investor '
                                                                        u'communication address'))
     
-    if settings.USING_S3:
+    if settings.USING_S3 is True:
         nominee_signature = S3PrivateImageField(upload_to=unique_nomineesignature_image, max_length=700, blank=True, null=True)
     else:
         nominee_signature = models.FileField(upload_to="nominee/signature/", max_length=700, blank=True, null=True)
