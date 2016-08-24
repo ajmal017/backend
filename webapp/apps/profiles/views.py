@@ -735,7 +735,7 @@ class SaveImage(APIView):
             serializer = serializers.ContactInfoContinueSerializer(contact, data=request.data)
             if serializer.is_valid():
                 addr_proof = serializer.initial_data.get('permanent_address_proof_type', 1)
-                serializer.save(front_image=request.FILES.get('permanent_front_image', None),
+                serializer.save(permanent_front_image=request.FILES.get('permanent_front_image', None),
                                 permanent_address_proof_type=addr_proof)
                 return api_utils.response({"message": constants.SUCCESS, "permanent_front_image": contact.permanent_front_image.url}, status.HTTP_200_OK)
             return api_utils.response({}, status.HTTP_400_BAD_REQUEST, generate_error_message(serializer.errors))

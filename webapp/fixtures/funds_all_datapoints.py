@@ -31,6 +31,9 @@ from core.models import Fund
 from core import models, constants
 from profiles.models import User
 from profiles import utils
+from webapp.conf import settings
+from django.core.files import File
+import os
 import requests
 import datetime
 import csv
@@ -76,6 +79,27 @@ def read_csv_and_populate_fund_data(csv_file_name):
             if answer == 'y':
                 fund.save()
 
+def read_csv_and_populate_fund_images(csv_file_name):
+    """
+    :return:
+    """
+    data_reader = csv.reader(open(csv_file_name), delimiter=',', quotechar='"')
+
+    for row in data_reader:
+        try: 
+            if row[0] != 'mstar_id':
+                fund = models.Fund.objects.get(mstar_id=row[0])
+                imageName = row[1]
+                imagePath = settings.MEDIA_ROOT + '/temp/' + imageName 
+                im = open(imagePath, 'rb')
+                imFile = File(im)
+                imFile.name = os.path.basename(imagePath)
+                fund.image_url = imFile
+                fund.save()
+                print("New fund url: " + fund.image_url.url)
+        except Exception as e:
+            print("Error saving image for fund: " + row[0] + " filename: " + imageName + " error: " + str(e))
+            
 def add_riskometer_data(fund):
     """
     :return:
@@ -98,6 +122,9 @@ morningstar_object.get_data_points_for_funds()
 
 NON_MS_DATA_FOR_FUNDS = 'webapp/fixtures/funds.csv'  # replace it relevant csv file that you create. You can always  update these records via admin manually.
 read_csv_and_populate_fund_data(NON_MS_DATA_FOR_FUNDS)
+
+NON_MS_DATA_FOR_FUNDS_IMAGES = 'webapp/fixtures/fund_images.csv'  # replace it relevant csv file that you create. You can always  update these records via admin manually.
+read_csv_and_populate_fund_images(NON_MS_DATA_FOR_FUNDS_IMAGES)
 
 # Now as MS does not provide data for crisl related funds we will have to create records for these via admin/shell
 # Create rows using in python shell like this only for non existing indices like example below
