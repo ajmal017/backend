@@ -102,7 +102,7 @@ def migrateAll():
                 if imFile:
                     investor_bank_details.bank_cheque_image = imFile
                     investor_bank_details.save()
-                    print("Bank cheque image url: " + investor_bank_details.pan_image.url)
+                    print("Bank cheque image url: " + investor_bank_details.bank_cheque_image.url)
                 else:
                     print("Could not open source cheque image file for : " + u.email)
         except InvestorBankDetails.DoesNotExist:
