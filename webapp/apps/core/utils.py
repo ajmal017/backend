@@ -22,6 +22,20 @@ import hashlib
 debug_logger = logging.getLogger('django.debug')
 
 
+#investor info check
+def investor_info_check(user):
+    applicant_name = None
+    try:
+        investor_info = models.InvestorInfo.objects.get(user=user)       
+        if investor_info is not None:
+            if investor_info.applicant_name is not None:
+                applicant_name = investor_info.applicant_name       
+    except models.InvestorInfo.DoesNotExist:
+            applicant_name = None
+    return applicant_name
+
+
+
 def get_answers(answers, questions, id):
     """
     :param answers: A list of answers objects
@@ -2362,11 +2376,12 @@ def convert_to_investor(txn):
     :return:
     """
     #TODO intil amount fixing
-
+    flag_data = {}
     user = txn.user
     portfolio = models.Portfolio.objects.get(user=user, has_invested=False)
-    order_detail = save_portfolio_snapshot(txn)
-
+    order_detail_lumpsum, order_detail_sip = save_portfolio_snapshot(txn)
+    
+    
     portfolio.has_invested = True
     portfolio.investment_date = date.today()
     portfolio.save()
@@ -2386,21 +2401,10 @@ def convert_to_investor(txn):
     profile_models.AggregatePortfolio.objects.update_or_create(
         user=txn.user, defaults={"update_date":datetime.now().date()})
     
+           
+    applicant_name = investor_info_check(user)
     
-    try:
-        investor_info = profile_models.InvestorInfo.objects.get(user=user)
-                
-        if investor_info.applicant_name is not None:
-          flag_data['applicant_name'] = investor_info.applicant_name
-        else:
-            flag_data['applicant_name'] = False
-                    
-    except profile_models.InvestorInfo.DoesNotExist:
-            flag_data['applicant_name'] = False
-                
-    applicant_name = flag_data['applicant_name']
-    
-    profiles_helpers.send_transaction_completed_email(order_detail,applicant_name,user.email,use_https=settings.USE_HTTPS)
+    profiles_helpers.send_transaction_completed_email(order_detail_lumpsum,order_detail_sip,applicant_name,user.email,use_https=settings.USE_HTTPS)
 
 
 def save_portfolio_snapshot(txn):
@@ -2436,7 +2440,8 @@ def save_portfolio_snapshot(txn):
         order_detail_sip = models.OrderDetail.objects.create(user=txn.user, order_status=0, transaction=txn)
         for index in range(len(order_item_list_sip)):
             order_detail_sip.fund_order_items.add(order_item_list_sip[index])
-    return order_detail_lump
+    
+    return order_detail_lump, order_detail_sip
 
 
 def get_is_enabled(portfolio_item):
