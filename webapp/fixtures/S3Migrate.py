@@ -28,10 +28,8 @@ def openSourceFile(currentPath):
 
 def migrateAll():
     users = User.objects.all()
-    
     for u in users:
         print("Links changed for user: " + u.email)
-
         try:
             investor = InvestorInfo.objects.get(user=u)
             if investor and investor.pan_image:
@@ -47,7 +45,6 @@ def migrateAll():
             print('Investor Info does not exist Exception for user: ' + u.email)
         except Exception as e:
             print('Investor Info Exception for user: ' + u.email + ' : ' + str(e))
-    
         try:
             if u.identity_info_image:
                 currentPath = settings.MEDIA_ROOT + '/' + str(u.identity_info_image)
@@ -56,7 +53,6 @@ def migrateAll():
                     u.identity_info_image = imFile
                 else:
                     print("Could not open source identity image file for : " + u.email)
-                    
             if u.image:
                 currentPath = settings.MEDIA_ROOT + '/' + str(u.image)
                 imFile = openSourceFile(currentPath)
@@ -86,7 +82,6 @@ def migrateAll():
                 else:
                     print("Could not open video file for : " + u.email)
             u.save()
-            
             if u.identity_info_image:
                 print(u.identity_info_image.url)
             if u.image:
@@ -97,10 +92,8 @@ def migrateAll():
                 print(u.user_video_thumbnail.url)
             if u.user_video:
                 print(u.user_video.url)
-                    
         except Exception as e:
             print('Exception for user: ' + u.email + ' : ' + str(e))
-
         try:
             investor_bank_details = InvestorBankDetails.objects.get(user=u)
             if investor_bank_details and investor_bank_details.bank_cheque_image:
@@ -116,7 +109,6 @@ def migrateAll():
             print('Bank Info does not exist Exception for user: ' + u.email)
         except Exception as e:
             print('Bank Info Exception for user: ' + u.email + ' : ' + str(e))
-
         try:
             nominee = NomineeInfo.objects.get(user=u)
             if nominee and nominee.nominee_signature:
@@ -132,7 +124,6 @@ def migrateAll():
             print('nominee Info does not exist Exception for user: ' + u.email)
         except Exception as e:
             print('Nominee Info Exception for user: ' + u.email + ' : ' + str(e))
-
         try:
             contact = ContactInfo.objects.get(user=u)
             if contact and contact.front_image:
@@ -178,3 +169,5 @@ def migrateAll():
             print('Contact Info does not exist Exception for user: ' + u.email)
         except Exception as e:
             print('Contact Info Exception for user: ' + u.email + ' : ' + str(e))
+
+migrateAll()
