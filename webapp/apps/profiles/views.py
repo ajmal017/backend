@@ -133,22 +133,14 @@ def password_reset_complete(request,
 
 #investor info check
 def investor_info_check(user):
-    flag_data = {}
+    applicant_name = None
     try:
-        investor_info = models.InvestorInfo.objects.get(user=user)
-                
+        investor_info = models.InvestorInfo.objects.get(user=user)       
         if investor_info is not None:
             if investor_info.applicant_name is not None:
-                flag_data['applicant_name'] = investor_info.applicant_name
-            else:
-                flag_data['applicant_name'] = False   
-        else:
-            flag_data['applicant_name'] = False
-                    
+                applicant_name = investor_info.applicant_name       
     except models.InvestorInfo.DoesNotExist:
-            flag_data['applicant_name'] = False
-                
-    applicant_name = flag_data['applicant_name']
+            applicant_name = None
     return applicant_name
 
 
@@ -1192,15 +1184,10 @@ class IsCompleteView(APIView):
                 request.user.vault_locked = True
                 request.user.save()
                 
-                investor = models.InvestorInfo.objects.get(user=request.user)
-                
-                if investor.applicant_name is not None:
-                    user_name = investor.applicant_name
-                else:
-                    user_name = request.user.email
+                applicant_name = investor_info_check(request.user)
                     
                 if vaultLocked == False:
-                    helpers.send_vault_completion_email_user(request.user, user_name,request.user.email, use_https=settings.USE_HTTPS)
+                    helpers.send_vault_completion_email_user(request.user, applicant_name,request.user.email, use_https=settings.USE_HTTPS)
                 return api_utils.response({'finaskus_id': request.user.finaskus_id,
                                            'process_choice': request.user.process_choice})
             return api_utils.response({}, status.HTTP_400_BAD_REQUEST, generate_error_message(serializer.errors))
