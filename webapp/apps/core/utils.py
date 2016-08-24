@@ -2376,10 +2376,9 @@ def convert_to_investor(txn):
     :return:
     """
     #TODO intil amount fixing
-    flag_data = {}
     user = txn.user
     portfolio = models.Portfolio.objects.get(user=user, has_invested=False)
-    order_detail_lumpsum, order_detail_sip = save_portfolio_snapshot(txn)
+    order_detail = save_portfolio_snapshot(txn)
     
     
     portfolio.has_invested = True
@@ -2404,7 +2403,7 @@ def convert_to_investor(txn):
            
     applicant_name = investor_info_check(user)
     
-    profiles_helpers.send_transaction_completed_email(order_detail_lumpsum,order_detail_sip,applicant_name,user.email,use_https=settings.USE_HTTPS)
+    profiles_helpers.send_transaction_completed_email(order_detail,applicant_name,user.email,use_https=settings.USE_HTTPS)
 
 
 def save_portfolio_snapshot(txn):
@@ -2441,7 +2440,7 @@ def save_portfolio_snapshot(txn):
         for index in range(len(order_item_list_sip)):
             order_detail_sip.fund_order_items.add(order_item_list_sip[index])
     
-    return order_detail_lump, order_detail_sip
+    return order_detail_lump
 
 
 def get_is_enabled(portfolio_item):
