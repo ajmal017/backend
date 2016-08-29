@@ -44,6 +44,7 @@ class TransactionString(APIView):
                       "txt_bank_id": txt_bank_id,
                       "product_id": product_id,
                       "additional_info_1": code_generator(40),
+                      "additional_info_3": request.user.finaskus_id,
                       "customer_id": code_generator(7),
                       "user_id": request.user.id,}
             billdesk = models.Transaction.objects.create(**kwargs)
@@ -88,6 +89,7 @@ class Pay(APIView):
                               "txt_bank_id": txt_bank_id,
                               "product_id": product_id,
                               "additional_info_1": code_generator(40),
+                              "additional_info_3": request.user.finaskus_id,
                               "customer_id": code_generator(7),
                               "user_id": request.user.id,}
                     billdesk = models.Transaction.objects.create(**kwargs)

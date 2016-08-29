@@ -5,6 +5,7 @@ from profiles.models import InvestorInfo
 from profiles.models import InvestorBankDetails
 from profiles.models import NomineeInfo
 from profiles.models import ContactInfo
+from core.models import Fund
 from django.conf import settings
 from django.core.files import File
 import os
@@ -39,6 +40,7 @@ def migrateAll():
                     investor.pan_image = imFile
                     investor.save()
                     print("Investor pan image url: " + investor.pan_image.url)
+                    imFile.close()
                 else:
                     print("Could not open source pan image file for : " + u.email)
         except InvestorInfo.DoesNotExist:
@@ -51,6 +53,7 @@ def migrateAll():
                 imFile = openSourceFile(currentPath)
                 if imFile:
                     u.identity_info_image = imFile
+                    imFile.close()
                 else:
                     print("Could not open source identity image file for : " + u.email)
             if u.image:
@@ -58,6 +61,7 @@ def migrateAll():
                 imFile = openSourceFile(currentPath)
                 if imFile:
                     u.image = imFile
+                    imFile.close()
                 else:
                     print("Could not open source profile image file for : " + u.email)
             if u.signature:
@@ -65,6 +69,7 @@ def migrateAll():
                 imFile = openSourceFile(currentPath)
                 if imFile:
                     u.signature = imFile
+                    imFile.close()
                 else:
                     print("Could not open source signature image file for : " + u.email)
             if u.user_video_thumbnail:
@@ -72,6 +77,7 @@ def migrateAll():
                 imFile = openSourceFile(currentPath)
                 if imFile:
                     u.user_video_thumbnail = imFile
+                    imFile.close()
                 else:
                     print("Could not open video thumbnail image file for : " + u.email)
             if u.user_video:
@@ -79,6 +85,7 @@ def migrateAll():
                 imFile = openSourceFile(currentPath)
                 if imFile:
                     u.user_video = imFile
+                    imFile.close()
                 else:
                     print("Could not open video file for : " + u.email)
             u.save()
@@ -103,6 +110,7 @@ def migrateAll():
                     investor_bank_details.bank_cheque_image = imFile
                     investor_bank_details.save()
                     print("Bank cheque image url: " + investor_bank_details.bank_cheque_image.url)
+                    imFile.close()
                 else:
                     print("Could not open source cheque image file for : " + u.email)
         except InvestorBankDetails.DoesNotExist:
@@ -118,6 +126,7 @@ def migrateAll():
                     nominee.nominee_signature = imFile
                     nominee.save()
                     print("Nominee SIgnature image url: " + nominee.nominee_signature.url)
+                    imFile.close()
                 else:
                     print("Could not open source nominee signature image file for : " + u.email)
         except NomineeInfo.DoesNotExist:
@@ -131,6 +140,7 @@ def migrateAll():
                 imFile = openSourceFile(currentPath)
                 if imFile:
                     contact.front_image = imFile
+                    imFile.close()
                 else:
                     print("Could not open source Contact Front image file for : " + u.email)
             if contact and contact.back_image:
@@ -138,6 +148,7 @@ def migrateAll():
                 imFile = openSourceFile(currentPath)
                 if imFile:
                     contact.back_image = imFile
+                    imFile.close()
                 else:
                     print("Could not open source Contact Back image file for : " + u.email)
             if contact and contact.permanent_front_image:
@@ -145,6 +156,7 @@ def migrateAll():
                 imFile = openSourceFile(currentPath)
                 if imFile:
                     contact.permanent_front_image = imFile
+                    imFile.close()
                 else:
                     print("Could not open source Contact Permanent Front image file for : " + u.email)
             if contact and contact.permanent_back_image:
@@ -152,6 +164,7 @@ def migrateAll():
                 imFile = openSourceFile(currentPath)
                 if imFile:
                     contact.permanent_back_image = imFile
+                    imFile.close()
                 else:
                     print("Could not open source Contact Permanent Back image file for : " + u.email)
             if contact:
@@ -169,5 +182,21 @@ def migrateAll():
             print('Contact Info does not exist Exception for user: ' + u.email)
         except Exception as e:
             print('Contact Info Exception for user: ' + u.email + ' : ' + str(e))
+            
+    funds = Fund.objects.all()
+    for fund in funds:
+        try:
+            if fund.image_url:
+                currentPath = settings.MEDIA_ROOT + '/' + str(fund.image_url)
+                imFile = openSourceFile(currentPath)
+                if imFile:
+                    fund.image_url = imFile
+                    fund.save()
+                    print("Fund image url: " + fund.image_url)
+                    imFile.close()
+                else:
+                    print("Could not open source fund image file for : " + fund.id)
+        except Exception as e:
+            print('Fund Exception for id: ' + fund.id + ' : ' + str(e))
 
 migrateAll()
