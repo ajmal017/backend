@@ -26,12 +26,16 @@ debug_logger = logging.getLogger('django.debug')
 def investor_info_check(user):
     applicant_name = None
     try:
-        investor_info = profile_models.InvestorInfo.objects.get(user=user)       
+        investor_info = profile_models.InvestorInfo.objects.get(user=user)  
+        print("Investor Info exists?")
+             
         if investor_info is not None:
             print("Investor Info exists")
             if investor_info.applicant_name is not None:
                 print("Investor Info exists and applicant_name not none")
-                applicant_name = investor_info.applicant_name       
+                applicant_name = investor_info.applicant_name
+        else:
+            print("Investor Info does nt exist")
     except profile_models.InvestorInfo.DoesNotExist:
             applicant_name = None
             print("Investor Info does not exist")
