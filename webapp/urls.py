@@ -33,6 +33,7 @@ urlpatterns = [
     url(r'^reset/done/$', profile_views.password_reset_complete, name='password_reset_complete'),
     url(r'^5a91a426e461/474a/admin/', include(admin.site.urls)),
     url(r"^v1.0/", include("api.urls", namespace='api_urls')),
+    url(r"^v2.0/", include("api.urls", namespace='api_urls')),
     url(r'^o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
     url('', include('django.contrib.auth.urls')),
     url(r"^$", views.index, name='index'),
