@@ -43,7 +43,7 @@ def generate_user_pipe_file(user, order_items):
         start_date = ""
         if item.portfolio_item.fund.id:
             fund_id = item.portfolio_item.fund.id
-            start_date = utils.get_valid_start_date(fund_id).strftime("%d/%m/%Y")
+            start_date = models.get_valid_start_date(fund_id).strftime("%d/%m/%Y")
 
         fund_house = ""
         folio_number = ""
