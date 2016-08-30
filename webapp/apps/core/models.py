@@ -12,7 +12,7 @@ import profiles.models as profile_models
 import profiles.helpers as profile_helpers
 from webapp.conf import settings
 from webapp.apps import random_with_N_digits
-from . import manager, constants, utils
+from . import manager, constants, helpers
 from payment import models as payment_models
 
 from datetime import timedelta, date
@@ -21,7 +21,7 @@ def unique_fund_image(instance, filename):
     return "fund/" + instance.mstar_id + "/image/" + filename
 
 def get_next_allotment_date_or_start_date(foi):
-    return utils.get_next_allotment_date_or_start_date(foi)
+    return helpers.get_next_allotment_date_or_start_date(foi)
 
 class Question(TimeStampedModel):
     """
@@ -866,7 +866,7 @@ class FundOrderItem(TimeStampedModel):
                 self.unit_alloted = unit_alloted
                 self.is_verified = True
                 if not self.orderdetail_set.all()[0].is_lumpsum:
-                    next_allotment_date = utils.get_next_allotment_date_or_start_date(self)
+                    next_allotment_date = get_next_allotment_date_or_start_date(self)
                     self.next_allotment_date = next_allotment_date
 
         return super(FundOrderItem, self).save(*args, **kwargs)
