@@ -35,12 +35,13 @@ urlpatterns = [
     url(r'^portfolio/details/v2/$', views.PortfolioDetailsVersionTwo.as_view(), name='portfolio-details-v2'),
     url(r'^portfolio/tracker/$', views.PortfolioTracker.as_view(), name='portfolio-tracker'),
 
-    # ===================  DEPRECATED APIS =========================================================================
-
-    url(r'^risk/profile/$', views.RiskProfile.as_view(), name='risk-profile'),
     url(r'^billdesk/complete/$', views.BilldeskComplete.as_view(), name='billdesk-complete'),
     url(r'^billdesk/success/$', views.Billdesk.as_view(), name='billdesk-success'),
     url(r'^billdesk/fail/$', views.Billdesk.as_view(), name='billdesk-fail'),
+
+    # ===================  DEPRECATED APIS =========================================================================
+
+    url(r'^risk/profile/$', views.RiskProfile.as_view(), name='risk-profile'),
     url(r'^plan/new/response/add/$', views.PlanAnswer.as_view(), name='plan-new-answers-add'),
     url(r'^redemption/detail/$', views.TransactionDetail.as_view(), name='redemption-detail'),
     url(r'^swap/funds/$', views.SwapFunds.as_view(), name='swap-funds'),

@@ -187,9 +187,9 @@ def send_vault_completion_email_user(user, applicant_name,user_email, domain_ove
      Sends an email when vault is completed to user.
     """
     if applicant_name is not None:
-         userName = applicant_name.title()
+        userName = applicant_name.title()
     else:
-         userName = user.email
+        userName = user.email
     context = {
         'user_name':userName,
         'domain': settings.SITE_BASE_URL,

@@ -26,12 +26,19 @@ debug_logger = logging.getLogger('django.debug')
 def investor_info_check(user):
     applicant_name = None
     try:
-        investor_info = models.InvestorInfo.objects.get(user=user)       
+        investor_info = profile_models.InvestorInfo.objects.get(user=user)  
+        print("Investor Info exists?")
+             
         if investor_info is not None:
+            print("Investor Info exists")
             if investor_info.applicant_name is not None:
-                applicant_name = investor_info.applicant_name       
-    except models.InvestorInfo.DoesNotExist:
+                print("Investor Info exists and applicant_name not none")
+                applicant_name = investor_info.applicant_name
+        else:
+            print("Investor Info does nt exist")
+    except profile_models.InvestorInfo.DoesNotExist:
             applicant_name = None
+            print("Investor Info does not exist")
     return applicant_name
 
 
@@ -319,7 +326,37 @@ def process_invest_answer(user, data):
             asset_allocation(user, {"invest_allocation": value})
     return is_error, errors
 
-
+def roundTo100(amount1, amount2):
+    amount1_remainder = amount1%100
+    if amount1_remainder < 50:
+        amount1 -= amount1_remainder
+        amount2 += amount1_remainder
+    else:
+        amount1 += (100 - amount1_remainder)
+        amount2 -= (100 - amount1_remainder)
+    return amount1, amount2
+    
+def calculate_asset_allocation(lumpsum_amount, sip_amount, equity_allocation, debt_allocation):
+    lumpsum_equity, lumpsum_debt, sip_equity, sip_debt = 0, 0, 0, 0
+    if equity_allocation:
+        lumpsum_equity = round((lumpsum_amount * float(equity_allocation)) / 100)
+        sip_equity = round((sip_amount * float(equity_allocation)) / 100)
+    
+    if debt_allocation:
+        lumpsum_debt = round((lumpsum_amount * float(debt_allocation)) / 100)
+        sip_debt = round((sip_amount * float(debt_allocation)) / 100)
+    
+    if lumpsum_equity > 0 and lumpsum_debt > 0:
+        if lumpsum_amount%100 == 0 and lumpsum_equity%100 > 0:
+            lumpsum_equity, lumpsum_debt = roundTo100(lumpsum_equity, lumpsum_debt)
+                
+    if sip_equity > 0 and sip_debt > 0:
+        if sip_amount%100 == 0 and sip_equity%100 > 0:
+            sip_equity, sip_debt = roundTo100(sip_equity, sip_debt)
+            
+    return lumpsum_equity, lumpsum_debt, sip_equity, sip_debt
+        
+    
 def calculate_overall_allocation(user_id, investment_date=None):
     """
     :param user_id:
@@ -340,6 +377,7 @@ def calculate_overall_allocation(user_id, investment_date=None):
     for asset in constants.ALLOCATION_PROPERTY_LIST:
         category_allocation = getattr(user_asset_allocation, asset + "_allocation")
         if category_allocation is not None:
+            
             investment_till_date, actual_term, invest_date = 0, 0, investment_date
             lumpsum_amount, sip_amount, term, growth = 0, 0, 0, 0
             category_questions = constants.ASSET_ALLOCATION_MAP[constants.MAP[asset]]
@@ -388,13 +426,13 @@ def calculate_overall_allocation(user_id, investment_date=None):
             if float(category_allocation[constants.ELSS]):
                 elss_lumpsum += round((lumpsum_amount * float(category_allocation[constants.ELSS])) / 100)
                 elss_sip += round((sip_amount * float(category_allocation[constants.ELSS])) / 100)
-            if float(category_allocation[constants.DEBT]):
-                debt_lumpsum += round((lumpsum_amount * float(category_allocation[constants.DEBT])) / 100)
-                debt_sip += round((sip_amount * float(category_allocation[constants.DEBT])) / 100)
-            if float(category_allocation[constants.EQUITY]):
-                equity_lumpsum += round((lumpsum_amount * float(category_allocation[constants.EQUITY])) / 100)
-                equity_sip += round((sip_amount * float(category_allocation[constants.EQUITY])) / 100)
-
+                
+            equity_l, debt_l, equity_s, debt_s = calculate_asset_allocation(lumpsum_amount, sip_amount, float(category_allocation[constants.EQUITY]), float(category_allocation[constants.DEBT]))
+            debt_lumpsum += debt_l
+            debt_sip += debt_s
+            equity_lumpsum += equity_l
+            equity_sip += equity_s
+            
             category_summary = {"goal": category_questions[2] + str(1), "corpus": round(corpus, 2), "sip": sip_amount,
                                 "lumpsum": lumpsum_amount, "term": term}
             goal_status = copy.deepcopy(category_summary)

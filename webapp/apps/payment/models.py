@@ -9,6 +9,8 @@ from djutil.models import TimeStampedModel
 
 from . import constants, utils
 
+from external_api import constants as external_cons 
+
 from enum import IntEnum
 
 
@@ -31,14 +33,14 @@ class Transaction(TimeStampedModel):
     txn_amount = models.FloatField(_('Transaction Amount'), max_length=8)
     txt_bank_id = models.CharField(_('Bank Name'), max_length=3)
     additional_info_1 = models.CharField(_('Order Number'), max_length=100, unique=True)
-    additional_info_2 = models.CharField(_('Folio Number'), max_length=100, default=constants.UNKNOWN)
+    additional_info_2 = models.CharField(_('Folio Number'), max_length=100, default=external_cons.MEMBER_CODE)
     additional_info_3 = models.CharField(_('User Login Id/CRN'), max_length=100, default=constants.UNKNOWN)
     additional_info_4 = models.CharField(_('Distributer Id'), max_length=100, default=constants.DISTRIBUTOR_ID)
 
     # additional_info_5 = models.CharField(_('BankId-AccountType-Debit Account No'), max_length=100, default='NA-NA-NA')
 
-    additional_info_5 = models.CharField(_('AMC Id '), max_length=100, default="BSE-NA")
-    additional_info_6 = models.CharField(_('Fund Type'), max_length=100, default=constants.LIQUID)
+    additional_info_5 = models.CharField(_('AMC Id '), max_length=100, default=constants.BSE)
+    additional_info_6 = models.CharField(_('Fund Type'), max_length=100, default=constants.NONLIQUID)
     additional_info_7 = models.CharField(_('Investor Type/Tax Status'), max_length=100,
                                          default=constants.DEFAULT_INVESTOR_TYPE)
     additional_info_8 = models.DateTimeField(_('Transaction Time'), max_length=100, auto_now_add=True)
