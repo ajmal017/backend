@@ -20,6 +20,9 @@ from datetime import timedelta, date
 def unique_fund_image(instance, filename):
     return "fund/" + instance.mstar_id + "/image/" + filename
 
+def get_next_allotment_date_or_start_date(foi):
+    return utils.get_next_allotment_date_or_start_date(foi)
+
 class Question(TimeStampedModel):
     """
     Model for questions for assess, plan

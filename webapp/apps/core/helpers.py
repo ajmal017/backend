@@ -1,4 +1,3 @@
-from . import utils
 
 from datetime import datetime, timedelta
 
@@ -31,5 +30,3 @@ def percentage(dividend, divisor):
     """
     return round(((dividend*100)/divisor), 1)
 
-def get_next_allotment_date_or_start_date(foi):
-    return utils.get_next_allotment_date_or_start_date(foi)
