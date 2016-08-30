@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from . import models, helpers
+from . import models, utils
 from profiles import models as profile_models
 
 
@@ -362,10 +362,8 @@ class FutureFundOrderItemSerializer(serializers.ModelSerializer):
         """
         if obj.next_allotment_date:
             return obj.next_allotment_date.strftime("%Y-%m-%d")
-        elif obj.allotment_date:
-            return helpers.get_valid_start_date(obj.portfolio_item.fund.id, obj.allotment_date).strftime("%Y-%m-%d")
         else:
-            return helpers.get_valid_start_date(obj.portfolio_item.fund.id, obj.created_at).date().strftime("%Y-%m-%d")
+            return utils.get_next_allotment_date_or_start_date(obj).strftime("%Y-%m-%d")
 
     class Meta:
         model = models.FundOrderItem

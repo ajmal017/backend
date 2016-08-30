@@ -12,7 +12,7 @@ import profiles.models as profile_models
 import profiles.helpers as profile_helpers
 from webapp.conf import settings
 from webapp.apps import random_with_N_digits
-from . import manager, constants
+from . import manager, constants, utils
 from payment import models as payment_models
 
 from datetime import timedelta, date
@@ -841,25 +841,6 @@ class FundOrderItem(TimeStampedModel):
         """
         return self.created_at.date()
 
-    def get_valid_start_date(self, fund_id, send_date):
-        """
-        generates valid start date for a prticular fund
-        :param fund_id: id of a particular fund
-        :param send_date: base date to be used as base date for finding valid start date
-        :return: next valid start date
-        """
-        sip_dates = Fund.objects.get(id=fund_id).sip_dates
-        sip_dates.sort()
-        next_month = (send_date + timedelta(30))
-        day = next_month.day
-        if day > sip_dates[-1]:
-            next_month += timedelta(30)
-            next_month = next_month.replace(day=sip_dates[0])
-            return next_month
-        modified_day = next(date[1] for date in enumerate(sip_dates) if date[1] >= day)
-        next_month = next_month.replace(day=modified_day)
-        return next_month
-
     def save(self, *args, **kwargs):
         """
         creates a check while saving instance of model, if is_verified is True then unit must be alloted.
@@ -882,7 +863,7 @@ class FundOrderItem(TimeStampedModel):
                 self.unit_alloted = unit_alloted
                 self.is_verified = True
                 if not self.orderdetail_set.all()[0].is_lumpsum:
-                    next_allotment_date = self.get_valid_start_date(self.portfolio_item.fund.id, self.allotment_date)
+                    next_allotment_date = utils.get_next_allotment_date_or_start_date(self)
                     self.next_allotment_date = next_allotment_date
 
         return super(FundOrderItem, self).save(*args, **kwargs)
