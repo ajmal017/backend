@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from . import models, utils
+from . import models, helpers
 from profiles import models as profile_models
 
 
@@ -25,7 +25,6 @@ class PortfolioItemSerializer(serializers.ModelSerializer):
 
         """
         model = models.PortfolioItem
-
 
 class PortfolioSerializer(serializers.ModelSerializer):
     """
@@ -363,7 +362,7 @@ class FutureFundOrderItemSerializer(serializers.ModelSerializer):
         if obj.next_allotment_date:
             return obj.next_allotment_date.strftime("%Y-%m-%d")
         else:
-            return utils.get_next_allotment_date_or_start_date(obj).strftime("%Y-%m-%d")
+            return helpers.get_next_allotment_date_or_start_date(obj).strftime("%Y-%m-%d")
 
     class Meta:
         model = models.FundOrderItem
