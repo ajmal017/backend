@@ -1,15 +1,19 @@
 import os
 
-BASE_URL="http://localhost:8000"
-SITE_BASE_URL="www.finaskus.com"
+BASE_URL="http://10.0.2.15:8000"
+SITE_BASE_URL="http://10.97.11.86"
 
-CVL_POSCODE=os.environ.get('CVL_POSCODE')
-CVL_PASSWORD=os.environ.get('CVL_PASSWORD')
-CVL_PASSKEY=os.environ.get('CVL_PASSKEY')
-CVL_USERID=os.environ.get('CVL_USERID')
-CVL_PASSWORD_URI=os.environ.get('CVL_PASSWORD_URI')
-CVL_PANCARD_URI=os.environ.get('CVL_PANCARD_URI')
-BILLDESK_SECRET_KEY=os.environ.get('BILLDESK_SECRET_KEY')
+CVL_POSCODE="5100108537"
+CVL_PASSWORD="FIN@123"
+CVL_PASSKEY="FINASKUSTEST"
+CVL_USERID="VIEWONLY"
+CVL_PASSWORD_URI="https://www.cvlkra.com/PanInquiry.asmx/GetPassword"
+CVL_PANCARD_URI="https://www.cvlkra.com/panInquiry.asmx/GetPanStatus"
+BILLDESK_SECRET_KEY="2KxU2EvL4enK"
+MGAGE_USERNAME="FINASKUST"
+MGAGE_PASSWORD="C2P3B@n@"
+MGAGE_FROM_NUMBER=918050248326
+
 
 EMAIL_BACKEND='django_smtp_ssl.SSLEmailBackend'
 EMAIL_HOST='email-smtp.us-west-2.amazonaws.com'
@@ -19,29 +23,32 @@ DEFAULT_TO_EMAIL = "appadmin@finaskus.com"
 EMAIL_HOST_USER=os.environ.get('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD=os.environ.get('EMAIL_HOST_PASSWORD')
 
+MORNING_STAR_UNIVERSE_ID="wlwhm2lfm9boisdt"
+MORNING_STAR_ACCESS_CODE="zy46g7rbbzici5cci8nau20l930zgg5c"
+MORNING_STAR_UNIVERSE_ID_EQUITY='x28l3ltc7hrsrrdq'
+MORNING_STAR_UNIVERSE_ID_DEBT='f351pmwnr55evt0j'
+MORNING_STAR_UNIVERSE_ID_INDICES='ttr83nzvyxn4lrvs'
+
+EMAIL_HOST_USER='AKIAILOEFIX3NX3REUGA'
+EMAIL_HOST_PASSWORD='AqM9b5AHqFuNbesfNJrVvQHx2gDj4DUV2fwxyCbJgITD'
+DATABASE_NAME='finaskus'
+DATABASE_USER='finaskus'
+DATABASE_PASSWORD='finaskus'
+DATABASE_HOST='localhost'
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ.get('DATABASE_NAME'),
-        'USER': os.environ.get('DATABASE_USER'),
-        'PASSWORD': os.environ.get('DATABASE_PASSWORD'),
-        'HOST': os.environ.get('DATABASE_HOST'),
-        'PORT': '5432',
+        'NAME': DATABASE_NAME,
+        'USER': DATABASE_USER,
+        'PASSWORD': DATABASE_PASSWORD,
+        'HOST': DATABASE_HOST,
+        'PORT': '',
     }
 }
 
 
-DEBUG = False
+DEBUG = True
 ALLOWED_HOSTS = ['*']
-TEMPLATE_DEBUG = False
-
-MGAGE_USERNAME = os.environ.get('MGAGE_USERNAME')
-MGAGE_PASSWORD = os.environ.get('MGAGE_PASSWORD')
-MGAGE_FROM_NUMBER = int(os.environ.get('MGAGE_FROM_NUMBER'))
-
-MORNING_STAR_UNIVERSE_ID = os.environ.get('MORNING_STAR_UNIVERSE_ID')
-MORNING_STAR_ACCESS_CODE = os.environ.get('MORNING_STAR_ACCESS_CODE')
-MORNING_STAR_UNIVERSE_ID_EQUITY = os.environ.get('MORNING_STAR_UNIVERSE_ID_EQUITY')
-MORNING_STAR_UNIVERSE_ID_DEBT = os.environ.get('MORNING_STAR_UNIVERSE_ID_DEBT')
-MORNING_STAR_UNIVERSE_ID_INDICES = os.environ.get('MORNING_STAR_UNIVERSE_ID_INDICES')
+TEMPLATE_DEBUG = True
+USING_S3=False

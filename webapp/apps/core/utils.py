@@ -558,6 +558,8 @@ def get_portfolio_items(user_id, overall_allocation, sip_lumpsum_allocation):
     latest_portfolio_time = models.PlanAssestAllocation.objects.get(user_id=user_id, portfolio=None).modified_at
     portfolio_create_time = models.Portfolio.objects.get(user_id=user_id, has_invested=False).modified_at
     if latest_answer_time > portfolio_create_time or latest_portfolio_time > portfolio_create_time:
+        logger = logging.getLogger('django.info')
+        logger.info(latest_answer_time)
         equity_funds, debt_funds, elss_funds, is_error, errors = create_portfolio_items(
             user_id, overall_allocation, sip_lumpsum_allocation)
         return format_porfolioitems(equity_funds, debt_funds, elss_funds, is_error, errors)
@@ -2375,16 +2377,16 @@ def convert_to_investor(txn):
     Run only after investment is successful
     :return:
     """
+    logger = logging.getLogger('django.info')
     #TODO intil amount fixing
     user = txn.user
     portfolio = models.Portfolio.objects.get(user=user, has_invested=False)
-    order_detail = save_portfolio_snapshot(txn)
-    
+    order_detail_lumpsum, order_detail_sip = save_portfolio_snapshot(txn)
     
     portfolio.has_invested = True
     portfolio.investment_date = date.today()
     portfolio.save()
-
+    
     for item in portfolio.portfolioitem_set.all():
         item.investment_date = date.today()
         item.save()
@@ -2403,7 +2405,7 @@ def convert_to_investor(txn):
            
     applicant_name = investor_info_check(user)
     
-    profiles_helpers.send_transaction_completed_email(order_detail,applicant_name,user.email,use_https=settings.USE_HTTPS)
+    profiles_helpers.send_transaction_completed_email(order_detail_lumpsum,order_detail_sip,applicant_name,user.email,use_https=settings.USE_HTTPS)
 
 
 def save_portfolio_snapshot(txn):
@@ -2412,14 +2414,18 @@ def save_portfolio_snapshot(txn):
     :param txn: the transaction object
     :return:
     """
+    logger = logging.getLogger('django.info')
+    logger.info(txn.user)
     portfolio_items = models.PortfolioItem.objects.filter(portfolio__user=txn.user, portfolio__has_invested=False)
     order_item_list_sip, order_item_list_lumpsum = [], []
+    sip_tenure_list = []
     for portfolio_item in portfolio_items:
         order_item_lump = models.FundOrderItem.objects.create(portfolio_item=portfolio_item,
                                                               order_amount=portfolio_item.lumpsum,
                                                               agreed_sip=portfolio_item.sip,
                                                               agreed_lumpsum=portfolio_item.lumpsum,
                                                               internal_ref_no="FIN" + str(random_with_N_digits(7)))
+        
         order_item_list_lumpsum.append(order_item_lump)
 
         if portfolio_item.sip != 0:
@@ -2429,6 +2435,11 @@ def save_portfolio_snapshot(txn):
                                                                  agreed_lumpsum=0,
                                                                  internal_ref_no="FIN" + str(random_with_N_digits(7)))
             order_item_list_sip.append(order_item_sip)
+            """
+            SIP tenure for each Portfolio item
+            """
+            sip_tenure = txn.user.get_sip_tenure(portfolio_item)
+            sip_tenure_list.append(sip_tenure)
 
     order_detail_lump = models.OrderDetail.objects.create(user=txn.user, order_status=0, transaction=txn,
                                                           is_lumpsum=True)
@@ -2439,8 +2450,12 @@ def save_portfolio_snapshot(txn):
         order_detail_sip = models.OrderDetail.objects.create(user=txn.user, order_status=0, transaction=txn)
         for index in range(len(order_item_list_sip)):
             order_detail_sip.fund_order_items.add(order_item_list_sip[index])
+            """
+            SIP tenure add to order_detail_sip object
+            """
+            order_detail_sip.sip_tenure.add(sip_tenure_list[index])
     
-    return order_detail_lump
+    return order_detail_lump, order_detail_sip
 
 
 def get_is_enabled(portfolio_item):
@@ -2562,6 +2577,7 @@ def get_latest_date():
     :return:the minimum date frm daily indices
     """
     minimum_date_object, minimum_date = None, date.today()
+    minimum_date = '2006-01-01'
 
     historical_fund_objects_by_max_date = models.Fund.objects.annotate(max_date=Max('historicalfunddata__date'))
     for historical_fund_object in historical_fund_objects_by_max_date:

@@ -372,6 +372,8 @@ class MorningStarBackend(BaseFundBackend):
             if end_date > date.today():
                 end_date = date.today()
             url = utils.generate_url_for_historical_data(fund_mstar_id, start_date, end_date)
+            print(url)
+
             json_data = self._get_data(url)
             for data in json_data[constants.DATA][constants.API][constants.RAW_DATA]:
                 date_of_nav = data[constants.HISTORICAL_DATA_MAP[constants.DATE]]
@@ -413,6 +415,7 @@ class MorningStarBackend(BaseFundBackend):
             if end_date > last_date:
                 end_date = last_date
             url = utils.generate_url_for_historical_data(index_mstar_id, start_date, end_date)
+            print(url)
             json_data = self._get_data(url)
             for data in json_data[constants.DATA][constants.API][constants.RAW_DATA]:
                 index_mstar_id = json_data[constants.DATA][constants.ID]
@@ -476,6 +479,7 @@ class MorningStarBackend(BaseFundBackend):
             if end_date > last_date:
                 end_date = last_date
             url = utils.generate_url_for_category_history(category_id, start_date, end_date)
+            print(url)
             json_data = self._get_data(url)
             for data in json_data[constants.DATA][constants.API]:
                 category_id = json_data[constants.DATA][constants.ID]

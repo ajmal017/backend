@@ -248,7 +248,7 @@ class RecommendedPortfolios(APIView):
     API to return the recommended portfolio for a user
     """
     permission_classes = [permissions.IsAuthenticated]
-
+    
     def get(self, request):
         """
 
@@ -261,12 +261,15 @@ class RecommendedPortfolios(APIView):
             portfolio_items.update(overall_allocation)
             request.user.rebuild_portfolio = False
             request.user.save()
-            return api_utils.response(portfolio_items, status.HTTP_200_OK)
+            msg=api_utils.response(portfolio_items, status.HTTP_200_OK)
+            return msg
         else:
             return api_utils.response({constants.MESSAGE: errors},
                                       status.HTTP_400_BAD_REQUEST, api_utils.create_error_message(errors))
-
-
+        
+        
+             
+         
 class ReviewCard(APIView):
     """
     API to return the goal summary
