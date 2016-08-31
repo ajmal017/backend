@@ -4,13 +4,8 @@ from profiles.models import User
 from profiles.models import InvestorBankDetails
 from external_api import models as external_models
 from django.conf import settings
-from django.core.files import File
 import os
 import csv
-
-from django.db import models, cursor
-from django.contrib.contenttypes.management import update_contenttypes
-from django.core.validators import RegexValidator
 
 
 def read_csv_and_populate_ifsc_data(csv_file_name):
