@@ -206,7 +206,15 @@ def sitemap(request):
     """
     return render(request, 'base/sitemap.xml')
 
+class DeprecateAPI(APIView):
+    def post(self, request):
+        deprecateMessage = "Please update the FinAskus application to continue."
+        return api_utils.response({"message": deprecateMessage, "login_error": "deprecateMessage"}, status.HTTP_401_UNAUTHORIZED, deprecateMessage)
 
+    def get(self, request):
+        deprecateMessage = "Please update the FinAskus application to continue."
+        return api_utils.response({"message": deprecateMessage, "login_error": "deprecateMessage"}, status.HTTP_401_UNAUTHORIZED, deprecateMessage)
+        
 class AssessAnswerNew(APIView):
     """
     New API to manage answers

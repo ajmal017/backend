@@ -32,7 +32,7 @@ urlpatterns = [
         profile_views.password_reset_confirm, name='password_reset_confirm'),
     url(r'^reset/done/$', profile_views.password_reset_complete, name='password_reset_complete'),
     url(r'^5a91a426e461/474a/admin/', include(admin.site.urls)),
-    url(r"^v1.0/", views.deprecate_v1_0, name="deprecate_v1_0"),
+    url(r"^v1.0/", views.DeprecateAPI.as_view(), name="DeprecateAPI"),
     url(r"^v2.0/", include("api.urls", namespace='api_urls')),
     url(r'^o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
     url('', include('django.contrib.auth.urls')),
