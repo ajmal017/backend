@@ -56,6 +56,13 @@ def blank(request):
     context = {"fundhouses": fund_houses}
     return render(request, 'base/blank.html', context)
 
+def deprecate_v1_0(request):
+    """
+    :param request:
+    :return: 404 webpage
+    """
+    deprecateMessage = "Please update the FinAskus application to continue. Go to https://play.google.com/store/apps/details?id=com.finaskus.finaskus_android"
+    return api_utils.response({"message": deprecateMessage}, status.HTTP_401_UNAUTHORIZED, generate_error_message("API not supported"))
 
 def privacy(request):
     """
