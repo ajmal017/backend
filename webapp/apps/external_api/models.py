@@ -78,6 +78,7 @@ class BankDetails(models.Model):
     city = models.CharField(max_length=100, blank=False, null=False)
     district = models.CharField(max_length=100, blank=False, null=False)
     state = models.CharField(max_length=100, blank=False, null=False)
+    updated = models.BooleanField(default=False)
 
     def __str__(self):
         return str(self.ifsc_code)
