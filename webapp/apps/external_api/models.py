@@ -71,6 +71,7 @@ class BankDetails(models.Model):
     ifsc_regex = RegexValidator(regex='^[0-9A-Z]{11}', message=_(
         "IFC CODE MUST BE PUT IN FORMAT: 'ABHY0065001'. Up to 11 digits allowed."))
     ifsc_code = models.CharField(max_length=11, validators=[ifsc_regex], unique=True, blank=False, null=False)
+    micr_code = models.CharField(max_length=10, blank=True, null=True)
     bank_branch = models.CharField(max_length=100, blank=False, null=False)
     address = models.TextField(blank=False, null=False)
     phone_number = models.CharField(max_length=12, blank=True, null=True)

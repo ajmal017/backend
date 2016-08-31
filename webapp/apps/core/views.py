@@ -56,6 +56,13 @@ def blank(request):
     context = {"fundhouses": fund_houses}
     return render(request, 'base/blank.html', context)
 
+def deprecate_v1_0(request):
+    """
+    :param request:
+    :return: 404 webpage
+    """
+    deprecateMessage = "Please update the FinAskus application to continue."
+    return api_utils.response({"message": deprecateMessage, "login_error": "deprecateMessage"}, status.HTTP_404_NOT_FOUND, deprecateMessage)
 
 def privacy(request):
     """
@@ -199,7 +206,15 @@ def sitemap(request):
     """
     return render(request, 'base/sitemap.xml')
 
+class DeprecateAPI(APIView):
+    def post(self, request):
+        deprecateMessage = "Please update the FinAskus application to continue."
+        return api_utils.response({"message": deprecateMessage, "login_error": "deprecateMessage"}, status.HTTP_401_UNAUTHORIZED, deprecateMessage)
 
+    def get(self, request):
+        deprecateMessage = "Please update the FinAskus application to continue."
+        return api_utils.response({"message": deprecateMessage, "login_error": "deprecateMessage"}, status.HTTP_401_UNAUTHORIZED, deprecateMessage)
+        
 class AssessAnswerNew(APIView):
     """
     New API to manage answers

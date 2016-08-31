@@ -27,18 +27,11 @@ def investor_info_check(user):
     applicant_name = None
     try:
         investor_info = profile_models.InvestorInfo.objects.get(user=user)  
-        print("Investor Info exists?")
-             
         if investor_info is not None:
-            print("Investor Info exists")
             if investor_info.applicant_name is not None:
-                print("Investor Info exists and applicant_name not none")
                 applicant_name = investor_info.applicant_name
-        else:
-            print("Investor Info does nt exist")
     except profile_models.InvestorInfo.DoesNotExist:
             applicant_name = None
-            print("Investor Info does not exist")
     return applicant_name
 
 
@@ -3006,7 +2999,7 @@ def generate_units_allotment():
             fund_order_item.unit_alloted = unit_alloted
             fund_order_item.is_verified = True
             if not fund_order_item.orderdetail_set.all()[0].is_lumpsum:
-                next_allotment_date = get_valid_start_date(fund_order_item.portfolio_item.fund.id, fund_order_item.allotment_date)
+                next_allotment_date = models.get_next_allotment_date_or_start_date(fund_order_item)
                 fund_order_item.next_allotment_date = next_allotment_date
             fund_order_item.save()
             debug_logger.debug("ID " + str(fund_order_item.id) + " for user " +
@@ -3266,24 +3259,6 @@ def generate_xirr(simple_return, number_of_days):
         return ((1 + r1) ** (365)) - 1
 
 
-def get_valid_start_date(fund_id, send_date=datetime.now()):
-    """
-    generates valid start date for a prticular fund
-    :param fund_id: id of a particular fund
-    :param send_date: base date to be used as base date for finding valid start date
-    :return: next valid start date
-    """
-    sip_dates = models.Fund.objects.get(id=fund_id).sip_dates
-    sip_dates.sort()
-    next_month = (send_date + timedelta(30))
-    day = next_month.day
-    if day > sip_dates[-1]:
-        next_month += timedelta(30)
-        next_month = next_month.replace(day=sip_dates[0])
-        return next_month
-    modified_day = next(date[1] for date in enumerate(sip_dates) if date[1] >= day)
-    next_month = next_month.replace(day=modified_day)
-    return next_month
 
 
 def find_funds_with_sip_lower_than_minimum_sip(total_category_sip, sip_count, fund_ids):

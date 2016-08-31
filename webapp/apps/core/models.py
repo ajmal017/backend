@@ -21,6 +21,74 @@ from datetime import timedelta, date
 def unique_fund_image(instance, filename):
     return "fund/" + instance.mstar_id + "/image/" + filename
 
+def get_valid_start_date(fund_id, send_date=date.today()):
+    """
+    generates valid start date for a prticular fund
+    :param fund_id: id of a particular fund
+    :param send_date: base date to be used as base date for finding valid start date
+    :return: next valid start date
+    """
+    sip_dates = Fund.objects.get(id=fund_id).sip_dates
+    sip_dates.sort()
+    next_month = (send_date + timedelta(33))
+    day = next_month.day
+    if day > sip_dates[-1]:
+        next_month += timedelta(30)
+        next_month = next_month.replace(day=sip_dates[0])
+        return next_month
+    modified_day = next(date[1] for date in enumerate(sip_dates) if date[1] >= day)
+    next_month = next_month.replace(day=modified_day)
+    return next_month
+
+def get_next_allotment_date(fund_id, send_date):
+    """
+    generates valid next allotment date for a prticular fund
+    :param fund_id: id of a particular fund
+    :param send_date: base date to be used as base date for finding valid start date
+    :return: next valid start date
+    """
+    sip_dates = Fund.objects.get(id=fund_id).sip_dates
+    sip_dates.sort()
+    current_month = send_date.month
+    if (current_month + 1) > 12:
+        next_month = 1
+        next_year = send_date.year + 1
+    else:
+        next_month = current_month + 1
+        next_year = send_date.year
+        
+    try:     
+        next_month_date = send_date.replace(month=next_month, year=next_year)
+    except:
+        next_month_date = send_date.replace(day=1, month=next_month+1, year=next_year)
+        
+    day = next_month_date.day
+    if day > sip_dates[-1]:
+        next_month_date += timedelta(30)
+        next_month_date = next_month_date.replace(day=sip_dates[0])
+        return next_month_date
+    modified_day = next(date[1] for date in enumerate(sip_dates) if date[1] >= day)
+    next_month_date = next_month_date.replace(day=modified_day)
+    return next_month_date
+
+def get_next_allotment_date_or_start_date(fund_order_item):
+    if fund_order_item.allotment_date:
+        days = relativedelta(fund_order_item.allotment_date, fund_order_item.portfolio_item.investment_date).days
+    else:
+        days = relativedelta(fund_order_item.created_at, fund_order_item.portfolio_item.investment_date).days
+    if (days > 30):
+        if fund_order_item.allotment_date:
+            next_allotment_date = get_next_allotment_date(fund_order_item.portfolio_item.fund.id, fund_order_item.allotment_date)
+        else:
+            next_allotment_date = get_next_allotment_date(fund_order_item.portfolio_item.fund.id, fund_order_item.created_at)
+    else:
+        if fund_order_item.allotment_date:
+            next_allotment_date = get_valid_start_date(fund_order_item.portfolio_item.fund.id, fund_order_item.allotment_date)
+        else:
+            next_allotment_date = get_valid_start_date(fund_order_item.portfolio_item.fund.id, fund_order_item.created_at)
+            
+    return next_allotment_date
+
 class Question(TimeStampedModel):
     """
     Model for questions for assess, plan
@@ -842,25 +910,6 @@ class FundOrderItem(TimeStampedModel):
         """
         return self.created_at.date()
 
-    def get_valid_start_date(self, fund_id, send_date):
-        """
-        generates valid start date for a prticular fund
-        :param fund_id: id of a particular fund
-        :param send_date: base date to be used as base date for finding valid start date
-        :return: next valid start date
-        """
-        sip_dates = Fund.objects.get(id=fund_id).sip_dates
-        sip_dates.sort()
-        next_month = (send_date + timedelta(30))
-        day = next_month.day
-        if day > sip_dates[-1]:
-            next_month += timedelta(30)
-            next_month = next_month.replace(day=sip_dates[0])
-            return next_month
-        modified_day = next(date[1] for date in enumerate(sip_dates) if date[1] >= day)
-        next_month = next_month.replace(day=modified_day)
-        return next_month
-
     def save(self, *args, **kwargs):
         """
         creates a check while saving instance of model, if is_verified is True then unit must be alloted.
@@ -883,7 +932,7 @@ class FundOrderItem(TimeStampedModel):
                 self.unit_alloted = unit_alloted
                 self.is_verified = True
                 if not self.orderdetail_set.all()[0].is_lumpsum:
-                    next_allotment_date = self.get_valid_start_date(self.portfolio_item.fund.id, self.allotment_date)
+                    next_allotment_date = get_next_allotment_date_or_start_date(self)
                     self.next_allotment_date = next_allotment_date
 
         return super(FundOrderItem, self).save(*args, **kwargs)
