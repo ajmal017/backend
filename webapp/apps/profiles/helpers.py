@@ -228,7 +228,7 @@ def send_vault_completion_email(user, user_email, domain_override=None,
               html_email_template_name=html_email_template_name)
     
 
-def send_transaction_completed_email(order_detail_lumpsum,order_detail_sip,applicant_name,user_email, domain_override=None, subject_template_name='transaction/subject.txt',
+def send_transaction_completed_email(order_detail_lumpsum,order_detail_sip,applicant_name,user_email,sip_tenure,portfolio_len,domain_override=None, subject_template_name='transaction/subject.txt',
                                      email_template_name='transaction/transaction_completed.html', use_https=False,
                                      token_generator=default_token_generator, from_email=None,
                                      request=None,html_email_template_name='transaction/user-confirm-pay.html', extra_email_context=None):
@@ -244,7 +244,8 @@ def send_transaction_completed_email(order_detail_lumpsum,order_detail_sip,appli
         'order_detail_lumpsum':order_detail_lumpsum,
         'order_detail_sip':order_detail_sip,       
         'user_name':user_name,
-        'order_detail': order_detail,
+        'sip_tenure':sip_tenure,
+        'portfolio_len':portfolio_len,
         'domain': settings.SITE_BASE_URL,
         'site_name': "Finaskus",
         'protocol': 'https' if use_https else 'http',
@@ -252,9 +253,36 @@ def send_transaction_completed_email(order_detail_lumpsum,order_detail_sip,appli
     send_mail(subject_template_name, email_template_name, context, from_email, settings.DEFAULT_TO_EMAIL,
               html_email_template_name=None)
     
-    send_mail('transaction/user-subject.txt', None, context, from_email, order_detail.user.email,
-              html_email_template_name=html_email_template_name)
     
+    send_mail('transaction/user-subject.txt', None, context, from_email, user_email,
+              html_email_template_name=html_email_template_name)
+
+
+def send_transaction_change_email(order_detail,applicant_name,user,domain_override=None, subject_template_name='transaction/subject.txt',
+                                     email_template_name='transaction/transaction_status_change.html', use_https=False,
+                                     token_generator=default_token_generator, from_email=None,
+                                     request=None,html_email_template_name='transaction/user-confirm-status-change.html', extra_email_context=None):
+    """
+    Sends email when a transaction is completed
+    """
+    if applicant_name is not None:
+        user_name = applicant_name.title()
+    else:
+        user_name = user.email
+    
+    context = {         
+        'user_name':user_name,
+        'domain': settings.SITE_BASE_URL,
+        'site_name': "Finaskus",
+        'protocol': 'https' if use_https else 'http',
+    }
+    send_mail(subject_template_name, email_template_name, context, from_email, settings.DEFAULT_TO_EMAIL,
+              html_email_template_name=None)
+    
+    
+    send_mail('transaction/user-status-change-subject.txt', None, context, from_email, user.email,
+              html_email_template_name=html_email_template_name)
+
 
 
 def send_reset_email(user,applicant_name,domain_override=None, subject_template_name='registration/password_reset_request_subject.txt',

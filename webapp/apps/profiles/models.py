@@ -238,7 +238,7 @@ class User(AbstractBaseUser, TimeStampedModel):
         texts = list(filter(lambda key: key != 0, texts))
         if len(texts) == 0:
             return None
-        return min(texts)
+        return min(texts),len(texts)
 
 
 class VerificationSMSCode(TimeStampedModel):

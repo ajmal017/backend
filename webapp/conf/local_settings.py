@@ -19,7 +19,7 @@ EMAIL_BACKEND='django_smtp_ssl.SSLEmailBackend'
 EMAIL_HOST='email-smtp.us-west-2.amazonaws.com'
 EMAIL_PORT=465
 DEFAULT_FROM_EMAIL = 'Finaskus Support<askus@finaskus.com>'
-DEFAULT_TO_EMAIL = "appadmin@finaskus.com"
+DEFAULT_TO_EMAIL = "jineshpaul@finaskus.com"
 EMAIL_HOST_USER=os.environ.get('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD=os.environ.get('EMAIL_HOST_PASSWORD')
 

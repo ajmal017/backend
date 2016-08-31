@@ -2415,7 +2415,6 @@ def convert_to_investor(txn):
     Run only after investment is successful
     :return:
     """
-    logger = logging.getLogger('django.info')
     #TODO intil amount fixing
     user = txn.user
     portfolio = models.Portfolio.objects.get(user=user, has_invested=False)
@@ -2440,10 +2439,17 @@ def convert_to_investor(txn):
     profile_models.AggregatePortfolio.objects.update_or_create(
         user=txn.user, defaults={"update_date":datetime.now().date()})
     
-           
+    """
+    SIP tenure for each Portfolio item
+    """
+    sip_tenure = 0
+    portfolio_len = 0
+    if order_detail_sip is not None:
+        sip_tenure,portfolio_len = txn.user.get_sip_tenure(portfolio) 
+       
     applicant_name = investor_info_check(user)
-    
-    profiles_helpers.send_transaction_completed_email(order_detail_lumpsum,order_detail_sip,applicant_name,user.email,use_https=settings.USE_HTTPS)
+
+    profiles_helpers.send_transaction_completed_email(order_detail_lumpsum,order_detail_sip,applicant_name,user.email,sip_tenure,portfolio_len,use_https=settings.USE_HTTPS)
 
 
 def save_portfolio_snapshot(txn):
@@ -2452,11 +2458,8 @@ def save_portfolio_snapshot(txn):
     :param txn: the transaction object
     :return:
     """
-    logger = logging.getLogger('django.info')
-    logger.info(txn.user)
     portfolio_items = models.PortfolioItem.objects.filter(portfolio__user=txn.user, portfolio__has_invested=False)
     order_item_list_sip, order_item_list_lumpsum = [], []
-    sip_tenure_list = []
     for portfolio_item in portfolio_items:
         order_item_lump = models.FundOrderItem.objects.create(portfolio_item=portfolio_item,
                                                               order_amount=portfolio_item.lumpsum,
@@ -2473,25 +2476,19 @@ def save_portfolio_snapshot(txn):
                                                                  agreed_lumpsum=0,
                                                                  internal_ref_no="FIN" + str(random_with_N_digits(7)))
             order_item_list_sip.append(order_item_sip)
-            """
-            SIP tenure for each Portfolio item
-            """
-            sip_tenure = txn.user.get_sip_tenure(portfolio_item)
-            sip_tenure_list.append(sip_tenure)
+            
 
     order_detail_lump = models.OrderDetail.objects.create(user=txn.user, order_status=0, transaction=txn,
                                                           is_lumpsum=True)
     for index in range(len(order_item_list_lumpsum)):
         order_detail_lump.fund_order_items.add(order_item_list_lumpsum[index])
 
+    order_detail_sip = None
     if order_item_list_sip:
         order_detail_sip = models.OrderDetail.objects.create(user=txn.user, order_status=0, transaction=txn)
         for index in range(len(order_item_list_sip)):
             order_detail_sip.fund_order_items.add(order_item_list_sip[index])
-            """
-            SIP tenure add to order_detail_sip object
-            """
-            order_detail_sip.sip_tenure.add(sip_tenure_list[index])
+            
     
     return order_detail_lump, order_detail_sip
 

@@ -15,6 +15,7 @@ from webapp.apps import random_with_N_digits
 from . import manager, constants
 from payment import models as payment_models
 
+
 from datetime import timedelta, date
 
 def unique_fund_image(instance, filename):
@@ -929,19 +930,20 @@ class OrderDetail(TimeStampedModel):
                 related_portfolio = self.fund_order_items.all()[0].portfolio_item.portfolio
                 related_portfolio.is_deleted = True
                 related_portfolio.save()
-                
+           
         #check Order Details information
-        '''
+        applicant_name = 'Jinesh Paul'
         if self.pk is not None:
             if self.order_status == 2:
                 try:
                     orig = OrderDetail.objects.get(pk=self.pk)
                     if orig is not None:
-                        if orig.order_status is not None:
-                            profiles_helpers.send_transaction_completed_email(order_detail=self,applicant_name='J Paul',user_email='jineshpaul@finaskus.com',use_https=settings.USE_HTTPS)
+                        if orig.order_status != 2:
+                            if self.is_lumpsum == True:
+                                profile_helpers.send_transaction_change_email(self,applicant_name,self.user,use_https=settings.USE_HTTPS)
                 except OrderDetail.DoesNotExist:
-                    return False
-        '''
+                    return False        
+                
         return super(OrderDetail, self).save(*args, **kwargs)
 
     def __str__(self):
