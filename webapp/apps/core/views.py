@@ -61,8 +61,8 @@ def deprecate_v1_0(request):
     :param request:
     :return: 404 webpage
     """
-    deprecateMessage = "Please update the FinAskus application to continue. Go to https://play.google.com/store/apps/details?id=com.finaskus.finaskus_android"
-    return api_utils.response({"message": deprecateMessage}, status.HTTP_401_UNAUTHORIZED, generate_error_message({"reason":"API not supported"}))
+    deprecateMessage = "Please update the FinAskus application to continue."
+    return api_utils.response({"message": deprecateMessage, "login_error": "deprecateMessage"}, status.HTTP_404_NOT_FOUND, deprecateMessage)
 
 def privacy(request):
     """
