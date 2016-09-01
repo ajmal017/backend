@@ -1948,6 +1948,8 @@ def make_financial_goal_response(goal_map, total_equity_invested, total_debt_inv
                         constants.EXPECTD_VALUE))), constants.PROGRESS: progress,
                     constants.GOAL_ANSWERS: category_individual_goal.get(constants.GOAL_ANSWERS)
                 }
+                debug_logger.debug("make_financial_goal_response: goal status: " + str(goal_status))
+
                 financial_goal_list.append(goal_status)
                 goal_map[category][1] += 1
     return financial_goal_list
