@@ -478,6 +478,7 @@ def generate_goals_data(category_answers, category_allocation):
     if category_allocation is not None:
         category_answers_result[constants.ALLOCATION] = category_allocation
     
+    return category_answers_result
 
 def get_category_answers(user, question_for):
     """
