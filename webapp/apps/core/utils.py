@@ -1560,7 +1560,6 @@ def get_financial_goal_status_for_dashboard(asset_overview, portfolio):
             corpus, debt_investment, equity_investment, elss_investment, term = \
                 calculate_corpus_and_investment_till_date(answer_map, portfolio, category, category_allocation)
             goal_data = generate_goals_data(user_answers, category_allocation)
-            debug_logger.debug("goal data is: " + str(goal_data))
 
             goal_map[constants.MAP[category]][0].append({
                 constants.EXPECTD_VALUE: corpus,
@@ -1890,7 +1889,6 @@ def calculate_financial_goal_status(asset_class_overview, portfolios_to_be_consi
                     calculate_corpus_and_investment_till_date(answer_map, portfolio, category, category_allocation)
                 user_answers_portfolio = [ans for ans in user_answers if ans.portfolio_id == portfolio.id]
                 goal_data = generate_goals_data(user_answers_portfolio, category_allocation)
-                debug_logger.debug("calculate_financial_goal_status: goal data: " + str(goal_data))
                 goal_map[constants.MAP[category]][0].append({
                     constants.EXPECTD_VALUE: corpus,
                     constants.EQUITY: equity_investment, constants.DEBT: debt_investment,
@@ -1937,8 +1935,6 @@ def make_financial_goal_response(goal_map, total_equity_invested, total_debt_inv
                         current_value_map[constants.ELSS] / total_elss_invested)
                 progress = round(goal_current_value * 100 / category_individual_goal.get(constants.EXPECTD_VALUE), 1)
                 
-                debug_logger.debug("make_financial_goal_response: goal data: " + str(category_individual_goal.get(constants.GOAL_ANSWERS)))
-
                 goal_status = {
                     constants.NAME: str(constants.ASSET_ALLOCATION_MAP[category][2]) +
                                     str(goal_map[category][1] + 1),
@@ -1948,8 +1944,6 @@ def make_financial_goal_response(goal_map, total_equity_invested, total_debt_inv
                         constants.EXPECTD_VALUE))), constants.PROGRESS: progress,
                     constants.GOAL_ANSWERS: category_individual_goal.get(constants.GOAL_ANSWERS)
                 }
-                debug_logger.debug("make_financial_goal_response: goal status: " + str(goal_status))
-
                 financial_goal_list.append(goal_status)
                 goal_map[category][1] += 1
     return financial_goal_list

@@ -160,7 +160,7 @@ class ContactInfoSerializer(serializers.ModelSerializer):
         """
         model = models.ContactInfo
         fields = ('communication_address', 'permanent_address', 'address_are_equal', 'address_proof_type',
-                  'front_image', 'back_image', 'email', 'phone_number')
+                  'front_image', 'back_image', 'email', 'phone_number', 'communication_address_type' )
 
     def create(self, validated_data):
         """
