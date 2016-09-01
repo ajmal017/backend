@@ -465,6 +465,19 @@ def get_assess_answer(user):
     answers_object["A1"] = str(user.age)
     return answers_object
 
+def generate_goals_data(category_answers, category_allocation):
+    category_answers_result = {}
+    if len(category_answers) == 0:
+        return category_answers_result
+    for answer in category_answers:
+        if answer.question.type == constants.TEXT:
+            category_answers_result[answer.question.question_id] = int(answer.text)
+        else:
+            answer_bool_converted = True if models.Option.objects.get(id=answer.option_id).option_id == "op1" else False
+            category_answers_result[answer.question.question_id] = answer_bool_converted
+    if category_allocation is not None:
+        category_answers_result[constants.ALLOCATION] = category_allocation
+    
 
 def get_category_answers(user, question_for):
     """
@@ -474,25 +487,16 @@ def get_category_answers(user, question_for):
     :param question_for: category for which answers ar to be returned
     :return:  dict of category related answers by user
     """
-    category_answers = {}
     category_related_answers = models.Answer.objects.filter(
         user=user, question__question_for=constants.MAP[question_for], portfolio=None).select_related('question')
-    if len(category_related_answers) == 0:
-        return category_answers
-    for answer in category_related_answers:
-        if answer.question.type == constants.TEXT:
-            category_answers[answer.question.question_id] = int(answer.text)
-        else:
-            answer_bool_converted = True if models.Option.objects.get(id=answer.option_id).option_id == "op1" else False
-            category_answers[answer.question.question_id] = answer_bool_converted
+
     category = question_for + "_allocation"
     try:
         category_allocation = getattr(models.PlanAssestAllocation.objects.get(user=user, portfolio=None), category)
     except models.PlanAssestAllocation.DoesNotExist:
         category_allocation = constants.EMPTY_ALLOCATION
-    if category_allocation is not None:
-        category_answers[constants.ALLOCATION] = category_allocation
-    return category_answers
+    
+    return generate_goals_data(category_related_answers, category_allocation)
 
 
 def get_plan_answers(user):
@@ -653,8 +657,8 @@ def get_number_of_funds(sip_lumpsum_allocation):
     debt_lumpsum = sip_lumpsum_allocation[constants.DEBT][constants.LUMPSUM]
     elss_lumpsum = sip_lumpsum_allocation[constants.ELSS][constants.LUMPSUM]
     # TODO add numbers to constants
-    equity_funds_by_sip = 4 if equity_sip >= 6000 else (
-        3 if equity_sip >= 3000 else(2 if equity_sip >= 1000 else (1 if equity_sip >= 500 else (
+    equity_funds_by_sip = 4 if equity_sip >= 8000 else (
+        3 if equity_sip >= 4500 else(2 if equity_sip >= 2000 else (1 if equity_sip >= 500 else (
             -1 if equity_sip > 0 else 0))))
     if equity_funds_by_sip is -1:
         is_error = True
@@ -1554,11 +1558,13 @@ def get_financial_goal_status_for_dashboard(asset_overview, portfolio):
         if category_allocation is not None:
             corpus, debt_investment, equity_investment, elss_investment, term = \
                 calculate_corpus_and_investment_till_date(answer_map, portfolio, category, category_allocation)
+            goal_data = generate_goals_data(user_answers, category_allocation)
             goal_map[constants.MAP[category]][0].append({
                 constants.EXPECTD_VALUE: corpus,
                 constants.EQUITY: equity_investment, constants.DEBT: debt_investment,
                 constants.ELSS: elss_investment,
-                constants.DATE: portfolio.modified_at.date() + relativedelta(years=int(term))
+                constants.DATE: portfolio.modified_at.date() + relativedelta(years=int(term)),
+                constants.GOAL_ANSWERS: goal_data
             })
             total_debt += debt_investment
             total_equity += equity_investment
@@ -1879,11 +1885,14 @@ def calculate_financial_goal_status(asset_class_overview, portfolios_to_be_consi
             if category_allocation is not None:
                 corpus, debt_investment, equity_investment, elss_investment, term = \
                     calculate_corpus_and_investment_till_date(answer_map, portfolio, category, category_allocation)
+                user_answers_portfolio = [ans for ans in user_answers if user_answers.portfolio == portfolio]
+                goal_data = generate_goals_data(user_answers_portfolio, category_allocation)
                 goal_map[constants.MAP[category]][0].append({
                     constants.EXPECTD_VALUE: corpus,
                     constants.EQUITY: equity_investment, constants.DEBT: debt_investment,
                     constants.ELSS: elss_investment,
-                    constants.DATE: portfolio.investment_date + relativedelta(years=int(term))
+                    constants.DATE: portfolio.investment_date + relativedelta(years=int(term)),
+                    constants.GOAL_ANSWERS: goal_data
                 })
                 total_debt += debt_investment
                 total_equity += equity_investment
@@ -1930,6 +1939,7 @@ def make_financial_goal_response(goal_map, total_equity_invested, total_debt_inv
                     constants.DATE: category_individual_goal.get(constants.DATE),
                     constants.GOAL: calculate_aum_in_string(round(category_individual_goal.get(
                         constants.EXPECTD_VALUE))), constants.PROGRESS: progress,
+                    constants.GOAL_ANSWERS: category_individual_goal.get(constants.GOAL_ANSWERS)
                 }
                 financial_goal_list.append(goal_status)
                 goal_map[category][1] += 1
