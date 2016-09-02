@@ -62,7 +62,7 @@ class BankInfoGet(APIView):
                                       constants.UNSUPPORTED_BANK)
         """
         serializer = serializers.BankInfoGetSerializer(bank_detail, data={'is_bank_supported':is_bank_supported})
-        if serializer.is_valid:
+        if serializer.is_valid():
             return api_utils.response(serializer.data)
         
         return api_utils.response({constants.MESSAGE: constants.UNSUPPORTED_BANK}, status.HTTP_404_NOT_FOUND,
