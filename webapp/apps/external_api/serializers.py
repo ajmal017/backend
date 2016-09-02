@@ -26,7 +26,7 @@ class BankInfoGetSerializer(serializers.ModelSerializer):
     """
     Serializer to return data for bank info
     """
-    is_bank_supported = ReadOnlyField(source='is_bank_supported')
+    is_bank_supported = ReadOnlyField()
     class Meta:
         model = models.BankDetails
         fields = ('name', 'bank_branch', 'address', 'city', 'is_bank_supported')
