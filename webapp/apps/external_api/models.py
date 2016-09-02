@@ -7,6 +7,7 @@ from django.core.validators import RegexValidator
 from djutil.models import TimeStampedModel
 
 from . import constants
+from payment import constants as payment_constants
 
 from enum import IntEnum
 
@@ -83,6 +84,12 @@ class BankDetails(models.Model):
     def __str__(self):
         return str(self.ifsc_code)
 
+    @property
+    def is_supported(self):
+        if payment_constants.bank_product_id_map.get(self.name, ["",""]) == ["", ""]:
+            return False
+        else:
+            return True
 
 # class OrderEntryParam(models.Model):
 #     """
