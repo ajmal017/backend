@@ -28,7 +28,7 @@ class BankInfoGetSerializer(serializers.ModelSerializer):
     is_bank_supported = serializers.BooleanField(required=True)
     class Meta:
         model = models.BankDetails
-        fields = ('name', 'bank_branch', 'address', 'city')
+        fields = ('name', 'bank_branch', 'address', 'city', 'is_bank_supported')
 
 
 class BankInfoGetWithIFSCSerializer(serializers.ModelSerializer):
