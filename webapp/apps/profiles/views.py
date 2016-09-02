@@ -1006,7 +1006,8 @@ class ContactInfo(APIView):
                                              "permanent_address_id": perm_obj.id,
                                              "address_are_equal": False,
                                              "email": request.data.get('email', None),
-                                             "phone_number":  request.data.get('phone_number', None)})
+                                             "phone_number":  request.data.get('phone_number', None),
+                                             "communication_address_type": request.data.get('communication_address_type', None)})
             utils.set_user_check_attributes(request.user, 'is_contact_info')
         else:
             perm_obj = comm_obj
@@ -1017,7 +1018,8 @@ class ContactInfo(APIView):
                                              "permanent_address_id": perm_obj.id,
                                              "address_are_equal": True,
                                              "email": request.data.get('email', None),
-                                             "phone_number":  request.data.get('phone_number', None)})
+                                             "phone_number":  request.data.get('phone_number', None),
+                                             "communication_address_type": request.data.get('communication_address_type', None)})
             utils.set_user_check_attributes(request.user, 'is_contact_info')
         return api_utils.response({"message": constants.SUCCESS})
 
