@@ -49,15 +49,19 @@ class BankInfoGet(APIView):
         :return:
         """
         ifsc_code = request.query_params.get('ifsc_code')
+        is_bank_supported = True
         try:
             bank_detail = models.BankDetails.objects.get(ifsc_code=ifsc_code)
         except models.BankDetails.DoesNotExist:
             return api_utils.response({constants.MESSAGE: constants.IFSC_CODE_INCORRECT}, status.HTTP_404_NOT_FOUND,
                                       constants.IFSC_CODE_INCORRECT)
         if payment_constant.bank_product_id_map.get(bank_detail.name, ["",""]) == ["", ""]:
+            is_bank_supported = False
+        """
             return api_utils.response({constants.MESSAGE: constants.UNSUPPORTED_BANK}, status.HTTP_404_NOT_FOUND,
                                       constants.UNSUPPORTED_BANK)
-        serializer = serializers.BankInfoGetSerializer(bank_detail)
+        """
+        serializer = serializers.BankInfoGetSerializer(bank_detail, is_bank_supported=is_bank_supported)
         return api_utils.response(serializer.data)
 
 
