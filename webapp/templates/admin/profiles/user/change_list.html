@@ -16,7 +16,7 @@
                 $.ajax({
                     type: 'post',
                     data: {"email" : email},
-                    url: "/v1.0/user/resend/verify/email/admin/",
+                    url: "/v2.0/user/resend/verify/email/admin/",
                     success: function(object) {
                         $(".loader").hide();
                         alert(object.response.message);
@@ -28,28 +28,28 @@
                 var allElems = $(this).parent().parent().children().children();
                 email = allElems[2].value;
                 // this opens a new window for the download of the private resource.
-                window.open("/v1.0/open/generate/investor/info/pdf/?email="+email);
+                window.open("/v2.0/open/generate/investor/info/pdf/?email="+email);
             });
 
             $('.kyc_pdf').click(function(){
                 var allElems = $(this).parent().parent().children().children();
                 email = allElems[2].value;
                 // this opens a new window for the download of the private resource.
-                window.open("/v1.0/open/generate/kyc/info/pdf/?email="+email);
+                window.open("/v2.0/open/generate/kyc/info/pdf/?email="+email);
             });
 
             $('.tiff').click(function(){
                 var allElems = $(this).parent().parent().children().children();
                 email = allElems[2].value;
                 // this opens a new window for the download of the private resource.
-                window.open("/v1.0/open/generate/bse/investor/tiff/?email="+email);
+                window.open("/v2.0/open/generate/bse/investor/tiff/?email="+email);
             });
 
             $('.mandate').click(function(){
                 var allElems = $(this).parent().parent().children().children();
                 email = allElems[2].value;
                 // this opens a new window for the download of the private resource.
-                window.open("/v1.0/open/generate/bank/mandate/pdf?email="+email);
+                window.open("/v2.0/open/generate/bank/mandate/pdf?email="+email);
             });
         }
     </script>

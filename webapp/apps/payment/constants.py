@@ -1,4 +1,4 @@
-RU = "https://www.finaskus.com/v1.0/core/billdesk/complete/"
+RU = "https://api.finaskus.com/v2.0/core/billdesk/complete/"
 DISTRIBUTOR_ID = "ARN-108537"
 MERCHANT_ID = "FINASKUS"
 UNKNOWN = "NA"
