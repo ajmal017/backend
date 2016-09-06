@@ -378,11 +378,11 @@ class ProfileCompleteness(APIView):
             try:
                 investor_bank_details = models.InvestorBankDetails.objects.get(user=request.user)
                 if investor_bank_details.ifsc_code:
-                    flag_data['is_bank_supported'] = investor_bank_details.ifsc_code.is_supported()
+                    flag_data['is_bank_supported'] = investor_bank_details.ifsc_code.is_supported
                 else:
                     flag_data['is_bank_supported'] = False
             except models.InvestorBankDetails.DoesNotExist:
-                flag_data['kra_verified'] = False
+                flag_data['is_bank_supported'] = False
 
             flag_data['is_virtual'] = False
             if request.user.orderdetail_set.all().count() == 0:
