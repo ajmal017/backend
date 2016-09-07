@@ -209,19 +209,20 @@ def sitemap(request):
 class VersionInfo(APIView):
     
     def get(self, request):
-        
+        logger = logging.getLogger('django.debug')
+
         try:
             version_id = request.GET.get('versionID', None)
-            print(version_id)
+            logger.debug(version_id)
             if version_id:
-                print("Valid version id: " + version_id)
+                logger.debug("Valid version id: " + version_id)
                 ver = float(version_id)
                 if ver >= 1.2:
                     api_utils.response({"status": "true"}, status.HTTP_200_OK)
                 else:
                     api_utils.response({"status": "false"}, status.HTTP_200_OK)
         except Exception as e:
-            print("Exception: " + str(e))
+            logger.debug("Exception: " + str(e))
         
         return api_utils.response({"message": "Bad Request"}, status.HTTP_400_BAD_REQUEST)
 
