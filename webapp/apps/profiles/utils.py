@@ -191,12 +191,8 @@ def get_vault_dict(target_user):
         cheque_image = ""
     try:
         nominee = profile_models.NomineeInfo.objects.get(user=target_user)
-        if nominee.nominee_absent:
-            nominee_signature = "/"
-        else:
-            nominee_signature = nominee.nominee_signature
     except profile_models.NomineeInfo.DoesNotExist:
-        nominee_signature = ""
+        nominee = ""
     # try:
     #     contact = profile_models.ContactInfo.objects.get(user=target_user)
     #
@@ -230,7 +226,7 @@ def get_vault_dict(target_user):
 
     vault_dict = {
             'is_bank_info': cheque_image,
-            'is_nominee_info': nominee_signature,
+            'is_nominee_info': nominee,
             'is_contact_info': contact_info,
             'is_investor_info': pan_image,
             'is_identity_info': target_user.identity_info_image
