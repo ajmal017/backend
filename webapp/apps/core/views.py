@@ -212,6 +212,7 @@ class VersionInfo(APIView):
         
         try:
             version_id = request.GET.get('versionID', None)
+            print(version_id)
             if version_id:
                 print("Valid version id: " + version_id)
                 ver = float(version_id)
