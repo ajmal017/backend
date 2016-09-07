@@ -213,13 +213,14 @@ class VersionInfo(APIView):
         try:
             version_id = request.GET.get('versionID', None)
             if version_id:
+                print("Valid version id: " + version_id)
                 ver = float(version_id)
                 if ver >= 1.2:
                     api_utils.response({"status": "true"}, status.HTTP_200_OK)
                 else:
                     api_utils.response({"status": "false"}, status.HTTP_200_OK)
-        except:
-            pass
+        except Exception as e:
+            print("Exception: " + str(e))
         
         return api_utils.response({"message": "Bad Request"}, status.HTTP_400_BAD_REQUEST)
 
