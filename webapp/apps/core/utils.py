@@ -204,6 +204,9 @@ def process_retirement_answer(request):
     """
     post answer for retirement
     """
+    logger = logging.getLogger('django.debug')
+    logger.debug(str(request.data))
+
     allocation_dict = make_allocation_dict(float(request.data.get('monthly_investment')), 0,
                                            request.data.get("allocation"))
     equity_sip, equity_lumpsum, debt_sip, debt_lumpsum, elss_sip, elss_lumpsum, is_error, errors = \
