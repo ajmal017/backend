@@ -220,7 +220,8 @@ class VersionInfo(APIView):
                     api_utils.response({"status": "false"}, status.HTTP_200_OK)
         except:
             pass
-    return api_utils.response({"message": "Bad Request"}, status.HTTP_400_BAD_REQUEST)
+        
+        return api_utils.response({"message": "Bad Request"}, status.HTTP_400_BAD_REQUEST)
 
 
 class DeprecateAPI(APIView):
