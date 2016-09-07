@@ -218,9 +218,9 @@ class VersionInfo(APIView):
                 logger.debug("Valid version id: " + version_id)
                 ver = float(version_id)
                 if ver >= 1.2:
-                    api_utils.response({"status": "true"}, status.HTTP_200_OK)
+                    return api_utils.response({"status": "true"}, status.HTTP_200_OK)
                 else:
-                    api_utils.response({"status": "false"}, status.HTTP_200_OK)
+                    return api_utils.response({"status": "false"}, status.HTTP_200_OK)
         except Exception as e:
             logger.debug("Exception: " + str(e))
         
