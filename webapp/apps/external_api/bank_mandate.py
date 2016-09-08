@@ -1,4 +1,5 @@
 from profiles import models, utils
+from profiles import constants as profile_constants
 
 from num2words import num2words
 from collections import OrderedDict
@@ -22,10 +23,8 @@ def generate_bank_mandate_file(user, order_items):
     timestamp = time.strftime("%Y%m%d-%H%M%S")
     bank_mandate_pipe_file_name = "bank_mandate_pipe" + timestamp + ".txt"
     outfile = open(output_path + bank_mandate_pipe_file_name, "w")
-    total_sip = 0.0
-    for item in order_items:
-        total_sip += item.agreed_sip
-    total_sip = max(total_sip, 100000)
+    total_sip = utils.get_investor_mandate_amount(user)
+    total_sip = max(total_sip*3, profile_constants.DEFAULT_BANK_MANDATE_AMOUNT)
     bank_mandate_dict = OrderedDict([('Member Code', cons.MEMBER_CODE),
                                       ('UCC', str(user.finaskus_id)),
                                       ('Amount', str(total_sip)),
@@ -50,7 +49,8 @@ def generate_bank_mandate_pdf(user_id):
     investor_bank = models.InvestorBankDetails.objects.get(user=user)
     curr_date = datetime.now()
 
-    mandate_amount_no = max(utils.get_investor_mandate_amount(user), 100000)
+    sip_total_amount = utils.get_investor_mandate_amount(user)
+    mandate_amount_no = max(sip_total_amount*3, profile_constants.DEFAULT_BANK_MANDATE_AMOUNT)
 
     mandate_dict = {
         'MandateAccountHolderName': investor_bank.account_holder_name,

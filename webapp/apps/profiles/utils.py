@@ -462,11 +462,11 @@ def get_investor_mandate_amount(user):
         :return: The total amount to be used to fill investor pdf which is calculated by summing all the sip of the
         last made is_lumpsum = True order
         """
+        mandate_amount = 0;
         try:
-            latest_order_detail = core_models.OrderDetail.objects.filter(user=user).latest('created_at')
-            mandate_amount = latest_order_detail.fund_order_items.aggregate(total=Sum(F('agreed_sip')))['total']
-            if mandate_amount:
-                return mandate_amount
-            return 0
+            order_details = core_models.OrderDetail.objects.filter(user=user, is_lumpsum=True, order_status=core_models.OrderDetail.OrderStatus.Complete)
+            for o in order_details:
+                mandate_amount += o.fund_order_items.aggregate(total=Sum(F('agreed_sip')))['total']
+            return mandate_amount
         except core_models.OrderDetail.DoesNotExist:
             return 0
