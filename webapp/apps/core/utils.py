@@ -1559,7 +1559,7 @@ def get_financial_goal_status_for_dashboard(asset_overview, portfolio):
         if category_allocation is not None:
             corpus, debt_investment, equity_investment, elss_investment, term = \
                 calculate_corpus_and_investment_till_date(answer_map, portfolio, category, category_allocation)
-            user_answers_category = [ans for ans in user_answers if ans.question.question_for==category]
+            user_answers_category = [ans for ans in user_answers if ans.question.question_for==constants.MAP[category]]
             goal_data = generate_goals_data(user_answers_category, category_allocation)
 
             goal_map[constants.MAP[category]][0].append({
@@ -1888,7 +1888,7 @@ def calculate_financial_goal_status(asset_class_overview, portfolios_to_be_consi
             if category_allocation is not None:
                 corpus, debt_investment, equity_investment, elss_investment, term = \
                     calculate_corpus_and_investment_till_date(answer_map, portfolio, category, category_allocation)
-                user_answers_portfolio = [ans for ans in user_answers if ans.portfolio_id == portfolio.id and ans.question.question_for==category]
+                user_answers_portfolio = [ans for ans in user_answers if ans.portfolio_id == portfolio.id and ans.question.question_for==constants.MAP[category]]
                 goal_data = generate_goals_data(user_answers_portfolio, category_allocation)
                 goal_map[constants.MAP[category]][0].append({
                     constants.EXPECTD_VALUE: corpus,
