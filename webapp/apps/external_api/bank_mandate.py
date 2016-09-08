@@ -11,7 +11,7 @@ import os
 import time
 
 
-def generate_bank_mandate_file(user, order_items):
+def generate_bank_mandate_file(user, order_detail):
     """
     This function generates a pipe separated file for bank mandate.
     :param order_items: list of order_items for that order_detail
@@ -23,7 +23,7 @@ def generate_bank_mandate_file(user, order_items):
     timestamp = time.strftime("%Y%m%d-%H%M%S")
     bank_mandate_pipe_file_name = "bank_mandate_pipe" + timestamp + ".txt"
     outfile = open(output_path + bank_mandate_pipe_file_name, "w")
-    total_sip = utils.get_investor_mandate_amount(user)
+    total_sip = utils.get_investor_mandate_amount(user, order_detail)
     total_sip = max(total_sip*3, profile_constants.DEFAULT_BANK_MANDATE_AMOUNT)
     bank_mandate_dict = OrderedDict([('Member Code', cons.MEMBER_CODE),
                                       ('UCC', str(user.finaskus_id)),

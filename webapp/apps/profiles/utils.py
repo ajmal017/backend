@@ -457,16 +457,26 @@ def update_kyc_status():
             investor.save()
 
 
-def get_investor_mandate_amount(user):
+def get_investor_mandate_amount(user, order_detail):
         """
+        order_detail: optional, when provided used to calculate SIP amount in addition to completed orders.
         :return: The total amount to be used to fill investor pdf which is calculated by summing all the sip of the
-        last made is_lumpsum = True order
+        order details where is_lumpsum = True. If no such 
         """
         mandate_amount = 0;
         try:
             order_details = core_models.OrderDetail.objects.filter(user=user, is_lumpsum=True, order_status=core_models.OrderDetail.OrderStatus.Complete)
             for o in order_details:
                 mandate_amount += o.fund_order_items.aggregate(total=Sum(F('agreed_sip')))['total']
+                
+            if order_detail is not None:
+                if order_detail.order_status != core_models.OrderDetail.OrderStatus.Complete:
+                    mandate_amount += order_detail.fund_order_items.aggregate(total=Sum(F('agreed_sip')))['total']
+            else:
+                if len(order_details) == 0:
+                    latest_order_detail = core_models.OrderDetail.objects.filter(user=user).latest('created_at')
+                    mandate_amount += latest_order_detail.fund_order_items.aggregate(total=Sum(F('agreed_sip')))['total']
+                    
             return mandate_amount
         except core_models.OrderDetail.DoesNotExist:
-            return 0
+            return mandate_amount

@@ -248,9 +248,8 @@ class GenerateBankMandate(View):
 
         if request.user.is_superuser:
             order_detail = OrderDetail.objects.get(order_id=request.GET.get('order_id'))
-            order_items = order_detail.fund_order_items.all()
             if is_investable(order_detail.user):
-                output_file = bank_mandate.generate_bank_mandate_file(order_detail.user, order_items).split('/')[-1]
+                output_file = bank_mandate.generate_bank_mandate_file(order_detail.user, order_detail).split('/')[-1]
                 prefix = 'webapp'
                 my_file_path = prefix+constants.STATIC + output_file
                 my_file = open(my_file_path, "rb")
