@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from enum import IntEnum
 from dateutil.relativedelta import relativedelta
+from django.db.models import Avg, Max, Sum, Q
 
 from django.contrib.postgres.fields import HStoreField, ArrayField
 from django.db import models
@@ -12,14 +13,97 @@ import profiles.models as profile_models
 import profiles.helpers as profile_helpers
 from webapp.conf import settings
 from webapp.apps import random_with_N_digits
-from . import manager, constants
+from . import manager, constants 
 from payment import models as payment_models
-
+from external_api import bank_mandate as bank_mandate
+import logging
+from django.http import HttpResponse
+from external_api import constants as external_constants
 
 from datetime import timedelta, date
 
 def unique_fund_image(instance, filename):
     return "fund/" + instance.mstar_id + "/image/" + filename
+
+def investor_info_check(user):
+    applicant_name = None
+    try:
+        investor_info = profile_models.InvestorInfo.objects.get(user=user)  
+        if investor_info is not None:
+            if investor_info.applicant_name is not None:
+                applicant_name = investor_info.applicant_name
+    except profile_models.InvestorInfo.DoesNotExist:
+            applicant_name = None
+    return applicant_name
+
+
+
+def order_detail_transaction_mail_send(order_detail):
+    
+    #check Order Details information
+    if order_detail.order_status == 2 and order_detail is not None and order_detail.is_lumpsum == True:
+        try:
+            applicant_name = investor_info_check(order_detail.user)
+        except models.investor_info_check.DoesNotExist:
+            applicant_name = order_detail.user.email
+                
+        sip_tenure = 0
+        goal_tenure_len = 0
+        portfolio = order_detail.fund_order_items.all()[:1].get().portfolio_item.portfolio
+        try:
+            sip_tenure,goal_tenure_len = order_detail.user.get_sip_tenure(portfolio)
+        except: 
+            sip_tenure = 0
+            goal_tenure_len = 0
+
+        if order_detail.user.mandate_status == "0": 
+            email_attachment = bank_mandate.generate_bank_mandate_pdf(order_detail.user.id)
+        else:
+            email_attachment = None
+                        
+        order_info = order_detail
+        order_info.fund_order_list = []
+        order_info.nav_list = []
+        order_info.unit_alloted = True
+        order_info.all_sips = []
+        order_info.all_lumpsums = []
+                
+        """
+        Get the all the portfolio items
+        """  
+                    
+        portfolio_items = PortfolioItem.objects.filter(portfolio=portfolio)
+        for portfolio_item in portfolio_items:
+            fund_order_items = FundOrderItem.objects.filter(portfolio_item=portfolio_item)
+            for fund_order_item in fund_order_items:
+                if fund_order_item.order_amount > 0:
+                    if fund_order_item.unit_alloted is not None:
+                        try:
+                            nav = HistoricalFundData.objects.get(fund_id=fund_order_item.portfolio_item.fund.id, date=fund_order_item.allotment_date).nav
+                        except HistoricalFundData.DoesNotExist:
+                            nav = None
+                        order_info.fund_order_list.append(fund_order_item)
+                        order_info.nav_list.append(nav)
+                        order_info.all_sips.append(fund_order_item.agreed_sip)
+                        order_info.all_lumpsums.append(fund_order_item.agreed_lumpsum)
+                    else:
+                        order_info.unit_alloted = False
+                        print("Unit has not alloted for the order detail")
+                        break
+            if order_info.unit_alloted == False:
+                print("Unit has not alloted for the order detail")
+                break               
+        msg = profile_helpers.send_transaction_change_email(order_info,applicant_name,order_detail.user,email_attachment,sip_tenure,goal_tenure_len,use_https=settings.USE_HTTPS)
+        if msg == "success":
+            response = "Email Send Successfully to the Investor"
+        else:
+            response = "Unit alloted is not available , Email Send to the Admin."
+
+        return response
+    else:
+        return "Email Send only for first order"
+        
+
 
 def get_valid_start_date(fund_id, send_date=date.today()):
     """
@@ -980,16 +1064,15 @@ class OrderDetail(TimeStampedModel):
                 related_portfolio.is_deleted = True
                 related_portfolio.save()
            
+         
         #check Order Details information
-        applicant_name = 'Jinesh Paul'
         if self.pk is not None:
             if self.order_status == 2:
                 try:
                     orig = OrderDetail.objects.get(pk=self.pk)
                     if orig is not None:
                         if orig.order_status != 2:
-                            if self.is_lumpsum == True:
-                                profile_helpers.send_transaction_change_email(self,applicant_name,self.user,use_https=settings.USE_HTTPS)
+                            order_detail_transaction_mail_send(self)
                 except OrderDetail.DoesNotExist:
                     return False        
                 

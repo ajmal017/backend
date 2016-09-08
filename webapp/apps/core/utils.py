@@ -2436,13 +2436,13 @@ def convert_to_investor(txn):
     SIP tenure for each Portfolio item
     """
     sip_tenure = 0
-    portfolio_len = 0
+    goal_len = 0
     if order_detail_sip is not None:
-        sip_tenure,portfolio_len = txn.user.get_sip_tenure(portfolio) 
+        sip_tenure,goal_len = txn.user.get_sip_tenure(portfolio) 
        
     applicant_name = investor_info_check(user)
 
-    profiles_helpers.send_transaction_completed_email(order_detail_lumpsum,order_detail_sip,applicant_name,user.email,sip_tenure,portfolio_len,use_https=settings.USE_HTTPS)
+    profiles_helpers.send_transaction_completed_email(order_detail_lumpsum,order_detail_sip,applicant_name,user.email,sip_tenure,goal_len,use_https=settings.USE_HTTPS)
 
 
 def save_portfolio_snapshot(txn):

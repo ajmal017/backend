@@ -636,7 +636,7 @@ Congratulations, you have successfully placed your investment order through FinA
       {% for order_detail in order_detail_sip.fund_order_items.all %}
        {% if order_detail.agreed_sip != 0 %}
          <li> SIP Rs {{ order_detail.agreed_sip|floatformat:2 }} - 
-          {% if portfolio_len == 1 %}
+          {% if goal_len == 1 %}
              {{sip_tenure}} years  - 
           {% endif %}
          {{order_detail.portfolio_item.fund.legal_name}} </li>

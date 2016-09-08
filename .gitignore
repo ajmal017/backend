@@ -3,3 +3,5 @@
 error_log
 webapp/media
 *.swp
+webapp/conf/settings
+webapp/conf/local_settings

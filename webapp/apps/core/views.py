@@ -22,6 +22,11 @@ from datetime import timedelta, datetime, date
 import logging
 import copy
 
+from profiles.utils import is_investable
+from django.views.generic import View
+from django.http import HttpResponse
+from external_api import bank_mandate as bank_mandate
+from external_api import constants as external_constants
 
 def index(request):
     """
@@ -1558,3 +1563,31 @@ class PortfolioTracker(APIView):
             return api_utils.response({constants.DATE: dates, constants.CURRENT_AMOUNT: historic_performance,
                                        constants.INVESTED_AMOUNT: invested_amount, constants.XIRR: xirr},
                                       status.HTTP_200_OK)
+
+
+class TransactionComplete(View):
+    """
+    An api to trigger Transaction Complete Email.
+    """
+    def get(self, request):
+        """
+        Only admin user is allowed to trigger the transaction complete email.
+
+        :param request: 
+        :return: send the generated pipe file
+        """
+        # makes sure that only superuser can access this file.
+        if request.user.is_superuser:
+            try:
+                order_detail = models.OrderDetail.objects.get(order_id=request.GET.get('order_id'))
+            except models.OrderDetail.DoesNotExist:
+                order_detail = None
+                   
+            response = models.order_detail_transaction_mail_send(order_detail)
+            return HttpResponse(response) 
+             
+        else:
+            return HttpResponse(external_constants.FORBIDDEN_ERROR, status=403)     
+            
+             
+    

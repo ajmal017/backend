@@ -632,9 +632,24 @@
                             <span style="color:#555555"><span style="font-size:15px"><span style="font-family:trebuchet ms,lucida grande,lucida sans unicode,lucida sans,tahoma,sans-serif">
 Congratulations!  Your investment order through FinAskus has been successfully processed. Please see below the synopsis of your investment; you can view the updated details of your portfolio anytime anywhere using the "Track performance" section in the App.<br><br>
 
-  
-  
- 
+
+
+    
+  {% if order_detail != None %}
+   <ul>
+     {% for order_details,nav_details in order_detail %}
+          {% if order_details.agreed_lumpsum != 0 %}
+          
+           <li> Lumpsum Rs {{ order_details.agreed_lumpsum|floatformat:2 }} - {{order_details.portfolio_item.fund.legal_name}} </li>
+                <ul><li>
+                   {{ order_details.unit_alloted}} units allotted with NAV Rs {{nav_details|floatformat:2}} as {{order_details.allotment_date}}
+                 </li></ul> 
+          {% endif %}
+       {% endfor %}
+       </ul>
+    {% endif %}
+    
+    
 <br><br>
 While your current order is for a lumpsum only, we advise that you set up a bank mandate with us for speedy execution of your future SIP orders as well as to add another convenient payment mode for any future SIP or lumpusm orders. Please find attached a pre-filled Bank Mandate Registration form, that you only need to sign and send us. You may notice that the mandate value is higher than your current order amount. This is solely to account for future orders, and the actual debits to your account will only be executed with your consent, once you have placed the order on the FinAskus platform.
 <br><br>
