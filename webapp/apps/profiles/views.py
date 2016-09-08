@@ -375,6 +375,15 @@ class ProfileCompleteness(APIView):
             except models.InvestorInfo.DoesNotExist:
                 flag_data['kra_verified'] = False
 
+            try:
+                investor_bank_details = models.InvestorBankDetails.objects.get(user=request.user)
+                if investor_bank_details.ifsc_code:
+                    flag_data['is_bank_supported'] = investor_bank_details.ifsc_code.is_supported
+                else:
+                    flag_data['is_bank_supported'] = False
+            except models.InvestorBankDetails.DoesNotExist:
+                flag_data['is_bank_supported'] = False
+
             flag_data['is_virtual'] = False
             if request.user.orderdetail_set.all().count() == 0:
                 flag_data['is_virtual'] = True
@@ -1006,7 +1015,8 @@ class ContactInfo(APIView):
                                              "permanent_address_id": perm_obj.id,
                                              "address_are_equal": False,
                                              "email": request.data.get('email', None),
-                                             "phone_number":  request.data.get('phone_number', None)})
+                                             "phone_number":  request.data.get('phone_number', None),
+                                             "communication_address_type": request.data.get('communication_address_type', None)})
             utils.set_user_check_attributes(request.user, 'is_contact_info')
         else:
             perm_obj = comm_obj
@@ -1017,7 +1027,8 @@ class ContactInfo(APIView):
                                              "permanent_address_id": perm_obj.id,
                                              "address_are_equal": True,
                                              "email": request.data.get('email', None),
-                                             "phone_number":  request.data.get('phone_number', None)})
+                                             "phone_number":  request.data.get('phone_number', None),
+                                             "communication_address_type": request.data.get('communication_address_type', None)})
             utils.set_user_check_attributes(request.user, 'is_contact_info')
         return api_utils.response({"message": constants.SUCCESS})
 

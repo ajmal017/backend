@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from . import models
+from rest_framework.fields import ReadOnlyField
 
 
 class PinCodeSerializer(serializers.ModelSerializer):
@@ -25,9 +26,10 @@ class BankInfoGetSerializer(serializers.ModelSerializer):
     """
     Serializer to return data for bank info
     """
+    is_bank_supported = serializers.BooleanField(source='is_supported')
     class Meta:
         model = models.BankDetails
-        fields = ('name', 'bank_branch', 'address', 'city')
+        fields = ('name', 'bank_branch', 'address', 'city', 'is_bank_supported')
 
 
 class BankInfoGetWithIFSCSerializer(serializers.ModelSerializer):

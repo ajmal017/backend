@@ -11,6 +11,7 @@ from . import helpers
 import logging
 
 from datetime import datetime
+from numpy.ma.core import remainder
 
 def get_answers(user_id):
     """
@@ -191,12 +192,8 @@ def get_vault_dict(target_user):
         cheque_image = ""
     try:
         nominee = profile_models.NomineeInfo.objects.get(user=target_user)
-        if nominee.nominee_absent:
-            nominee_signature = "/"
-        else:
-            nominee_signature = nominee.nominee_signature
     except profile_models.NomineeInfo.DoesNotExist:
-        nominee_signature = ""
+        nominee = ""
     # try:
     #     contact = profile_models.ContactInfo.objects.get(user=target_user)
     #
@@ -230,7 +227,7 @@ def get_vault_dict(target_user):
 
     vault_dict = {
             'is_bank_info': cheque_image,
-            'is_nominee_info': nominee_signature,
+            'is_nominee_info': nominee,
             'is_contact_info': contact_info,
             'is_investor_info': pan_image,
             'is_identity_info': target_user.identity_info_image
@@ -461,16 +458,34 @@ def update_kyc_status():
             investor.save()
 
 
-def get_investor_mandate_amount(user):
+def get_investor_mandate_amount(user, order_detail):
         """
+        order_detail: optional, when provided used to calculate SIP amount in addition to completed orders.
         :return: The total amount to be used to fill investor pdf which is calculated by summing all the sip of the
-        last made is_lumpsum = True order
+        order details where is_lumpsum = True. If no such 
         """
+        sip_amount = 0;
         try:
-            latest_order_detail = core_models.OrderDetail.objects.filter(user=user).latest('created_at')
-            mandate_amount = latest_order_detail.fund_order_items.aggregate(total=Sum(F('agreed_sip')))['total']
-            if mandate_amount:
-                return mandate_amount
-            return 0
+            order_details = core_models.OrderDetail.objects.filter(user=user, is_lumpsum=True, order_status=core_models.OrderDetail.OrderStatus.Complete)
+            for o in order_details:
+                sip_amount += o.fund_order_items.aggregate(total=Sum(F('agreed_sip')))['total']
+                
+            if order_detail is not None:
+                if order_detail.order_status != core_models.OrderDetail.OrderStatus.Complete:
+                    sip_amount += order_detail.fund_order_items.aggregate(total=Sum(F('agreed_sip')))['total']
+            else:
+                if len(order_details) == 0:
+                    latest_order_detail = core_models.OrderDetail.objects.filter(user=user).latest('created_at')
+                    sip_amount += latest_order_detail.fund_order_items.aggregate(total=Sum(F('agreed_sip')))['total']
+                    
         except core_models.OrderDetail.DoesNotExist:
-            return 0
+            pass
+        
+        mandate_amount = max(sip_amount*2, cons.DEFAULT_BANK_MANDATE_AMOUNT)
+        
+        if mandate_amount > cons.DEFAULT_BANK_MANDATE_AMOUNT:
+            amount_remainder = mandate_amount%10000
+            if amount_remainder > 0:
+                mandate_amount = (mandate_amount - amount_remainder) + 10000
+            
+        return mandate_amount

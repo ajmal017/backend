@@ -304,6 +304,9 @@ class InvestorInfo(TimeStampedModel):
     applicant_name = models.CharField(max_length=512, blank=True, null=True)
     father_name = models.CharField(max_length=512, blank=True, null=True)
     dob = models.DateField(_('dob'), blank=True, null=True)
+    country_of_birth = models.CharField(_('country of birth'), max_length=254, blank=True, null=True)
+    place_of_birth = models.CharField(_('place of birth'), max_length=254, blank=True, null=True)
+
     income = models.CharField(max_length=1, choices=INCOME_CHOICE, blank=True, null=True)
     political_exposure = models.CharField(max_length=1, choices=EXPOSURE_CHOICE, blank=True, null=True)
     occupation_type = models.CharField(max_length=3, blank=True, null=True, default=None,
@@ -363,8 +366,16 @@ class ContactInfo(TimeStampedModel):
         Ration_Card = 7
         Lease = 8
 
+    class AddressType(IntEnum):
+        Residential = 1
+        Business = 2
+        Residential_Business = 3
+        Registered_Office = 4
+        
     user = models.OneToOneField(User)
     communication_address = models.ForeignKey(Address, related_name="user_communication_address", blank=True, null=True)
+    communication_address_type = models.IntegerField(choices=[(x.value, x.name) for x in AddressType], default=None,
+                                             null=True)
     permanent_address = models.ForeignKey(Address, related_name="user_permanent_address", blank=True, null=True)
     address_are_equal = models.BooleanField(default=False, help_text=_(u'Is communication and permanent address same'))
     address_proof_type = models.IntegerField(choices=[(x.value, x.name) for x in AddressProofs], default=None,

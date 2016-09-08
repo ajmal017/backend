@@ -211,6 +211,25 @@ def sitemap(request):
     """
     return render(request, 'base/sitemap.xml')
 
+class VersionInfo(APIView):
+    
+    def get(self, request):
+        logger = logging.getLogger('django.debug')
+
+        try:
+            version_id = request.GET.get('versionID', None)
+            if version_id:
+                ver = float(version_id)
+                if ver >= 1.2:
+                    return api_utils.response({"status": "true"}, status.HTTP_200_OK)
+                else:
+                    return api_utils.response({"status": "false"}, status.HTTP_200_OK)
+        except Exception as e:
+            logger.debug("VersionInfo Exception: " + str(e))
+        
+        return api_utils.response({"message": "Bad Request"}, status.HTTP_400_BAD_REQUEST)
+
+
 class DeprecateAPI(APIView):
     def post(self, request):
         deprecateMessage = "Please update the FinAskus application to continue."

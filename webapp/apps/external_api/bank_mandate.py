@@ -10,7 +10,7 @@ import os
 import time
 
 
-def generate_bank_mandate_file(user, order_items):
+def generate_bank_mandate_file(user, order_detail):
     """
     This function generates a pipe separated file for bank mandate.
     :param order_items: list of order_items for that order_detail
@@ -22,10 +22,7 @@ def generate_bank_mandate_file(user, order_items):
     timestamp = time.strftime("%Y%m%d-%H%M%S")
     bank_mandate_pipe_file_name = "bank_mandate_pipe" + timestamp + ".txt"
     outfile = open(output_path + bank_mandate_pipe_file_name, "w")
-    total_sip = 0.0
-    for item in order_items:
-        total_sip += item.agreed_sip
-    total_sip = max(total_sip, 100000)
+    total_sip = utils.get_investor_mandate_amount(user, order_detail)
     bank_mandate_dict = OrderedDict([('Member Code', cons.MEMBER_CODE),
                                       ('UCC', str(user.finaskus_id)),
                                       ('Amount', str(total_sip)),
@@ -50,7 +47,10 @@ def generate_bank_mandate_pdf(user_id):
     investor_bank = models.InvestorBankDetails.objects.get(user=user)
     curr_date = datetime.now()
 
-    mandate_amount_no = max(utils.get_investor_mandate_amount(user), 100000)
+    if not user.mandate_reg_no:
+        return None, "Mandate Registration Number Missing"
+    
+    mandate_amount_no = utils.get_investor_mandate_amount(user, None)
 
     mandate_dict = {
         'MandateAccountHolderName': investor_bank.account_holder_name,
@@ -107,4 +107,4 @@ def generate_bank_mandate_pdf(user_id):
 
     call(("rm " + temp_file_name).split())
 
-    return output_path + out_file_name
+    return output_path + out_file_name, None

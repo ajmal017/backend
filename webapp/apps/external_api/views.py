@@ -54,11 +54,15 @@ class BankInfoGet(APIView):
         except models.BankDetails.DoesNotExist:
             return api_utils.response({constants.MESSAGE: constants.IFSC_CODE_INCORRECT}, status.HTTP_404_NOT_FOUND,
                                       constants.IFSC_CODE_INCORRECT)
-        if payment_constant.bank_product_id_map.get(bank_detail.name, ["",""]) == ["", ""]:
+        """
             return api_utils.response({constants.MESSAGE: constants.UNSUPPORTED_BANK}, status.HTTP_404_NOT_FOUND,
                                       constants.UNSUPPORTED_BANK)
+        """
         serializer = serializers.BankInfoGetSerializer(bank_detail)
         return api_utils.response(serializer.data)
+        
+        return api_utils.response({constants.MESSAGE: constants.UNSUPPORTED_BANK}, status.HTTP_404_NOT_FOUND,
+                                      constants.UNSUPPORTED_BANK)
 
 
 class KycApi(APIView):
@@ -244,9 +248,8 @@ class GenerateBankMandate(View):
 
         if request.user.is_superuser:
             order_detail = OrderDetail.objects.get(order_id=request.GET.get('order_id'))
-            order_items = order_detail.fund_order_items.all()
             if is_investable(order_detail.user):
-                output_file = bank_mandate.generate_bank_mandate_file(order_detail.user, order_items).split('/')[-1]
+                output_file = bank_mandate.generate_bank_mandate_file(order_detail.user, order_detail).split('/')[-1]
                 prefix = 'webapp'
                 my_file_path = prefix+constants.STATIC + output_file
                 my_file = open(my_file_path, "rb")
@@ -353,7 +356,10 @@ class GenerateMandatePdf(View):
         if request.user.is_superuser:
             user = pr_models.User.objects.get(email=request.GET.get('email'))
             if is_investable(user) and user.signature != "":
-                output_file = bank_mandate.generate_bank_mandate_pdf(user.id).split('/')[-1]
+                output_file, error = bank_mandate.generate_bank_mandate_pdf(user.id)
+                if output_file is None:
+                    return HttpResponse(error, status=404)
+                output_file = output_file.split('/')[-1]
                 prefix = 'webapp'
                 my_file_path = prefix+constants.STATIC + output_file
                 my_file = open(my_file_path, "rb")

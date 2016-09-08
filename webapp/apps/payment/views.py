@@ -102,4 +102,8 @@ class Pay(APIView):
             except IntegrityError:
                 return api_utils.response({"message": "failure"}, status.HTTP_404_NOT_FOUND,
                                           constants.ORDER_CREATION_FAILED)
+            except Exception:
+                return api_utils.response({"message": "failure"}, status.HTTP_404_NOT_FOUND,
+                                          constants.ORDER_CREATION_FAILED)
+                
         return api_utils.response(serializer.errors, status.HTTP_404_NOT_FOUND, constants.MALFORMED_REQUEST)
