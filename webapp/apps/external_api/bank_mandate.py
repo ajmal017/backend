@@ -49,7 +49,7 @@ def generate_bank_mandate_pdf(user_id):
     investor_bank = models.InvestorBankDetails.objects.get(user=user)
     curr_date = datetime.now()
 
-    sip_total_amount = utils.get_investor_mandate_amount(user)
+    sip_total_amount = utils.get_investor_mandate_amount(user, None)
     mandate_amount_no = max(sip_total_amount*3, profile_constants.DEFAULT_BANK_MANDATE_AMOUNT)
 
     mandate_dict = {
