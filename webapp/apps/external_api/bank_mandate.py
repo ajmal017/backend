@@ -47,6 +47,9 @@ def generate_bank_mandate_pdf(user_id):
     investor_bank = models.InvestorBankDetails.objects.get(user=user)
     curr_date = datetime.now()
 
+    if not user.mandate_reg_no:
+        return "Mandate Registration Number Missing"
+    
     mandate_amount_no = utils.get_investor_mandate_amount(user, None)
 
     mandate_dict = {
