@@ -11,6 +11,7 @@ from . import helpers
 import logging
 
 from datetime import datetime
+from numpy.ma.core import remainder
 
 def get_answers(user_id):
     """
@@ -463,20 +464,28 @@ def get_investor_mandate_amount(user, order_detail):
         :return: The total amount to be used to fill investor pdf which is calculated by summing all the sip of the
         order details where is_lumpsum = True. If no such 
         """
-        mandate_amount = 0;
+        sip_amount = 0;
         try:
             order_details = core_models.OrderDetail.objects.filter(user=user, is_lumpsum=True, order_status=core_models.OrderDetail.OrderStatus.Complete)
             for o in order_details:
-                mandate_amount += o.fund_order_items.aggregate(total=Sum(F('agreed_sip')))['total']
+                sip_amount += o.fund_order_items.aggregate(total=Sum(F('agreed_sip')))['total']
                 
             if order_detail is not None:
                 if order_detail.order_status != core_models.OrderDetail.OrderStatus.Complete:
-                    mandate_amount += order_detail.fund_order_items.aggregate(total=Sum(F('agreed_sip')))['total']
+                    sip_amount += order_detail.fund_order_items.aggregate(total=Sum(F('agreed_sip')))['total']
             else:
                 if len(order_details) == 0:
                     latest_order_detail = core_models.OrderDetail.objects.filter(user=user).latest('created_at')
-                    mandate_amount += latest_order_detail.fund_order_items.aggregate(total=Sum(F('agreed_sip')))['total']
+                    sip_amount += latest_order_detail.fund_order_items.aggregate(total=Sum(F('agreed_sip')))['total']
                     
-            return mandate_amount
         except core_models.OrderDetail.DoesNotExist:
-            return mandate_amount
+            pass
+        
+        mandate_amount = max(sip_amount*2, cons.DEFAULT_BANK_MANDATE_AMOUNT)
+        
+        if mandate_amount > cons.DEFAULT_BANK_MANDATE_AMOUNT:
+            amount_remainder = mandate_amount%10000
+            if remainder > 0:
+                mandate_amount = (mandate_amount - amount_remainder) + 10000
+            
+        return mandate_amount
