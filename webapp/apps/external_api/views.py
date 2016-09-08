@@ -359,6 +359,7 @@ class GenerateMandatePdf(View):
                 output_file, error = bank_mandate.generate_bank_mandate_pdf(user.id).split('/')[-1]
                 if output_file is None:
                     return HttpResponse(error, status=404)
+                output_file = output_file.split('/')[-1]
                 prefix = 'webapp'
                 my_file_path = prefix+constants.STATIC + output_file
                 my_file = open(my_file_path, "rb")
