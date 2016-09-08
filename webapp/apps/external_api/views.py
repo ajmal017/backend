@@ -356,7 +356,9 @@ class GenerateMandatePdf(View):
         if request.user.is_superuser:
             user = pr_models.User.objects.get(email=request.GET.get('email'))
             if is_investable(user) and user.signature != "":
-                output_file = bank_mandate.generate_bank_mandate_pdf(user.id).split('/')[-1]
+                output_file, error = bank_mandate.generate_bank_mandate_pdf(user.id).split('/')[-1]
+                if output_file is None:
+                    return HttpResponse(error, status=404)
                 prefix = 'webapp'
                 my_file_path = prefix+constants.STATIC + output_file
                 my_file = open(my_file_path, "rb")

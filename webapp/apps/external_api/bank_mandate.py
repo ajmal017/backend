@@ -48,7 +48,7 @@ def generate_bank_mandate_pdf(user_id):
     curr_date = datetime.now()
 
     if not user.mandate_reg_no:
-        return "Mandate Registration Number Missing"
+        return None, "Mandate Registration Number Missing"
     
     mandate_amount_no = utils.get_investor_mandate_amount(user, None)
 
@@ -107,4 +107,4 @@ def generate_bank_mandate_pdf(user_id):
 
     call(("rm " + temp_file_name).split())
 
-    return output_path + out_file_name
+    return output_path + out_file_name, None
