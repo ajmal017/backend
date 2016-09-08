@@ -72,15 +72,12 @@ class Pay(APIView):
 
         """
         bank_name = request.user.investorbankdetails.ifsc_code.name
+        txt_bank_id = 'XXX'
+        product_id = bank_name 
         product_id_array = constants.bank_product_id_map.get(bank_name, None)
         if product_id_array is not None:
             txt_bank_id, product_id = product_id_array[0], product_id_array[1]
-            if txt_bank_id == "" or product_id == "":
-                return api_utils.response({"message" : constants.UNAVAILABE_BANK}, status.HTTP_404_NOT_FOUND,
-                                          constants.UNAVAILABE_BANK)
-        else:
-            return api_utils.response({"message" : constants.UNAVAILABE_BANK}, status.HTTP_404_NOT_FOUND,
-                                      constants.UNAVAILABE_BANK)
+
         serializer = serailizers.TransactionSerializer(data=request.query_params)
         if serializer.is_valid():
             try:
