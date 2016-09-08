@@ -24,7 +24,7 @@ def generate_bank_mandate_file(user, order_detail):
     bank_mandate_pipe_file_name = "bank_mandate_pipe" + timestamp + ".txt"
     outfile = open(output_path + bank_mandate_pipe_file_name, "w")
     total_sip = utils.get_investor_mandate_amount(user, order_detail)
-    total_sip = max(total_sip*3, profile_constants.DEFAULT_BANK_MANDATE_AMOUNT)
+    total_sip = max(total_sip*2, profile_constants.DEFAULT_BANK_MANDATE_AMOUNT)
     bank_mandate_dict = OrderedDict([('Member Code', cons.MEMBER_CODE),
                                       ('UCC', str(user.finaskus_id)),
                                       ('Amount', str(total_sip)),
@@ -50,7 +50,7 @@ def generate_bank_mandate_pdf(user_id):
     curr_date = datetime.now()
 
     sip_total_amount = utils.get_investor_mandate_amount(user, None)
-    mandate_amount_no = max(sip_total_amount*3, profile_constants.DEFAULT_BANK_MANDATE_AMOUNT)
+    mandate_amount_no = max(sip_total_amount*2, profile_constants.DEFAULT_BANK_MANDATE_AMOUNT)
 
     mandate_dict = {
         'MandateAccountHolderName': investor_bank.account_holder_name,
