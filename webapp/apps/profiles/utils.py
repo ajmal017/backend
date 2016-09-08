@@ -485,7 +485,7 @@ def get_investor_mandate_amount(user, order_detail):
         
         if mandate_amount > cons.DEFAULT_BANK_MANDATE_AMOUNT:
             amount_remainder = mandate_amount%10000
-            if remainder > 0:
+            if amount_remainder > 0:
                 mandate_amount = (mandate_amount - amount_remainder) + 10000
             
         return mandate_amount
