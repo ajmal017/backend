@@ -93,14 +93,14 @@ def send_email_change_notify_to_old_email(old_email,applicant_name, new_email, s
     :return:
     """
     if applicant_name is not None:
-       userName = applicant_name.title()
+        userName = applicant_name.title()
     else:
-       userName = old_email
+        userName = old_email
     context = {
         'old_email': old_email,
         'new_email': new_email,
         'user_name':userName,
-        'domain': settings.SITE_BASE_URL,
+        'domain': settings.SITE_API_BASE_URL,
         'site_name': profile_constants.SITE_NAME,
         'protocol': 'https' if use_https else 'http',
     }
@@ -117,7 +117,7 @@ def send_bse_registration_email(user_email_list, domain_override=None,
      Sends an email of list of user emil whose bse registration has to be done
     """
     context = {
-        'domain': settings.SITE_BASE_URL,
+        'domain': settings.SITE_API_BASE_URL,
         'site_name': "Finaskus",
         'user_list': user_email_list,
         'protocol': 'https' if use_https else 'http',
@@ -149,7 +149,7 @@ def send_kra_verified_email(user,applicant_name, domain_override=None, subject_t
         'user': user,
         'email': user.email,
         'user_name':userName,
-        'domain': settings.SITE_BASE_URL,
+        'domain': settings.SITE_API_BASE_URL,
         'site_name': "Finaskus",
         'protocol': 'https' if use_https else 'http',
     }
@@ -170,7 +170,7 @@ def send_kyc_verification_email(user_email_list, domain_override=None,
      Sends an email of list of user emil whose kyc is pending
     """
     context = {
-        'domain': settings.SITE_BASE_URL,
+        'domain': settings.SITE_API_BASE_URL,
         'site_name': "Finaskus",
         'user_list': user_email_list,
         'protocol': 'https' if use_https else 'http',
@@ -192,7 +192,7 @@ def send_vault_completion_email_user(user, applicant_name,user_email, domain_ove
         userName = user.email
     context = {
         'user_name':userName,
-        'domain': settings.SITE_BASE_URL,
+        'domain': settings.SITE_API_BASE_URL,
         'site_name': "Finaskus",
         'user_email': user_email,
         'user': user,
@@ -218,7 +218,7 @@ def send_vault_completion_email(user, user_email, domain_override=None,
      Sends an email when vault is completed.
     """
     context = {
-        'domain': settings.SITE_BASE_URL,
+        'domain': settings.SITE_API_BASE_URL,
         'site_name': "Finaskus",
         'user_email': user_email,
         'user': user,
@@ -243,7 +243,7 @@ def send_transaction_completed_email(order_detail,applicant_name,user_email, dom
     context = {          
         'user_name':user_name,
         'order_detail': order_detail,
-        'domain': settings.SITE_BASE_URL,
+        'domain': settings.SITE_API_BASE_URL,
         'site_name': "Finaskus",
         'protocol': 'https' if use_https else 'http',
     }
@@ -271,7 +271,7 @@ def send_reset_email(user,applicant_name,domain_override=None, subject_template_
         context = {
             'email': user.email,
             'user_name':user_name,
-            'domain': settings.SITE_BASE_URL,
+            'domain': settings.SITE_API_BASE_URL,
             'site_name': "Finaskus",
             'uid': urlsafe_base64_encode(force_bytes(user.pk)),
             'user': user,
@@ -310,7 +310,7 @@ def send_verify_email(user, applicant_name, code, domain_override=None, subject_
     context = {
         'user_name':user_name,      
         'email': user.email,
-        'domain': settings.SITE_BASE_URL,
+        'domain': settings.SITE_API_BASE_URL,
         'site_name': profile_constants.SITE_NAME,
         'user': user,
         'token': code,
@@ -349,12 +349,12 @@ def send_phone_number_change_email(user_email,applicant_name,previous_number, ne
      Sends an email when user has successfully changed his phone number.
     """
     if applicant_name is not None:
-       userName = applicant_name.title()
+        userName = applicant_name.title()
     else:
-       userName = user.email
+        userName = user_email
        
     context = {
-        'domain': settings.SITE_BASE_URL,
+        'domain': settings.SITE_API_BASE_URL,
         'site_name': "Finaskus",
         'user_email': user_email,
         'user_name':userName,
@@ -375,7 +375,7 @@ def send_redeem_completed_email(redeem_detail, domain_override=None, subject_tem
     """
     context = {
         'redeem_detail': redeem_detail,
-        'domain': settings.SITE_BASE_URL,
+        'domain': settings.SITE_API_BASE_URL,
         'site_name': "Finaskus",
         'protocol': 'https' if use_https else 'http',
     }
