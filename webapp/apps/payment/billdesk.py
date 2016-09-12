@@ -1,7 +1,7 @@
 from django.conf import settings
 
 from . import utils, models
-
+import logging
 
 def verify_billdesk_checksum(string):
     """
@@ -18,9 +18,11 @@ def verify_billdesk_checksum(string):
          shared by BillDesk
     """
 
+    logger = logging.getLogger('django.info')
     response_checksum = string.split("|")[-1:][0]
     string_to_be_hashed = "|".join(string.split("|")[:-1])
     hash_generated = utils.get_billdesk_checksum(string_to_be_hashed, settings.BILLDESK_SECRET_KEY)
+    logger.info("checksum:" + hash_generated)
     return True if hash_generated == response_checksum else False
 
 
