@@ -746,16 +746,22 @@ class BilldeskComplete(APIView):
         # ]
         # msg = msg[0]
         msg = request.data.get('msg',[])
-        order_id, ref_no, txn_amount, auth_status  = billdesk.parse_billdesk_response(msg)
+        order_id, ref_no, txn_amount, auth_status, txn_time  = billdesk.parse_billdesk_response(msg)
+        txn_time_dt = None
+        if txn_time:
+            try:
+                txn_time_dt = datetime.strptime(txn_time, '%d-%m-%Y %H:%M:%S')
+            except:
+                logger.info("Billdesk response: Error parsing transaction time: " + txn_time)
         if not billdesk.verify_billdesk_checksum(msg) or auth_status!= "0300":
-            txn = billdesk.update_transaction_failure(order_id, ref_no, float(txn_amount), auth_status, msg)
+            txn = billdesk.update_transaction_failure(order_id, ref_no, float(txn_amount), auth_status, msg, txn_time_dt)
             query_params = {"txn_amount" :txn_amount, "auth_status": auth_status, "order_id": order_id,
                             "message" : msg.split("|")[24] # as error message is the 24th pipe seperated in the string
                             }
             query_params_string = self.create_query_params(query_params)
             full_url = reverse("api_urls:core_urls:billdesk-fail") + "?" + query_params_string
         else:
-            txn = billdesk.update_transaction_success(order_id, ref_no, float(txn_amount), auth_status, msg)
+            txn = billdesk.update_transaction_success(order_id, ref_no, float(txn_amount), auth_status, msg, txn_time_dt)
             utils.convert_to_investor(txn)
             query_params = {"txn_amount" :txn_amount, "auth_status": auth_status, "order_id": order_id,
                             "message": "Payment successful"}
