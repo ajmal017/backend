@@ -37,30 +37,31 @@ def investor_info_check(user):
     return applicant_name
 
 
-
 def order_detail_transaction_mail_send(order_detail):
     
     #check Order Details information
-    if order_detail.order_status == 2 and order_detail is not None and order_detail.is_lumpsum == True:
+    if order_detail is not None and order_detail.order_status == 2 and order_detail.is_lumpsum == True:
         try:
             applicant_name = investor_info_check(order_detail.user)
-        except models.investor_info_check.DoesNotExist:
+        except investor_info_check.DoesNotExist:
             applicant_name = order_detail.user.email
                 
         sip_tenure = 0
         goal_tenure_len = 0
-        portfolio = order_detail.fund_order_items.all()[:1].get().portfolio_item.portfolio
-        try:
-            sip_tenure,goal_tenure_len = order_detail.user.get_sip_tenure(portfolio)
-        except: 
-            sip_tenure = 0
-            goal_tenure_len = 0
-
+        if order_detail.fund_order_items.all() is not None:
+            portfolio = order_detail.fund_order_items.all()[:1].get().portfolio_item.portfolio
+            try:
+                sip_tenure,goal_tenure_len = order_detail.user.get_sip_tenure(portfolio)
+            except: 
+                sip_tenure = 0
+                goal_tenure_len = 0
+        
         if order_detail.user.mandate_status == "0": 
-            email_attachment = bank_mandate.generate_bank_mandate_pdf(order_detail.user.id)
+            email_attachment,attachment_error = bank_mandate.generate_bank_mandate_pdf(order_detail.user.id)
         else:
             email_attachment = None
-                        
+            attachment_error = None
+                            
         order_info = order_detail
         order_info.fund_order_list = []
         order_info.nav_list = []
@@ -70,30 +71,31 @@ def order_detail_transaction_mail_send(order_detail):
                 
         """
         Get the all the portfolio items
-        """  
-                    
-        portfolio_items = PortfolioItem.objects.filter(portfolio=portfolio)
-        for portfolio_item in portfolio_items:
-            fund_order_items = FundOrderItem.objects.filter(portfolio_item=portfolio_item)
-            for fund_order_item in fund_order_items:
-                if fund_order_item.order_amount > 0:
-                    if fund_order_item.unit_alloted is not None:
-                        try:
-                            nav = HistoricalFundData.objects.get(fund_id=fund_order_item.portfolio_item.fund.id, date=fund_order_item.allotment_date).nav
-                        except HistoricalFundData.DoesNotExist:
-                            nav = None
-                        order_info.fund_order_list.append(fund_order_item)
-                        order_info.nav_list.append(nav)
-                        order_info.all_sips.append(fund_order_item.agreed_sip)
-                        order_info.all_lumpsums.append(fund_order_item.agreed_lumpsum)
-                    else:
-                        order_info.unit_alloted = False
-                        print("Unit has not alloted for the order detail")
-                        break
-            if order_info.unit_alloted == False:
-                print("Unit has not alloted for the order detail")
-                break               
-        msg = profile_helpers.send_transaction_change_email(order_info,applicant_name,order_detail.user,email_attachment,sip_tenure,goal_tenure_len,use_https=settings.USE_HTTPS)
+        """ 
+        if attachment_error == None:          
+            portfolio_items = PortfolioItem.objects.filter(portfolio=portfolio)
+            for portfolio_item in portfolio_items:
+                fund_order_items = FundOrderItem.objects.filter(portfolio_item=portfolio_item)
+                for fund_order_item in fund_order_items:
+                    if fund_order_item.order_amount > 0:
+                        if fund_order_item.unit_alloted is not None and fund_order_item.unit_alloted > 0:
+                            try:
+                                nav = HistoricalFundData.objects.get(fund_id=fund_order_item.portfolio_item.fund.id, date=fund_order_item.allotment_date).nav
+                            except HistoricalFundData.DoesNotExist:
+                                nav = None
+                                order_info.unit_alloted = False
+                            order_info.fund_order_list.append(fund_order_item)
+                            order_info.nav_list.append(nav)
+                            order_info.all_sips.append(fund_order_item.agreed_sip)
+                            order_info.all_lumpsums.append(fund_order_item.agreed_lumpsum)
+                        else:
+                            order_info.unit_alloted = False
+                            print("Unit has not alloted for the order detail")
+                            break
+                if order_info.unit_alloted == False:
+                    print("Unit has not alloted for the order detail")
+                    break               
+        msg = profile_helpers.send_transaction_change_email(order_info,applicant_name,order_detail.user,email_attachment,attachment_error,sip_tenure,goal_tenure_len,use_https=settings.USE_HTTPS)
         if msg == "success":
             response = "Email Send Successfully to the Investor"
         else:

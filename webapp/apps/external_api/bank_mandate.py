@@ -96,7 +96,7 @@ def generate_bank_mandate_pdf(user_id):
     fdf_file = open(temp_file_name, "wb")
     fdf_file.write(fdf)
     fdf_file.close()
-
+    
     base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps', '')
     bank_mandate_pdf_path = base_dir + '/bse_docs/'
     output_path = base_dir + '/webapp/static/'

@@ -19,6 +19,8 @@ import re
 import hmac
 import hashlib
 
+from external_api import bank_mandate as bank_mandate
+
 debug_logger = logging.getLogger('django.debug')
 
 
@@ -35,6 +37,7 @@ def investor_info_check(user):
     return applicant_name
 
 
+        
 
 def get_answers(answers, questions, id):
     """
@@ -4033,3 +4036,5 @@ def store_most_popular_fund_data():
     models.CachedData.objects.update_or_create(key=constants.MOST_POPULAR_FUND,
                                                defaults={"value":{constants.MOST_POPULAR_FUND: str(popular_funds)}})
     return 0
+
+        

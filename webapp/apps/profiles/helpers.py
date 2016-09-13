@@ -96,9 +96,9 @@ def send_email_change_notify_to_old_email(old_email,applicant_name, new_email, s
     :return:
     """
     if applicant_name is not None:
-       userName = applicant_name.title()
+        userName = applicant_name.title()
     else:
-       userName = old_email
+        userName = old_email
     context = {
         'old_email': old_email,
         'new_email': new_email,
@@ -139,9 +139,9 @@ def send_kra_verified_email(user,applicant_name, domain_override=None, subject_t
     
     
     if applicant_name is not None:
-         userName = applicant_name.title()
+        userName = applicant_name.title()
     else:
-         userName = user.email
+        userName = user.email
 
     
        
@@ -231,7 +231,7 @@ def send_vault_completion_email(user, user_email, domain_override=None,
               html_email_template_name=html_email_template_name)
     
 
-def send_transaction_completed_email(order_detail_lumpsum,order_detail_sip,applicant_name,user_email,sip_tenure,portfolio_len,domain_override=None, subject_template_name='transaction/subject.txt',
+def send_transaction_completed_email(order_detail_lumpsum,order_detail_sip,applicant_name,user_email,sip_tenure,goal_len,domain_override=None, subject_template_name='transaction/subject.txt',
                                      email_template_name='transaction/transaction_completed.html', use_https=False,
                                      token_generator=default_token_generator, from_email=None,
                                      request=None,html_email_template_name='transaction/user-confirm-pay.html', extra_email_context=None):
@@ -261,7 +261,7 @@ def send_transaction_completed_email(order_detail_lumpsum,order_detail_sip,appli
               html_email_template_name=html_email_template_name)
 
 
-def send_transaction_change_email(order_detail,applicant_name,user,email_attachment,sip_tenure,goal_len,domain_override=None, subject_template_name='transaction/subject.txt',
+def send_transaction_change_email(order_detail,applicant_name,user,email_attachment,attachment_error,sip_tenure,goal_len,domain_override=None, subject_template_name='transaction/subject.txt',
                                      email_template_name='transaction/transaction_status_change.html', use_https=False,
                                      token_generator=default_token_generator, from_email=None,
                                      request=None,extra_email_context=None):
@@ -298,7 +298,7 @@ def send_transaction_change_email(order_detail,applicant_name,user,email_attachm
     """
     Sends a django.core.mail.EmailMultiAlternatives to `to_email`.
     """
-    if order_detail.unit_alloted == True:
+    if order_detail.unit_alloted == True and attachment_error == None:
         subject = loader.render_to_string('transaction/user-status-change-subject.txt', context)
         subject = ''.join(subject.splitlines())
         body = loader.render_to_string(html_email_template_name, context)
@@ -314,7 +314,7 @@ def send_transaction_change_email(order_detail,applicant_name,user,email_attachm
     else:
         send_mail(subject_template_name, email_template_name, context, from_email, settings.DEFAULT_TO_EMAIL,
               html_email_template_name=None)
-        return "Unit alloted is not available , Email Send to the Admin."
+        return "Failed"
     
     
 
@@ -412,9 +412,9 @@ def send_phone_number_change_email(user_email,applicant_name,previous_number, ne
      Sends an email when user has successfully changed his phone number.
     """
     if applicant_name is not None:
-       userName = applicant_name.title()
+        userName = applicant_name.title()
     else:
-       userName = user.email
+        userName = user_email
        
     context = {
         'domain': settings.SITE_BASE_URL,
@@ -444,3 +444,5 @@ def send_redeem_completed_email(redeem_detail, domain_override=None, subject_tem
     }
     send_mail(subject_template_name, email_template_name, context, from_email, settings.DEFAULT_TO_EMAIL,
               html_email_template_name=html_email_template_name)
+    
+
