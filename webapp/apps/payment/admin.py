@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.utils.safestring import mark_safe
+from django.contrib.admin import DateFieldListFilter
 
 from . import models
 
@@ -14,7 +15,7 @@ class TransactionAdmin(admin.ModelAdmin):
     """
     search_fields = ['user__email', 'user__phone_number']
     list_display = ['get_user_email', 'biller_id', 'txn_amount', 'txn_status', 'txn_time']
-    list_filter = ['txn_status', 'txn_time']
+    list_filter = ['txn_status', ('txn_time', DateFieldListFilter)]
 
     readonly_fields = ('user', 'order_details')
     exclude = ('txt_merchant_user_ref_no',)
