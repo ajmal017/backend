@@ -247,14 +247,10 @@ def send_transaction_completed_email(order_detail_lumpsum,order_detail_sip,appli
         'order_detail_lumpsum':order_detail_lumpsum,
         'order_detail_sip':order_detail_sip,       
         'user_name':user_name,
-<<<<<<< HEAD
         'sip_tenure':sip_tenure,
         'goal_len':goal_len,
         'domain': settings.SITE_BASE_URL,
-=======
-        'order_detail': order_detail,
         'domain': settings.SITE_API_BASE_URL,
->>>>>>> 33fbe94357e424dddee7baf3d665fd38dae01e6f
         'site_name': "Finaskus",
         'protocol': 'https' if use_https else 'http',
     }
