@@ -96,10 +96,12 @@ class Pay(APIView):
                     billdesk = models.Transaction.objects.create(**kwargs)
                     core_utils.convert_to_investor(billdesk)
                     return api_utils.response({"message":"success"})
-            except IntegrityError:
+            except IntegrityError as e:
+                logger.info("Integrity Error creating order: " + str(e))
                 return api_utils.response({"message": "failure"}, status.HTTP_404_NOT_FOUND,
                                           constants.ORDER_CREATION_FAILED)
-            except Exception:
+            except Exception as e:
+                logger.info("Error creating order: " + str(e))
                 return api_utils.response({"message": "failure"}, status.HTTP_404_NOT_FOUND,
                                           constants.ORDER_CREATION_FAILED)
                 

@@ -44,6 +44,7 @@ THIRD_PARTY_APPS = [
     'oauth2_provider',
     'django_crontab',
     'import_export',
+    'rangefilter',
     'django_smtp_ssl'
 ]
 
