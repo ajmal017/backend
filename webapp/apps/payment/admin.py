@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.utils.safestring import mark_safe
-from rangefilter.filters import DateRangeFilter
+from rangefilter.filter import DateRangeFilter
 
 from . import models
 
