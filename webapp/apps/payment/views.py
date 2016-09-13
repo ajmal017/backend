@@ -12,6 +12,8 @@ from core import utils as core_utils
 
 import logging
 
+import sys,traceback
+
 
 class TransactionString(APIView):
     """
@@ -80,6 +82,7 @@ class Pay(APIView):
 
         serializer = serailizers.TransactionSerializer(data=request.query_params)
         if serializer.is_valid():
+            logger = logging.getLogger('django.info')
             try:
                 with transaction.atomic():
                     kwargs = {"txn_amount":  request.query_params.get('txn_amount'),
@@ -89,6 +92,7 @@ class Pay(APIView):
                               "additional_info_3": request.user.finaskus_id,
                               "customer_id": code_generator(7),
                               "user_id": request.user.id,}
+                    
                     billdesk = models.Transaction.objects.create(**kwargs)
                     core_utils.convert_to_investor(billdesk)
                     return api_utils.response({"message":"success"})

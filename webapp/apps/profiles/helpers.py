@@ -15,6 +15,9 @@ from requests.auth import HTTPBasicAuth
 
 from . import constants as profile_constants
 import logging
+from django.http import HttpResponse
+import copy
+
 
 def unique_filename(path, context):
     if path and context:
@@ -136,9 +139,9 @@ def send_kra_verified_email(user,applicant_name, domain_override=None, subject_t
     
     
     if applicant_name is not None:
-         userName = applicant_name.title()
+        userName = applicant_name.title()
     else:
-         userName = user.email
+        userName = user.email
 
     
        
@@ -228,7 +231,7 @@ def send_vault_completion_email(user, user_email, domain_override=None,
               html_email_template_name=html_email_template_name)
     
 
-def send_transaction_completed_email(order_detail,applicant_name,user_email, domain_override=None, subject_template_name='transaction/subject.txt',
+def send_transaction_completed_email(order_detail_lumpsum,order_detail_sip,applicant_name,user_email,sip_tenure,goal_len,domain_override=None, subject_template_name='transaction/subject.txt',
                                      email_template_name='transaction/transaction_completed.html', use_https=False,
                                      token_generator=default_token_generator, from_email=None,
                                      request=None,html_email_template_name='transaction/user-confirm-pay.html', extra_email_context=None):
@@ -240,9 +243,13 @@ def send_transaction_completed_email(order_detail,applicant_name,user_email, dom
     else:
         user_name = user_email
     
-    context = {          
+    context = {   
+        'order_detail_lumpsum':order_detail_lumpsum,
+        'order_detail_sip':order_detail_sip,       
         'user_name':user_name,
-        'order_detail': order_detail,
+        'sip_tenure':sip_tenure,
+        'goal_len':goal_len,
+        'domain': settings.SITE_BASE_URL,
         'domain': settings.SITE_API_BASE_URL,
         'site_name': "Finaskus",
         'protocol': 'https' if use_https else 'http',
@@ -250,10 +257,67 @@ def send_transaction_completed_email(order_detail,applicant_name,user_email, dom
     send_mail(subject_template_name, email_template_name, context, from_email, settings.DEFAULT_TO_EMAIL,
               html_email_template_name=None)
     
-    send_mail('transaction/user-subject.txt', None, context, from_email, order_detail.user.email,
-              html_email_template_name=html_email_template_name)
     
+    send_mail('transaction/user-subject.txt', None, context, from_email, user_email,
+              html_email_template_name=html_email_template_name)
 
+
+def send_transaction_change_email(order_detail,applicant_name,user,email_attachment,attachment_error,sip_tenure,goal_len,domain_override=None, subject_template_name='transaction/subject.txt',
+                                     email_template_name='transaction/transaction_status_change.html', use_https=False,
+                                     token_generator=default_token_generator, from_email=None,
+                                     request=None,extra_email_context=None):
+    
+    
+    """
+    Template changes according to mandate status of the user 
+    """        
+    if user.mandate_status == "0":   
+        if all(sips < 1 for sips in order_detail.all_sips) & any(lumpsums > 0 for lumpsums in order_detail.all_lumpsums):
+            html_email_template_name='transaction/user-confirm-status-change.html'
+        else:
+            html_email_template_name='transaction/user-confirm-status-change-sip.html'
+    else:
+        html_email_template_name='transaction/user-confirm-status-change-ongoing.html'
+    
+    list1 = zip(order_detail.fund_order_list,order_detail.nav_list)
+    
+    if applicant_name is not None:
+        user_name = applicant_name.title()
+    else:
+        user_name = user.email
+
+    context = {
+        'sip_tenure':sip_tenure,
+        'goal_len':goal_len,
+        'order_detail':list1,        
+        'user_name':user_name,
+        'transaction_detail':order_detail,
+        'domain': settings.SITE_BASE_URL,
+        'site_name': "Finaskus",
+        'protocol': 'https' if use_https else 'http',
+    }
+    """
+    Sends a django.core.mail.EmailMultiAlternatives to `to_email`.
+    """
+    if order_detail.unit_alloted == True and attachment_error == None:
+        subject = loader.render_to_string('transaction/user-status-change-subject.txt', context)
+        subject = ''.join(subject.splitlines())
+        body = loader.render_to_string(html_email_template_name, context)
+        email_message = EmailMultiAlternatives(subject, body, from_email, [user.email])
+        if user.mandate_status == "0" and email_attachment is not None:
+            attachment = open(email_attachment, 'rb')
+            email_message.attach(email_attachment, attachment.read(),'application/pdf')
+            user.mandate_status = 1
+            user.save()
+        email_message.attach_alternative(body, 'text/html')
+        email_message.send()
+        return "success"
+    else:
+        send_mail(subject_template_name, email_template_name, context, from_email, settings.DEFAULT_TO_EMAIL,
+              html_email_template_name=None)
+        return "Failed"
+    
+    
 
 def send_reset_email(user,applicant_name,domain_override=None, subject_template_name='registration/password_reset_request_subject.txt',
                      email_template_name=None, use_https=False,
@@ -381,3 +445,5 @@ def send_redeem_completed_email(redeem_detail, domain_override=None, subject_tem
     }
     send_mail(subject_template_name, email_template_name, context, from_email, settings.DEFAULT_TO_EMAIL,
               html_email_template_name=html_email_template_name)
+    
+

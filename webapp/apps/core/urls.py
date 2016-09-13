@@ -38,6 +38,8 @@ urlpatterns = [
     url(r'^billdesk/complete/$', views.BilldeskComplete.as_view(), name='billdesk-complete'),
     url(r'^billdesk/success/$', views.Billdesk.as_view(), name='billdesk-success'),
     url(r'^billdesk/fail/$', views.Billdesk.as_view(), name='billdesk-fail'),
+    
+    url(r'^transaction/complete/$', views.TransactionComplete.as_view(), name='transaction-complete'),
 
     # ===================  DEPRECATED APIS =========================================================================
 

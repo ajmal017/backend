@@ -48,7 +48,10 @@ def read_csv_and_populate_indices_data(csv_file_name):
         if row[0] != 'mstar_id':
             inception_date = datetime.datetime.strptime(row[2], "%Y-%m-%d").date()
             models.Indices.objects.create(mstar_id=row[0], index_name=row[1], inception_date=inception_date)
-            morningstar_object.get_historical_index_data_points(row[0], datetime.date(2006, 1, 1) , datetime.datetime.now().date())
+            startDate = datetime.date(2006, 1, 1)
+            if inception_date > startDate:
+                startDate = inception_date
+            morningstar_object.get_historical_index_data_points(row[0], startDate , datetime.datetime.now().date())
 
 def read_csv_and_populate_fund_data(csv_file_name):
     """

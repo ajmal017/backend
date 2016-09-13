@@ -630,11 +630,39 @@
                         <td valign="top" class="mcnTextContent" style="padding-top:0; padding-right:18px; padding-bottom:9px; padding-left:18px;">
                         
                             <span style="color:#555555"><span style="font-size:15px"><span style="font-family:trebuchet ms,lucida grande,lucida sans unicode,lucida sans,tahoma,sans-serif">
-Congratulations, you have successfully placed your investment order through FinAskus. <br><br>
+Congratulations, you have successfully placed your investment order through FinAskus. Please note your order details below:<br><br>
 
-You will soon receive an email from BSE (Bombay Stock Exchange) with a payment link including your order details. The link will be sent shortly during market hours of 9AM to 4PM Monday to Friday excluding public holidays,  and will be valid till 9AM the next business day.
+  {% if order_detail_sip != None %}
+      {% for order_detail in order_detail_sip.fund_order_items.all %}
+       {% if order_detail.agreed_sip != 0 %}
+         <li> SIP Rs {{ order_detail.agreed_sip|floatformat:2 }} - 
+          {% if goal_len == 1 %}
+             {{sip_tenure}} years  - 
+          {% endif %}
+         {{order_detail.portfolio_item.fund.legal_name}} </li>
+       {% endif %}
+      {% endfor %}
+  {% endif %}
+
+  {% if order_detail_lumpsum != None %}
+  
+  <br> <br>
+  
+     {% for order_detail in order_detail_lumpsum.fund_order_items.all %}
+          {% if order_detail.agreed_lumpsum != 0 %}
+          
+           <li> Lumpsum Rs {{ order_detail.agreed_lumpsum|floatformat:2 }} - {{order_detail.portfolio_item.fund.legal_name}} </li>
+           
+          {% endif %}
+     {% endfor %}
+     
+  {% endif %}
+  
+ 
 <br><br>
-Please complete the payment process through that link via NetBanking using your registered bank account and let FinAskus do the rest. In the meanwhile, you can track the real-time performance of your portfolio using the FinAskus Mobile App.                            
+You will soon receive an email from BSE (Bombay Stock Exchange) with a payment link including the above order details. The link will be sent shortly during market hours of 9AM to 4PM Monday to Friday excluding public holidays, and will be valid till 9AM the next business day. 
+<br><br>
+Please complete the payment process through that link via NetBanking using your registered bank account and let FinAskus do the rest. In the meanwhile, you can track the real-time performance of your portfolio using the FinAskus Mobile App.                            
                             </span></span></span>
 
                         </td>

@@ -19,6 +19,8 @@ import re
 import hmac
 import hashlib
 
+from external_api import bank_mandate as bank_mandate
+
 debug_logger = logging.getLogger('django.debug')
 
 
@@ -35,6 +37,7 @@ def investor_info_check(user):
     return applicant_name
 
 
+        
 
 def get_answers(answers, questions, id):
     """
@@ -594,6 +597,8 @@ def get_portfolio_items(user_id, overall_allocation, sip_lumpsum_allocation):
     latest_portfolio_time = models.PlanAssestAllocation.objects.get(user_id=user_id, portfolio=None).modified_at
     portfolio_create_time = models.Portfolio.objects.get(user_id=user_id, has_invested=False).modified_at
     if latest_answer_time > portfolio_create_time or latest_portfolio_time > portfolio_create_time:
+        logger = logging.getLogger('django.info')
+        logger.info(latest_answer_time)
         equity_funds, debt_funds, elss_funds, is_error, errors = create_portfolio_items(
             user_id, overall_allocation, sip_lumpsum_allocation)
         return format_porfolioitems(equity_funds, debt_funds, elss_funds, is_error, errors)
@@ -2426,13 +2431,12 @@ def convert_to_investor(txn):
     #TODO intil amount fixing
     user = txn.user
     portfolio = models.Portfolio.objects.get(user=user, has_invested=False)
-    order_detail = save_portfolio_snapshot(txn)
-    
+    order_detail_lumpsum, order_detail_sip = save_portfolio_snapshot(txn)
     
     portfolio.has_invested = True
     portfolio.investment_date = date.today()
     portfolio.save()
-
+    
     for item in portfolio.portfolioitem_set.all():
         item.investment_date = date.today()
         item.save()
@@ -2448,10 +2452,17 @@ def convert_to_investor(txn):
     profile_models.AggregatePortfolio.objects.update_or_create(
         user=txn.user, defaults={"update_date":datetime.now().date()})
     
-           
+    """
+    SIP tenure for each Portfolio item
+    """
+    sip_tenure = 0
+    goal_len = 0
+    if order_detail_sip is not None:
+        sip_tenure,goal_len = txn.user.get_sip_tenure(portfolio) 
+       
     applicant_name = investor_info_check(user)
-    
-    profiles_helpers.send_transaction_completed_email(order_detail,applicant_name,user.email,use_https=settings.USE_HTTPS)
+
+    profiles_helpers.send_transaction_completed_email(order_detail_lumpsum,order_detail_sip,applicant_name,user.email,sip_tenure,goal_len,use_https=settings.USE_HTTPS)
 
 
 def save_portfolio_snapshot(txn):
@@ -2468,6 +2479,7 @@ def save_portfolio_snapshot(txn):
                                                               agreed_sip=portfolio_item.sip,
                                                               agreed_lumpsum=portfolio_item.lumpsum,
                                                               internal_ref_no="FIN" + str(random_with_N_digits(7)))
+        
         order_item_list_lumpsum.append(order_item_lump)
 
         if portfolio_item.sip != 0:
@@ -2477,18 +2489,21 @@ def save_portfolio_snapshot(txn):
                                                                  agreed_lumpsum=0,
                                                                  internal_ref_no="FIN" + str(random_with_N_digits(7)))
             order_item_list_sip.append(order_item_sip)
+            
 
     order_detail_lump = models.OrderDetail.objects.create(user=txn.user, order_status=0, transaction=txn,
                                                           is_lumpsum=True)
     for index in range(len(order_item_list_lumpsum)):
         order_detail_lump.fund_order_items.add(order_item_list_lumpsum[index])
 
+    order_detail_sip = None
     if order_item_list_sip:
         order_detail_sip = models.OrderDetail.objects.create(user=txn.user, order_status=0, transaction=txn)
         for index in range(len(order_item_list_sip)):
             order_detail_sip.fund_order_items.add(order_item_list_sip[index])
+            
     
-    return order_detail_lump
+    return order_detail_lump, order_detail_sip
 
 
 def get_is_enabled(portfolio_item):
@@ -2610,6 +2625,7 @@ def get_latest_date():
     :return:the minimum date frm daily indices
     """
     minimum_date_object, minimum_date = None, date.today()
+    minimum_date = '2006-01-01'
 
     historical_fund_objects_by_max_date = models.Fund.objects.annotate(max_date=Max('historicalfunddata__date'))
     for historical_fund_object in historical_fund_objects_by_max_date:
@@ -4024,3 +4040,5 @@ def store_most_popular_fund_data():
     models.CachedData.objects.update_or_create(key=constants.MOST_POPULAR_FUND,
                                                defaults={"value":{constants.MOST_POPULAR_FUND: str(popular_funds)}})
     return 0
+
+        
