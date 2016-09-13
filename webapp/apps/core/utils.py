@@ -8,6 +8,7 @@ from . import models, serializers, constants, helpers, xirr, new_xirr
 from profiles import models as profile_models
 from profiles import helpers as profiles_helpers
 from webapp.apps import random_with_N_digits
+from payment import models as payment_models
 
 from collections import OrderedDict, defaultdict
 from datetime import date, datetime, timedelta
@@ -2462,7 +2463,8 @@ def convert_to_investor(txn):
        
     applicant_name = investor_info_check(user)
 
-    profiles_helpers.send_transaction_completed_email(order_detail_lumpsum,order_detail_sip,applicant_name,user.email,sip_tenure,goal_len,use_https=settings.USE_HTTPS)
+    payment_completed = True if txn.txn_status == payment_models.Transaction.Status.Success else False
+    profiles_helpers.send_transaction_completed_email(order_detail_lumpsum,order_detail_sip,applicant_name,user.email,sip_tenure,goal_len,payment_completed, use_https=settings.USE_HTTPS)
 
 
 def save_portfolio_snapshot(txn):
