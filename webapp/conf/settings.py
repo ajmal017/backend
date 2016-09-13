@@ -337,6 +337,7 @@ try:
 except:
     # Ideally this should be the base url of the site since there is no domain name its like this
     SITE_BASE_URL = "www.finaskus.com"
+    SITE_API_BASE_URL = "api.finaskus.com"
 
 if os.environ.get('ENV_VAR') == 'prod':
     from .aws_settings import *

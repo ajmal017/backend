@@ -13,12 +13,13 @@ class TransactionAdmin(admin.ModelAdmin):
     make fields readonly
     """
     search_fields = ['user__email', 'user__phone_number']
-    list_display = ['get_user_email', 'biller_id', 'txn_amount', 'txn_status']
+    list_display = ['get_user_email', 'biller_id', 'txn_amount', 'txn_status', 'txn_time']
     list_filter = ['txn_status']
 
     readonly_fields = ('user', 'order_details')
     exclude = ('txt_merchant_user_ref_no',)
-    actions = None
+    date_hierarchy = 'txn_time'
+    actions = ['generate_bse_pipe_file']
 
     def has_delete_permission(self, request, obj=None):
         return False
@@ -40,6 +41,15 @@ class TransactionAdmin(admin.ModelAdmin):
         :param obj: contains an instance to order detail object
         """
         return mark_safe(u"<br>".join([self.form_url(order_detail.id) for order_detail in obj.orderdetail_set.all()]))
+
+    def generate_bse_pipe_file(self, request, queryset):
+        """
+
+        :param modeladmin:
+        :param request:
+        :param queryset: selected users
+        :return:call a function that returns pipe separated file of selected id
+        """
 
     order_details.allow_tags = True
     form_url.allow_tags = True

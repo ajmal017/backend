@@ -872,7 +872,7 @@ def get_scheme_details(fund, monthly_data_points, daily_data_points):
                                     "(" + str(round(fund_detail[constants.CAPITAL_GAIN_PERCENTAGE], 2)) + "%)"
         elif field == constants.IMAGE_URL:
             # TODO: http or https?
-            scheme_details[field] = "http://" + settings.SITE_BASE_URL + fund_detail[constants.IMAGE_URL]
+            scheme_details[field] = "http://" + settings.SITE_API_BASE_URL + fund_detail[constants.IMAGE_URL]
         elif field == constants.DAY_END_DATE:
             day_end_date = datetime.strptime(fund_detail[field], '%Y-%m-%d').date()
             # scheme_details[field] = datetime.strftime(day_end_date, '%d-%m-%Y')
@@ -1564,7 +1564,8 @@ def get_financial_goal_status_for_dashboard(asset_overview, portfolio):
         if category_allocation is not None:
             corpus, debt_investment, equity_investment, elss_investment, term = \
                 calculate_corpus_and_investment_till_date(answer_map, portfolio, category, category_allocation)
-            goal_data = generate_goals_data(user_answers, category_allocation)
+            user_answers_category = [ans for ans in user_answers if ans.question.question_for==constants.MAP[category]]
+            goal_data = generate_goals_data(user_answers_category, category_allocation)
 
             goal_map[constants.MAP[category]][0].append({
                 constants.EXPECTD_VALUE: corpus,
@@ -1892,7 +1893,7 @@ def calculate_financial_goal_status(asset_class_overview, portfolios_to_be_consi
             if category_allocation is not None:
                 corpus, debt_investment, equity_investment, elss_investment, term = \
                     calculate_corpus_and_investment_till_date(answer_map, portfolio, category, category_allocation)
-                user_answers_portfolio = [ans for ans in user_answers if ans.portfolio_id == portfolio.id]
+                user_answers_portfolio = [ans for ans in user_answers if ans.portfolio_id == portfolio.id and ans.question.question_for==constants.MAP[category]]
                 goal_data = generate_goals_data(user_answers_portfolio, category_allocation)
                 goal_map[constants.MAP[category]][0].append({
                     constants.EXPECTD_VALUE: corpus,
@@ -1939,6 +1940,9 @@ def make_financial_goal_response(goal_map, total_equity_invested, total_debt_inv
                     goal_current_value += category_individual_goal.get(constants.ELSS) * (
                         current_value_map[constants.ELSS] / total_elss_invested)
                 progress = round(goal_current_value * 100 / category_individual_goal.get(constants.EXPECTD_VALUE), 1)
+                
+                debug_logger.debug(str(constants.ASSET_ALLOCATION_MAP[category][2]) +
+                                    str(goal_map[category][1] + 1) + str(category_individual_goal.get(constants.GOAL_ANSWERS)))
                 
                 goal_status = {
                     constants.NAME: str(constants.ASSET_ALLOCATION_MAP[category][2]) +
