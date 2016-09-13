@@ -271,7 +271,7 @@ LOGGING = {
 SERVER_EMAIL = 'askus@finaskus.com'
 
 ADMINS = (
-    ('Jinesh', 'jineshpaul@finaskus.com')
+    ('Finaskus', 'techops@finaskus.com')
 )
 
 '''REST_FRAMEWORK = {
