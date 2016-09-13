@@ -17,6 +17,7 @@ from . import constants as profile_constants
 import logging
 from django.http import HttpResponse
 import copy
+import os
 
 
 def unique_filename(path, context):
@@ -305,7 +306,7 @@ def send_transaction_change_email(order_detail,applicant_name,user,email_attachm
         email_message = EmailMultiAlternatives(subject, body, from_email, [user.email])
         if user.mandate_status == "0" and email_attachment is not None:
             attachment = open(email_attachment, 'rb')
-            email_message.attach(email_attachment, attachment.read(),'application/pdf')
+            email_message.attach(os.path.basename(email_attachment), attachment.read(),'application/pdf')
             user.mandate_status = 1
             user.save()
         email_message.attach_alternative(body, 'text/html')
