@@ -249,7 +249,6 @@ def send_transaction_completed_email(order_detail_lumpsum,order_detail_sip,appli
         'user_name':user_name,
         'sip_tenure':sip_tenure,
         'goal_len':goal_len,
-        'domain': settings.SITE_BASE_URL,
         'domain': settings.SITE_API_BASE_URL,
         'site_name': "Finaskus",
         'protocol': 'https' if use_https else 'http',
@@ -292,7 +291,7 @@ def send_transaction_change_email(order_detail,applicant_name,user,email_attachm
         'order_detail':list1,        
         'user_name':user_name,
         'transaction_detail':order_detail,
-        'domain': settings.SITE_BASE_URL,
+        'domain': settings.SITE_API_BASE_URL,
         'site_name': "Finaskus",
         'protocol': 'https' if use_https else 'http',
     }

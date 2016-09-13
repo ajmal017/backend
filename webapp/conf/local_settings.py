@@ -1,6 +1,5 @@
 import os
 
-<<<<<<< HEAD
 BASE_URL="http://10.0.2.15:8000"
 SITE_BASE_URL="http://10.97.11.86"
 
@@ -14,11 +13,10 @@ BILLDESK_SECRET_KEY="2KxU2EvL4enK"
 MGAGE_USERNAME="FINASKUST"
 MGAGE_PASSWORD="C2P3B@n@"
 MGAGE_FROM_NUMBER=918050248326
-=======
 BASE_URL="http://localhost:8000"
 SITE_BASE_URL="www.finaskus.com"
 SITE_API_BASE_URL = "api.finaskus.com"
->>>>>>> 33fbe94357e424dddee7baf3d665fd38dae01e6f
+
 
 
 EMAIL_BACKEND='django_smtp_ssl.SSLEmailBackend'
