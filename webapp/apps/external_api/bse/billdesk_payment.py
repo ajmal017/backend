@@ -13,8 +13,6 @@ import os
 logger = logging.getLogger("default")
 
 class BillDeskPayment(object):
-    def __init__(self, pay_date):
-        self.pay_date = pay_date
         
     def createOutputFile(self, name):
         base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps', '')
@@ -22,15 +20,12 @@ class BillDeskPayment(object):
         outfile = open(output_path + name, "w")
         return outfile, output_path + name
 
-    def generateBSEUploadFile(self):
-        payments = Transaction.objects.filter(txn_time__month=self.pay_date.month, txn_time__day=self.pay_date.day,
-                                            txn_time__year = self.pay_date.year, txn_status=Transaction.Status.Success)
-        
+    def generateBSEUploadFile(self, txns):
         dt_today_str = date.today().strftime("%d%m%y")
         out_filename = 'FW_FUN_' + dt_today_str + '.txt'
         out_file, out_filepath = self.createOutputFile(out_filename)
         
-        for pay in payments:
+        for pay in txns:
             order_details = core_models.OrderDetail.objects.filter(transaction=pay)
         
             for order in order_details:
@@ -47,6 +42,13 @@ class BillDeskPayment(object):
                         bse_order_dict.clear()
         out_file.close()
         return out_filepath
+        
+    def generateBSEUploadFileForDate(self, paydate):
+        self.paydate = paydate
+        payments = Transaction.objects.filter(txn_time__month=self.pay_date.month, txn_time__day=self.pay_date.day,
+                                            txn_time__year = self.pay_date.year, txn_status=Transaction.Status.Success)
+        
+        return self.generateBSEUploadFile(payments)
 
 
 # transaction = Payment(constants.GET_PASSWORD_URL)
