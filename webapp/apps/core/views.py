@@ -28,8 +28,6 @@ from django.http import HttpResponse
 from external_api import bank_mandate as bank_mandate
 from external_api import constants as external_constants
 
-from django.http import JsonResponse
-
 def index(request):
     """
     :param request:
@@ -235,8 +233,7 @@ class VersionInfo(APIView):
 class DeprecateAPI(APIView):
     def generateResponse(self):
         deprecateMessage = "Please visit Play Store and update the FinAskus application to continue."
-        res = {"status_code": status.HTTP_401_UNAUTHORIZED, "error": deprecateMessage, "response": {"message": deprecateMessage, "login_error": deprecateMessage}}
-        return JsonResponse(res, status=status.HTTP_401_UNAUTHORIZED)
+        return api_utils.response({"message": deprecateMessage, "login_error": deprecateMessage}, status.HTTP_401_UNAUTHORIZED, deprecateMessage)
         
     def post(self, request):
         return self.generateResponse()
