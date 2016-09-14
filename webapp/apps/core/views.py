@@ -234,7 +234,7 @@ class DeprecateAPI(APIView):
     def generateResponse(self):
         deprecateMessage = "Please visit Play Store and update the FinAskus application to continue."
         res = {"status_code": status.HTTP_401_UNAUTHORIZED, "error": deprecateMessage, "response": {"message": deprecateMessage, "login_error": deprecateMessage}}
-        return WebResponse(data=res, status=status.HTTP_401_UNAUTHORIZED)
+        return WebResponse(res, data=res, status=status.HTTP_401_UNAUTHORIZED)
         
     def post(self, request):
         return self.generateResponse()
