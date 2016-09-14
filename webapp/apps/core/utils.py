@@ -2622,7 +2622,6 @@ def get_latest_date():
     :return:the minimum date frm daily indices
     """
     minimum_date_object, minimum_date = None, date.today()
-    minimum_date = '2006-01-01'
 
     historical_fund_objects_by_max_date = models.Fund.objects.annotate(max_date=Max('historicalfunddata__date'))
     for historical_fund_object in historical_fund_objects_by_max_date:
