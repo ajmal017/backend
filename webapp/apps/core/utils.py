@@ -599,8 +599,6 @@ def get_portfolio_items(user_id, overall_allocation, sip_lumpsum_allocation):
     latest_portfolio_time = models.PlanAssestAllocation.objects.get(user_id=user_id, portfolio=None).modified_at
     portfolio_create_time = models.Portfolio.objects.get(user_id=user_id, has_invested=False).modified_at
     if latest_answer_time > portfolio_create_time or latest_portfolio_time > portfolio_create_time:
-        logger = logging.getLogger('django.info')
-        logger.info(latest_answer_time)
         equity_funds, debt_funds, elss_funds, is_error, errors = create_portfolio_items(
             user_id, overall_allocation, sip_lumpsum_allocation)
         return format_porfolioitems(equity_funds, debt_funds, elss_funds, is_error, errors)
@@ -1137,8 +1135,6 @@ def get_annualised_return(portfolio_items, nav_list):
             category_value_map[constants.FUND_MAP_REVERSE[portfolio_item.broad_category_group]][index] += \
                 portfolio_fund_navs[index] * portfolio_item_weightage
             portfolio_value_map[index] += portfolio_fund_navs[index] * portfolio_item_weightage
-    logger = logging.getLogger('django.debug')
-    logger.debug(portfolio_value_map)
     for category in category_value_map:
         if category_value_map[category][3]:
             category_returns = get_annualized_returns(category_value_map[category])
@@ -2253,7 +2249,11 @@ def make_fund_dict_for_portfolio_detail(fund_name, fund_current_value, fund_gain
     :param sum_invested_in_fund: the sum(lumpsum+sip) paid by user till present in a fund
     :return:
     """
-    return {constants.FUND_NAME: fund_name, constants.RETURN_PERCENTAGE: round(fund_gain * 100, 1),
+    try:
+        fund_gain_rounded = round(fund_gain * 100, 1)
+    except:
+        fund_gain_rounded = 0
+    return {constants.FUND_NAME: fund_name, constants.RETURN_PERCENTAGE: fund_gain_rounded,
             constants.IS_GAIN: True if float(round(fund_current_value - sum_invested_in_fund)) >= 0 else False,
             constants.CURRENT_VALUE: round(fund_current_value),
             constants.INVESTED_VALUE: round(sum_invested_in_fund),
@@ -3632,6 +3632,8 @@ def make_xirr_calculations_for_dashboard_version_two(transaction_fund_map, api_t
                 gain_percentage_of_a_fund = 0.0
         else:
             gain_percentage_of_a_fund = 0
+        
+        debug_logger.debug("gain percent: " + str(gain_percentage_of_a_fund))
         # make asset class overview for portfolio details
         for category in asset_class_overview:
             if category.get(constants.KEY) == constants.FUND_MAP_REVERSE[fund.type_of_fund]:
