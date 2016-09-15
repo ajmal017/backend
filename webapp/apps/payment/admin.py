@@ -21,7 +21,6 @@ class TransactionAdmin(admin.ModelAdmin):
 
     readonly_fields = ('user', 'order_details')
     exclude = ('txt_merchant_user_ref_no',)
-    date_hierarchy = 'txn_time'
     actions = ['generate_bse_pipe_file']
 
     # disable delete action as well as delete button.
