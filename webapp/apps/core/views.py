@@ -25,7 +25,6 @@ import copy
 from profiles.utils import is_investable
 from django.views.generic import View
 from django.http import HttpResponse
-from external_api import bank_mandate as bank_mandate
 from external_api import constants as external_constants
 
 def index(request):
@@ -211,6 +210,11 @@ def sitemap(request):
     """
     return render(request, 'base/sitemap.xml')
 
+
+def get_all_portfolio_detail():
+    return_value = utils.get_portfolio_dashboard()
+    return return_value
+   
 class VersionInfo(APIView):
     
     def get(self, request):
