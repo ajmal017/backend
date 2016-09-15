@@ -2,8 +2,7 @@ from django.conf import settings
 
 from webapp.apps.external_api import constants
 from webapp.apps import code_generator
-from webapp.apps.payment import Transaction
-from webapp.apps.core import models as core_models
+from core import models as core_models
 from collections import OrderedDict
 
 import logging
@@ -44,9 +43,11 @@ class BillDeskPayment(object):
         return out_filepath
         
     def generateBSEUploadFileForDate(self, paydate):
+        from webapp.apps.payment import models as payment_models
+        
         self.paydate = paydate
-        payments = Transaction.objects.filter(txn_time__month=self.pay_date.month, txn_time__day=self.pay_date.day,
-                                            txn_time__year = self.pay_date.year, txn_status=Transaction.Status.Success)
+        payments = payment_models.Transaction.objects.filter(txn_time__month=self.pay_date.month, txn_time__day=self.pay_date.day,
+                                            txn_time__year = self.pay_date.year, txn_status=payment_models.Transaction.Status.Success)
         
         return self.generateBSEUploadFile(payments)
 
