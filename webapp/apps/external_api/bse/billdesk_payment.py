@@ -14,7 +14,7 @@ logger = logging.getLogger("default")
 class BillDeskPayment(object):
         
     def createOutputFile(self, name):
-        base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps', '')
+        base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps/external_api', '')
         output_path = base_dir + '/webapp/static/'
         outfile = open(output_path + name, "w")
         return outfile, output_path + name
