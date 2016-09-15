@@ -15,7 +15,7 @@ class BillDeskPayment(object):
         
     def createOutputFile(self, name):
         base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps/external_api', '')
-        output_path = base_dir + '/webapp/static/'
+        output_path = base_dir + '/webapp/statics/'
         outfile = open(output_path + name, "w")
         return outfile, output_path + name
 
@@ -40,7 +40,7 @@ class BillDeskPayment(object):
                         out_file.write("\r")
                         bse_order_dict.clear()
         out_file.close()
-        return out_filepath
+        return "/webapp/static/" + os.path.basename(out_filepath)
         
     def generateBSEUploadFileForDate(self, paydate):
         from webapp.apps.payment import models as payment_models
