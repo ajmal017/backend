@@ -2,7 +2,7 @@ from django.conf import settings
 
 from webapp.apps.external_api import constants
 from webapp.apps import code_generator
-from webapp.apps.core import models as core_models
+from core import models as core_models
 from collections import OrderedDict
 
 import logging
