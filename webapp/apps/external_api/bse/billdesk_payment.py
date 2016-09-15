@@ -2,7 +2,7 @@ from django.conf import settings
 
 from webapp.apps.external_api import constants
 from webapp.apps import code_generator
-from webapp.apps.payment import Transaction
+from webapp.apps.payment.models import Transaction
 from webapp.apps.core import models as core_models
 from collections import OrderedDict
 
