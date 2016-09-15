@@ -20,7 +20,7 @@ class BillDeskPayment(object):
         return outfile, output_path + name
 
     def generateBSEUploadFile(self, txns):
-        from webapp.apps.payment import models as payment_models
+        from payment import models as payment_models
 
         dt_today_str = date.today().strftime("%d%m%y")
         out_filename = 'FW_FUN_' + dt_today_str + '.txt'
@@ -52,7 +52,7 @@ class BillDeskPayment(object):
         return "/webapp/static/" + os.path.basename(out_filepath), None
         
     def generateBSEUploadFileForDate(self, paydate):
-        from webapp.apps.payment import models as payment_models
+        from payment import models as payment_models
         
         self.paydate = paydate
         payments = payment_models.Transaction.objects.filter(txn_time__month=self.pay_date.month, txn_time__day=self.pay_date.day,
