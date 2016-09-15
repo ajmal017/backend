@@ -235,13 +235,15 @@ class VersionInfo(APIView):
 
 
 class DeprecateAPI(APIView):
+    def generateResponse(self):
+        deprecateMessage = "Please visit Play Store and update the FinAskus application to continue."
+        return api_utils.response({"message": deprecateMessage, "login_error": deprecateMessage}, status.HTTP_401_UNAUTHORIZED, deprecateMessage)
+        
     def post(self, request):
-        deprecateMessage = "Please update the FinAskus application to continue."
-        return api_utils.response({"message": deprecateMessage, "login_error": "deprecateMessage"}, status.HTTP_401_UNAUTHORIZED, deprecateMessage)
+        return self.generateResponse()
 
     def get(self, request):
-        deprecateMessage = "Please update the FinAskus application to continue."
-        return api_utils.response({"message": deprecateMessage, "login_error": "deprecateMessage"}, status.HTTP_401_UNAUTHORIZED, deprecateMessage)
+        return self.generateResponse()
         
 class AssessAnswerNew(APIView):
     """
@@ -767,7 +769,7 @@ class BilldeskComplete(APIView):
                 logger.info("Billdesk response: Error parsing transaction time: " + txn_time)
         if not billdesk.verify_billdesk_checksum(msg) or auth_status!= "0300":
             txn = billdesk.update_transaction_failure(order_id, ref_no, float(txn_amount), auth_status, msg, txn_time_dt)
-            query_params = {"txn_amount" :txn_amount, "auth_status": auth_status, "order_id": order_id,
+            query_params = {"txn_amount" :txn_amount, "auth_status": auth_status, "order_id": ref_no,
                             "message" : msg.split("|")[24] # as error message is the 24th pipe seperated in the string
                             }
             query_params_string = self.create_query_params(query_params)
@@ -775,7 +777,7 @@ class BilldeskComplete(APIView):
         else:
             txn = billdesk.update_transaction_success(order_id, ref_no, float(txn_amount), auth_status, msg, txn_time_dt)
             utils.convert_to_investor(txn)
-            query_params = {"txn_amount" :txn_amount, "auth_status": auth_status, "order_id": order_id,
+            query_params = {"txn_amount" :txn_amount, "auth_status": auth_status, "order_id": ref_no,
                             "message": "Payment successful"}
             query_params_string = self.create_query_params(query_params)
             full_url = reverse("api_urls:core_urls:billdesk-success") + "?" + query_params_string

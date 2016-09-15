@@ -106,6 +106,7 @@ def generate_tiff(pdf_name, bank_cheque_image):
     prefix_out_tiff_file = tiff_output_path + out_tiff_file
     uncompressed_combined_tiff_file = tiff_output_path + "combined" + timestamp + ".tiff"
     out_pdf_tiff_file = tiff_output_path + "pdfTIFF" + timestamp + ".tiff"
+    out_image_png_file = tiff_output_path + "imagePNG_" + timestamp + ".png"
     out_image_pdf_file = tiff_output_path + "imagePDF_" + timestamp + ".pdf"
     out_image_tiff_file = tiff_output_path + "imageTIFF_" + timestamp + ".tiff"
 
@@ -139,6 +140,12 @@ def generate_tiff(pdf_name, bank_cheque_image):
             # the given image is portrait
             size = constants.TIFF_PORTRAIT_SIZE
         resized_image = actual_image.resize(size, Image.ANTIALIAS)
+        """
+        temp_image_outfile = open(out_image_png_file, 'wb')
+        resized_image.save(temp_image_outfile, "PNG", optimize=True)
+        temp_image_outfile.close()
+        resized_image = Image.open(out_image_png_file)
+        """
         outfile = open(out_image_pdf_file, 'wb')
         # save the image as pdf for input to ghostscript
         resized_image.save(outfile, "PDF", resolution=100.0)

@@ -12,7 +12,6 @@ import requests
 import logging
 from xml.etree import ElementTree
 from datetime import date, timedelta, datetime
-import sys
 
 
 class MorningStarBackend(BaseFundBackend):
@@ -38,9 +37,6 @@ class MorningStarBackend(BaseFundBackend):
         :return:
         """
         json_data = self._get_data(constants.MORNING_STAR_FUND_API)
-        logger = logging.getLogger('django.error')
-        logger.error(json_data)
-        
         fields = {}
         if json_data[constants.STATUS][constants.CODE] != 0:
             return api_utils.response({constants.MESSAGE: json_data[constants.STATUS][constants.MESSAGE]},
@@ -149,7 +145,6 @@ class MorningStarBackend(BaseFundBackend):
             fund_id=fund_object, date__in=date_list)]
         benchmark_nav_list = [bench_data.nav for bench_data in core_models.HistoricalIndexData.objects.filter(
             index=fund_object.mapped_benchmark, date__in=date_list)]
-        print(fund_nav_list)
         return helpers.calculate_beta(fund_nav_list, benchmark_nav_list)
 
     def _get_exchange_rate(self):
@@ -190,7 +185,6 @@ class MorningStarBackend(BaseFundBackend):
                 except core_models.FundDataPointsChangeDaily.DoesNotExist:
                     earlier_fund_data = None
                     does_exist = False
-                logger_response += self.get_historical_data_points(fund.get(constants.ID), True)
                 for field in constants.FIELDS_DATA_POINTS_DAILY_API:
                     fields[field] = fund.get(constants.API).get(constants.DAILY_CHANGE_POINTS_MAP[field])
                     if field == constants.AUM:
@@ -207,6 +201,7 @@ class MorningStarBackend(BaseFundBackend):
                                 fields[field] = 0
                 fund_object = core_models.Fund.objects.get(mstar_id=fund.get(constants.ID))
                 core_models.FundDataPointsChangeDaily.objects.update_or_create(fund_id=fund_object.id, defaults=fields)
+                logger_response += self.get_historical_data_points(fund.get(constants.ID), True)
                 count += 1
             mail_logger.info(logger_response)
             return count
@@ -365,20 +360,18 @@ class MorningStarBackend(BaseFundBackend):
                                       constants.FUND_DOES_NOT_EXIST)
         start_date = settings.START_DATE
         if start_date is None:
-            if for_daily_nav is not True:
+            if for_daily_nav:
                 start_date = date.today() - timedelta(days=10)
             else:
                 start_date = fund.inception_date
         else:
             start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
-        print(start_date)
+
         while start_date < date.today():
             end_date = start_date + timedelta(days=constants.HISTORICAL_DATA_TIME_INTERVAL)
             if end_date > date.today():
                 end_date = date.today()
             url = utils.generate_url_for_historical_data(fund_mstar_id, start_date, end_date)
-            print(url)
-
             json_data = self._get_data(url)
             for data in json_data[constants.DATA][constants.API][constants.RAW_DATA]:
                 date_of_nav = data[constants.HISTORICAL_DATA_MAP[constants.DATE]]
@@ -420,7 +413,6 @@ class MorningStarBackend(BaseFundBackend):
             if end_date > last_date:
                 end_date = last_date
             url = utils.generate_url_for_historical_data(index_mstar_id, start_date, end_date)
-            print(url)
             json_data = self._get_data(url)
             for data in json_data[constants.DATA][constants.API][constants.RAW_DATA]:
                 index_mstar_id = json_data[constants.DATA][constants.ID]
@@ -484,7 +476,6 @@ class MorningStarBackend(BaseFundBackend):
             if end_date > last_date:
                 end_date = last_date
             url = utils.generate_url_for_category_history(category_id, start_date, end_date)
-            print(url)
             json_data = self._get_data(url)
             for data in json_data[constants.DATA][constants.API]:
                 category_id = json_data[constants.DATA][constants.ID]

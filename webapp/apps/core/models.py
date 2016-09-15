@@ -15,7 +15,6 @@ from webapp.conf import settings
 from webapp.apps import random_with_N_digits
 from . import manager, constants 
 from payment import models as payment_models
-from external_api import bank_mandate as bank_mandate
 import logging
 from django.http import HttpResponse
 from external_api import constants as external_constants
@@ -38,7 +37,8 @@ def investor_info_check(user):
 
 
 def order_detail_transaction_mail_send(order_detail):
-    
+    from external_api import bank_mandate
+
     #check Order Details information
     if order_detail is not None and order_detail.order_status == 2 and order_detail.is_lumpsum == True:
         try:

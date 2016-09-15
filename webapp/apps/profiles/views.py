@@ -384,6 +384,9 @@ class ProfileCompleteness(APIView):
             except models.InvestorBankDetails.DoesNotExist:
                 flag_data['is_bank_supported'] = False
 
+            logger = logging.getLogger('django.info')
+            logger.info("is bank supported: " + str(flag_data['is_bank_supported']))
+            
             flag_data['is_virtual'] = False
             if request.user.orderdetail_set.all().count() == 0:
                 flag_data['is_virtual'] = True

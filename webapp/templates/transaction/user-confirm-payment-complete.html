@@ -630,31 +630,39 @@
                         <td valign="top" class="mcnTextContent" style="padding-top:0; padding-right:18px; padding-bottom:9px; padding-left:18px;">
                         
                             <span style="color:#555555"><span style="font-size:15px"><span style="font-family:trebuchet ms,lucida grande,lucida sans unicode,lucida sans,tahoma,sans-serif">
- {% if bank_details != None %}
-    
-    Your bank account {{bank_details.account_number}} with {{bank_details.ifsc_code.name}}  will be debited on 
-    {{next_allotment_date }} -  RS {{ total_sip.agreed_sip__sum|floatformat:2}} <br> <br>
+Congratulations, you have successfully made the payment and placed your investment order through FinAskus. Please note your order details below:<br><br>
 
-{% endif %}
+  {% if order_detail_sip != None %}
+      {% for order_detail in order_detail_sip.fund_order_items.all %}
+       {% if order_detail.agreed_sip != 0 %}
+         <li> SIP Rs {{ order_detail.agreed_sip|floatformat:2 }} - 
+          {% if goal_len == 1 %}
+             {{sip_tenure}} years  - 
+          {% endif %}
+         {{order_detail.portfolio_item.fund.legal_name}} </li>
+       {% endif %}
+      {% endfor %}
+  {% endif %}
 
-Details of the SIP investment you have scheduled on {{next_allotment_date}} are as below  <br> <br>
+  {% if order_detail_lumpsum != None %}
   
- {% if fund_order_items != None %}
-
-    {% for fund_order_item in fund_order_items %}
- 
-    Rs {{fund_order_item.agreed_sip|floatformat:2 }} : {{ fund_order_item.portfolio_item.fund.legal_name}} <br>
-
-    {% endfor %}
- {% endif %}
- 
- <br>
+  <br> <br>
+  
+     {% for order_detail in order_detail_lumpsum.fund_order_items.all %}
+          {% if order_detail.agreed_lumpsum != 0 %}
+          
+           <li> Lumpsum Rs {{ order_detail.agreed_lumpsum|floatformat:2 }} - {{order_detail.portfolio_item.fund.legal_name}} </li>
+           
+          {% endif %}
+     {% endfor %}
+     
+  {% endif %}
+  
  
 <br><br>
-Please make sure, that you have sufficient balance in your account.
-Feel free to reach out to us for any help, support or feedback at askus@finaskus.com or call us on +91 8095656777
+Your order will be processed immediately. However, please note that the NAV allotted will be of the day when the payment is realized by BSE (Bombay Stock Exchange). This is typically the next business day. 
 <br><br>
-
+In the meanwhile, you can track the real-time performance of your portfolio using the FinAskus Mobile App.                            
                             </span></span></span>
 
                         </td>

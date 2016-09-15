@@ -1,9 +1,11 @@
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.utils.safestring import mark_safe
+from rangefilter.filter import DateRangeFilter
 
 from . import models
 
+from external_api.bse import billdesk_payment
 
 class TransactionAdmin(admin.ModelAdmin):
     """
@@ -14,12 +16,23 @@ class TransactionAdmin(admin.ModelAdmin):
     """
     search_fields = ['user__email', 'user__phone_number']
     list_display = ['get_user_email', 'biller_id', 'txn_amount', 'txn_status', 'txn_time']
-    list_filter = ['txn_status', 'txn_time']
+    list_filter = ['txn_status', ('txn_time', DateRangeFilter)]
 
     readonly_fields = ('user', 'order_details')
     exclude = ('txt_merchant_user_ref_no',)
     date_hierarchy = 'txn_time'
     actions = ['generate_bse_pipe_file']
+
+    # disable delete action as well as delete button.
+    def get_actions(self, request):
+        """
+        removes the delete selected users option from the drop down list of actions.
+        :param request: the django request.
+        :return: the list of actions without the delete action.
+        """
+        actions = super(TransactionAdmin, self).get_actions(request)
+        del actions['delete_selected']
+        return actions
 
     def has_delete_permission(self, request, obj=None):
         return False
@@ -44,12 +57,17 @@ class TransactionAdmin(admin.ModelAdmin):
 
     def generate_bse_pipe_file(self, request, queryset):
         """
-
         :param modeladmin:
         :param request:
-        :param queryset: selected users
+        :param queryset: selected Transactions
         :return:call a function that returns pipe separated file of selected id
         """
+        txn_list = queryset
+        billDeskPayment_object = billdesk_payment.BillDeskPayment()
+        response = billDeskPayment_object.generateBSEUploadFile(txn_list)
+        message = mark_safe("Successfully generated the bulk client master upload file.<a href='/"+"/".join(response.split("/")[-2:])+"'>Click here.</a>")
+        self.message_user(request, message, level="success")
+
 
     order_details.allow_tags = True
     form_url.allow_tags = True
