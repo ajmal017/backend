@@ -630,17 +630,26 @@
                         <td valign="top" class="mcnTextContent" style="padding-top:0; padding-right:18px; padding-bottom:9px; padding-left:18px;">
                         
                             <span style="color:#555555"><span style="font-size:15px"><span style="font-family:trebuchet ms,lucida grande,lucida sans unicode,lucida sans,tahoma,sans-serif">
-Your bank account {bank.account.number} with {user.bank} will be debited on {next_allotment_date}. <br><br>
-Details of the SIP investment you have scheduled on {next_allotment_date} are as below  <br> <br>
+ {% if bank_details != None %}
+    
+    Your bank account {{bank_details.account_number}} with {{bank_details.ifsc_code.name}}  will be debited on 
+    {{next_allotment_date }} -  RS {{ total_sip.agreed_sip__sum|floatformat:2}} <br> <br>
+
+{% endif %}
+
+Details of the SIP investment you have scheduled on {{next_allotment_date}} are as below  <br> <br>
   
- {% if fund_order_items is not None %}
+ {% if fund_order_items != None %}
+
     {% for fund_order_item in fund_order_items %}
  
-    Rs {{fund_order_item.agreed_sip }} : {{ fund_order_item.portfolio_item.fund.legal_name}}
-    
+    Rs {{fund_order_item.agreed_sip|floatformat:2 }} : {{ fund_order_item.portfolio_item.fund.legal_name}} <br>
+
     {% endfor %}
  {% endif %}
-  
+ 
+ <br>
+ 
 <br><br>
 Please make sure, that you have sufficient balance in your account.
 Feel free to reach out to us for any help, support or feedback at askus@finaskus.com or call us on +91 8095656777
