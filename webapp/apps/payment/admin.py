@@ -16,7 +16,7 @@ class TransactionAdmin(admin.ModelAdmin):
     make fields readonly
     """
     search_fields = ['user__email', 'user__phone_number']
-    list_display = ['get_user_email', 'biller_id', 'txn_amount', 'txn_status', 'txn_time']
+    list_display = ['get_user_email', 'biller_id', 'txn_amount', 'txn_status', 'txn_time', 'created_at']
     list_filter = ['txn_status', ('txn_time', DateRangeFilter)]
 
     readonly_fields = ('user', 'order_details')

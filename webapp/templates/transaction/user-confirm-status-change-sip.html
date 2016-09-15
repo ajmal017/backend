@@ -646,7 +646,7 @@ Congratulations!  Your investment order through FinAskus has been successfully p
        {% endif %}
        
          {% if order_details.agreed_lumpsum != 0 %}
-           <ul><li> Lumpsum Rs {{ order_details.agreed_lumpsum|floatformat:2 }} - {{ order_details.unit_alloted}} units allotted with NAV Rs {{nav_details|floatformat:2}} as {{order_details.allotment_date}}
+           <ul><li> Lumpsum Rs {{ order_details.agreed_lumpsum|floatformat:2 }} - {{ order_details.unit_alloted}} units allotted with NAV Rs {{nav_details|floatformat:2}} as of {{order_details.allotment_date}}
                  </li></ul>
           {% endif %}
        </li>

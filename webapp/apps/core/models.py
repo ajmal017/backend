@@ -77,7 +77,7 @@ def order_detail_transaction_mail_send(order_detail):
             for portfolio_item in portfolio_items:
                 fund_order_items = FundOrderItem.objects.filter(portfolio_item=portfolio_item)
                 for fund_order_item in fund_order_items:
-                    if fund_order_item.order_amount > 0:
+                    if fund_order_item.order_amount > 0 and fund_order_item.is_cancelled == False:
                         if fund_order_item.unit_alloted is not None and fund_order_item.unit_alloted > 0:
                             try:
                                 nav = HistoricalFundData.objects.get(fund_id=fund_order_item.portfolio_item.fund.id, date=fund_order_item.allotment_date).nav

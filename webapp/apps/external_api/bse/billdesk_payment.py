@@ -20,27 +20,36 @@ class BillDeskPayment(object):
         return outfile, output_path + name
 
     def generateBSEUploadFile(self, txns):
+        from webapp.apps.payment import models as payment_models
+
         dt_today_str = date.today().strftime("%d%m%y")
         out_filename = 'FW_FUN_' + dt_today_str + '.txt'
         out_file, out_filepath = self.createOutputFile(out_filename)
         
+        missing_order_ids = []
         for pay in txns:
-            order_details = core_models.OrderDetail.objects.filter(transaction=pay)
+            if pay.txn_status == payment_models.Transaction.Status.Success:
+                order_details = core_models.OrderDetail.objects.filter(transaction=pay)
+            
+                for order in order_details:
+                    for fund_order_item in order.fund_order_items.all():
+                        if int(fund_order_item.order_amount) > 0:
+                            if not fund_order_item.bse_transaction_id:
+                                missing_order_ids.append(fund_order_item)
+                            else:
+                                bse_order_dict = OrderedDict([('ORDER DATE', fund_order_item.modified_at.strftime('%d/%m/%y')), 
+                                                           ('Order ID', str(fund_order_item.bse_transaction_id)),
+                                                           ('Client Code', str(pay.user.finaskus_id)),
+                                                           ('Order Val AMOUNT', str(fund_order_item.order_amount))])
+                                out_file.write("|".join(bse_order_dict.values()))
+                                out_file.write("\r")
+                                bse_order_dict.clear()
         
-            for order in order_details:
-                for fund_order_item in order.fund_order_items.all():
-                    if int(fund_order_item.order_amount) > 0:
-                        bse_order_dict = OrderedDict([('ORDER DATE', fund_order_item.modified_at.strftime('%d/%m/%y')), 
-                                                       ('Order ID', str(fund_order_item.bse_transaction_id)),
-                                                       ('Client Code', str(pay.user.finaskus_id)),
-                                                       ('Order Val AMOUNT', str(fund_order_item.order_amount))])
-                    
-        
-                        out_file.write("|".join(bse_order_dict.values()))
-                        out_file.write("\r")
-                        bse_order_dict.clear()
         out_file.close()
-        return "/webapp/static/" + os.path.basename(out_filepath)
+        if len(missing_order_ids) > 0:
+            return missing_order_ids, "MISSING_BSE_ORDER_ID"
+        
+        return "/webapp/static/" + os.path.basename(out_filepath), None
         
     def generateBSEUploadFileForDate(self, paydate):
         from webapp.apps.payment import models as payment_models
