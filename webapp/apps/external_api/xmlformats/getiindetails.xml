@@ -1,0 +1,8 @@
+<NMFIIService>
+    <service_request>
+        <appln_id>MFS108537</appln_id>
+        <password>test$258</password>
+        <broker_code>ARN-108537</broker_code>
+        <iin>5011000029</iin>
+    </service_request>
+</NMFIIService>
