@@ -135,6 +135,7 @@ def daily_once_cron():
     """
     :return:
     """
+    utils.reminder_next_sip_allotment()
     mail_logger = logging.getLogger('django.info')
     is_error, errors = False, ''
 

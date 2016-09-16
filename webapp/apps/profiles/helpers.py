@@ -1,7 +1,6 @@
 """
 To make structure of code more organised. We are keeping all those functions that don't involve model queries here
 
-
 """
 from django.conf import settings
 from django.template import loader
@@ -15,9 +14,8 @@ from requests.auth import HTTPBasicAuth
 
 from . import constants as profile_constants
 import logging
-from django.http import HttpResponse
 import copy
-import os
+from django.db.models import Sum
 
 
 def unique_filename(path, context):
@@ -451,3 +449,49 @@ def send_redeem_completed_email(redeem_detail, domain_override=None, subject_tem
               html_email_template_name=html_email_template_name)
     
 
+
+def send_mail_reminder_next_sip(fund_order_items,target_date,total_sip,bank_details,applicant_name,user,domain_override=None, subject_template_name='transaction/sip-reminder-subject.txt',
+                                     email_template_name=None, use_https=False,
+                                     token_generator=default_token_generator, from_email=None,
+                                     request=None,html_email_template_name='transaction/sip-reminder.html', extra_email_context=None):
+                   
+    if applicant_name is not None:
+        userName = applicant_name.title()
+    else:
+        userName = user.email
+       
+    context = {     
+              'domain': settings.SITE_BASE_URL,
+              'site_name': "Finaskus",
+              'user': user,
+              'bank_details':bank_details,
+              'total_sip':total_sip,
+              'user_name':userName,
+              'fund_order_items':fund_order_items,
+              'next_allotment_date':target_date,
+              'protocol': 'https' if use_https else 'http',
+               }
+    send_mail(subject_template_name, email_template_name, context, from_email, user.email,
+                          html_email_template_name=html_email_template_name) 
+                    
+                    
+def send_mail_weekly_portfolio(portfolio_details,user,applicant_name,domain_override=None, subject_template_name='transaction/weekly-portfolio-subject.txt',
+                                     email_template_name=None, use_https=False,
+                                     token_generator=default_token_generator, from_email=None,
+                                     request=None,html_email_template_name='transaction/weekly_portfolio_snapshot.html', extra_email_context=None):                
+    if applicant_name is not None:
+        userName = applicant_name.title()
+    else:
+        userName = user.email
+    context = {     
+             'domain': settings.SITE_BASE_URL,
+             'site_name': "Finaskus",
+             'user': user,
+             'user_name':userName,
+             'portfolio_details':portfolio_details,
+             'protocol': 'https' if use_https else 'http',
+               }
+    send_mail(subject_template_name, email_template_name, context, from_email, user.email,
+                          html_email_template_name=html_email_template_name) 
+    
+    

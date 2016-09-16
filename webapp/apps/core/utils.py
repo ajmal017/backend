@@ -10,6 +10,8 @@ from profiles import helpers as profiles_helpers
 from webapp.apps import random_with_N_digits
 from payment import models as payment_models
 
+from external_api import bank_mandate as bank_mandate
+
 from collections import OrderedDict, defaultdict
 from datetime import date, datetime, timedelta
 import math
@@ -21,11 +23,41 @@ import hmac
 import hashlib
 import threading
 
-from external_api import bank_mandate as bank_mandate
-
 debug_logger = logging.getLogger('django.debug')
 
-
+def get_all_portfolio_details(user,fund_order_items):
+    is_transient_dashboard = False
+    # query all fund_order_items of a user
+    all_investments_of_user = [fund_order_item for fund_order_item in fund_order_items if fund_order_item.portfolio_item.portfolio.user==user]
+    if all_investments_of_user:
+        # query all redeems of user
+        all_redeems_of_user = models.FundRedeemItem.objects.filter(portfolio_item__portfolio__user=user,is_verified=True)
+        # club all investments and redeems of a user according to the funds
+        transaction_fund_map, today_portfolio, portfolios_to_be_considered = club_investment_redeem_together(all_investments_of_user, all_redeems_of_user)
+        info =  get_dashboard_version_two(transaction_fund_map, today_portfolio, portfolios_to_be_considered, is_transient_dashboard)
+        return info
+    
+    
+def get_portfolio_dashboard():
+    fund_order_items = models.FundOrderItem.objects.filter(is_cancelled=False,is_verified=True)
+    users = []
+    if fund_order_items is not None:
+        for fund_order_item in fund_order_items:
+            if fund_order_item.portfolio_item.portfolio.user not in users:
+                user = fund_order_item.portfolio_item.portfolio.user
+                users.append(user)
+                
+                portfolio_details = get_all_portfolio_details(user,fund_order_items)
+                
+                    
+                try:
+                    applicant_name = investor_info_check(user)
+                except:
+                    applicant_name = None    
+            
+                profiles_helpers.send_mail_weekly_portfolio(portfolio_details,user,applicant_name,use_https=settings.USE_HTTPS)
+                
+    
 #investor info check
 def investor_info_check(user):
     applicant_name = None
@@ -38,7 +70,48 @@ def investor_info_check(user):
             applicant_name = None
     return applicant_name
 
+def reminder_next_sip_allotment():
+    curr_date = date.today()
+    target_date = curr_date + timedelta(days=settings.SIP_REMINDER_DAYS)
+    fund_order_items = models.FundOrderItem.objects.filter(next_allotment_date = target_date , order_amount__gt=0 , agreed_sip__gt=0)      
+    
+    users = []
+    if fund_order_items is not None:
+        for fund_order_item in fund_order_items:
+            if fund_order_item.portfolio_item.portfolio.user not in users:
+                user = fund_order_item.portfolio_item.portfolio.user
+                users.append(user)
+                
+                user_fund_order_items,bank_details,applicant_name,total_sip =  reminder_next_sip_detail(fund_order_items,target_date,user)   
+                profiles_helpers.send_mail_reminder_next_sip(user_fund_order_items,target_date,total_sip,bank_details,applicant_name,user,use_https=settings.USE_HTTPS)    
+    
+    
 
+def reminder_next_sip_detail(fund_order_items,target_date,user):
+    try:
+        user_fund_order_items = [fund_order_item for fund_order_item in fund_order_items if fund_order_item.portfolio_item.portfolio.user==user]
+        total_sip = models.FundOrderItem.objects.filter(next_allotment_date=target_date, portfolio_item__portfolio__user__id=user.id).aggregate(Sum('agreed_sip'))
+    except:
+        user_fund_order_items = None
+        total_sip = None
+
+    if user_fund_order_items is not None:    
+        try:
+            bank_details = profile_models.InvestorBankDetails.objects.get(user=user)
+        except profile_models.InvestorBankDetails.DoesNotExist:
+            bank_details = None
+   
+        try:
+            applicant_name = models.investor_info_check(user)
+        except:
+            applicant_name = None
+                    
+    else:
+        bank_details = None
+        applicant_name = None
+        
+    return user_fund_order_items, bank_details,applicant_name,total_sip 
+                    
         
 
 def get_answers(answers, questions, id):
@@ -3529,11 +3602,14 @@ def get_dashboard_version_two(transaction_fund_map, today_portfolio, portfolios_
 
     financial_goal_status = calculate_financial_goal_status(asset_class_overview, portfolios_to_be_considered)
 
+    
     return {constants.FINANCIAL_GOAL_STATUS: financial_goal_status,
-            constants.ASSET_CLASS_OVERVIEW: asset_class_overview, constants.PORTFOLIO_OVERVIEW: portfolio_overview,
-            constants.YESTERDAY_CHANGE: yesterday_changes, constants.DATE: get_dashboard_change_date(),
+            constants.ASSET_CLASS_OVERVIEW: asset_class_overview, 
+            constants.PORTFOLIO_OVERVIEW: portfolio_overview,
+            constants.YESTERDAY_CHANGE: yesterday_changes, 
+            constants.DATE: get_dashboard_change_date(),
             constants.IS_VIRTUAL: False}
-
+    
 
 def convert_dashboard_to_leaderboard(dashboard_data):
     """

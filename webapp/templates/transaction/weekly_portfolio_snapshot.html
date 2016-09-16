@@ -517,7 +517,7 @@
                             <td class="mcnImageContent" valign="top" style="padding-right: 9px; padding-left: 9px; padding-top: 0; padding-bottom: 0; text-align:center;">
                                 
                                     <a href="https://play.google.com/store/apps/details?id=com.finaskus.finaskus_android" title="" class="" target="_blank">
-                                        <img align="center" alt="" src="{{ protocol }}://{{ domain }}/static/images/headerlogo.png" width="355" style="max-width:355px; padding-bottom: 0; display: inline !important; vertical-align: bottom;" class="mcnImage">
+                                        <img align="center" alt="" src="https://finaskus.com/static/images/headerlogo.png" width="355" style="max-width:355px; padding-bottom: 0; display: inline !important; vertical-align: bottom;" class="mcnImage">
                                     </a>
                                 
                             </td>
@@ -630,31 +630,70 @@
                         <td valign="top" class="mcnTextContent" style="padding-top:0; padding-right:18px; padding-bottom:9px; padding-left:18px;">
                         
                             <span style="color:#555555"><span style="font-size:15px"><span style="font-family:trebuchet ms,lucida grande,lucida sans unicode,lucida sans,tahoma,sans-serif">
- {% if bank_details != None %}
+Thank you for investing with FinAskus! Please see below a snapshot of your latest portfolio status:<br><br>
+
+  
+{% if portfolio_details != None %}
+
+ {% if portfolio_details.portfolio_overview != None %}
+     
+     <b>Overall Portfolio Status </b><br>
+     
+     <ul>
+       <li>Total Investment: Rs.{{portfolio_details.portfolio_overview.invested|floatformat:2}} </li>
+       <li>Current Value: Rs. {{portfolio_details.portfolio_overview.current_value.value|floatformat:2}} </li>
+       <li>Current Gain/Loss: Rs . {{portfolio_details.portfolio_overview.current_return|floatformat:2}} </li>
+       <li> Annualized Returns: Rs . {{portfolio_details.portfolio_overview.current_value.gain_per|floatformat:2}} </li> 
+      </ul> 
+  {% endif %}
+  
+  {% if portfolio_details.asset_class_overview != None %}
+    {% for asset_class_overview in portfolio_details.asset_class_overview %}
     
-    Your bank account {{bank_details.account_number}} with {{bank_details.ifsc_code.name}}  will be debited on 
-    {{next_allotment_date }} -  RS {{ total_sip.agreed_sip__sum|floatformat:2}} <br> <br>
+         {% if asset_class_overview.name == "equity" %}
+          
+          <b> Equity Portfolio status: </b>
+          <ul>
+             <li> Total investment: Rs {{asset_class_overview.invested|floatformat:2}}</li>
+             <li> Current Value: Rs {{asset_class_overview.current_value|floatformat:2}}</li>
+             <li> Current Gain/Loss: Rs {{asset_class_overview.gain|floatformat:2}}</li>
+             <li> Annualized Returns: Rs {{asset_class_overview.gain_per|floatformat:2}}</li>
+          </ul>
+         {% endif %}
+         
+         {% if asset_class_overview.name == "debt" %}
+          
+          <b> Debt Portfolio status: </b>
+          <ul>
+             <li> Total investment: Rs {{asset_class_overview.invested|floatformat:2}}</li>
+             <li> Current Value: Rs {{asset_class_overview.current_value|floatformat:2}}</li>
+             <li> Current Gain/Loss: Rs {{asset_class_overview.gain|floatformat:2}}</li>
+             <li> Annualized Returns: Rs {{asset_class_overview.gain_per|floatformat:2}}</li>
+          </ul>
+         {% endif %}
+         
+         {% if asset_class_overview.name == "elss" %}
+          
+          <b> ELSS Portfolio status: </b>
+          <ul>
+             <li> Total investment: Rs {{asset_class_overview.invested|floatformat:2}}</li>
+             <li> Current Value: Rs {{asset_class_overview.current_value|floatformat:2}}</li>
+             <li> Current Gain/Loss: Rs {{asset_class_overview.gain|floatformat:2}}</li>
+             <li> Annualized Returns: Rs {{asset_class_overview.gain_per|floatformat:2}}</li>
+          </ul>
+         {% endif %}
+    
+    {% endfor %}
+  {% endif %}
 
 {% endif %}
 
-Details of the SIP investment you have scheduled on {{next_allotment_date}} are as below  <br> <br>
-  
- {% if fund_order_items != None %}
-
-    {% for fund_order_item in fund_order_items %}
- 
-    Rs {{fund_order_item.agreed_sip|floatformat:2 }} : {{ fund_order_item.portfolio_item.fund.legal_name}} <br>
-
-    {% endfor %}
- {% endif %}
- 
- 
  
 <br><br>
-Please make sure, that you have sufficient balance in your account.
-Feel free to reach out to us for any help, support or feedback at askus@finaskus.com or call us on +91 8095656777
+For more detailed update on your portfolio by schemes, please visit the FinAskus mobile app and view your Dashboard in the "Track Performance Section":
 <br><br>
 
+                          
                             </span></span></span>
 
                         </td>
@@ -773,7 +812,7 @@ FinAskus Support</span></span></span></span>
                                                                         <tbody><tr>
                                                                             
                                                                                 <td align="center" valign="middle" width="24" class="mcnFollowIconContent">
-                                                                                    <a href="http://www.facebook.com/finaskus" target="_blank"><img src="{{ protocol }}://{{ domain }}/static/images/facebook_share_icon.png" style="display:block;" height="24" width="24" class=""></a>
+                                                                                    <a href="http://www.facebook.com/finaskus" target="_blank"><img src="https://www.finaskus.com/static/images/facebook_share_icon.png" style="display:block;" height="24" width="24" class=""></a>
                                                                                 </td>
                                                                             
                                                                             
@@ -805,7 +844,7 @@ FinAskus Support</span></span></span></span>
                                                                         <tbody><tr>
                                                                             
                                                                                 <td align="center" valign="middle" width="24" class="mcnFollowIconContent">
-                                                                                    <a href="http://www.twitter.com/finaskus" target="_blank"><img src="{{ protocol }}://{{ domain }}/static/images/twitter_share_icon.png" style="display:block;" height="24" width="24" class=""></a>
+                                                                                    <a href="http://www.twitter.com/finaskus" target="_blank"><img src="https://finaskus.com/static/images/twitter_share_icon.png" style="display:block;" height="24" width="24" class=""></a>
                                                                                 </td>
                                                                             
                                                                             
