@@ -271,9 +271,9 @@ LOGGING = {
 
 SERVER_EMAIL = 'askus@finaskus.com'
 
-ADMINS = (
+ADMINS = [
     ('Finaskus', 'techops@finaskus.com')
-)
+]
 
 '''REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
