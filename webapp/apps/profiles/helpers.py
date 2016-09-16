@@ -450,66 +450,35 @@ def send_redeem_completed_email(redeem_detail, domain_override=None, subject_tem
     
 
 
-def send_mail_reminder_next_sip(fund_order_items,target_date,domain_override=None, subject_template_name='transaction/sip-reminder-subject.txt',
+def send_mail_reminder_next_sip(fund_order_items,target_date,total_sip,bank_details,applicant_name,user,domain_override=None, subject_template_name='transaction/sip-reminder-subject.txt',
                                      email_template_name=None, use_https=False,
                                      token_generator=default_token_generator, from_email=None,
                                      request=None,html_email_template_name='transaction/sip-reminder.html', extra_email_context=None):
-    from core import models as core_models
-    from profiles import models as profile_models
-    users = []
-    if fund_order_items is not None:
-        for fund_order_item in fund_order_items:
-            if fund_order_item.portfolio_item.portfolio.user not in users:
-                user = fund_order_item.portfolio_item.portfolio.user
-                users.append(fund_order_item.portfolio_item.portfolio.user)
-                try:
-                    user_fund_order_items = core_models.FundOrderItem.objects.filter(next_allotment_date=target_date, portfolio_item__portfolio__user__id=fund_order_item.portfolio_item.portfolio.user.id)
-                    total_sip = core_models.FundOrderItem.objects.filter(next_allotment_date=target_date, portfolio_item__portfolio__user__id=fund_order_item.portfolio_item.portfolio.user.id).aggregate(Sum('agreed_sip'))
-                except core_models.FundOrderItem.DoesNotExist:
-                    user_fund_order_items = None
-                    total_sip = None
-
-                if user_fund_order_items is not None:    
-                    try:
-                        bank_details = profile_models.InvestorBankDetails.objects.filter(user=user)
-                    except profile_models.InvestorBankDetails.DoesNotExist:
-                        bank_details = None
-   
-                    try:
-                        applicant_name = core_models.investor_info_check(user)
-                    except core_models.InvestorInfo.DoesNotExist:
-                        applicant_name = None
-                    
-                    if applicant_name is not None:
-                        userName = applicant_name.title()
-                    else:
-                        userName = user.email
-                    context = {     
-                        'domain': settings.SITE_BASE_URL,
-                        'site_name': "Finaskus",
-                        'user': user,
-                        'bank_details':bank_details,
-                        'total_sip':total_sip,
-                        'user_name':userName,
-                        'fund_order_items':user_fund_order_items,
-                        'next_allotment_date':target_date,
-                        'protocol': 'https' if use_https else 'http',
-                         }
-                    send_mail(subject_template_name, email_template_name, context, from_email, user.email,
+                   
+    if applicant_name is not None:
+        userName = applicant_name.title()
+    else:
+        userName = user.email
+       
+    context = {     
+              'domain': settings.SITE_BASE_URL,
+              'site_name': "Finaskus",
+              'user': user,
+              'bank_details':bank_details,
+              'total_sip':total_sip,
+              'user_name':userName,
+              'fund_order_items':fund_order_items,
+              'next_allotment_date':target_date,
+              'protocol': 'https' if use_https else 'http',
+               }
+    send_mail(subject_template_name, email_template_name, context, from_email, user.email,
                           html_email_template_name=html_email_template_name) 
                     
                     
-def send_mail_weekly_portfolio(portfolio_details,user,email_attachment,attachment_error,domain_override=None, subject_template_name='transaction/weekly-portfolio-subject.txt',
+def send_mail_weekly_portfolio(portfolio_details,user,applicant_name,domain_override=None, subject_template_name='transaction/weekly-portfolio-subject.txt',
                                      email_template_name=None, use_https=False,
                                      token_generator=default_token_generator, from_email=None,
-                                     request=None,html_email_template_name='transaction/weekly_portfolio_snapshot.html', extra_email_context=None):
-    from core import models as core_models
-    
-    try:
-        applicant_name = core_models.investor_info_check(user)
-    except core_models.InvestorInfo.DoesNotExist:
-        applicant_name = None
-                    
+                                     request=None,html_email_template_name='transaction/weekly_portfolio_snapshot.html', extra_email_context=None):                
     if applicant_name is not None:
         userName = applicant_name.title()
     else:
@@ -522,18 +491,7 @@ def send_mail_weekly_portfolio(portfolio_details,user,email_attachment,attachmen
              'portfolio_details':portfolio_details,
              'protocol': 'https' if use_https else 'http',
                }
-    
-    subject = loader.render_to_string('transaction/weekly-portfolio-subject.txt', context)
-    subject = ''.join(subject.splitlines())
-    body = loader.render_to_string(html_email_template_name, context)
-    email_message = EmailMultiAlternatives(subject, body, from_email, [user.email])
-    if email_attachment is not None:
-        attachment = open(email_attachment, 'rb')
-        email_message.attach(email_attachment, attachment.read(),'application/pdf')  
-    email_message.attach_alternative(body, 'text/html')
-    email_message.send()
-    
-    """
     send_mail(subject_template_name, email_template_name, context, from_email, user.email,
                           html_email_template_name=html_email_template_name) 
-    """
+    
+    

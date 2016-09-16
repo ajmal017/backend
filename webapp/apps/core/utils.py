@@ -25,10 +25,10 @@ import threading
 
 debug_logger = logging.getLogger('django.debug')
 
-def get_all_portfolio_details(user):
+def get_all_portfolio_details(user,fund_order_items):
     is_transient_dashboard = False
     # query all fund_order_items of a user
-    all_investments_of_user = models.FundOrderItem.objects.filter(portfolio_item__portfolio__user=user,is_cancelled=False,is_verified=True)
+    all_investments_of_user = [fund_order_item for fund_order_item in fund_order_items if fund_order_item.portfolio_item.portfolio.user==user]
     if all_investments_of_user:
         # query all redeems of user
         all_redeems_of_user = models.FundRedeemItem.objects.filter(portfolio_item__portfolio__user=user,is_verified=True)
@@ -45,16 +45,17 @@ def get_portfolio_dashboard():
         for fund_order_item in fund_order_items:
             if fund_order_item.portfolio_item.portfolio.user not in users:
                 user = fund_order_item.portfolio_item.portfolio.user
-                users.append(fund_order_item.portfolio_item.portfolio.user)
-                portfolio_details = get_all_portfolio_details(user)
+                users.append(user)
                 
+                portfolio_details = get_all_portfolio_details(user,fund_order_items)
+                
+                    
                 try:
-                    email_attachment,attachment_error = bank_mandate.generate_bank_mandate_pdf(user.id)
+                    applicant_name = investor_info_check(user)
                 except:
-                    email_attachment = None
-                    attachment_error = None
+                    applicant_name = None    
             
-                profiles_helpers.send_mail_weekly_portfolio(portfolio_details,user,email_attachment,attachment_error,use_https=settings.USE_HTTPS)
+                profiles_helpers.send_mail_weekly_portfolio(portfolio_details,user,applicant_name,use_https=settings.USE_HTTPS)
                 
     
 #investor info check
@@ -71,12 +72,46 @@ def investor_info_check(user):
 
 def reminder_next_sip_allotment():
     curr_date = date.today()
-    target_date = curr_date + timedelta(days=4)
+    target_date = curr_date + timedelta(days=settings.SIP_REMINDER_DAYS)
     fund_order_items = models.FundOrderItem.objects.filter(next_allotment_date = target_date , order_amount__gt=0 , agreed_sip__gt=0)      
-    """
-    Send mail to the User
-    """
-    profiles_helpers.send_mail_reminder_next_sip(fund_order_items,target_date,use_https=settings.USE_HTTPS)
+    
+    users = []
+    if fund_order_items is not None:
+        for fund_order_item in fund_order_items:
+            if fund_order_item.portfolio_item.portfolio.user not in users:
+                user = fund_order_item.portfolio_item.portfolio.user
+                users.append(user)
+                
+                user_fund_order_items,bank_details,applicant_name,total_sip =  reminder_next_sip_detail(fund_order_items,target_date,user)   
+                profiles_helpers.send_mail_reminder_next_sip(user_fund_order_items,target_date,total_sip,bank_details,applicant_name,user,use_https=settings.USE_HTTPS)    
+    
+    
+
+def reminder_next_sip_detail(fund_order_items,target_date,user):
+    try:
+        user_fund_order_items = [fund_order_item for fund_order_item in fund_order_items if fund_order_item.portfolio_item.portfolio.user==user]
+        total_sip = models.FundOrderItem.objects.filter(next_allotment_date=target_date, portfolio_item__portfolio__user__id=user.id).aggregate(Sum('agreed_sip'))
+    except:
+        user_fund_order_items = None
+        total_sip = None
+
+    if user_fund_order_items is not None:    
+        try:
+            bank_details = profile_models.InvestorBankDetails.objects.get(user=user)
+        except profile_models.InvestorBankDetails.DoesNotExist:
+            bank_details = None
+   
+        try:
+            applicant_name = models.investor_info_check(user)
+        except:
+            applicant_name = None
+                    
+    else:
+        bank_details = None
+        applicant_name = None
+        
+    return user_fund_order_items, bank_details,applicant_name,total_sip 
+                    
         
 
 def get_answers(answers, questions, id):
