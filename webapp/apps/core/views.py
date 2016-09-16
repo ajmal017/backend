@@ -170,6 +170,12 @@ def mfarticles(request):
     """
     return render(request, 'base/mutual-fund-articles.html')
 
+def mailer1(request):
+    """
+    :param request:
+    :return:
+    """
+    return render(request, 'base/MarketingEmailer1.html')
 
 def aboutus(request):
     """

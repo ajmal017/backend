@@ -56,6 +56,7 @@ urlpatterns = [
     url(r'^a-sip-in-time-saves-nine', views.sipintime, name='sipintime'),
     url(r'^aboutus', views.aboutus, name='aboutus'),
     url(r'^mutual-fund-articles', views.mfarticles, name='mfarticles'),
+    url(r'^why-invest-in-finaskus', views.mailer1, name='mailer1'),
     url(r'^blog', views.blog, name='blog'),
     url(r'^deep-linking/(?P<schemeUri>.*)/', views.deeplinking, name='deeplinking'),
     url(r'^google59199aa04156c0bc.html$', TemplateView.as_view(template_name='google59199aa04156c0bc.html')),
