@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.utils.safestring import mark_safe
 from rangefilter.filter import DateRangeFilter
+from django.shortcuts import render
 
 from . import models
 
@@ -15,12 +16,11 @@ class TransactionAdmin(admin.ModelAdmin):
     make fields readonly
     """
     search_fields = ['user__email', 'user__phone_number']
-    list_display = ['get_user_email', 'biller_id', 'txn_amount', 'txn_status', 'txn_time']
+    list_display = ['get_user_email', 'biller_id', 'txn_amount', 'txn_status', 'txn_time', 'created_at']
     list_filter = ['txn_status', ('txn_time', DateRangeFilter)]
 
     readonly_fields = ('user', 'order_details')
     exclude = ('txt_merchant_user_ref_no',)
-    date_hierarchy = 'txn_time'
     actions = ['generate_bse_pipe_file']
 
     # disable delete action as well as delete button.
@@ -64,9 +64,14 @@ class TransactionAdmin(admin.ModelAdmin):
         """
         txn_list = queryset
         billDeskPayment_object = billdesk_payment.BillDeskPayment()
-        response = billDeskPayment_object.generateBSEUploadFile(txn_list)
-        message = mark_safe("Successfully generated the bulk client master upload file.<a href='/"+"/".join(response.split("/")[-2:])+"'>Click here.</a>")
-        self.message_user(request, message, level="success")
+        response, error = billDeskPayment_object.generateBSEUploadFile(txn_list)
+        if isinstance(response, list):
+            self.message_user(request, "Error encountered." + error, level="error")
+            context = dict(failed_orders_list=response)
+            return render(request, 'admin/payment/transaction/failure.html', context)
+        else:
+            message = mark_safe("Successfully generated the bulk client master upload file.<a href='/"+"/".join(response.split("/")[-2:])+"'>Click here.</a>")
+            self.message_user(request, message, level="success")
 
 
     order_details.allow_tags = True
