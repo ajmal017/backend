@@ -135,7 +135,6 @@ def daily_once_cron():
     """
     :return:
     """
-    utils.reminder_next_sip_allotment()
     mail_logger = logging.getLogger('django.info')
     is_error, errors = False, ''
 
@@ -145,10 +144,33 @@ def daily_once_cron():
         is_error = True
         error_entry = str(e) + ' create_order_items_based_on_next_allotment_date; '
         errors += error_entry
+
+    try:
+        generate_log_message(utils.reminder_next_sip_allotment(), 'SIP_Reminder', 0, mail_logger)
+    except Exception as e:
+        is_error = True
+        error_entry = str(e) + ' reminder_next_sip_allotment; '
+        errors += error_entry
     
     if is_error:
         mail_logger.info(errors)
 
+def weekly_once_cron():
+    """
+    :return:
+    """
+    mail_logger = logging.getLogger('django.info')
+    is_error, errors = False, ''
+
+    try:
+        generate_log_message(utils.get_portfolio_dashboard(), 'get_portfolio', 0, mail_logger)
+    except Exception as e:
+        is_error = True
+        error_entry = str(e) + ' get_portfolio_dashboard; '
+        errors += error_entry
+    
+    if is_error:
+        mail_logger.info(errors)
 
 def monthly_cron():
     """

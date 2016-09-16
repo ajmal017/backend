@@ -184,9 +184,9 @@ class User(AbstractBaseUser, TimeStampedModel):
         super(User, self).save(*args, **kwargs)
 
     def clean(self):
-        if self.username:
-            self.username = self.username.strip()
         super(User, self).clean()
+        if self.email:
+            self.username = self.email 
     
     @property
     def is_superuser(self):
