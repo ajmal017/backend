@@ -16,6 +16,7 @@ from . import constants as profile_constants
 import logging
 import copy
 from django.db.models import Sum
+import datetime
 
 
 def unique_filename(path, context):
@@ -264,7 +265,7 @@ def send_transaction_completed_email(order_detail_lumpsum,order_detail_sip,appli
               html_email_template_name=html_email_template_name)
 
 
-def send_transaction_change_email(order_detail,applicant_name,user,email_attachment,attachment_error,sip_tenure,goal_len,domain_override=None, subject_template_name='transaction/subject.txt',
+def send_transaction_change_email(first_order,order_detail,applicant_name,user,email_attachment,attachment_error,sip_tenure,goal_len,domain_override=None, subject_template_name='transaction/subject.txt',
                                      email_template_name='transaction/transaction_status_change.html', use_https=False,
                                      token_generator=default_token_generator, from_email=None,
                                      request=None,extra_email_context=None):
@@ -272,14 +273,17 @@ def send_transaction_change_email(order_detail,applicant_name,user,email_attachm
     
     """
     Template changes according to mandate status of the user 
-    """        
-    if user.mandate_status == "0":   
-        if all(sips < 1 for sips in order_detail.all_sips) & any(lumpsums > 0 for lumpsums in order_detail.all_lumpsums):
-            html_email_template_name='transaction/user-confirm-status-change.html'
+    """ 
+    if first_order == True:      
+        if user.mandate_status == "0":   
+            if all(sips < 1 for sips in order_detail.all_sips) & any(lumpsums > 0 for lumpsums in order_detail.all_lumpsums):
+                html_email_template_name='transaction/user-confirm-status-change.html'
+            else:
+                html_email_template_name='transaction/user-confirm-status-change-sip.html'
         else:
-            html_email_template_name='transaction/user-confirm-status-change-sip.html'
+            html_email_template_name='transaction/user-confirm-status-change-ongoing.html'
     else:
-        html_email_template_name='transaction/user-confirm-status-change-ongoing.html'
+        html_email_template_name='transaction/user-confirm-following-sip.html'
     
     list1 = zip(order_detail.fund_order_list,order_detail.nav_list)
     
@@ -287,6 +291,8 @@ def send_transaction_change_email(order_detail,applicant_name,user,email_attachm
         user_name = applicant_name.title()
     else:
         user_name = user.email
+        
+    month = datetime.datetime.strftime(order_detail.created_at, '%B')    
 
     context = {
         'sip_tenure':sip_tenure,
@@ -294,6 +300,7 @@ def send_transaction_change_email(order_detail,applicant_name,user,email_attachm
         'order_detail':list1,        
         'user_name':user_name,
         'transaction_detail':order_detail,
+        'month':month,
         'domain': settings.SITE_API_BASE_URL,
         'site_name': "Finaskus",
         'protocol': 'https' if use_https else 'http',
@@ -459,12 +466,28 @@ def send_mail_reminder_next_sip(fund_order_items,target_date,total_sip,bank_deta
         userName = applicant_name.title()
     else:
         userName = user.email
+        
+    if bank_details is not None and bank_details.account_number is not None:
+        x = bank_details.account_number
+        y = list(x)
+        y.reverse()
+        index = 0
+        while index < len(y):
+            if index > 3:
+                y[index] = 'X'
+            index = index + 1
+                
+        y.reverse() 
+        bank_account_number = ''.join(y)
+    else:
+        bank_account_number = None
        
     context = {     
-              'domain': settings.SITE_BASE_URL,
+              'domain': settings.SITE_API_BASE_URL,
               'site_name': "Finaskus",
               'user': user,
               'bank_details':bank_details,
+              'bank_account_number':bank_account_number,
               'total_sip':total_sip,
               'user_name':userName,
               'fund_order_items':fund_order_items,
@@ -484,7 +507,7 @@ def send_mail_weekly_portfolio(portfolio_details,user,applicant_name,domain_over
     else:
         userName = user.email
     context = {     
-             'domain': settings.SITE_BASE_URL,
+             'domain': settings.SITE_API_BASE_URL,
              'site_name': "Finaskus",
              'user': user,
              'user_name':userName,
@@ -494,4 +517,17 @@ def send_mail_weekly_portfolio(portfolio_details,user,applicant_name,domain_over
     send_mail(subject_template_name, email_template_name, context, from_email, user.email,
                           html_email_template_name=html_email_template_name) 
     
-    
+
+def send_mail_admin_next_sip(users,target_date, domain_override=None, subject_template_name='transaction/sip-reminder-subject.txt',
+                                     email_template_name='transaction/sip_reminder_users_list.html', use_https=False,
+                                     token_generator=default_token_generator, from_email=None,
+                                     request=None,html_email_template_name=None, extra_email_context=None):
+    context = {     
+             'domain': settings.SITE_API_BASE_URL,
+             'site_name': "Finaskus",
+             'users': users,
+             'target_date':target_date,
+             'protocol': 'https' if use_https else 'http',
+               }
+    send_mail(subject_template_name, email_template_name, context, from_email, settings.DEFAULT_TO_EMAIL,
+              html_email_template_name=None)    
