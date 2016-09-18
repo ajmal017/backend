@@ -83,7 +83,7 @@ def reminder_next_sip_allotment():
                 
                 user_fund_order_items,bank_details,applicant_name,total_sip =  reminder_next_sip_detail(fund_order_items,target_date,user)   
                 profiles_helpers.send_mail_reminder_next_sip(user_fund_order_items,target_date,total_sip,bank_details,applicant_name,user,use_https=settings.USE_HTTPS)    
-    if users is not None:
+    if len(users) > 0:
         profiles_helpers.send_mail_admin_next_sip(users,target_date,use_https=settings.USE_HTTPS)
   
 def reminder_next_sip_detail(fund_order_items,target_date,user):
