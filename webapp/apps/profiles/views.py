@@ -217,7 +217,8 @@ class Register(APIView):
                                       constants.PHONE_EXISTS)
         if serializer.is_valid():
             if flag:
-                user = models.User.objects.create_user(email=email, username=email, password=password, phone_number=phone)
+                username = serializer.validated_data.get("email")
+                user = models.User.objects.create_user(email=email, username=username, password=password, phone_number=phone)
             user.image = request.FILES.get("image", None)
             user.identity_info_image = request.FILES.get("image", None)
             user.save()
@@ -384,9 +385,6 @@ class ProfileCompleteness(APIView):
             except models.InvestorBankDetails.DoesNotExist:
                 flag_data['is_bank_supported'] = False
 
-            logger = logging.getLogger('django.info')
-            logger.info("is bank supported: " + str(flag_data['is_bank_supported']))
-            
             flag_data['is_virtual'] = False
             if request.user.orderdetail_set.all().count() == 0:
                 flag_data['is_virtual'] = True

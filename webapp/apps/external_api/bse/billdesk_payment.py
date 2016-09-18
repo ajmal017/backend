@@ -22,7 +22,7 @@ class BillDeskPayment(object):
     def generateBSEUploadFile(self, txns):
         from payment import models as payment_models
 
-        dt_today_str = date.today().strftime("%d%m%y")
+        dt_today_str = date.today().strftime("%d%m%Y")
         out_filename = 'FW_FUN_' + dt_today_str + '.txt'
         out_file, out_filepath = self.createOutputFile(out_filename)
         
@@ -37,7 +37,7 @@ class BillDeskPayment(object):
                             if not fund_order_item.bse_transaction_id:
                                 missing_order_ids.append(fund_order_item)
                             else:
-                                bse_order_dict = OrderedDict([('ORDER DATE', fund_order_item.modified_at.strftime('%d/%m/%y')), 
+                                bse_order_dict = OrderedDict([('ORDER DATE', fund_order_item.modified_at.strftime('%d/%m/%Y')), 
                                                            ('Order ID', str(fund_order_item.bse_transaction_id)),
                                                            ('Client Code', str(pay.user.finaskus_id)),
                                                            ('Order Val AMOUNT', str(fund_order_item.order_amount))])
