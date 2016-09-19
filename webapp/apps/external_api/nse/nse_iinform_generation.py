@@ -11,7 +11,7 @@ from subprocess import call
 import time
 
 
-def bse_investor_info_generator(user_id):
+def nse_investor_info_generator(user_id):
     """
 
     :param user_id: id of user for whom the bse investor info is to be generated
@@ -39,19 +39,12 @@ def bse_investor_info_generator(user_id):
      "BankCity" : investor_bank.ifsc_code.city,
      "BankCountry" : constants.INDIA,
      "BankPincode" : None,
-     "BankState" : investor_bank.ifsc_code.state,
      "Branch" : investor_bank.ifsc_code.bank_branch,
-     "BrokerAgentCodeARN" : "108537",
      "City" : contact.communication_address.pincode.city,
      "ContactAddress" : contact.communication_address.address_line_1,
      "Country" : constants.INDIA,
-     "CountryofTaxResidence" : constants.INDIA,
-     "CountryofTaxResidence_2" : None,
-     "CountryofTaxResidence_3" : None,
      "DateofBirth" : investor.dob.strftime('%d-%m-%Y'),
-     "DateofBirth_2" : None,
-     "DateofBirth_3" : None,
-     "EUIN" : "E148376",
+     "DpId" : None,
      "Email" : contact.email,
      "FatherName" : investor.father_name,
      "FaxOff" : None,
@@ -59,12 +52,6 @@ def bse_investor_info_generator(user_id):
      "GuardianNameIfNomineeMinor" : nominee.guardian_name if nominee else None,
      "GuardianPAN" : None,
      "IFSCCode" : investor_bank.ifsc_code.ifsc_code,
-     "IncomeTaxSlabNetworth" : None,  # TODO
-     "IncomeTaxSlabNetworth_2" : None,
-     "IncomeTaxSlabNetworth_3" : None,
-     "KYC" : investor.kra_verified,
-     "KYC_2" : None,
-     "KYC_3" : None,
      "Mobile" : contact.phone_number,
      "ModeofHolding" : None,  # TODO
      "MotherName" : None,  # TODO
@@ -79,10 +66,6 @@ def bse_investor_info_generator(user_id):
      "NomineePincode" : nominee.nominee_address.pincode.pincode,
      "NomineeRelationship" : nominee.get_relationship_with_investor_display() if nominee else None,
      "NomineeState" : nominee.nominee_address.pincode.state,
-     "Occupation" : investor.get_occupation_type_display() if investor.occupation_type != "OTH" else investor.occupation_specific,
-     "OccupationDetails" : None,
-     "OccupationDetails_2" : None,
-     "OccupationDetails_3" : None,
      "OverseasAddress" : None,
      "OverseasCity" : None,
      "OverseasCountry" : None,
@@ -91,22 +74,10 @@ def bse_investor_info_generator(user_id):
      "PANNumber_2" : None,
      "PANNumber_3" : None,
      "Pincode" : contact.communication_address.pincode.pincode,
-     "PlaceofBirth" : None,
-     "PlaceofBirth_2" : None,
-     "PlaceofBirth_3" : None,
-     "PoliticallyExposedNo" : False if investor.political_exposure == 2 else True,
-     "PoliticallyExposedNo_2" : None,
-     "PoliticallyExposedNo_3" : None,
-     "PoliticallyExposedYes" : True if investor.political_exposure == 2 else False,
-     "PoliticallyExposedYes_2" : None,
-     "PoliticallyExposedYes_3" : None,
-     "SUBBROKER" : None,
      "SignatureDate" : curr_date.strftime('%d-%m-%Y'),
      "SignaturePlace" : contact.communication_address.pincode.city,
      "State" : contact.communication_address.pincode.state,
-     "TaxIdNo" : None,  # TODO
-     "TaxIdNo_2" : None,
-     "TaxIdNo_3" : None,
+     "TaxStatus" : None,  # TODO
      "TelOff" : None,
      "TelRes": None
      }
@@ -138,11 +109,11 @@ def bse_investor_info_generator(user_id):
     fdf_file.close()
 
     base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps', '')
-    bse_investor_pdf_path = base_dir + '/bse_docs/'
+    bse_investor_pdf_path = base_dir + '/nse_docs/'
     output_path = base_dir + '/webapp/static/'
-    aof_file_name = bse_investor_pdf_path + "aof.pdf"
+    iin_file_name = bse_investor_pdf_path + "iin.pdf"
 
-    call(("pdftk " + aof_file_name + " fill_form %s output " % temp_file_name + output_path + "%s flatten"
+    call(("pdftk " + iin_file_name + " fill_form %s output " % temp_file_name + output_path + "%s flatten"
           % out_file_name).split())
     # remove the temporary generated fdf file.
     call(("rm " + temp_file_name).split())
@@ -155,9 +126,9 @@ def bse_investor_info_generator(user_id):
     # list of individual image type/size (passport/signature) they are based on international standards.
     image_sizes = [constants.TIFF_SIGNATURE_SIZE, ]
 
-    aof_destination_file_name = "aof_destination" + timestamp + ".pdf"
+    iin_destination_file_name = "iin_destination" + timestamp + ".pdf"
 
-    dest = output_path + aof_destination_file_name  # the final pdf with all images in place.
+    dest = output_path + iin_destination_file_name  # the final pdf with all images in place.
     exist = output_path + out_file_name   # the source pdf without the images.
     coords = [(125, 24), ]  # the lower left bottom corner
     #  co-ordinates for each of the images.
@@ -171,9 +142,5 @@ def bse_investor_info_generator(user_id):
     embed_images(list_of_embeddable_images, image_sizes, coords, target_pages, images_count_each_page, dest, exist)
     # following generates the tiff file.
 
-    final_tiff_file_name = generate_tiff(output_path + aof_destination_file_name, investor_bank.bank_cheque_image)
+    final_tiff_file_name = generate_tiff(output_path + iin_destination_file_name, investor_bank.bank_cheque_image)
     return output_path + final_tiff_file_name
-
-
-def get_tiff(user_id):
-    return
