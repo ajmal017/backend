@@ -1,4 +1,5 @@
 .settings
+.idea
 **/__pycache__
 error_log
 webapp/media

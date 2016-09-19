@@ -1,6 +1,6 @@
 from django.utils.translation import ugettext_lazy as _
 
-from webapp.conf import settings
+from webapp.conf import local_settings as settings
 
 OPERATOR_UNKNOWN = 0
 OPERATOR_MGAGE = 1
@@ -47,6 +47,7 @@ CATEGORY_NAV_API = 'http://api.morningstar.com/v2/service/mf/mk2ipzwesb5qricc/un
 HISTORICAL_NAV_CATEGORY_API = 'http://api.morningstar.com/service/mf/CategoryTotalReturnIndex?accesscode='
 
 EXCHANGE_RATE_API = 'http://www.morningstar.in/exchangerate/'
+
 
 CATEGORY_ID = '&categoryId='
 UNIVERSE = '&universe=FO'
@@ -227,6 +228,7 @@ HOLDINGS = "holdings"
 SUCCESS = "success"
 FAIL = 'fail'
 CONNECTION_ERROR = 'Connection Error'
+HTTP_ERROR = 'HTTP Error'
 NO_DATA_RECEIVED = 'No data received'
 ID = '_id'
 API = 'api'

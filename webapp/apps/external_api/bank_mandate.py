@@ -1,3 +1,4 @@
+from external_api.utils import generate_tiff
 from profiles import models, utils
 
 from num2words import num2words
@@ -27,10 +28,10 @@ def generate_bank_mandate_file(user, order_items):
         total_sip += item.agreed_sip
     total_sip = max(total_sip, 100000)
     bank_mandate_dict = OrderedDict([('Member Code', cons.MEMBER_CODE),
-                                      ('UCC', str(user.finaskus_id)),
-                                      ('Amount', str(total_sip)),
-                                      ('IFSC Code', user.investorbankdetails.ifsc_code.ifsc_code),
-                                      ('Account Number', user.investorbankdetails.account_number), ])
+                                     ('UCC', str(user.finaskus_id)),
+                                     ('Amount', str(total_sip)),
+                                     ('IFSC Code', user.investorbankdetails.ifsc_code.ifsc_code),
+                                     ('Account Number', user.investorbankdetails.account_number), ])
     outfile.write("|".join(bank_mandate_dict.values()))
     outfile.write("\r")
     outfile.close()
@@ -71,7 +72,7 @@ def generate_bank_mandate_pdf(user_id):
         'MandateReferenceNo': user.mandate_reg_no,
         'MandateUCC': investor.user.finaskus_id,
     }
-    
+
     for key, value in mandate_dict.items():
         if value is None:
             mandate_dict[key] = ""
@@ -108,3 +109,15 @@ def generate_bank_mandate_pdf(user_id):
     call(("rm " + temp_file_name).split())
 
     return output_path + out_file_name
+
+
+def generate_bank_mandate_tiff(user_id):
+    """
+    This function fills the bank mandate pdf with pertinent user's data and convert it into tiff format.
+    :param user_id: The id of the user for whom the mandate is generated.
+    :return: path of the generated mandate tiff.
+    """
+    pdf_path = generate_bank_mandate_pdf(user_id)
+    output_path = os.path.dirname(pdf_path)
+    final_tiff_file_name = generate_tiff(pdf_path, bank_cheque_image = None)
+    return output_path + final_tiff_file_name
