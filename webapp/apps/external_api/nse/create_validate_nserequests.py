@@ -27,7 +27,6 @@ def getValidRequest(investor_dict, root):
 def changeDobFormat(dob):
     return '01-Jan-1990'
 
-
 def getiinrequest(root, user_id):
     """
 
@@ -184,7 +183,6 @@ def createcustomerrequest(root, user_id):
     }
 
     return getValidRequest(investor_dict, root)
-
 
 def purchasetxnrequest(root, user_id):
     """
