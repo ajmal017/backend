@@ -213,6 +213,7 @@ NSE_NMF_BROKER_CODE = "ARN-108537"
 # NSE REQUEST XML
 
 METHOD_CREATECUSTOMER = "CREATECUSTOMER"
+METHOD_IINDETAILS = "IINDETAILS"
 METHOD_PURCHASETXN = "PURCHASETRXN"
 METHOD_UPLOADIMG = "UPLOADIMG"
 METHOD_GETIIN = "GETIIN"
@@ -343,6 +344,15 @@ REQUEST_GETIIN = '''<NMFIIService>
                     <guardian_pan></guardian_pan>
                     </service_request>
                 </NMFIIService>'''
+
+REQUEST_IINDETAILS = '''<NMFIIService>
+                        <service_request>
+                        <appln_id>''' + NSE_NMF_APPL_ID + '''</appln_id>
+                        <password>''' + NSE_NMF_PASSWORD + '''</password>
+                        <broker_code>''' + NSE_NMF_BROKER_CODE + '''</broker_code>
+                        <iin></iin>
+                        </service_request>
+                    </NMFIIService>'''
 
 REQUEST_PURCHASETXN = '''<NMFIIService>
                             <service_request>
