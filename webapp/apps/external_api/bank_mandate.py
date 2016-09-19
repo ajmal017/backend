@@ -1,3 +1,4 @@
+from external_api.utils import generate_tiff
 from profiles import models, utils
 
 from num2words import num2words
@@ -24,10 +25,10 @@ def generate_bank_mandate_file(user, order_detail):
     outfile = open(output_path + bank_mandate_pipe_file_name, "w")
     total_sip = utils.get_investor_mandate_amount(user, order_detail)
     bank_mandate_dict = OrderedDict([('Member Code', cons.MEMBER_CODE),
-                                      ('UCC', str(user.finaskus_id)),
-                                      ('Amount', str(total_sip)),
-                                      ('IFSC Code', user.investorbankdetails.ifsc_code.ifsc_code),
-                                      ('Account Number', user.investorbankdetails.account_number), ])
+                                     ('UCC', str(user.finaskus_id)),
+                                     ('Amount', str(total_sip)),
+                                     ('IFSC Code', user.investorbankdetails.ifsc_code.ifsc_code),
+                                     ('Account Number', user.investorbankdetails.account_number), ])
     outfile.write("|".join(bank_mandate_dict.values()))
     outfile.write("\r")
     outfile.close()
@@ -71,7 +72,7 @@ def generate_bank_mandate_pdf(user_id):
         'MandateReferenceNo': user.mandate_reg_no,
         'MandateUCC': investor.user.finaskus_id,
     }
-    
+
     for key, value in mandate_dict.items():
         if value is None:
             mandate_dict[key] = ""
@@ -108,3 +109,4 @@ def generate_bank_mandate_pdf(user_id):
     call(("rm " + temp_file_name).split())
 
     return output_path + out_file_name, None
+

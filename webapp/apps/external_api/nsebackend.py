@@ -1,17 +1,11 @@
-from . import constants, helpers, utils
-from django.conf import settings
-
 from rest_framework import status
-
-from webapp.apps import generate_error_message
+from .nse import constants as nse_constants
+from . import constants
+import os
 from api import utils as api_utils
-from core import models as core_models
-from . import constants, helpers, utils
-
+import xml.etree.ElementTree as ET
 import requests
 import logging
-from xml.etree import ElementTree
-from datetime import date, timedelta, datetime
 
 
 class NSEBackend():
@@ -19,19 +13,34 @@ class NSEBackend():
     A wrapper that manages the NSE Purchase Transactions Backend
     """
 
-    def _get_data(self, api_url, xml_request_body):
+    def _get_data(self, method_name, xml_request_body):
         """
 
         :param api_url:
-        :return:
+        :return: XML Element
         """
-        mail_logger = logging.getLogger('django.info')
+        api_url = nse_constants.NSE_NMF_BASE_API_URL + method_name
+        error_logger = logging.getLogger('django.error')
         try:
-            headers = {'Content-Type': 'application/xml'}
-            return requests.post(api_url, data=xml_request_body, headers=headers)
+            headers = {'Content-Type': 'application/xml', 'accept': 'application/xml'}
+            response = requests.request("POST", api_url, data=xml_request_body, headers=headers)
+            if response.status_code == requests.codes.ok:
+                element = ET.fromstring(response.text)
+                root = element.find(nse_constants.RESPONSE_BASE_PATH)
+                return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
+                if return_code == nse_constants.RETURN_CODE_SUCCESS:
+                    return root.find(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
+                else:
+                    error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
+                    for error in error_responses:
+                        error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text
+                        error_logger.info(error_msg)
+            response.raise_for_status()
         except ConnectionError:
-            mail_logger.info(constants.CONNECTION_ERROR + api_url)
-            return api_utils.response({constants.MESSAGE: "error"}, status.HTTP_408_REQUEST_TIMEOUT, "error")
+            error_logger.info(constants.CONNECTION_ERROR + api_url)
+        except requests.HTTPError:
+            error_logger.info(constants.HTTP_ERROR + api_url)
+
 
     def _get_request_body(self, api_url):
 
@@ -40,48 +49,70 @@ class NSEBackend():
         :param api_url:
         :return:
         """
-        if api_url == constants.NSE_GETIIN:
-            return """<NMFIIService> <service_request>
+        if api_url == nse_constants.METHOD_GETIIN:
+            root = ET.fromstring(nse_constants.REQUEST_GETIIN)
+            # Have to add values in the template before forming xml body
+            return ET.tostring(root)
+        elif api_url == nse_constants.METHOD_IINDETAILS:
+            root = ET.fromstring(nse_constants.REQUEST_IINDETAILS)
+            root = tree.getroot()
+            # Have to add values in the template before forming xml body
+            return ET.tostring(root)
+        elif api_url == nse_constants.METHOD_CREATECUSTOMER:
+            root = ET.fromstring(nse_constants.REQUEST_CREATECUSTOMER)
+            root = tree.getroot()
+            # Have to add values in the template before forming xml body
+            return ET.tostring(root)
+        elif api_url == nse_constants.METHOD_PURCHASETXN:
+            root = ET.fromstring(nse_constants.REQUEST_PURCHASETXN)
+            root = tree.getroot()
+            # Have to add values in the template before forming xml body
+            return ET.tostring(root, encoding='utf8', method='xml')
+        return
 
-< appln_id > KRISHNA < / appln_id > < password > TEST$258 < / password > < broker_code > ARN - 70209 < / broker_code > < tax_status > 01 < / tax_status > < hold_nature > SI < / hold_nature > < exempt_flag > N < / exempt_flag > < fh_pan > ABAPL9854C < / fh_pan > < jh1_exempt_flag > N < / jh1_exempt_flag > < jh1_pan > < / jh1_pan > < jh2_exempt_flag > N < / jh2_exempt_flag > < jh2_pan > < / jh2_pan > < guardian_pan > < / guardian_pan > / service_request >
-< / NMFIIService > """
 
+    def get_iin(self):
+        """
 
-def get_iin(self):
-    """
-    to get IIN OR CUSTOMER ID
-    :return:
-    """
-    xml_request_body = self._get_request_body(constants.NSE_GETIIN)
+        :param:
+        :return:
+        """
+        xml_request_body = self._get_request_body(nse_constants.METHOD_GETIIN)
+        response_element = self._get_data(nse_constants.METHOD_GETIIN, xml_request_body=xml_request_body)
+        return response_element
 
-    xml_response_data = self._get_data(constants.NSE_GETIIN, xml_request_body)
+    def create_customer(self):
+        """
 
-    print(xml_response_data)
-    # fields = {}
-    # if json_data[constants.STATUS][constants.CODE] != 0:
-    #     return api_utils.response({constants.MESSAGE: json_data[constants.STATUS][constants.MESSAGE]},
-    #                               json_data[constants.STATUS][constants.CODE],
-    #                               generate_error_message(json_data[constants.STATUS][constants.MESSAGE]))
-    # else:
-    #     logger = logging.getLogger('django.error')
-    #     for fund in json_data[constants.DATA]:
-    #         does_exist = True
-    #         try:
-    #             earlier_fund = core_models.Fund.objects.get(mstar_id=fund.get(constants.ID))
-    #         except core_models.Fund.DoesNotExist:
-    #             earlier_fund = None
-    #             does_exist = False
-    #         for field in constants.FIELDS_FUND_API:
-    #             if field == constants.BENCHMARK:
-    #                 benchmark_list_of_fund = fund.get(constants.API).get(constants.FUND_MAP[field])
-    #                 fields[field] = benchmark_list_of_fund[0].get(constants.INDEX_NAME)
-    #             else:
-    #                 fields[field] = fund.get(constants.API).get(constants.FUND_MAP[field])
-    #             if fields[field] is None:
-    #                 logger.error(helpers.generate_logger_message(field, fund))
-    #                 if does_exist:
-    #                     fields[field] = getattr(earlier_fund, field)
-    #                 else:
-    #                     fields[field] = 0
-    #         core_models.Fund.objects.update_or_create(isin=fields.get("isin"), defaults=fields)
-    #     return api_utils.response(({constants.MESSAGE: constants.SUCCESS}, status.HTTP_200_OK))
+        :param:
+        :return:
+        """
+        xml_request_body = self._get_request_body(nse_constants.METHOD_CREATECUSTOMER)
+        response_element = self._get_data(nse_constants.METHOD_CREATECUSTOMER, xml_request_body=xml_request_body)
+        return response_element
+
+    def get_iin_details(self):
+        """
+
+        :param:
+        :return:
+        """
+        xml_request_body = self._get_request_body(nse_constants.METHOD_IINDETAILS)
+        response_element = self._get_data(nse_constants.METHOD_IINDETAILS, xml_request_body=xml_request_body)
+        return response_element
+
+    def purchase_trxn(self, type="sip"):
+        """
+
+        :param:
+        :return:
+        """
+        # Make trxn based on type value either "sip or lumpsum"
+
+        xml_request_body = self._get_request_body(nse_constants.METHOD_PURCHASETXN)
+        response_element = self._get_data(nse_constants.METHOD_PURCHASETXN, xml_request_body=xml_request_body)
+        return response_element
+
+    def upload_img(self, customer_id, ref_no='', image_type=''):
+        queryString = "?BrokerCode=" + "ARN-108537" + "&Appln_id=" + "MFS108537" + "&Password=" + "test$258" + "&CustomerID=" + customer_id  + "&Refno=" + ref_no + "&ImageType=" + image_type
+        api_url = nse_constants.NSE_UPLOAD_IMG_URL + queryString
