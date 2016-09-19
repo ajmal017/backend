@@ -20,6 +20,10 @@ urlpatterns = [
     url(r'^generate/bse/order/pipe/$', views.GenerateBseOrderPipe.as_view(), name='generate_bse_order_pipe'),
     url(r'^generate/bse/redeem/pipe/$', views.GenerateBseRedeemPipe.as_view(), name='generate_bse_redeem_pipe'),
     url(r'^generate/xsip/registration/$', views.GenerateXsipRegistration.as_view(), name='generate_xsip_Registration'),
+<<<<<<< 353c7cd585b4ca9819d784faf05a2b6f8797344d
     url(r'^generate/bank/mandate/$', views.GenerateBankMandateRegistration.as_view(), name='generate_bank_mandate'),
+=======
+    url(r'^generate/bank/mandate/$', views.GenerateBankMandate.as_view(), name='generate_bank_mandate'),
+>>>>>>> Made image upload and complete flow setup
     url(r'^nse/order/$', views.NseOrder.as_view(), name='nse_order')
 ]
