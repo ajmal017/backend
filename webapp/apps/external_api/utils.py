@@ -119,7 +119,7 @@ def generate_tiff(pdf_name, bank_cheque_image):
         actual_image = Image.open("webapp" + bank_cheque_image.url)
         original_size = actual_image.size  # actual image dimensions (width, height)
         size = constants.TIFF_LANDSCAPE_SIZE  # assume by default landscape.
-        if original_size[1] >= 1200:
+        if original_size[0] < original_size[1]:
             # the original image is portrait.
             size = constants.TIFF_PORTRAIT_SIZE
             if settings.ROTATE_IMAGE:
@@ -129,17 +129,21 @@ def generate_tiff(pdf_name, bank_cheque_image):
 
         # aspect ratio maintenance logic.
         image_w, image_h = actual_image.size
-        aspect_ratio = image_w / float(image_h)
-        new_height = int(size[0] / aspect_ratio)
-        # note it is width X height always, in real life too not just python.
-        # portrait is 800 x 1,200 these are minimum dimensions.
-        # landscape is 1,024 x 512 these are minimum dimensions.
-        if new_height < 1200:
-            size = constants.TIFF_LANDSCAPE_SIZE
+        if (size == constants.TIFF_LANDSCAPE_SIZE and (image_w > 1920 or image_w < 840)) or \
+            (size == constants.TIFF_PORTRAIT_SIZE and (image_h > 1920 or image_h < 840)):
+            aspect_ratio = image_w / float(image_h)
+            new_height = int(size[0] / aspect_ratio)
+            # note it is width X height always, in real life too not just python.
+            # portrait is 800 x 1,200 these are minimum dimensions.
+            # landscape is 1,024 x 512 these are minimum dimensions.
+            if new_height < 1200:
+                size = constants.TIFF_LANDSCAPE_SIZE
+            else:
+                # the given image is portrait
+                size = constants.TIFF_PORTRAIT_SIZE
+            resized_image = actual_image.resize(size, Image.ANTIALIAS)
         else:
-            # the given image is portrait
-            size = constants.TIFF_PORTRAIT_SIZE
-        resized_image = actual_image.resize(size, Image.ANTIALIAS)
+            resized_image = actual_image
         """
         temp_image_outfile = open(out_image_png_file, 'wb')
         resized_image.save(temp_image_outfile, "PNG", optimize=True)
