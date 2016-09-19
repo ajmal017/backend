@@ -305,7 +305,11 @@ REQUEST_CREATECUSTOMER = '''<NMFIIService>
                         <nominee2_guard_name></nominee2_guard_name>
                         <nominee2_guard_pan></nominee2_guard_pan>
                         <nominee3_type></nominee3_type>
+<<<<<<< f8172654525d58a110afc11d300d114e1e941bdf
                         <nominee3_name></nominee3_name>
+=======
+                        <nominee3_Name></nominee3_Name>
+>>>>>>> Made request Constants and validation rule for request xml body
                         <nominee3_dob></nominee3_dob>
                         <nominee3_relation></nominee3_relation>
                         <nominee3_percent></nominee3_percent>
@@ -395,7 +399,11 @@ REQUEST_PURCHASETXN = '''<NMFIIService>
                             <nominee2_percent><nominee2_percent>
                             <nominee2_guard_name></nominee2_guard_name>
                             <nominee2_guard_pan></nominee2_guard_pan>
+<<<<<<< f8172654525d58a110afc11d300d114e1e941bdf
                             <nominee3_name></nominee3_name>
+=======
+                            <nominee3_Name></nominee3_Name>
+>>>>>>> Made request Constants and validation rule for request xml body
                             <nominee3_dob></nominee3_dob>
                             <nominee3_relation></nominee3_relation>
                             <nominee3_percent></nominee3_percent>
