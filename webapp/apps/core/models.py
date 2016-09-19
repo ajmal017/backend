@@ -37,7 +37,7 @@ def investor_info_check(user):
     return applicant_name
 
 
-def order_detail_info_function(order_detail):
+def order_detail_info_function(order_detail,portfolio):
     from external_api import bank_mandate
     
     try:
@@ -47,27 +47,25 @@ def order_detail_info_function(order_detail):
                     
     sip_tenure = 0
     goal_tenure_len = 0
-    if order_detail.fund_order_items.all() is not None:
-        portfolio = order_detail.fund_order_items.all()[:1].get().portfolio_item.portfolio
-        try:
-            sip_tenure,goal_tenure_len = order_detail.user.get_sip_tenure(portfolio)
-        except: 
-            sip_tenure = 0
-            goal_tenure_len = 0
+    try:
+        sip_tenure,goal_tenure_len = order_detail.user.get_sip_tenure(portfolio)
+    except: 
+        sip_tenure = 0
+        goal_tenure_len = 0
             
     if order_detail.user.mandate_status == "0": 
         email_attachment,attachment_error = bank_mandate.generate_bank_mandate_pdf(order_detail.user.id)
     else:
         email_attachment = None
         attachment_error = None
-                                
+                                    
     order_info = order_detail
     order_info.fund_order_list = []
     order_info.nav_list = []
     order_info.unit_alloted = True
     order_info.all_sips = []
     order_info.all_lumpsums = []
-                    
+                        
     """
     Get the all the portfolio items
     """ 
@@ -92,41 +90,41 @@ def order_detail_info_function(order_detail):
                         print("Unit has not alloted for the order detail")
                         break
             if order_info.unit_alloted == False:
-                        print("Unit has not alloted for the order detail")
-                        break 
+                print("Unit has not alloted for the order detail")
+                break 
     return order_info,applicant_name,order_detail.user,email_attachment,attachment_error,sip_tenure,goal_tenure_len      
 
 
 def order_detail_transaction_mail_send(order_detail):
     #check Order Details information
     if order_detail is not None and order_detail.order_status == 2:
-        if order_detail.is_lumpsum == True:
-            order_info,applicant_name,order_detail.user,email_attachment,attachment_error,sip_tenure,goal_tenure_len = order_detail_info_function(order_detail)           
-            first_order = True
-            msg = profile_helpers.send_transaction_change_email(first_order,order_info,applicant_name,order_detail.user,email_attachment,attachment_error,sip_tenure,goal_tenure_len,use_https=settings.USE_HTTPS)
-            if msg == "success":
-                response = "Email Send Successfully to the Investor"
+        fund_order_items = order_detail.fund_order_items.all()
+        if len(fund_order_items) > 0:
+            portfolio = fund_order_items.first().portfolio_item.portfolio
+            if order_detail.is_lumpsum == True:
+                order_info,applicant_name,order_detail.user,email_attachment,attachment_error,sip_tenure,goal_tenure_len = order_detail_info_function(order_detail,portfolio)           
+                first_order = True
+                msg = profile_helpers.send_transaction_change_email(first_order,order_info,applicant_name,order_detail.user,email_attachment,attachment_error,sip_tenure,goal_tenure_len,use_https=settings.USE_HTTPS)
+                if msg == "success":
+                    response = "Email Send Successfully to the Investor"
+                else:
+                    response = "Unit alloted is not available , Email Send to the Admin."
+                return response
             else:
-                response = "Unit alloted is not available , Email Send to the Admin."
-    
-            return response
-        else:
-            if order_detail.fund_order_items.all() is not None:
-                investment_date = order_detail.fund_order_items.all()[:1].get().portfolio_item.portfolio.investment_date
+                investment_date = portfolio.investment_date
                 if datetime.datetime.date(order_detail.created_at) > investment_date:
-                    order_info,applicant_name,order_detail.user,email_attachment,attachment_error,sip_tenure,goal_tenure_len = order_detail_info_function(order_detail)
+                    order_info,applicant_name,order_detail.user,email_attachment,attachment_error,sip_tenure,goal_tenure_len = order_detail_info_function(order_detail,portfolio)
                     first_order = False
                     msg = profile_helpers.send_transaction_change_email(first_order,order_info,applicant_name,order_detail.user,email_attachment,attachment_error,sip_tenure,goal_tenure_len,use_https=settings.USE_HTTPS)
                     if msg == "success":
                         response = "Email Send Successfully to the Investor"
                     else:
                         response = "Unit alloted is not available , Email Send to the Admin."
-    
                     return response
                 else:
                     return "Order detail should be the following SIP"
-            else:
-                return "Order has no fund order items"
+        else:
+            return "Order detail has no fund order items"
     else:
         return "Please mark the order detail status to complete"
         
