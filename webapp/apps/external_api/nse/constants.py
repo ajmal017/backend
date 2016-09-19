@@ -162,6 +162,7 @@ INSTRM_DATE_XPATH = './instrm_date'
 INSTRM_BRANCH_XPATH = './instrm_branch'
 INSTRM_CHARGES_XPATH = './instrm_charges'
 MICR_XPATH = './micr'
+MICR_NO_XPATH = './micr_no'
 RTGS_CODE_XPATH = './rtgs_code'
 NEFT_IFSC_XPATH = './neft_ifsc'
 ADVISIORY_CHARGE_XPATH = './advisory_charge'
@@ -177,12 +178,15 @@ SIP_AC_TYPE_XPATH = './sip_ac_type'
 SIP_IFSC_CODE_XPATH = './sip_ifsc_code'
 UMRN_XPATH = './umrn'
 ACH_AMT_XPATH = './ach_amt'
+ACH_AMOUNT_XPATH = './ach_amount'
 ACH_FROM_DATE_XPATH = './ach_fromdate'
+ACH_TO_DATE_XPATH = './ach_todate'
 ACH_END_DATE_XPATH = './ach_enddate'
 UNTIL_CANCELLED_XPATH = './until_cancelled'
 RETURN_PAYMENT_FLAG_XPATH = './Return_paymnt_flag'
 CLIENT_CALLBACK_URL_XPATH = './Client_callback_url'
 TRANS_COUNT_XPATH = './trans_count'
+UC_XPATH = './uc'
 
 # NSE VARIABLES
 
@@ -431,21 +435,19 @@ REQUEST_PURCHASETXN = '''<NMFIIService>
 
 REQUEST_ACHMANDATEREGISTRATIONS = '''<NMFIIService>
                                          <service_request>
-                                            <appln_id>KGNANA</appln_id>
-                                             <password>HJR$W34F3</password>
-                                              <broker_code>ARN-44332</broker_code>
-                                               <iin>5011006336</iin>
-                                                <acc_no>1234567890</acc_no>
-                                            <acc_type>SB</acc_type>
-                                            <ifsc_code>HDFC0125484</ifsc_code>
-                                            <bank_name>HDF</bank_name>
-                                            <branch_name>chennai</branch_name>
+                                            <appln_id>''' + NSE_NMF_APPL_ID + '''</appln_id>
+                                            <password>''' + NSE_NMF_PASSWORD + '''</password>
+                                            <broker_code>''' + NSE_NMF_BROKER_CODE + '''</broker_code>
+                                            <iin></iin>
+                                            <acc_no></acc_no>
+                                            <acc_type></acc_type>
+                                            <ifsc_code></ifsc_code>
+                                            <bank_name></bank_name>
+                                            <branch_name></branch_name>
                                             <micr_no></micr_no>
-                                            <uc>Y</uc>
-                                            <ach_fromdate>22-Feb-2016</ach_fromdate>
-                                             <ach_todate>22-Feb-2017</ach_todate>
-                                             <ach_amount>5000</ach_amount>
-                                             </service_request>
-                                    </NMFIIService>
-
-'''
+                                            <uc></uc>
+                                            <ach_fromdate></ach_fromdate>
+                                            <ach_todate></ach_todate>
+                                            <ach_amount></ach_amount>
+                                        </service_request>
+                                    </NMFIIService>'''
