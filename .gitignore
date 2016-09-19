@@ -3,4 +3,6 @@
 **/__pycache__
 error_log
 webapp/media
+webapp/statics
+*.pyc
 *.swp
