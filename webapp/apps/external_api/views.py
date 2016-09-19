@@ -269,6 +269,22 @@ class GenerateBankMandate(View):
             # non-admin is trying to access the file. Prevent access.
             return HttpResponse(constants.FORBIDDEN_ERROR, status=403)
 
+class NseOrder(View):
+    """
+    An api to generate bank mandate.
+    """
+
+    def get(self, request):
+        """
+
+        :param request: user_id of the user and payment type online/offline.
+        :return: send the payment link url
+        """
+        #getiin, if error create customer and then recieve iin and save to db
+        #depending on txn type sip/lumpsum make requests for payment link if online
+
+        return
+
 
 class NseOrder(View):
     """
