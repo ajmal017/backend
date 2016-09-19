@@ -3,7 +3,8 @@
 **/__pycache__
 error_log
 webapp/media
-*.swp
-**/.DS_Store
+webapp/statics
+*.pyc
+*.swp**/.DS_Store
 webapp/static
 webapp/conf/local_settings.py
