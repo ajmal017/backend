@@ -1,6 +1,5 @@
 NO_DATA_FOUND = 'No Data Found'
 
-
 # XPATHS FOR READING NSE_RESPONSE FIELDS
 
 RESPONSE_BASE_PATH = './{urn:schemas-microsoft-com:xml-diffgram-v1}diffgram/NMFIISERVICES'

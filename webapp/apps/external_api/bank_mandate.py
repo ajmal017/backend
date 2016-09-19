@@ -108,7 +108,7 @@ def generate_bank_mandate_pdf(user_id):
 
     call(("rm " + temp_file_name).split())
 
-    return output_path + out_file_name
+    return output_path + out_file_name, None
 
 
 def generate_bank_mandate_tiff(user_id):
