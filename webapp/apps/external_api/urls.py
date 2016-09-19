@@ -20,4 +20,5 @@ urlpatterns = [
     url(r'^generate/bse/redeem/pipe/$', views.GenerateBseRedeemPipe.as_view(), name='generate_bse_redeem_pipe'),
     url(r'^generate/xsip/registration/$', views.GenerateXsipRegistration.as_view(), name='generate_xsip_Registration'),
     url(r'^generate/bank/mandate/$', views.GenerateBankMandate.as_view(), name='generate_bank_mandate'),
+    url(r'^nse/order/$', views.NseOrder.as_view(), name='nse_order')
 ]
