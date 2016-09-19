@@ -133,7 +133,7 @@ class NseBackend():
         api_url = nse_constants.NSE_NMF_BASE_API_URL + nse_constants.METHOD_UPLOADIMG + queryString
         filePath = ""
         if image_type == "A":
-            filePath = nse_iinform_generation.get_tiff(user_id)
+            filePath = nse_iinform_generation.nse_investor_info_generator(user_id)
         elif image_type == "X":
             filePath = debit_mandate.get_tiff(user_id)
 
