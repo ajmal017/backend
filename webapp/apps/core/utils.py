@@ -74,7 +74,6 @@ def reminder_next_sip_allotment():
     curr_date = date.today()
     target_date = curr_date + timedelta(days=settings.SIP_REMINDER_DAYS)
     fund_order_items = models.FundOrderItem.objects.filter(next_allotment_date = target_date , order_amount__gt=0 , agreed_sip__gt=0)      
-    
     users = []
     if fund_order_items is not None:
         for fund_order_item in fund_order_items:
@@ -84,13 +83,14 @@ def reminder_next_sip_allotment():
                 
                 user_fund_order_items,bank_details,applicant_name,total_sip =  reminder_next_sip_detail(fund_order_items,target_date,user)   
                 profiles_helpers.send_mail_reminder_next_sip(user_fund_order_items,target_date,total_sip,bank_details,applicant_name,user,use_https=settings.USE_HTTPS)    
-    
-    
-
+    if len(users) > 0:
+        profiles_helpers.send_mail_admin_next_sip(users,target_date,use_https=settings.USE_HTTPS)
+  
 def reminder_next_sip_detail(fund_order_items,target_date,user):
     try:
         user_fund_order_items = [fund_order_item for fund_order_item in fund_order_items if fund_order_item.portfolio_item.portfolio.user==user]
-        total_sip = models.FundOrderItem.objects.filter(next_allotment_date=target_date, portfolio_item__portfolio__user__id=user.id).aggregate(Sum('agreed_sip'))
+        total_sip = sum(fund_order_item.agreed_sip for fund_order_item in user_fund_order_items)
+
     except:
         user_fund_order_items = None
         total_sip = None
