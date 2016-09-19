@@ -28,7 +28,6 @@ def getValidRequest(investor_dict, root):
 def changeDobFormat(dob):
     return dob.strftime('%d-%b-%Y')
 
-
 def getiinrequest(root, user_id):
     """
 
@@ -205,7 +204,6 @@ def createcustomerrequest(root, user_id):
     }
 
     return getValidRequest(investor_dict, root)
-
 
 def purchasetxnrequest(root, user_id):
     """
