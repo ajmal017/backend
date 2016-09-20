@@ -643,7 +643,7 @@ Details of the SIP investment you have scheduled on {{next_allotment_date}} are 
 
     {% for fund_order_item in fund_order_items %}
  
-    Rs {{fund_order_item.agreed_sip|floatformat:2 }} : {{ fund_order_item.portfolio_item.fund.legal_name}} <br>
+    Rs {{fund_order_item.agreed_sip|floatformat:2 }} : {{fund_order_item.portfolio_item.broad_category_group}} - {{ fund_order_item.portfolio_item.fund.legal_name}} <br>
 
     {% endfor %}
  {% endif %}
