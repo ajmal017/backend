@@ -7,6 +7,7 @@ from reportlab.lib.units import cm
 from reportlab.lib.utils import ImageReader
 from PIL import Image
 
+import requests
 
 import csv
 import logging
@@ -116,7 +117,8 @@ def generate_tiff(pdf_name, bank_cheque_image):
     ghostscript.Ghostscript(*args)
 
     if bank_cheque_image:
-        actual_image = Image.open("webapp" + bank_cheque_image.url)
+        response = requests.get(bank_cheque_image.url)
+        actual_image = Image.open(BytesIO(response.content))
         original_size = actual_image.size  # actual image dimensions (width, height)
         size = constants.TIFF_LANDSCAPE_SIZE  # assume by default landscape.
         if original_size[0] < original_size[1]:
@@ -192,9 +194,9 @@ def embed_images(images_list, sizes, coords, target_pages, images_count_each_pag
         Co-ordinates must be (x,y) of the lower left corner of the area in which the image should be inserted
         :return: the generated image canvas
         """
-
         img_temp = BytesIO()
-        actual_image = Image.open(the_image)
+        response = requests.get(the_image)
+        actual_image = Image.open(BytesIO(response.content))
         width = constants.SEMI_WALLPAPER_WIDTH * cm
         height = constants.SEMI_WALLPAPER_HEIGHT * cm
 
@@ -310,7 +312,8 @@ def attach_images(images_list, source_pdf, output_location):
     count = 0
     for image in images_list:
         if image:
-            actual_image = Image.open(image, "r")
+            response = requests.get(image)
+            actual_image = Image.open(BytesIO(response.content))
             # in case of size==constants.FIT_SIZE
             original_size = actual_image.size  # actual image dimensions (width, height)
             size = constants.LANDSCAPE_SIZE  # assume by default landscape.

@@ -210,7 +210,7 @@ def migrateAll():
         try:
             if fund.image_url:
                 currentPath = settings.MEDIA_ROOT + '/' + str(fund.image_url)
-                print(fund.id + "," + str(fund.image_url))
+                print(str(fund.id) + "," + str(fund.image_url))
                 imFile = openSourceFile(currentPath)
                 if imFile:
                     fund.image_url = imFile
