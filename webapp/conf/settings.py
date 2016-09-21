@@ -331,6 +331,7 @@ SESSION_SERIALIZER = 'django.contrib.sessions.serializers.PickleSerializer'
 AUTO_LOGOUT_DELAY = 60  # compulsory logout after 60 mins, whether or not the admin is interacting actively.
 INACTIVE_LOGOUT_DELAY = 10  # admin inactive timeout, if admin has been inactive for more than 10 mins.
 SIP_REMINDER_DAYS = 7 # SIP reminder days for email send
+SIP_BUFFER_DAYS = 3 # SIP reminder Buffer days
 
 USING_S3 = False
 

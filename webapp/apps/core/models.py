@@ -428,6 +428,9 @@ class PortfolioItem(TimeStampedModel):
 
     class Meta:
         unique_together = (('portfolio', 'fund'),)
+        
+    def category_verbose(self):
+        return dict(PortfolioItem.TYPE_CHOICES)[self.broad_category_group]
 
     def __str__(self):
         return str(self.portfolio.user.email + " " + self.fund.fund_name + " " + self.broad_category_group + '' +
@@ -983,6 +986,7 @@ class FundOrderItem(TimeStampedModel):
     agreed_lumpsum = models.FloatField(default=0.00)
     bse_transaction_id = models.CharField(max_length=100, blank=True, null=True)
     internal_ref_no = models.CharField(max_length=10, unique=True, default=0000000000)
+    sip_reminder_sent = models.BooleanField(_('sip_reminder_sent'), default=False)
 
     def __str__(self):
         return str(self.portfolio_item.fund.legal_name)

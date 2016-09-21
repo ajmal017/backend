@@ -633,19 +633,27 @@
  {% if bank_details != None %}
     
     Your bank account {{bank_account_number}} with {{bank_details.ifsc_code.name}}  will be debited on 
-    {{next_allotment_date }} -  RS {{ total_sip|floatformat:2}} <br> <br>
+    following SIP Allotted dates with Total RS {{ total_sip|floatformat:2}} <br> <br>
 
 {% endif %}
 
-Details of the SIP investment you have scheduled on {{next_allotment_date}} are as below  <br> <br>
+<br> 
   
  {% if fund_order_items != None %}
-
-    {% for fund_order_item in fund_order_items %}
  
-    Rs {{fund_order_item.agreed_sip|floatformat:2 }} : {{fund_order_item.portfolio_item.broad_category_group}} - {{ fund_order_item.portfolio_item.fund.legal_name}} <br>
-
+ {% regroup fund_order_items|dictsort:"next_allotment_date" by next_allotment_date|date:"d-m-Y" as fund_order_items_by_day %}
+ <ul>
+   {% for fund_order_items in fund_order_items_by_day %}
+   
+  <li><b>  Date : {{fund_order_items.grouper}} </b> </li>
+   <ul>
+    {% for fund_order_item in fund_order_items.list %}
+ 
+    <li>Rs {{fund_order_item.agreed_sip|floatformat:2 }} : {{fund_order_item.portfolio_item.category_verbose}} - {{ fund_order_item.portfolio_item.fund.legal_name}}</li> <br>
     {% endfor %}
+    </ul>
+   {% endfor %}
+   </ul>
  {% endif %}
  
  

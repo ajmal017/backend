@@ -496,7 +496,7 @@ def send_mail_reminder_next_sip(fund_order_items,target_date,total_sip,bank_deta
                }
     send_mail(subject_template_name, email_template_name, context, from_email, user.email,
                           html_email_template_name=html_email_template_name) 
-                    
+    return True
                     
 def send_mail_weekly_portfolio(portfolio_details,user,applicant_name,domain_override=None, subject_template_name='transaction/weekly-portfolio-subject.txt',
                                      email_template_name=None, use_https=False,
@@ -518,7 +518,7 @@ def send_mail_weekly_portfolio(portfolio_details,user,applicant_name,domain_over
                           html_email_template_name=html_email_template_name) 
     
 
-def send_mail_admin_next_sip(users,target_date, domain_override=None, subject_template_name='transaction/sip-reminder-subject.txt',
+def send_mail_admin_next_sip(users,current_date,target_date, domain_override=None, subject_template_name='transaction/sip-reminder-subject.txt',
                                      email_template_name='transaction/sip_reminder_users_list.html', use_https=False,
                                      token_generator=default_token_generator, from_email=None,
                                      request=None,html_email_template_name=None, extra_email_context=None):
@@ -526,6 +526,7 @@ def send_mail_admin_next_sip(users,target_date, domain_override=None, subject_te
              'domain': settings.SITE_API_BASE_URL,
              'site_name': "Finaskus",
              'users': users,
+             'current_date':current_date,
              'target_date':target_date,
              'protocol': 'https' if use_https else 'http',
                }
