@@ -632,8 +632,8 @@
                             <span style="color:#555555"><span style="font-size:15px"><span style="font-family:trebuchet ms,lucida grande,lucida sans unicode,lucida sans,tahoma,sans-serif">
  {% if bank_details != None %}
     
-    Your bank account {{bank_account_number}} with {{bank_details.ifsc_code.name}}  will be debited on 
-    following SIP Allotted dates with Total RS {{ total_sip|floatformat:2}} <br> <br>
+    Your bank account {{bank_account_number}} with {{bank_details.ifsc_code.name}}  will be debited on the
+    following dates towards your scheduled SIP investments with FinAskus, for Total Amount RS. {{ total_sip|floatformat:2}} <br> <br>
 
 {% endif %}
 
@@ -659,8 +659,7 @@
  
  
 <br><br>
-Please make sure, that you have sufficient balance in your account.
-Feel free to reach out to us for any help, support or feedback at askus@finaskus.com or call us on +91 8095656777
+Please note that the actual date(s) of bank account debit may vary by a few days depending on weekends / holidays. Do make sure that you have sufficient balance in your account in this period.
 <br><br>
 
                             </span></span></span>
@@ -712,7 +711,11 @@ Feel free to reach out to us for any help, support or feedback at askus@finaskus
                         
                         <td valign="top" class="mcnTextContent" style="padding-top:0; padding-right:18px; padding-bottom:9px; padding-left:18px;">
                         
-                            <span style="color:#555555"><span style="font-size:14px"><span class="mc-toc-title"><span style="font-family:trebuchet ms,lucida grande,lucida sans unicode,lucida sans,tahoma,sans-serif">Please reach out to us for any help, support or feedback at <a href="mailto:askus@finaskus.com">askus@finaskus.com</a>&nbsp;or call us on +91 80 95656777<br>
+                            <span style="color:#555555"><span style="font-size:14px"><span class="mc-toc-title"><span style="font-family:trebuchet ms,lucida grande,lucida sans unicode,lucida sans,tahoma,sans-serif">
+                            {% if user.mandate_status != "2" %}
+                               Note: If your bank mandate hasn't been approved yet (due to delayed receipt / processing), then the above amount will not be deducted this month, and the SIP deductions will start from the next month, or whenever the mandate is approved within three months from first SIP date. If approval is not received within three months, then your registered SIP will get cancelled for all future deductions. Please ignore this if your bank mandate is already approved.<br><br>
+                            {% endif %}
+                            Please reach out to us for any help, support or feedback at <a href="mailto:askus@finaskus.com">askus@finaskus.com</a>&nbsp;or call us on +91 80 95656777<br>
 <br>
 Thanks<br>
 FinAskus Support</span></span></span></span>

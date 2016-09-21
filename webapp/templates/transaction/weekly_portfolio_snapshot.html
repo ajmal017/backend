@@ -643,9 +643,9 @@ Thank you for investing with FinAskus! Please see below a snapshot of your lates
        <li>Total Investment: Rs.{{portfolio_details.portfolio_overview.invested|floatformat:2}} </li>
        <li>Current Value: Rs. {{portfolio_details.portfolio_overview.current_value.value|floatformat:2}} </li>
        {% if portfolio_details.portfolio_overview.current_return < 0 %}
-          <li>Current Gain/Loss: Rs ( {{portfolio_details.portfolio_overview.current_return|floatformat:2|slice:"1:"}} )</li>
+          <li>Current Gain/Loss: Rs. ({{portfolio_details.portfolio_overview.current_return|floatformat:2|slice:"1:"}})</li>
        {% else %}
-          <li>Current Gain/Loss: Rs . {{portfolio_details.portfolio_overview.current_return|floatformat:2}} </li>
+          <li>Current Gain/Loss: Rs. {{portfolio_details.portfolio_overview.current_return|floatformat:2}} </li>
        {% endif %}
        {% if portfolio_details.portfolio_overview.current_value.is_gain == True %}
        <li> Annualized Returns:  {{portfolio_details.portfolio_overview.current_value.gain_per|floatformat:2}} % </li> 
@@ -662,12 +662,12 @@ Thank you for investing with FinAskus! Please see below a snapshot of your lates
           
           <b> Equity Portfolio status: </b>
           <ul>
-             <li> Total investment: Rs {{asset_class_overview.invested|floatformat:2}}</li>
-             <li> Current Value: Rs {{asset_class_overview.current_value|floatformat:2}}</li>
+             <li> Total investment: Rs. {{asset_class_overview.invested|floatformat:2}}</li>
+             <li> Current Value: Rs. {{asset_class_overview.current_value|floatformat:2}}</li>
              {% if asset_class_overview.gain < 0 %}
-               <li> Current Gain/Loss: Rs ( {{asset_class_overview.gain|floatformat:2|slice:"1:"}} )</li>
+               <li> Current Gain/Loss: Rs. ({{asset_class_overview.gain|floatformat:2|slice:"1:"}})</li>
              {% else %}
-                 <li> Current Gain/Loss: Rs {{asset_class_overview.gain|floatformat:2}}</li>
+                 <li> Current Gain/Loss: Rs. {{asset_class_overview.gain|floatformat:2}}</li>
              {% endif %}
              {% if asset_class_overview.is_gain == True %}
              <li> Annualized Returns:  {{asset_class_overview.gain_per|floatformat:2}} %</li>
@@ -681,12 +681,12 @@ Thank you for investing with FinAskus! Please see below a snapshot of your lates
           
           <b> Debt Portfolio status: </b>
           <ul>
-             <li> Total investment: Rs {{asset_class_overview.invested|floatformat:2}}</li>
-             <li> Current Value: Rs {{asset_class_overview.current_value|floatformat:2}}</li>
+             <li> Total investment: Rs. {{asset_class_overview.invested|floatformat:2}}</li>
+             <li> Current Value: Rs. {{asset_class_overview.current_value|floatformat:2}}</li>
               {% if asset_class_overview.gain < 0 %}
-               <li> Current Gain/Loss: Rs ( {{asset_class_overview.gain|floatformat:2|slice:"1:"}} )</li>
+               <li> Current Gain/Loss: Rs. ({{asset_class_overview.gain|floatformat:2|slice:"1:"}})</li>
              {% else %}
-                 <li> Current Gain/Loss: Rs {{asset_class_overview.gain|floatformat:2}}</li>
+                 <li> Current Gain/Loss: Rs. {{asset_class_overview.gain|floatformat:2}}</li>
              {% endif %}
              
              {% if asset_class_overview.is_gain == True %}
@@ -701,12 +701,12 @@ Thank you for investing with FinAskus! Please see below a snapshot of your lates
           
           <b> ELSS Portfolio status: </b>
           <ul>
-             <li> Total investment: Rs {{asset_class_overview.invested|floatformat:2}}</li>
-             <li> Current Value: Rs {{asset_class_overview.current_value|floatformat:2}}</li>
+             <li> Total investment: Rs. {{asset_class_overview.invested|floatformat:2}}</li>
+             <li> Current Value: Rs. {{asset_class_overview.current_value|floatformat:2}}</li>
               {% if asset_class_overview.gain < 0 %}
-               <li> Current Gain/Loss: Rs ( {{asset_class_overview.gain|floatformat:2|slice:"1:"}} )</li>
+               <li> Current Gain/Loss: Rs. ({{asset_class_overview.gain|floatformat:2|slice:"1:"}})</li>
              {% else %}
-                 <li> Current Gain/Loss: Rs {{asset_class_overview.gain|floatformat:2}}</li>
+                 <li> Current Gain/Loss: Rs. {{asset_class_overview.gain|floatformat:2}}</li>
              {% endif %}
              
              {% if asset_class_overview.is_gain == True %}
