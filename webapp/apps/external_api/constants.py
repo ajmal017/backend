@@ -241,6 +241,12 @@ HISTORICAL_DATA_MAP = {
 }
 FUND_DOES_NOT_EXIST = 'fund with the mstar id does not exist'
 
+USER_NOT_FOUND = 'User does not exist'
+
+PURCHASE_TXN_FAILED = 'Purchase transaction failed'
+
+VAULT_NOT_CLOSED = 'Vault not closed'
+
 HISTORICAL_DATA_TIME_INTERVAL = 30
 
 INDICES_MAP = {

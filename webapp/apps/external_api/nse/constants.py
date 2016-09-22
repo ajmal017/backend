@@ -5,6 +5,8 @@ RESPONSE_BASE_PATH = './{urn:schemas-microsoft-com:xml-diffgram-v1}diffgram/NMFI
 SERVICE_RETURN_CODE_PATH = './service_status/service_return_code'
 SERVICE_RETURN_ERROR_MSG_PATH = './return_msg'
 SERVICE_RESPONSE_VALUE_PATH = './service_response'
+SERVICE_RETURN_MSG_PATH = SERVICE_RESPONSE_VALUE_PATH + '/return_msg'
+RESPONSE_PAYMENT_LINK_PATH = SERVICE_RETURN_MSG_PATH + './paymentlink'
 
 # XPATHS FOR UPDATING NSE_REQUEST FIELDS
 
