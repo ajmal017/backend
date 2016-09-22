@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 
 from django.db import models
+from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from django.core.validators import RegexValidator
 
 from djutil.models import TimeStampedModel
 
 from . import constants
+from core.models import Fund
 from payment import constants as payment_constants
+from payment.models import Transaction
 
 from enum import IntEnum
 
@@ -90,6 +93,25 @@ class BankDetails(models.Model):
             return False
         else:
             return True
+
+class Vendors(models.Model):
+    name = models.CharField(max_length=100, blank=False, null=False)
+
+class UserVendors(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL)
+    vendor = models.ForeignKey(Vendors, related_name="user_vendor", blank=False, null=False)
+
+class NseDetails(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL)
+    iin_customer_id = models.CharField(max_length=12, blank=False, null=False)
+    ach_inserted = models.BooleanField(default=False)
+
+class OrderDetail(models.Model):
+    user_vendor = models.ForeignKey(UserVendors, related_name="user_vendor", blank=False, null=False)
+    fund = models.ForeignKey(Fund, blank=False, null=False)
+    transaction_detail = models.ForeignKey(Transaction, blank=False, null=False)
+    payment_link = models.CharField(max_length=254, blank=False, null=False)
+
 
 # class OrderEntryParam(models.Model):
 #     """
