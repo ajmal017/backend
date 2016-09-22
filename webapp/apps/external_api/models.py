@@ -8,7 +8,9 @@ from django.core.validators import RegexValidator
 from djutil.models import TimeStampedModel
 
 from . import constants
+from core.models import Fund
 from payment import constants as payment_constants
+from payment.models import Transaction
 
 
 

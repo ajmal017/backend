@@ -304,22 +304,6 @@ class GenerateBankMandateRegistration(View):
             # non-admin is trying to access the file. Prevent access.
             return HttpResponse(constants.FORBIDDEN_ERROR, status=403)
 
-class NseOrder(View):
-    """
-    An api to generate bank mandate.
-    """
-
-    def get(self, request):
-        """
-
-        :param request: user_id of the user and payment type online/offline.
-        :return: send the payment link url
-        """
-        #getiin, if error create customer and then recieve iin and save to db
-        #depending on txn type sip/lumpsum make requests for payment link if online
-
-        return
-
 
 
 class NseOrder(View):
@@ -345,14 +329,14 @@ class NseOrder(View):
                 nse = NSEBackend()
                 status_code = nse.get_iin(user_id=user_id)
                 if status_code == nse_contants.RETURN_CODE_FAILURE:
-                    return_code = nse.create_customer(user_id=user_id)
+                    nse.create_customer(user_id=user_id)
                 if investor_bank.sip_check:
-                        nse.generate_bank_mandate_registration(user_id=user_id)
+                        nse.ach_mandate_registrations(user_id=user_id)
                         nse.upload_img(user_id=user_id, image_type="X")  # 'X' for Transaction type of image and 'A' for IIN Form
                 status_code = nse.purchase_trxn(user_id=user_id)
                 if status_code == nse_contants.RETURN_CODE_SUCCESS:
-                    current_transaction = Transaction.get(user_id=user_id, txn_status=0)
-                    payment_link = current_transaction.payment_link
+                    # fetch payment link from database
+                    payment_link = ''
                     return api_utils.response({"payment_link": payment_link})
                 else:
                     return api_utils.response({constants.MESSAGE: constants.PURCHASE_TXN_FAILED}, status.HTTP_404_NOT_FOUND,
@@ -363,6 +347,8 @@ class NseOrder(View):
         except pr_models.User.DoesNotExist:
             return api_utils.response({constants.MESSAGE: constants.USER_NOT_FOUND}, status.HTTP_404_NOT_FOUND,
                                       constants.USER_NOT_FOUND)
+
+
 
 class UploadAOFTiff(View):
     """
