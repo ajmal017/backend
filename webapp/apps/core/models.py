@@ -72,7 +72,10 @@ def order_detail_info_function(order_detail,portfolio):
     if attachment_error == None:          
         portfolio_items = PortfolioItem.objects.filter(portfolio=portfolio)
         for portfolio_item in portfolio_items:
-            fund_order_items = FundOrderItem.objects.filter(portfolio_item=portfolio_item)
+            if order_detail.is_lumpsum == True:
+                fund_order_items = FundOrderItem.objects.filter(portfolio_item=portfolio_item)
+            else:
+                fund_order_items = order_detail.fund_order_items.all()
             for fund_order_item in fund_order_items:
                 if fund_order_item.order_amount > 0 and fund_order_item.is_cancelled == False:
                     if fund_order_item.unit_alloted is not None and fund_order_item.unit_alloted > 0:
