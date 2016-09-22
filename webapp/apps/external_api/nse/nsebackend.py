@@ -266,7 +266,7 @@ class NSEBackend(ExchangeBackend):
         elif image_type == "X":
             filePath = bank_mandate.generate_bank_mandate_tiff(user_id, **kwargs)
 
-        headers = {'Content-Type': 'application/octet-stream'}
+        headers = {'Content-Type': 'image/tiff'}
         with open(filePath, 'rb') as f:
             img_data = f.read()
             response = requests.request("POST", api_url, data=img_data, headers=headers)
