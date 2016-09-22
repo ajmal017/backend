@@ -33,14 +33,18 @@ def generate_bank_mandate_tiff(user_id):
         'MandateAmountWords': str(num2words(mandate_amount_no, lang="en_IN")) + " ONLY",
         'MandateBank': investor_bank.ifsc_code.name,
         'MandateBankACNumber': investor_bank.account_number,
-        'MandateBankACType': investor_bank.account_type,
+        'MandateCreate': True,
         'MandateDate-dd': curr_date.strftime("%d"),
         'MandateDate-mm': curr_date.strftime("%m"),
         'MandateDate-yyyy': curr_date.strftime("%Y"),
+        'MandateEmailID': contact.email,
         'MandateIFSC': investor_bank.ifsc_code.ifsc_code,
         'MandatePeriodFrom-dd': curr_date.strftime("%d"),
         'MandatePeriodFrom-mm': curr_date.strftime("%m"),
-        'MandatePeriodFrom-yyyy': curr_date.strftime("%Y")
+        'MandatePeriodFrom-yyyy': curr_date.strftime("%Y"),
+        'MandatePhoneNo': contact.phone_number,
+        'MandateReferenceNo': user.mandate_reg_no,
+        'MandateUCC': investor.user.finaskus_id,
     }
 
     for key, value in mandate_dict.items():
