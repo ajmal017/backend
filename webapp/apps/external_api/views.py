@@ -7,7 +7,10 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework import permissions
 
-from . import investor_info_generation, bse_investor_info_generation, bulk_order_entry, kyc_pdf_generator, xsip_registration, bank_mandate
+from external_api.nse.nsebackend import NseBackend
+from external_api.nse import constants as nse_contants
+from . import investor_info_generation, bse_investor_info_generation, bulk_order_entry, kyc_pdf_generator, \
+    xsip_registration, bank_mandate
 from core.models import OrderDetail, RedeemDetail, GroupedRedeemDetail
 from . import models, constants, serializers, cvl
 from api import utils as api_utils
@@ -32,8 +35,8 @@ class VerifiablePincode(APIView):
         pincode_count = models.VerifiablePincode.objects.filter(
             pincode__pincode__in=[request.data.get('pincode', None)]).count()
         if pincode_count > 0:
-            return api_utils.response({"verifiable" : True, "message" : constants.YES_DOORSTEP_VERIFICATION})
-        return api_utils.response({"verifiable" : False, "message" : constants.NO_DOORSTEP_VERIFICATION})
+            return api_utils.response({"verifiable": True, "message": constants.YES_DOORSTEP_VERIFICATION})
+        return api_utils.response({"verifiable": False, "message": constants.NO_DOORSTEP_VERIFICATION})
 
 
 class BankInfoGet(APIView):
@@ -60,9 +63,9 @@ class BankInfoGet(APIView):
         """
         serializer = serializers.BankInfoGetSerializer(bank_detail)
         return api_utils.response(serializer.data)
-        
+
         return api_utils.response({constants.MESSAGE: constants.UNSUPPORTED_BANK}, status.HTTP_404_NOT_FOUND,
-                                      constants.UNSUPPORTED_BANK)
+                                  constants.UNSUPPORTED_BANK)
 
 
 class KycApi(APIView):
@@ -85,7 +88,7 @@ class KycApi(APIView):
                 pr_models.InvestorInfo.objects.update_or_create(user=request.user, defaults=payload_data)
             except IntegrityError:
                 return api_utils.response({"message": constants.UNACCEPTABLE_PAN_NUMBER},
-                                      status.HTTP_404_NOT_FOUND, constants.UNACCEPTABLE_PAN_NUMBER)
+                                          status.HTTP_404_NOT_FOUND, constants.UNACCEPTABLE_PAN_NUMBER)
         return api_utils.response({"status": new_status, "name": name})
 
 
@@ -109,11 +112,12 @@ class GenerateInvestorPdf(View):
             if is_investable(user) and user.signature != "":
                 output_file = investor_info_generation.investor_info_generator(user.id).split('/')[-1]
                 prefix = 'webapp'
-                my_file_path = prefix+constants.STATIC + output_file
+                my_file_path = prefix + constants.STATIC + output_file
                 my_file = open(my_file_path, "rb")
                 content_type = 'application/pdf'
                 response = HttpResponse(my_file, content_type=content_type, status=200)
-                response['Content-Disposition'] = 'attachment;filename=%s' % str(user.id) + "_" + time.strftime("%Y%m%d-%H%M%S") + "_investor.pdf"
+                response['Content-Disposition'] = 'attachment;filename=%s' % str(user.id) + "_" + time.strftime(
+                    "%Y%m%d-%H%M%S") + "_investor.pdf"
                 my_file.close()
                 return response  # contains the pdf of the pertinent user
             else:
@@ -144,11 +148,11 @@ class GenerateKycPdf(View):
             if is_investable(user) and user.signature != "":
                 output_file = kyc_pdf_generator.generate_kyc_pdf(user.id).split('/')[-1]
                 prefix = 'webapp'
-                my_file_path = prefix+constants.STATIC + output_file
+                my_file_path = prefix + constants.STATIC + output_file
                 my_file = open(my_file_path, "rb")
                 content_type = 'application/pdf'
                 response = HttpResponse(my_file, content_type=content_type, status=200)
-                response['Content-Disposition'] = 'attachment;filename=%s' % str(user.id)+'_kyc.pdf'
+                response['Content-Disposition'] = 'attachment;filename=%s' % str(user.id) + '_kyc.pdf'
                 my_file.close()
                 return response  # contains the pdf of the pertinent user
             else:
@@ -180,11 +184,11 @@ class GenerateBseOrderPipe(View):
             if is_investable(order_detail.user):
                 output_file = bulk_order_entry.generate_order_pipe_file(order_detail.user, order_items).split('/')[-1]
                 prefix = 'webapp'
-                my_file_path = prefix+constants.STATIC + output_file
+                my_file_path = prefix + constants.STATIC + output_file
                 my_file = open(my_file_path, "rb")
                 content_type = 'text/plain'
                 response = HttpResponse(my_file, content_type=content_type, status=200)
-                response['Content-Disposition'] = 'attachment;filename=%s' % str(order_detail.id)+'_order.txt'
+                response['Content-Disposition'] = 'attachment;filename=%s' % str(order_detail.id) + '_order.txt'
                 my_file.close()
                 return response  # contains the pdf of the pertinent user
             else:
@@ -216,11 +220,11 @@ class GenerateXsipRegistration(View):
             if is_investable(order_detail.user):
                 output_file = xsip_registration.generate_user_pipe_file(order_detail.user, order_items).split('/')[-1]
                 prefix = 'webapp'
-                my_file_path = prefix+constants.STATIC + output_file
+                my_file_path = prefix + constants.STATIC + output_file
                 my_file = open(my_file_path, "rb")
                 content_type = 'text/plain'
                 response = HttpResponse(my_file, content_type=content_type, status=200)
-                response['Content-Disposition'] = 'attachment;filename=%s' % str(order_detail.id)+'_xip_order.txt'
+                response['Content-Disposition'] = 'attachment;filename=%s' % str(order_detail.id) + '_xip_order.txt'
                 my_file.close()
                 return response  # contains the pdf of the pertinent user
             else:
@@ -251,11 +255,11 @@ class GenerateBankMandate(View):
             if is_investable(order_detail.user):
                 output_file = bank_mandate.generate_bank_mandate_file(order_detail.user, order_detail).split('/')[-1]
                 prefix = 'webapp'
-                my_file_path = prefix+constants.STATIC + output_file
+                my_file_path = prefix + constants.STATIC + output_file
                 my_file = open(my_file_path, "rb")
                 content_type = 'text/plain'
                 response = HttpResponse(my_file, content_type=content_type, status=200)
-                response['Content-Disposition'] = 'attachment;filename=%s' % str(order_detail.id)+'_order.txt'
+                response['Content-Disposition'] = 'attachment;filename=%s' % str(order_detail.id) + '_order.txt'
                 my_file.close()
                 return response  # contains the pipe file of the pertinent user
             else:
@@ -264,6 +268,7 @@ class GenerateBankMandate(View):
         else:
             # non-admin is trying to access the file. Prevent access.
             return HttpResponse(constants.FORBIDDEN_ERROR, status=403)
+
 
 class NseOrder(View):
     """
@@ -276,10 +281,36 @@ class NseOrder(View):
         :param request: user_id of the user and payment type online/offline.
         :return: send the payment link url
         """
-        #getiin, if error create customer and then recieve iin and save to db
-        #depending on txn type sip/lumpsum make requests for payment link if online
 
-        return
+        # getiin, if error create customer and then recieve iin and save to db
+        # depending on txn type sip/lumpsum make requests for payment link if online
+
+        user_id = request.query_params.get('user_id')
+        try:
+            user = pr_models.User.objects.get(id=user_id)
+            investor_bank = pr_models.InvestorBankDetails.objects.get(user=user)
+            if user.vault_locked:
+                nse = NseBackend()
+                status_code = nse.get_iin(user_id=user_id)
+                if status_code == nse_contants.RETURN_CODE_FAILURE:
+                    nse.create_customer(user_id=user_id)
+                if investor_bank.sip_check:
+                        nse.ach_mandate_registrations(user_id=user_id)
+                        nse.upload_img(user_id=user_id, image_type="X")  # 'X' for Transaction type of image and 'A' for IIN Form
+                status_code = nse.purchase_trxn(user_id=user_id)
+                if status_code == nse_contants.RETURN_CODE_SUCCESS:
+                    # fetch payment link from database
+                    payment_link = ''
+                    return api_utils.response({"payment_link": payment_link})
+                else:
+                    return api_utils.response({constants.MESSAGE: constants.PURCHASE_TXN_FAILED}, status.HTTP_404_NOT_FOUND,
+                                              constants.PURCHASE_TXN_FAILED)
+            else:
+                return api_utils.response({constants.MESSAGE: constants.VAULT_NOT_CLOSED}, status.HTTP_412_PRECONDITION_FAILED,
+                                          constants.VAULT_NOT_CLOSED)
+        except pr_models.User.DoesNotExist:
+            return api_utils.response({constants.MESSAGE: constants.USER_NOT_FOUND}, status.HTTP_404_NOT_FOUND,
+                                      constants.USER_NOT_FOUND)
 
 
 class GenerateBseInfoTiff(View):
@@ -302,12 +333,12 @@ class GenerateBseInfoTiff(View):
             if is_investable(user) and user.signature != "":
                 output_file = bse_investor_info_generation.bse_investor_info_generator(user.id).split('/')[-1]
                 prefix = 'webapp'
-                my_file_path = prefix+constants.STATIC + output_file
+                my_file_path = prefix + constants.STATIC + output_file
                 my_file = open(my_file_path, "rb")
                 content_type = 'image/tiff'
                 download_name = user.id
                 response = HttpResponse(my_file, content_type=content_type, status=200)
-                response['Content-Disposition'] = 'attachment;filename=%s' % download_name+".tiff"
+                response['Content-Disposition'] = 'attachment;filename=%s' % download_name + ".tiff"
                 my_file.close()
                 return response  # contains the pdf of the pertinent user
             else:
@@ -337,13 +368,14 @@ class GenerateBseRedeemPipe(View):
             group_redeem_detail = GroupedRedeemDetail.objects.get(id=request.GET.get('group_redeem_id'))
             redeem_items = group_redeem_detail.redeem_details.all()
             if is_investable(group_redeem_detail.user):
-                output_file = bulk_order_entry.generate_redeem_pipe_file(group_redeem_detail.user, redeem_items).split('/')[-1]
+                output_file = \
+                bulk_order_entry.generate_redeem_pipe_file(group_redeem_detail.user, redeem_items).split('/')[-1]
                 prefix = 'webapp'
-                my_file_path = prefix+constants.STATIC + output_file
+                my_file_path = prefix + constants.STATIC + output_file
                 my_file = open(my_file_path, "rb")
                 content_type = 'text/plain'
                 response = HttpResponse(my_file, content_type=content_type, status=200)
-                response['Content-Disposition'] = 'attachment;filename=%s' % str(group_redeem_detail.id)+'redeem.txt'
+                response['Content-Disposition'] = 'attachment;filename=%s' % str(group_redeem_detail.id) + 'redeem.txt'
                 my_file.close()
                 return response  # contains the pdf of the pertinent user
             else:
@@ -377,11 +409,11 @@ class GenerateMandatePdf(View):
                     return HttpResponse(error, status=404)
                 output_file = output_file.split('/')[-1]
                 prefix = 'webapp'
-                my_file_path = prefix+constants.STATIC + output_file
+                my_file_path = prefix + constants.STATIC + output_file
                 my_file = open(my_file_path, "rb")
                 content_type = 'application/pdf'
                 response = HttpResponse(my_file, content_type=content_type, status=200)
-                response['Content-Disposition'] = 'attachment;filename=%s' % str(user.id)+'_mandate.pdf'
+                response['Content-Disposition'] = 'attachment;filename=%s' % str(user.id) + '_mandate.pdf'
                 my_file.close()
                 return response  # contains the pdf of the pertinent user
             else:
