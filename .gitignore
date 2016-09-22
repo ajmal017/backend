@@ -5,9 +5,6 @@ error_log
 webapp/media
 webapp/statics
 *.pyc
-<<<<<<< 593aa4555007d2baf693f66444ee4a957abc03ec
 **/.DS_Store
-=======
->>>>>>> Added changes for dynamic request body and xpaths constants
 *.swp**/.DS_Store
 webapp/static
