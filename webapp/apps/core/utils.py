@@ -42,21 +42,23 @@ def get_all_portfolio_details(user,fund_order_items):
     
 def get_portfolio_dashboard():
     fund_order_items = models.FundOrderItem.objects.filter(is_cancelled=False,is_verified=True)
+    predefined_users = ["rashmi@finaskus.com", "amar.choudhary@gmail.com", "gaurav.iimb@gmail.com", "krishna@finaskus.com", "bvswetha@gmail.com", "gaurav1gupta@gmail.com"]
     users = []
     if fund_order_items is not None:
         for fund_order_item in fund_order_items:
             if fund_order_item.portfolio_item.portfolio.user not in users:
-                user = fund_order_item.portfolio_item.portfolio.user
-                users.append(user)
-                
-                portfolio_details = get_all_portfolio_details(user,fund_order_items)
-                   
-                try:
-                    applicant_name = investor_info_check(user)
-                except:
-                    applicant_name = None
- 
-                profiles_helpers.send_mail_weekly_portfolio(portfolio_details,user,applicant_name,use_https=settings.USE_HTTPS)
+                if fund_order_item.portfolio_item.portfolio.user.email in predefined_users:
+                    user = fund_order_item.portfolio_item.portfolio.user
+                    users.append(user)
+                    
+                    portfolio_details = get_all_portfolio_details(user,fund_order_items)
+                       
+                    try:
+                        applicant_name = investor_info_check(user)
+                    except:
+                        applicant_name = None
+     
+                    profiles_helpers.send_mail_weekly_portfolio(portfolio_details,user,applicant_name,use_https=settings.USE_HTTPS)
                 
     
 #investor info check
