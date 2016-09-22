@@ -3,9 +3,12 @@ from rest_framework import status
 from external_api.nse import create_validate_nserequests
 from external_api.nse import constants as nse_constants
 from external_api import constants
-from external_api.nse import debit_mandate
+from external_api import models
+from profiles import models as pr_models
+from external_api.nse import bank_mandate
 from external_api.nse import nse_iinform_generation
 import os
+import re
 from api import utils as api_utils
 import xml.etree.ElementTree as ET
 import requests
@@ -28,25 +31,17 @@ class NseBackend():
         try:
             headers = {'Content-Type': 'application/xml', 'accept': 'application/xml'}
             response = requests.request("POST", api_url, data=xml_request_body, headers=headers)
-            return self._get_valid_response(response, error_logger)
+            return self._get_valid_response(response)
         except ConnectionError:
             error_logger.info(constants.CONNECTION_ERROR + api_url)
         except requests.HTTPError:
             error_logger.info(constants.HTTP_ERROR + api_url)
 
     def _get_valid_response(self, response):
-        error_logger = logging.getLogger('django.error')
         if response.status_code == requests.codes.ok:
             element = ET.fromstring(response.text)
             root = element.find(nse_constants.RESPONSE_BASE_PATH)
-            return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
-            if return_code == nse_constants.RETURN_CODE_SUCCESS:
-                return root.find(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
-            else:
-                error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
-                for error in error_responses:
-                    error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text
-                    error_logger.info(error_msg)
+            return root
         response.raise_for_status()
 
     def _get_request_body(self, method_name, user_id):
@@ -76,9 +71,18 @@ class NseBackend():
         :param:
         :return:
         """
+        error_logger = logging.getLogger('django.error')
         xml_request_body = self._get_request_body(nse_constants.METHOD_GETIIN, user_id)
-        response_element = self._get_data(nse_constants.METHOD_GETIIN, xml_request_body=xml_request_body)
-        return response_element
+        root = self._get_data(nse_constants.METHOD_GETIIN, xml_request_body=xml_request_body)
+        return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
+        if return_code == nse_constants.RETURN_CODE_SUCCESS:
+            return nse_constants.RETURN_CODE_SUCCESS
+        else:
+            error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
+            for error in error_responses:
+                error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text
+                error_logger.info(error_msg)
+            return nse_constants.RETURN_CODE_FAILURE
 
     def create_customer(self, user_id):
         """
@@ -87,32 +91,46 @@ class NseBackend():
         :param:
         :return:
         """
+        error_logger = logging.getLogger('django.error')
         xml_request_body = self._get_request_body(nse_constants.METHOD_CREATECUSTOMER, user_id)
-        response_element = self._get_data(nse_constants.METHOD_CREATECUSTOMER, xml_request_body=xml_request_body)
-        return response_element
+        root = self._get_data(nse_constants.METHOD_CREATECUSTOMER, xml_request_body=xml_request_body)
+        return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
+        if return_code == nse_constants.RETURN_CODE_SUCCESS:
+            return_msg = root.find(nse_constants.SERVICE_RETURN_MSG_PATH).text
+            return_msg = return_msg.replace(" ", "")
+            iin_customer_id = re.search('ID:(.+?)', return_msg)
+            # save this to NseDetails table
+            return nse_constants.RETURN_CODE_SUCCESS
+        else:
+            error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
+            for error in error_responses:
+                error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text
+                error_logger.info(error_msg)
+            return nse_constants.RETURN_CODE_FAILURE
 
-    def purchase_trxn_sip(self, user_id):
+
+    def purchase_trxn(self, user_id):
         """
 
         :param:
         :return:
         """
-        # Complete ach registration and debit mandate upload flow
-
+        error_logger = logging.getLogger('django.error')
         xml_request_body = self._get_request_body(nse_constants.METHOD_PURCHASETXN, user_id)
-        response_element = self._get_data(nse_constants.METHOD_PURCHASETXN, xml_request_body=xml_request_body)
-        return response_element
+        # make an entry to db for this order and transaction
+        root = self._get_data(nse_constants.METHOD_PURCHASETXN, xml_request_body=xml_request_body)
+        return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
+        if return_code == nse_constants.RETURN_CODE_SUCCESS:
+            payment_link = root.find(nse_constants.RESPONSE_PAYMENT_LINK_PATH).text
+            # Save payment link Order_detail Table
+            return nse_constants.RETURN_CODE_SUCCESS
+        else:
+            error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
+            for error in error_responses:
+                error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text
+                error_logger.info(error_msg)
+            return nse_constants.RETURN_CODE_FAILURE
 
-    def purchase_trxn_lumpsum(self, user_id):
-        """
-
-        :param:
-        :return:
-        """
-
-        xml_request_body = self._get_request_body(nse_constants.METHOD_PURCHASETXN, user_id)
-        response_element = self._get_data(nse_constants.METHOD_PURCHASETXN, xml_request_body=xml_request_body)
-        return response_element
 
     def ach_mandate_registrations(self, user_id):
         """
@@ -120,25 +138,45 @@ class NseBackend():
         :param:
         :return:
         """
-
+        error_logger = logging.getLogger('django.error')
         xml_request_body = self._get_request_body(nse_constants.METHOD_ACHMANDATEREGISTRATIONS, user_id)
-        response_element = self._get_data(nse_constants.METHOD_ACHMANDATEREGISTRATIONS,
+        root = self._get_data(nse_constants.METHOD_ACHMANDATEREGISTRATIONS,
                                           xml_request_body=xml_request_body)
-        return response_element
+        return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
+        if return_code == nse_constants.RETURN_CODE_SUCCESS:
+            # save this entry to NSE_Details table
+            return nse_constants.RETURN_CODE_SUCCESS
+        else:
+            error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
+            for error in error_responses:
+                error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text
+                error_logger.info(error_msg)
+            return nse_constants.RETURN_CODE_FAILURE
 
-    def upload_img(self, customer_id, user_id, ref_no='', image_type=''):
+
+    def upload_img(self, user_id, ref_no='', image_type=''):
+        error_logger = logging.getLogger('django.error')
+        nse_user = models.NseDetails.get(user_id=user_id)
         queryString = "?BrokerCode=" + nse_constants.NSE_NMF_BROKER_CODE + "&Appln_id=" + nse_constants.NSE_NMF_APPL_ID + \
-                      "&Password=" + nse_constants.NSE_NMF_PASSWORD + "&CustomerID=" + customer_id + "&Refno=" + ref_no + \
+                      "&Password=" + nse_constants.NSE_NMF_PASSWORD + "&CustomerID=" + nse_user.iin_customer_id + "&Refno=" + ref_no + \
                       "&ImageType=" + image_type
         api_url = nse_constants.NSE_NMF_BASE_API_URL + nse_constants.METHOD_UPLOADIMG + queryString
         filePath = ""
         if image_type == "A":
             filePath = nse_iinform_generation.nse_investor_info_generator(user_id)
         elif image_type == "X":
-            filePath = debit_mandate.get_tiff(user_id)
+            filePath = bank_mandate.generate_bank_mandate_tiff(user_id)
 
-        headers = {'Content-Type': 'application/octet-stream'}
+        headers = {'Content-Type': 'image/tiff'}
         with open(filePath, 'rb') as f:
             response = requests.post(api_url, files={'image': f}, headers=headers)
-        response_element = self._get_valid_response(response)
-        return response_element
+        root = self._get_valid_response(response)
+        return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
+        if return_code == nse_constants.RETURN_CODE_SUCCESS:
+            return nse_constants.RETURN_CODE_SUCCESS
+        else:
+            error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
+            for error in error_responses:
+                error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text
+                error_logger.info(error_msg)
+            return nse_constants.RETURN_CODE_FAILURE

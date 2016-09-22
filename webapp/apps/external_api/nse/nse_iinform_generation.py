@@ -109,9 +109,9 @@ def nse_investor_info_generator(user_id):
     fdf_file.close()
 
     base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps', '')
-    bse_investor_pdf_path = base_dir + '/nse_docs/'
+    nse_investor_pdf_path = base_dir + '/nse_docs/'
     output_path = base_dir + '/webapp/static/'
-    iin_file_name = bse_investor_pdf_path + "iin.pdf"
+    iin_file_name = nse_investor_pdf_path + "iin.pdf"
 
     call(("pdftk " + iin_file_name + " fill_form %s output " % temp_file_name + output_path + "%s flatten"
           % out_file_name).split())
