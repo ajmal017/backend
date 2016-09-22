@@ -300,6 +300,7 @@ def send_transaction_change_email(first_order,order_detail,applicant_name,user,e
         'order_detail':list1,        
         'user_name':user_name,
         'transaction_detail':order_detail,
+        'sip_allotment_date':order_detail.fund_order_items.first().allotment_date,
         'month':month,
         'domain': settings.SITE_API_BASE_URL,
         'site_name': "Finaskus",

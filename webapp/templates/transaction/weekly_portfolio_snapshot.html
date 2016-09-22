@@ -650,7 +650,7 @@ Thank you for investing with FinAskus! Please see below a snapshot of your lates
        {% if portfolio_details.portfolio_overview.current_value.is_gain == True %}
        <li> Annualized Returns:  {{portfolio_details.portfolio_overview.current_value.gain_per|floatformat:2}} % </li> 
        {% else %}
-       <li> Annualized Returns: ( {{portfolio_details.portfolio_overview.current_value.gain_per|floatformat:2}} ) %  </li> 
+       <li> Annualized Returns: ({{portfolio_details.portfolio_overview.current_value.gain_per|floatformat:2|slice:"1:"}}) %  </li> 
        {% endif %}
       </ul> 
   {% endif %}
@@ -672,7 +672,7 @@ Thank you for investing with FinAskus! Please see below a snapshot of your lates
              {% if asset_class_overview.is_gain == True %}
              <li> Annualized Returns:  {{asset_class_overview.gain_per|floatformat:2}} %</li>
              {% else %}
-             <li> Annualized Returns:  ( {{asset_class_overview.gain_per|floatformat:2}} ) %</li>
+             <li> Annualized Returns:  ({{asset_class_overview.gain_per|floatformat:2|slice:"1:"}}) %</li>
              {% endif %}
           </ul>
          {% endif %}
@@ -692,7 +692,7 @@ Thank you for investing with FinAskus! Please see below a snapshot of your lates
              {% if asset_class_overview.is_gain == True %}
              <li> Annualized Returns:  {{asset_class_overview.gain_per|floatformat:2}} %</li>
              {% else %}
-             <li> Annualized Returns:  ( {{asset_class_overview.gain_per|floatformat:2}} ) %</li>
+             <li> Annualized Returns:  ({{asset_class_overview.gain_per|floatformat:2|slice:"1:"}}) %</li>
              {% endif %}
           </ul>
          {% endif %}
@@ -712,7 +712,7 @@ Thank you for investing with FinAskus! Please see below a snapshot of your lates
              {% if asset_class_overview.is_gain == True %}
              <li> Annualized Returns:  {{asset_class_overview.gain_per|floatformat:2}} %</li>
              {% else %}
-             <li> Annualized Returns:  ( {{asset_class_overview.gain_per|floatformat:2}} ) %</li>
+             <li> Annualized Returns:  ({{asset_class_overview.gain_per|floatformat:2|slice:"1:"}}) %</li>
              {% endif %}
           </ul>
          {% endif %}
