@@ -69,7 +69,7 @@ def order_detail_info_function(order_detail,portfolio):
     """
     Get the all the portfolio items
     """ 
-    if attachment_error is not None:          
+    if attachment_error == None:          
         portfolio_items = PortfolioItem.objects.filter(portfolio=portfolio)
         
         if order_detail.is_lumpsum == True:
