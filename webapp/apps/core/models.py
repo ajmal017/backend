@@ -114,7 +114,7 @@ def order_detail_transaction_mail_send(order_detail):
                 else:
                     response = "Unit alloted is not available , Email Send to the Admin."
                 return response
-            """
+            
             else:
                 investment_date = portfolio.investment_date
                 if datetime.datetime.date(order_detail.created_at) > investment_date:
@@ -130,7 +130,7 @@ def order_detail_transaction_mail_send(order_detail):
                     return response
                 else:
                     return "Order detail should be the following SIP"
-            """
+            
         else:
             return "Order detail has no fund order items"
     else:
