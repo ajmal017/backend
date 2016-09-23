@@ -635,7 +635,7 @@
 			<table align="left" border="0" cellpadding="0" cellspacing="0" width="100%">
 				<tbody>
 					<tr>
-						<td valign="top"><span style="font-size:15px"><font color="#555555" face="trebuchet ms, lucida grande, lucida sans unicode, lucida sans, tahoma, sans-serif">Details of the SIP investment for the month of {{month}} are as below&nbsp;</font><br>
+						<td valign="top"><span style="font-size:15px"><font color="#555555" face="trebuchet ms, lucida grande, lucida sans unicode, lucida sans, tahoma, sans-serif">Details of the SIP investment are as below:&nbsp;</font>
 						<br>
 						<font color="#555555" face="trebuchet ms, lucida grande, lucida sans unicode, lucida sans, tahoma, sans-serif"><br>
 						
@@ -644,11 +644,11 @@
      {% for order_details,nav_details in order_detail %}
        {% if order_details.agreed_sip != 0 and order_details.agreed_lumpsum == 0 %}
         <li> {{order_details.portfolio_item.fund.legal_name}} 
-        <ul> <li> SIP Rs {{ order_details.agreed_sip|floatformat:2 }} - 
+        <ul> <li> SIP Rs. {{ order_details.agreed_sip|floatformat:2 }} - 
           {% if goal_len == 1 %}
              {{sip_tenure}} years  - 
           {% endif %}
-             {{ order_details.unit_alloted}} units allotted with NAV Rs {{nav_details|floatformat:2}} 
+             {{ order_details.unit_alloted}} units allotted with NAV Rs. {{nav_details|floatformat:2}} 
                  </li> </ul> </li>
        {% endif %}
       {% endfor %}

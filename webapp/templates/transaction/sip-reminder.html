@@ -633,7 +633,7 @@
  {% if bank_details != None %}
     
     Your bank account {{bank_account_number}} with {{bank_details.ifsc_code.name}}  will be debited on the
-    following dates towards your scheduled SIP investments with FinAskus, for Total Amount RS. {{ total_sip|floatformat:2}} <br> <br>
+    following dates towards your scheduled SIP investments with FinAskus, for Total Amount Rs. {{ total_sip|floatformat:2}} <br> <br>
 
 {% endif %}
 
@@ -649,7 +649,7 @@
    <ul>
     {% for fund_order_item in fund_order_items.list %}
  
-    <li>Rs {{fund_order_item.agreed_sip|floatformat:2 }} : {{fund_order_item.portfolio_item.category_verbose}} - {{ fund_order_item.portfolio_item.fund.legal_name}}</li> <br>
+    <li>Rs. {{fund_order_item.agreed_sip|floatformat:2 }} : {{fund_order_item.portfolio_item.category_verbose}} - {{ fund_order_item.portfolio_item.fund.legal_name}}</li> <br>
     {% endfor %}
     </ul>
    {% endfor %}
