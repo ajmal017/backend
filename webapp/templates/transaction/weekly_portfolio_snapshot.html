@@ -630,6 +630,7 @@
                         <td valign="top" class="mcnTextContent" style="padding-top:0; padding-right:18px; padding-bottom:9px; padding-left:18px;">
                         
                             <span style="color:#555555"><span style="font-size:15px"><span style="font-family:trebuchet ms,lucida grande,lucida sans unicode,lucida sans,tahoma,sans-serif">
+{% load humanize %}
 {% if portfolio_details != None %}
 
 Thank you for investing with FinAskus! Please see below a snapshot of your latest portfolio status as of {{portfolio_details.date}}:<br><br>
@@ -640,17 +641,17 @@ Thank you for investing with FinAskus! Please see below a snapshot of your lates
      <b>Overall Portfolio Status </b><br>
      
      <ul>
-       <li>Total Investment: Rs.{{portfolio_details.portfolio_overview.invested|floatformat:2}} </li>
-       <li>Current Value: Rs. {{portfolio_details.portfolio_overview.current_value.value|floatformat:2}} </li>
+       <li>Total Investment: Rs.{{portfolio_details.portfolio_overview.invested|floatformat:2|intcomma}} </li>
+       <li>Current Value: Rs. {{portfolio_details.portfolio_overview.current_value.value|floatformat:2|intcomma}} </li>
        {% if portfolio_details.portfolio_overview.current_return < 0 %}
-          <li>Current Gain/Loss: Rs. ({{portfolio_details.portfolio_overview.current_return|floatformat:2|slice:"1:"}})</li>
+          <li>Current Gain/Loss: Rs. <span style='color:red;'> ({{portfolio_details.portfolio_overview.current_return|floatformat:2|intcomma|slice:"1:"}}) </span></li>
        {% else %}
-          <li>Current Gain/Loss: Rs. {{portfolio_details.portfolio_overview.current_return|floatformat:2}} </li>
+          <li>Current Gain/Loss: Rs. <span style='color:green;'> {{portfolio_details.portfolio_overview.current_return|floatformat:2|intcomma}} </span></li>
        {% endif %}
        {% if portfolio_details.portfolio_overview.current_value.is_gain == True %}
-       <li> Annualized Returns:  {{portfolio_details.portfolio_overview.current_value.gain_per|floatformat:2}} % </li> 
+       <li> Annualized Returns:  <span style='color:green;'>{{portfolio_details.portfolio_overview.current_value.gain_per|floatformat:2}} </span> % </li> 
        {% else %}
-       <li> Annualized Returns: ({{portfolio_details.portfolio_overview.current_value.gain_per|floatformat:2|slice:"1:"}}) %  </li> 
+       <li> Annualized Returns: <span style='color:red;'> ({{portfolio_details.portfolio_overview.current_value.gain_per|floatformat:2|slice:"1:"}}) </span>%  </li> 
        {% endif %}
       </ul> 
   {% endif %}
@@ -662,17 +663,17 @@ Thank you for investing with FinAskus! Please see below a snapshot of your lates
           
           <b> Equity Portfolio status: </b>
           <ul>
-             <li> Total investment: Rs. {{asset_class_overview.invested|floatformat:2}}</li>
-             <li> Current Value: Rs. {{asset_class_overview.current_value|floatformat:2}}</li>
+             <li> Total investment: Rs. {{asset_class_overview.invested|floatformat:2|intcomma}}</li>
+             <li> Current Value: Rs. {{asset_class_overview.current_value|floatformat:2|intcomma}}</li>
              {% if asset_class_overview.gain < 0 %}
-               <li> Current Gain/Loss: Rs. ({{asset_class_overview.gain|floatformat:2|slice:"1:"}})</li>
+               <li> Current Gain/Loss: Rs. <span style='color:red;'> ({{asset_class_overview.gain|floatformat:2|intcomma|slice:"1:"}}) </span></li>
              {% else %}
-                 <li> Current Gain/Loss: Rs. {{asset_class_overview.gain|floatformat:2}}</li>
+                 <li> Current Gain/Loss: Rs. <span style='color:green;'>{{asset_class_overview.gain|floatformat:2|intcomma}}</span></li>
              {% endif %}
              {% if asset_class_overview.is_gain == True %}
-             <li> Annualized Returns:  {{asset_class_overview.gain_per|floatformat:2}} %</li>
+             <li> Annualized Returns:  <span style='color:green;'>{{asset_class_overview.gain_per|floatformat:2}}</span> %</li>
              {% else %}
-             <li> Annualized Returns:  ({{asset_class_overview.gain_per|floatformat:2|slice:"1:"}}) %</li>
+             <li> Annualized Returns:  <span style='color:red;'> ({{asset_class_overview.gain_per|floatformat:2|slice:"1:"}})</span> %</li>
              {% endif %}
           </ul>
          {% endif %}
@@ -681,18 +682,17 @@ Thank you for investing with FinAskus! Please see below a snapshot of your lates
           
           <b> Debt Portfolio status: </b>
           <ul>
-             <li> Total investment: Rs. {{asset_class_overview.invested|floatformat:2}}</li>
-             <li> Current Value: Rs. {{asset_class_overview.current_value|floatformat:2}}</li>
-              {% if asset_class_overview.gain < 0 %}
-               <li> Current Gain/Loss: Rs. ({{asset_class_overview.gain|floatformat:2|slice:"1:"}})</li>
+             <li> Total investment: Rs. {{asset_class_overview.invested|floatformat:2|intcomma}}</li>
+             <li> Current Value: Rs. {{asset_class_overview.current_value|floatformat:2|intcomma}}</li>
+             {% if asset_class_overview.gain < 0 %}
+               <li> Current Gain/Loss: Rs. <span style='color:red;'> ({{asset_class_overview.gain|floatformat:2|intcomma|slice:"1:"}}) </span></li>
              {% else %}
-                 <li> Current Gain/Loss: Rs. {{asset_class_overview.gain|floatformat:2}}</li>
+                 <li> Current Gain/Loss: Rs. <span style='color:green;'>{{asset_class_overview.gain|floatformat:2|intcomma}}</span></li>
              {% endif %}
-             
              {% if asset_class_overview.is_gain == True %}
-             <li> Annualized Returns:  {{asset_class_overview.gain_per|floatformat:2}} %</li>
+             <li> Annualized Returns:  <span style='color:green;'>{{asset_class_overview.gain_per|floatformat:2}}</span> %</li>
              {% else %}
-             <li> Annualized Returns:  ({{asset_class_overview.gain_per|floatformat:2|slice:"1:"}}) %</li>
+             <li> Annualized Returns:  <span style='color:red;'> ({{asset_class_overview.gain_per|floatformat:2|slice:"1:"}})</span> %</li>
              {% endif %}
           </ul>
          {% endif %}
@@ -701,18 +701,17 @@ Thank you for investing with FinAskus! Please see below a snapshot of your lates
           
           <b> ELSS Portfolio status: </b>
           <ul>
-             <li> Total investment: Rs. {{asset_class_overview.invested|floatformat:2}}</li>
-             <li> Current Value: Rs. {{asset_class_overview.current_value|floatformat:2}}</li>
-              {% if asset_class_overview.gain < 0 %}
-               <li> Current Gain/Loss: Rs. ({{asset_class_overview.gain|floatformat:2|slice:"1:"}})</li>
+             <li> Total investment: Rs. {{asset_class_overview.invested|floatformat:2|intcomma}}</li>
+             <li> Current Value: Rs. {{asset_class_overview.current_value|floatformat:2|intcomma}}</li>
+             {% if asset_class_overview.gain < 0 %}
+               <li> Current Gain/Loss: Rs. <span style='color:red;'> ({{asset_class_overview.gain|floatformat:2|intcomma|slice:"1:"}}) </span></li>
              {% else %}
-                 <li> Current Gain/Loss: Rs. {{asset_class_overview.gain|floatformat:2}}</li>
+                 <li> Current Gain/Loss: Rs. <span style='color:green;'>{{asset_class_overview.gain|floatformat:2|intcomma}}</span></li>
              {% endif %}
-             
              {% if asset_class_overview.is_gain == True %}
-             <li> Annualized Returns:  {{asset_class_overview.gain_per|floatformat:2}} %</li>
+             <li> Annualized Returns:  <span style='color:green;'>{{asset_class_overview.gain_per|floatformat:2}}</span> %</li>
              {% else %}
-             <li> Annualized Returns:  ({{asset_class_overview.gain_per|floatformat:2|slice:"1:"}}) %</li>
+             <li> Annualized Returns:  <span style='color:red;'> ({{asset_class_overview.gain_per|floatformat:2|slice:"1:"}})</span> %</li>
              {% endif %}
           </ul>
          {% endif %}

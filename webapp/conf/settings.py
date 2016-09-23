@@ -38,6 +38,7 @@ DJANGO_APPS = [
     "django.contrib.admin",
     "django.contrib.postgres",
     # 'django_extensions'
+    "django.contrib.humanize",
 ]
 
 THIRD_PARTY_APPS = [
