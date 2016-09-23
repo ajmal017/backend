@@ -113,10 +113,13 @@ def order_detail_transaction_mail_send(order_detail):
                 else:
                     response = "Unit alloted is not available , Email Send to the Admin."
                 return response
+            """
             else:
                 investment_date = portfolio.investment_date
                 if datetime.datetime.date(order_detail.created_at) > investment_date:
                     order_info,applicant_name,order_detail.user,email_attachment,attachment_error,sip_tenure,goal_tenure_len = order_detail_info_function(order_detail,portfolio)
+                    logger = logging.getLogger('django.debug')
+                    logger.debug('SIP completed len: ' + str(len(order_info)))
                     first_order = False
                     msg = profile_helpers.send_transaction_change_email(first_order,order_info,applicant_name,order_detail.user,email_attachment,attachment_error,sip_tenure,goal_tenure_len,use_https=settings.USE_HTTPS)
                     if msg == "success":
@@ -126,6 +129,7 @@ def order_detail_transaction_mail_send(order_detail):
                     return response
                 else:
                     return "Order detail should be the following SIP"
+            """
         else:
             return "Order detail has no fund order items"
     else:
