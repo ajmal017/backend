@@ -69,32 +69,33 @@ def order_detail_info_function(order_detail,portfolio):
     """
     Get the all the portfolio items
     """ 
-    if attachment_error == None:          
+    if attachment_error is not None:          
         portfolio_items = PortfolioItem.objects.filter(portfolio=portfolio)
-        for portfolio_item in portfolio_items:
-            if order_detail.is_lumpsum == True:
-                fund_order_items = FundOrderItem.objects.filter(portfolio_item=portfolio_item)
-            else:
-                fund_order_items = order_detail.fund_order_items.all()
-            for fund_order_item in fund_order_items:
-                if fund_order_item.order_amount > 0 and fund_order_item.is_cancelled == False:
-                    if fund_order_item.unit_alloted is not None and fund_order_item.unit_alloted > 0:
-                        try:
-                            nav = HistoricalFundData.objects.get(fund_id=fund_order_item.portfolio_item.fund.id, date=fund_order_item.allotment_date).nav
-                        except HistoricalFundData.DoesNotExist:
-                            nav = None
-                            order_info.unit_alloted = False
-                        order_info.fund_order_list.append(fund_order_item)
-                        order_info.nav_list.append(nav)
-                        order_info.all_sips.append(fund_order_item.agreed_sip)
-                        order_info.all_lumpsums.append(fund_order_item.agreed_lumpsum)
-                    else:
+        
+        if order_detail.is_lumpsum == True:
+            fund_order_items = []
+            for portfolio_item in portfolio_items:
+                fund_order_items.extend(FundOrderItem.objects.filter(portfolio_item=portfolio_item))
+        else:
+            fund_order_items = order_detail.fund_order_items.all()
+        
+        for fund_order_item in fund_order_items:
+            if fund_order_item.order_amount > 0 and fund_order_item.is_cancelled == False:
+                if fund_order_item.unit_alloted is not None and fund_order_item.unit_alloted > 0:
+                    try:
+                        nav = HistoricalFundData.objects.get(fund_id=fund_order_item.portfolio_item.fund.id, date=fund_order_item.allotment_date).nav
+                    except HistoricalFundData.DoesNotExist:
+                        nav = None
                         order_info.unit_alloted = False
-                        print("Unit has not alloted for the order detail")
-                        break
-            if order_info.unit_alloted == False:
-                print("Unit has not alloted for the order detail")
-                break 
+                    order_info.fund_order_list.append(fund_order_item)
+                    order_info.nav_list.append(nav)
+                    order_info.all_sips.append(fund_order_item.agreed_sip)
+                    order_info.all_lumpsums.append(fund_order_item.agreed_lumpsum)
+                else:
+                    order_info.unit_alloted = False
+                    print("Unit has not alloted for the order detail")
+                    break
+         
     return order_info,applicant_name,order_detail.user,email_attachment,attachment_error,sip_tenure,goal_tenure_len      
 
 
