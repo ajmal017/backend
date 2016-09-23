@@ -42,24 +42,22 @@ def get_all_portfolio_details(user,fund_order_items):
     
 def get_portfolio_dashboard():
     fund_order_items = models.FundOrderItem.objects.filter(is_cancelled=False,is_verified=True)
-    predefined_users = ["rashmi@finaskus.com", "amar.choudhary@gmail.com", "gaurav.iimb@gmail.com", "krishna@finaskus.com", "bvswetha@gmail.com", "gaurav1gupta@gmail.com", "ruchika.a.choudhary@gmail.com"]
     users = []
     if fund_order_items is not None:
         for fund_order_item in fund_order_items:
             if fund_order_item.portfolio_item.portfolio.user not in users:
-                if fund_order_item.portfolio_item.portfolio.user.email in predefined_users:
-                    user = fund_order_item.portfolio_item.portfolio.user
-                    users.append(user)
-                    
-                    portfolio_details = get_all_portfolio_details(user,fund_order_items)
-                       
-                    try:
-                        applicant_name = investor_info_check(user)
-                    except:
-                        applicant_name = None
-     
-                    profiles_helpers.send_mail_weekly_portfolio(portfolio_details,user,applicant_name,use_https=settings.USE_HTTPS)
+                user = fund_order_item.portfolio_item.portfolio.user
+                users.append(user)
                 
+                portfolio_details = get_all_portfolio_details(user,fund_order_items)
+                   
+                try:
+                    applicant_name = investor_info_check(user)
+                except:
+                    applicant_name = None
+ 
+                profiles_helpers.send_mail_weekly_portfolio(portfolio_details,user,applicant_name,use_https=settings.USE_HTTPS)
+            
     
 #investor info check
 def investor_info_check(user):
@@ -79,7 +77,6 @@ def reminder_next_sip_allotment():
     target_date_1 = target_date + timedelta(days=1)
     buffer_date = target_date + timedelta(days=settings.SIP_BUFFER_DAYS)
     fund_order_items = models.FundOrderItem.objects.filter(next_allotment_date__range=(curr_date,target_date),order_amount__gt=0 , agreed_sip__gt=0,sip_reminder_sent=False)      
-    predefined_users = ["rashmi@finaskus.com", "amar.choudhary@gmail.com", "gaurav.iimb@gmail.com", "krishna@finaskus.com", "bvswetha@gmail.com", "gaurav1gupta@gmail.com", "ruchika.a.choudhary@gmail.com"]
     users = []
     if len(fund_order_items) > 0:
         buffer_fund_order_items = models.FundOrderItem.objects.filter(next_allotment_date__range=(target_date_1,buffer_date) , order_amount__gt=0 , agreed_sip__gt=0,sip_reminder_sent=False)
@@ -89,15 +86,14 @@ def reminder_next_sip_allotment():
             all_fund_order_items = fund_order_items
         for fund_order_item in all_fund_order_items:
             if fund_order_item.portfolio_item.portfolio.user not in users:
-                if fund_order_item.portfolio_item.portfolio.user.email in predefined_users:
-                    user = fund_order_item.portfolio_item.portfolio.user
-                    users.append(user)
-                    user_fund_order_items,bank_details,applicant_name,total_sip =  reminder_next_sip_detail(all_fund_order_items,target_date,user)   
-                    email = profiles_helpers.send_mail_reminder_next_sip(user_fund_order_items,target_date,total_sip,bank_details,applicant_name,user,use_https=settings.USE_HTTPS)    
-                    if email == True:
-                        for fund_item in user_fund_order_items:
-                            fund_item.sip_reminder_sent = True
-                            fund_item.save()
+                user = fund_order_item.portfolio_item.portfolio.user
+                users.append(user)
+                user_fund_order_items,bank_details,applicant_name,total_sip =  reminder_next_sip_detail(all_fund_order_items,target_date,user)   
+                email = profiles_helpers.send_mail_reminder_next_sip(user_fund_order_items,target_date,total_sip,bank_details,applicant_name,user,use_https=settings.USE_HTTPS)    
+                if email == True:
+                    for fund_item in user_fund_order_items:
+                        fund_item.sip_reminder_sent = True
+                        fund_item.save()
     if len(users) > 0:
         profiles_helpers.send_mail_admin_next_sip(users,curr_date,target_date,use_https=settings.USE_HTTPS)
   
