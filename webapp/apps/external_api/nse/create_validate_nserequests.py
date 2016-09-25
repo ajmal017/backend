@@ -8,6 +8,26 @@ from external_api import constants as api_constants
 from datetime import datetime
 
 
+def getValidRequest(investor_dict, root):
+    for key, value in investor_dict.items():
+        if value is None:
+            investor_dict[key] = ''
+        if value is True:
+            investor_dict[key] = "Y"
+        if value is False:
+            investor_dict[key] = "N"
+
+    for key, value in investor_dict.items():
+        if value not in ("", "Y", "N"):
+            investor_dict[key] = str(value).upper()
+        root.find(key).text = investor_dict[key]
+
+    return ET.tostring(root, encoding="us-ascii", method="xml")
+
+def changeDobFormat(dob):
+    return '01-Jan-1990'
+
+
 def getiinrequest(root, user_id):
     """
 
@@ -18,23 +38,18 @@ def getiinrequest(root, user_id):
     investor = models.InvestorInfo.objects.get(user=user)
 
     investor_dict = {
-        constants.TAX_STATUS_XPATH: user.tax_status,
-        constants.HOLD_NATURE_XPATH: None,  # TODO
+        constants.TAX_STATUS_XPATH: '01',  # TODO : user.tax_status return nothing
+        constants.HOLD_NATURE_XPATH: 'SI',  # TODO
         constants.EXEMPT_FLAG_XPATH: 'N',
         constants.FH_PAN_XPATH: investor.pan_number,
         constants.JH1_PAN_XPATH: None,
         constants.JH1_EXEMPT_FLAG_XPATH: None,
         constants.JH2_PAN_XPATH: None,
         constants.JH2_EXEMPT_FLAG_XPATH: None,
-        constants.GUARD_PAN_XPATH: None
+        constants.GUARDIAN_PAN_XPATH: None
     }
 
-    for key, value in investor_dict.items():
-        if value is None:
-            investor_dict[key] = ""
-        root.find(key).text = value
-
-    return root
+    return getValidRequest(investor_dict, root)
 
 
 def createcustomerrequest(root, user_id):
@@ -57,15 +72,13 @@ def createcustomerrequest(root, user_id):
         blank_address.pincode = blank_pincode
         nominee.nominee_address = blank_address
 
-    title=None
+    title = None
     if user.gender == 'M':
         title = "Mr."
     elif user.gender == 'F' & user.marital_status == 'Married':
         title = "Mrs."
-    else :
+    else:
         title = "Ms."
-
-
 
     investor_dict = {
         constants.TITLE_XPATH: title,
@@ -73,17 +86,18 @@ def createcustomerrequest(root, user_id):
         constants.PAN_XPATH: investor.pan_number,
         constants.VALID_PAN_XPATH: 'Y',
         constants.EXEMPTION_XPATH: 'N',
-        constants.EXEMPT_CATEGORY_XPATH: None, # TODO
-        constants.EXEMPT_REF_NO_XPATH: None, # TODO
-        constants.DOB_XPATH: user.dob,
-        constants.HOLD_NATURE_XPATH: None, # TODO
-        constants.TAX_STATUS_XPATH: user.tax_status,
+        constants.EXEMPT_CATEGORY_XPATH: None,  # TODO
+        constants.EXEMPT_REF_NO_XPATH: None,  # TODO
+        constants.DOB_XPATH: changeDobFormat(user.dob),
+        constants.HOLD_NATURE_XPATH: 'SI',  # TODO
+        constants.TAX_STATUS_XPATH: '01',
         constants.KYC_XPATH: user.kyc_accepted,
-        constants.OCCUPATION_XPATH: investor.occupation_type, # TODO : Refer master services for 2 letter occupation code
-        constants.MFU_CAN_XPATH: None, # TODO
-        constants.DP_ID_XPATH: None, # TODO
+        constants.OCCUPATION_XPATH: None,
+    # TODO : Refer master services for 2 letter occupation code
+        constants.MFU_CAN_XPATH: None,  # TODO
+        constants.DP_ID_XPATH: None,  # TODO
         constants.FATHER_NAME_XPATH: investor.father_name,
-        constants.MOTHER_NAME_XPATH: None, # TODO
+        constants.MOTHER_NAME_XPATH: None,  # TODO
         constants.TRXN_ACCEPTANCE_XPATH: "ALL",
         constants.ADDR1_XPATH: contact.communication_address.address_line_1,
         constants.ADDR2_XPATH: contact.communication_address.address_line_2,
@@ -107,15 +121,15 @@ def createcustomerrequest(root, user_id):
         constants.NRI_COUNTRY_XPATH: None,
         constants.BANK_NAME_XPATH: investor_bank.ifsc_code.name,
         constants.ACC_NO_XPATH: investor_bank.account_number,
-        constants.ACC_TYPE_XPATH: investor_bank.account_type,
+        constants.ACC_TYPE_XPATH: 'SB', #TODO: investor_bank.account_type
         constants.IFSC_CODE_XPATH: investor_bank.ifsc_code.ifsc_code,
         constants.BRANCH_NAME_XPATH: investor_bank.ifsc_code.bank_branch,
         constants.BRANCH_ADDR1_XPATH: investor_bank.ifsc_code.address,
         constants.BRANCH_ADDR2_XPATH: None,
         constants.BRANCH_ADDR3_XPATH: None,
         constants.BRANCH_CITY_XPATH: investor_bank.ifsc_code.city,
-        constants.BRANCH_PINCODE_XPATH: None, #TODO
-        constants.BRANCH_COUNTRY_XPATH: None, #TODO
+        constants.BRANCH_PINCODE_XPATH: None,  # TODO
+        constants.BRANCH_COUNTRY_XPATH: api_constants.INDIA,
         constants.JH1_NAME_XPATH: None,
         constants.JH1_PAN_XPATH: None,
         constants.JH1_VALID_PAN_XPATH: None,
@@ -132,19 +146,19 @@ def createcustomerrequest(root, user_id):
         constants.JH2_EXEMPT_REF_NO_XPATH: None,
         constants.JH2_DOB_XPATH: None,
         constants.JH2_KYC_XPATH: None,
-        constants.NO_OF_NOMINEE_XPATH: None,
-        constants.NOMINEE1_TYPE_XPATH: None,
-        constants.NOMINEE1_NAME_XPATH: None,
-        constants.NOMINEE1_DOB_XPATH: None,
-        constants.NOMINEE1_ADDR1_XPATH: None,
-        constants.NOMINEE1_ADDR2_XPATH: None,
-        constants.NOMINEE1_ADDR3_XPATH: None,
-        constants.NOMINEE1_CITY_XPATH: None,
-        constants.NOMINEE1_STATE_XPATH: None,
-        constants.NOMINEE1_PINCODE_XPATH: None,
-        constants.NOMINEE1_RELATION_XPATH: None,
-        constants.NOMINEE1_PERCENT_XPATH: None,
-        constants.NOMINEE1_GUARD_NAME_XPATH: None,
+        constants.NO_OF_NOMINEE_XPATH: '1' if nominee else '0',
+        constants.NOMINEE1_TYPE_XPATH: 'N',
+        constants.NOMINEE1_NAME_XPATH: nominee.nominee_name,
+        constants.NOMINEE1_DOB_XPATH: changeDobFormat(nominee.nominee_dob),
+        constants.NOMINEE1_ADDR1_XPATH: nominee.nominee_address.address_line_1,
+        constants.NOMINEE1_ADDR2_XPATH: nominee.nominee_address.address_line_2,
+        constants.NOMINEE1_ADDR3_XPATH: nominee.nominee_address.nearest_landmark,
+        constants.NOMINEE1_CITY_XPATH: nominee.nominee_address.pincode.city,
+        constants.NOMINEE1_STATE_XPATH: nominee.nominee_address.pincode.state,
+        constants.NOMINEE1_PINCODE_XPATH: nominee.nominee_address.pincode.pincode,
+        constants.NOMINEE1_RELATION_XPATH: nominee.relationship_with_investor,
+        constants.NOMINEE1_PERCENT_XPATH: '100',
+        constants.NOMINEE1_GUARD_NAME_XPATH: nominee.guardian_name,
         constants.NOMINEE1_GUARD_PAN_XPATH: None,
         constants.NOMINEE2_TYPE_XPATH: None,
         constants.NOMINEE2_NAME_XPATH: None,
@@ -169,16 +183,7 @@ def createcustomerrequest(root, user_id):
         constants.GUARD_DOB_XPATH: None
     }
 
-    for key, value in investor_dict.items():
-        if value is None:
-            investor_dict[key] = ""
-        if value is True:
-            investor_dict[key] = "Y"
-        if value is False:
-            investor_dict[key] = "N"
-        root.find(key).text = value
-
-    return root
+    return getValidRequest(investor_dict, root)
 
 
 def purchasetxnrequest(root, user_id):
@@ -280,12 +285,7 @@ def purchasetxnrequest(root, user_id):
         constants.SIP_PERIOD_DAY_XPATH: None
     }
 
-    for key, value in investor_dict.items():
-        if value is None:
-            investor_dict[key] = ""
-        root.find(key).text = value
-
-    return root
+    return getValidRequest(investor_dict, root)
 
 
 def achmandateregistrationsrequest(root, user_id):
@@ -321,9 +321,4 @@ def achmandateregistrationsrequest(root, user_id):
         constants.ACH_AMOUNT_XPATH: None
     }
 
-    for key, value in investor_dict.items():
-        if value is None:
-            investor_dict[key] = ""
-        root.find(key).text = value
-
-    return root
+    return getValidRequest(investor_dict, root)

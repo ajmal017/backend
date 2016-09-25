@@ -1,3 +1,6 @@
+NO_DATA_FOUND = 'No Data Found'
+
+
 # XPATHS FOR READING NSE_RESPONSE FIELDS
 
 RESPONSE_BASE_PATH = './{urn:schemas-microsoft-com:xml-diffgram-v1}diffgram/NMFIISERVICES'
@@ -122,6 +125,7 @@ NOMINEE3_GUARD_NAME_XPATH = SERVICE_REQUEST_PATH + '/nominee3_guard_name'
 NOMINEE3_GUARD_PAN_XPATH = SERVICE_REQUEST_PATH + '/nominee3_guard_pan'
 GUARD_NAME_XPATH = SERVICE_REQUEST_PATH + '/guard_name'
 GUARD_PAN_XPATH = SERVICE_REQUEST_PATH + '/guard_pan'
+GUARDIAN_PAN_XPATH = SERVICE_REQUEST_PATH + '/guardian_pan'
 GUARD_VALID_PAN_XPATH = SERVICE_REQUEST_PATH + '/guard_valid_pan'
 GUARD_EXEMPTION_XPATH = SERVICE_REQUEST_PATH + '/guard_exemption'
 GUARD_EXEMPT_CATEGORY_XPATH = SERVICE_REQUEST_PATH + '/guard_exempt_category'
@@ -301,7 +305,7 @@ REQUEST_CREATECUSTOMER = '''<NMFIIService>
                         <nominee2_guard_name></nominee2_guard_name>
                         <nominee2_guard_pan></nominee2_guard_pan>
                         <nominee3_type></nominee3_type>
-                        <nominee3_Name></nominee3_Name>
+                        <nominee3_name></nominee3_name>
                         <nominee3_dob></nominee3_dob>
                         <nominee3_relation></nominee3_relation>
                         <nominee3_percent></nominee3_percent>
@@ -391,7 +395,7 @@ REQUEST_PURCHASETXN = '''<NMFIIService>
                             <nominee2_percent><nominee2_percent>
                             <nominee2_guard_name></nominee2_guard_name>
                             <nominee2_guard_pan></nominee2_guard_pan>
-                            <nominee3_Name></nominee3_Name>
+                            <nominee3_name></nominee3_name>
                             <nominee3_dob></nominee3_dob>
                             <nominee3_relation></nominee3_relation>
                             <nominee3_percent></nominee3_percent>

@@ -108,13 +108,14 @@ def nse_investor_info_generator(user_id):
     fdf_file.write(fdf)
     fdf_file.close()
 
-    base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps', '')
+    base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps/external_api', '')
     nse_investor_pdf_path = base_dir + '/nse_docs/'
     output_path = base_dir + '/webapp/static/'
     iin_file_name = nse_investor_pdf_path + "iin.pdf"
 
     call(("pdftk " + iin_file_name + " fill_form %s output " % temp_file_name + output_path + "%s flatten"
           % out_file_name).split())
+
     # remove the temporary generated fdf file.
     call(("rm " + temp_file_name).split())
     prefix = "webapp"  # prefix is needed to access the images from media directory.

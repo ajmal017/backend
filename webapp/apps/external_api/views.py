@@ -293,7 +293,7 @@ class NseOrder(View):
                 nse = NseBackend()
                 status_code = nse.get_iin(user_id=user_id)
                 if status_code == nse_contants.RETURN_CODE_FAILURE:
-                    nse.create_customer(user_id=user_id)
+                    return_code = nse.create_customer(user_id=user_id)
                 if investor_bank.sip_check:
                         nse.ach_mandate_registrations(user_id=user_id)
                         nse.upload_img(user_id=user_id, image_type="X")  # 'X' for Transaction type of image and 'A' for IIN Form
