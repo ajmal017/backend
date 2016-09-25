@@ -8,7 +8,6 @@ from django.core.validators import RegexValidator
 from djutil.models import TimeStampedModel
 
 from . import constants
-from core.models import Fund
 from payment import constants as payment_constants
 from payment.models import Transaction
 
@@ -108,7 +107,8 @@ class NseDetails(models.Model):
 
 class OrderDetail(models.Model):
     user_vendor = models.ForeignKey(UserVendors, related_name="user_vendor", blank=False, null=False)
-    fund = models.ForeignKey(Fund, blank=False, null=False)
+    # from core.models import Fund
+    # fund = models.ForeignKey(Fund, blank=False, null=False)
     transaction_detail = models.ForeignKey(Transaction, blank=False, null=False)
     payment_link = models.CharField(max_length=254, blank=False, null=False)
 
