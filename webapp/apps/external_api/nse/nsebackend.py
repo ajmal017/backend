@@ -122,11 +122,17 @@ class NSEBackend(object, ExchangeBackend):
         if return_code == nse_constants.RETURN_CODE_SUCCESS:
             return nse_constants.RETURN_CODE_SUCCESS
         else:
+            createFlag = False
             error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
             for error in error_responses:
                 error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text
+                if error_msg == nse_constants.NO_DATA_FOUND:
+                    createFlag = True
                 error_logger.info(error_msg)
-            return nse_constants.RETURN_CODE_FAILURE
+            if createFlag:
+                return nse_constants.RETURN_CODE_FAILURE
+            else:
+                raise AttributeError
 
     def create_customer(self, user_id):
         """
