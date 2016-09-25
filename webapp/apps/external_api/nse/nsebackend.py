@@ -9,6 +9,7 @@ from external_api.nse import bank_mandate
 from external_api.nse import nse_iinform_generation
 import os
 import re
+import pdb
 from api import utils as api_utils
 import xml.etree.ElementTree as ET
 import requests
@@ -78,11 +79,17 @@ class NseBackend():
         if return_code == nse_constants.RETURN_CODE_SUCCESS:
             return nse_constants.RETURN_CODE_SUCCESS
         else:
+            createFlag = False
             error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
             for error in error_responses:
                 error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text
+                if error_msg == nse_constants.NO_DATA_FOUND:
+                    createFlag = True
                 error_logger.info(error_msg)
-            return nse_constants.RETURN_CODE_FAILURE
+            if createFlag:
+                return nse_constants.RETURN_CODE_FAILURE
+            else:
+                raise AttributeError
 
     def create_customer(self, user_id):
         """
@@ -100,11 +107,14 @@ class NseBackend():
             return_msg = return_msg.replace(" ", "")
             iin_customer_id = re.search('ID:(.+?)', return_msg)
             # save this to NseDetails table
+            # save to UserVendors table that this user is nse registered
+            self.upload_img(user_id=user_id, image_type="A")
             return nse_constants.RETURN_CODE_SUCCESS
         else:
             error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
             for error in error_responses:
                 error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text
+                print(error_msg)
                 error_logger.info(error_msg)
             return nse_constants.RETURN_CODE_FAILURE
 
