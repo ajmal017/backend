@@ -318,25 +318,6 @@ class NseOrder(View):
         #getiin, if error create customer and then recieve iin and save to db
         #depending on txn type sip/lumpsum make requests for payment link if online
 
-        return
-
-
-
-class NseOrder(View):
-    """
-    An api to generate bank mandate.
-    """
-
-    def get(self, request):
-        """
-
-        :param request: user_id of the user and payment type online/offline.
-        :return: send the payment link url
-        """
-
-        # getiin, if error create customer and then recieve iin and save to db
-        # depending on txn type sip/lumpsum make requests for payment link if online
-
         user_id = request.query_params.get('user_id')
         try:
             user = pr_models.User.objects.get(id=user_id)
