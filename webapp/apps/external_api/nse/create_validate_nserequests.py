@@ -52,26 +52,6 @@ def getiinrequest(root, user_id):
 
     return getValidRequest(investor_dict, root)
 
-def ceasesystematictrxn(root, user_id):
-    """
-
-    :param user_id: id of user for whom the nse_request is to be generated
-    :return:
-    """
-    user = models.User.objects.get(id=user_id)
-    nse_details = NseDetails.objects.get(user=user)
-    curr_date = datetime.now()
-
-    investor_dict = {
-        constants.REQUEST_IIN_XPATH: nse_details.iin_customer_id,
-        constants.TRXN_NO_XPATH: '155',  # TODO : Get this from systematic registration report
-        constants.CEASE_REQ_DATE_XPATH: curr_date.strftime('%d-%b-%Y'),
-        constants.INSTBY_XPATH: 'B', # 'B' for broker and 'I' for investor
-        constants.NIGO_REMARKS_XPATH: 'test'
-    }
-
-    return getValidRequest(investor_dict, root)
-
 
 def createcustomerrequest(root, user_id):
     """
