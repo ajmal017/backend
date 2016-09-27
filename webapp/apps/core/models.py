@@ -143,6 +143,8 @@ def get_valid_start_date(fund_id, send_date=date.today()):
     :param send_date: base date to be used as base date for finding valid start date
     :return: next valid start date
     """
+    logger = logging.getLogger("django.debug")
+    logger.debug("in get_valid_start_date: " + str(send_date))
     sip_dates = Fund.objects.get(id=fund_id).sip_dates
     sip_dates.sort()
     next_month = (send_date + timedelta(33))
@@ -153,6 +155,7 @@ def get_valid_start_date(fund_id, send_date=date.today()):
         return next_month
     modified_day = next(date[1] for date in enumerate(sip_dates) if date[1] >= day)
     next_month = next_month.replace(day=modified_day)
+    logger.debug("in get_valid_start_date: next month date: " + str(next_month))
     return next_month
 
 def get_next_allotment_date(fund_id, send_date):
@@ -162,6 +165,8 @@ def get_next_allotment_date(fund_id, send_date):
     :param send_date: base date to be used as base date for finding valid start date
     :return: next valid start date
     """
+    logger = logging.getLogger("django.debug")
+    logger.debug("in get_next_allotment_date: " + str(send_date))
     sip_dates = Fund.objects.get(id=fund_id).sip_dates
     sip_dates.sort()
     current_month = send_date.month
@@ -184,6 +189,7 @@ def get_next_allotment_date(fund_id, send_date):
         return next_month_date
     modified_day = next(date[1] for date in enumerate(sip_dates) if date[1] >= day)
     next_month_date = next_month_date.replace(day=modified_day)
+    logger.debug("in get_next_allotment_date: next date: " + str(next_month_date))
     return next_month_date
 
 def get_next_allotment_date_or_start_date(fund_order_item):
