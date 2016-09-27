@@ -657,7 +657,7 @@ PHYS = "PHYS"
 CLIENT_TYPE_P = "P"
 DEFAULT_BANK_Y = "Y"
 DEFAULT_BANK_N = "N"
-
+FATCA_DATA_SRC_E = "E"
 
 UNSUPPORTED_BANK = "Payment is not supported through this bank as of now."
 
@@ -695,3 +695,4 @@ GET_PASSWORD_URL = 'http://tempuri.org/IMFUploadService/getPassword'
 
 BSE_ORDER_WSDL = 'http://bsestarmfdemo.bseindia.com/MFOrderEntry/MFOrder.svc?singleWsdl'
 BSE_ORDER_GET_PASSWORD_URL = 'http://bsestarmf.in/MFOrderEntry/getPassword'
+EXCHNAME_BSE = "BSE"
