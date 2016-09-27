@@ -187,12 +187,12 @@ def get_bse_income_code(code):
     """
 
     INCOMESLAB_MAP = {
-        profile_models.InvestorInfo.INCOME_CHOICE[profile_constants.LEVEL_1]: '31',
-        profile_models.InvestorInfo.INCOME_CHOICE[profile_constants.LEVEL_2]: '32',
-        profile_models.InvestorInfo.INCOME_CHOICE[profile_constants.LEVEL_3]: '33',
-        profile_models.InvestorInfo.INCOME_CHOICE[profile_constants.LEVEL_4]: '34',
-        profile_models.InvestorInfo.INCOME_CHOICE[profile_constants.LEVEL_5]: '35',
-        profile_models.InvestorInfo.INCOME_CHOICE[profile_constants.LEVEL_6]: '36',
+        profile_models.InvestorInfo.INCOME_CHOICE[0]: '31',
+        profile_models.InvestorInfo.INCOME_CHOICE[1]: '32',
+        profile_models.InvestorInfo.INCOME_CHOICE[2]: '33',
+        profile_models.InvestorInfo.INCOME_CHOICE[3]: '34',
+        profile_models.InvestorInfo.INCOME_CHOICE[4]: '35',
+        profile_models.InvestorInfo.INCOME_CHOICE[5]: '36',
     }
 
     return INCOMESLAB_MAP.get(code, "33")
@@ -205,9 +205,9 @@ def get_bse_pep_code(code):
     """
 
     PEP_MAP = {
-        profile_models.InvestorInfo.EXPOSURE_CHOICE[profile_constants.LEVEL_1]: 'N',
-        profile_models.InvestorInfo.EXPOSURE_CHOICE[profile_constants.LEVEL_2]: 'Y',
-        profile_models.InvestorInfo.EXPOSURE_CHOICE[profile_constants.LEVEL_3]: 'R',
+        profile_models.InvestorInfo.EXPOSURE_CHOICE[0]: 'N',
+        profile_models.InvestorInfo.EXPOSURE_CHOICE[1]: 'Y',
+        profile_models.InvestorInfo.EXPOSURE_CHOICE[2]: 'R',
     }
 
     return PEP_MAP.get(code, "N")
