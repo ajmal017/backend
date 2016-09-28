@@ -161,6 +161,76 @@ def get_bse_occupation_code(code):
 
     return OCCUPATION_MAP.get(code, "08")
 
+def get_bse_occupation_type(code):
+    """
+    :param code: Our mapping for the occupation
+    :return: Occupation code according to BSE standards
+
+    Routes our model mapping to BSE mapping as shown below
+
+    CLIENT_OCCUPATION_CODE_MAP = {
+    "Business": "01",
+    "Services": "02",
+    "Professional": "03",
+    "Agriculture": "04",
+    "Retired": "05",
+    "Housewife": "06",
+    "Student": "07",
+    "Others": "08"
+    }
+    """
+
+    OCCUPATION_TYPE_MAP = {
+        profile_constants.BUSINESS: 'B',
+        profile_constants.PRIVATE_SECTOR: 'S',
+        profile_constants.PUBLIC_SECTOR: 'S',
+        profile_constants.GOVERNMENT: 'S',
+        profile_constants.PROFESSIONAL: 'B',
+        profile_constants.AGRICULTURE: 'O',
+        profile_constants.RETIRED: 'O',
+        profile_constants.HOUSEWIFE: 'O',
+        profile_constants.STUDENT: 'O',
+        profile_constants.OTHER: 'O',
+        profile_constants.FOREX_DEALER: 'O',
+    }
+
+    return OCCUPATION_TYPE_MAP.get(code, "O")
+
+def get_bse_srcwealth_code(code):
+    """
+    :param code: Our mapping for the occupation
+    :return: Occupation code according to BSE standards
+
+    Routes our model mapping to BSE mapping as shown below
+
+    CLIENT_OCCUPATION_CODE_MAP = {
+    "Business": "01",
+    "Services": "02",
+    "Professional": "03",
+    "Agriculture": "04",
+    "Retired": "05",
+    "Housewife": "06",
+    "Student": "07",
+    "Others": "08"
+    }
+    """
+
+    OCCUPATION_TO_SRCWEALTH_MAP = {
+        profile_constants.BUSINESS: '02',
+        profile_constants.PRIVATE_SECTOR: '01',
+        profile_constants.PUBLIC_SECTOR: '01',
+        profile_constants.GOVERNMENT: '01',
+        profile_constants.PROFESSIONAL: '02',
+        profile_constants.AGRICULTURE: '08',
+        profile_constants.RETIRED: '08',
+        profile_constants.HOUSEWIFE: '08',
+        profile_constants.STUDENT: '08',
+        profile_constants.OTHER: '08',
+        profile_constants.FOREX_DEALER: '08',
+    }
+
+    return OCCUPATION_TO_SRCWEALTH_MAP.get(code, "08")
+
 def get_bse_address_type_code(code):
     """
     :param code: Our mapping for the address type code
@@ -685,7 +755,6 @@ def generate_client_fatca_pipe(user_list):
         """
         user = profile_models.User.objects.get(id=user_id)
         investor = profile_models.InvestorInfo.objects.get(user=user)
-        nominee = profile_models.NomineeInfo.objects.get(user=user)
         contact = profile_models.ContactInfo.objects.get(user=user)
     
         bse_dict = OrderedDict([("CLIENT PAN", investor.pan_number),
@@ -711,14 +780,14 @@ def generate_client_fatca_pipe(user_list):
                                ("CLIENT TAXRES4", None),
                                ("CLIENT TAX PIN4", None),
                                ("CLIENT TAX PIN TYPE4", None),
-                               ("CLIENT SRC WEALTH", None),
+                               ("CLIENT SRC WEALTH", get_bse_srcwealth_code(investor.occupation_type)),
                                ("CLIENT CORP SERVS", None),
                                ("CLIENT INC SLAB", get_bse_income_code(investor.income)),
                                ("CLIENT NET WORTH", None),
                                ("CLIENT NET WORTH DATE", None),
                                ("CLIENT PEP", get_bse_pep_code(investor.political_exposure)),
                                ("CLIENT OCCUPATIONCODE", get_bse_occupation_code(investor.occupation_type)),
-                               ("CLIENT OCCUPATIONType", get_bse_occupation_code(investor.occupation_type)),
+                               ("CLIENT OCCUPATIONType", get_bse_occupation_type(investor.occupation_type)),
                                ("CLIENT EXMPT CODE", None),
                                ("CLIENT FFI_DRNFE", None),
                                ("CLIENT GIIN_NO", None),
@@ -730,7 +799,7 @@ def generate_client_fatca_pipe(user_list):
                                ("CLIENT NATURE_BUS", None),
                                ("CLIENT REL_LISTED", None),
                                ("CLIENT EXCH_NAME", cons.EXCHNAME_BSE),
-                               ("CLIENT UBO_APPL", None),
+                               ("CLIENT UBO_APPL", "N"),
                                ("CLIENT UBO_COUNT", None),
                                ("CLIENT UBO_NAME", None),
                                ("CLIENT UBO_PAN", None),
@@ -760,7 +829,7 @@ def generate_client_fatca_pipe(user_list):
                                ("CLIENT UBO_DF", "N"),
                                ("CLIENT AADHAAR_RP", None),
                                ("CLIENT NEW_CHANGE", "N"),
-                               ("CLIENT LOG_NAME", investor.modified_at.strftime("%d/%m/%Y")),
+                               ("CLIENT LOG_NAME", user.finaskus_id + ":" + investor.modified_at.strftime("%d/%m/%Y")),
                                ("CLIENT FILLER1", None),
                                ("CLIENT FILLER2", None)
                                 ])
@@ -778,6 +847,10 @@ def generate_client_fatca_pipe(user_list):
         user = profile_models.User.objects.get(id=i)
         if not is_investable(user):
             not_set.append(user.id)
+        else:
+            investor = profile_models.InvestorInfo.objects.get(user=user)
+            if investor and investor.other_tax_payer == True:
+                not_set.append(user.id)
     if len(not_set) > 0:
         return not_set
     else:
