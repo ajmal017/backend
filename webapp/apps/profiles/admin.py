@@ -106,7 +106,7 @@ class UserAdmin(admin.ModelAdmin):
         internal_models.EmailField: {'widget': TextInput(attrs={'size': '17'})},
         internal_models.TextField: {'widget': Textarea(attrs={'rows': '2', 'cols': '40'})},
     }
-    search_fields = ['phone_number', 'email']
+    search_fields = ['phone_number', 'email', 'finaskus_id']
     list_display = ['id', 'email', 'phone_number', 'get_vault_complete', 'get_kra_verification', 'bse_registered',
                     'tiff_mailed', 'tiff_accepted', 'kyc_mailed', 'kyc_accepted', 'mandate_status', 'xsip_status',
                     'finaskus_id', 'mandate_reg_no', 'remarks', 'button', 'button1', 'button2', 'button3', 'button4']
@@ -166,7 +166,6 @@ class UserAdmin(admin.ModelAdmin):
         :param queryset: selected users
         :return:call a function that returns pipe separated file of selected id
         """
-
         user_id_list = []
         for item in queryset:
             user_id_list.append(item.id)
