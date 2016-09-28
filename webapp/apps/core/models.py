@@ -501,7 +501,23 @@ class PortfolioItem(TimeStampedModel):
         except ZeroDivisionError:
             self.returns_percentage = 0
 
+"""
+class Goal(TimeStampedModel):
+    CATEGORY_CHOICE = (
+        (constants.RETIREMENT, 'Retirement'),
+        (constants.TAX_SAVING, 'Tax Saving'),
+        (constants.BUY_PROPERTY, 'Buy Property'),
+        (constants.EDUCATION, 'Higher Education'),
+        (constants.WEDDING, 'Save for Wedding'),
+        (constants.OTHER_EVENT, 'Other Events'),
+        (constants.INVEST, 'Invest')
+    )
 
+    user = models.ForeignKey(profile_models.User, related_name="user")
+    portfolio = models.ForeignKey(Portfolio, null=True, blank=True, default=None)
+    category = models.CharField(_('Category'), max_length=254, choices=CATEGORY_CHOICE)
+"""     
+    
 class Answer(TimeStampedModel):
     """
     Model for selected choices from options

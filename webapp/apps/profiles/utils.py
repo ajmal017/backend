@@ -484,8 +484,11 @@ def get_investor_mandate_amount(user, order_detail):
         mandate_amount = max(sip_amount*2, cons.DEFAULT_BANK_MANDATE_AMOUNT)
         
         if mandate_amount > cons.DEFAULT_BANK_MANDATE_AMOUNT:
-            amount_remainder = mandate_amount%10000
-            if amount_remainder > 0:
-                mandate_amount = (mandate_amount - amount_remainder) + 10000
+            if mandate_amount <= cons.DEFAULT_BANK_MANDATE_AMOUNT_NEXT:
+                mandate_amount = cons.DEFAULT_BANK_MANDATE_AMOUNT_NEXT
+            else:
+                amount_remainder = mandate_amount%10000
+                if amount_remainder > 0:
+                    mandate_amount = (mandate_amount - amount_remainder) + 10000
             
         return mandate_amount

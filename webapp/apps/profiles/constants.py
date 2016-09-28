@@ -121,5 +121,6 @@ PHONE_ALREADY_PRESENT = 'Phone Number already registered'
 USER_WITH_EMAIL_NOT_PRESENT = 'User with given email is not present'
 VERIFICATION_CODE_NOT_PRESENT = 'User did not requested for password change.'
 
-DEFAULT_BANK_MANDATE_AMOUNT = 10000
+DEFAULT_BANK_MANDATE_AMOUNT = 50000
+DEFAULT_BANK_MANDATE_AMOUNT_NEXT = 100000
 
