@@ -54,6 +54,20 @@ def get_access_token(user, password):
     return responseJSON
 
 
+def convert_social_access_token(user,access_token):
+    """
+     Return : Converted access token to application
+    """
+    data = {'grant_type':'convert_token','backend':'google-oauth2','token':access_token,'client_id':settings.CLIENT_ID,'client_secret':settings.CLIENT_SECRET}
+    print(access_token)
+    response = requests.post(settings.BASE_URL + '/auth/convert-token/', data=data)
+    responseJSON = response.json()
+    if not responseJSON.get('convert_token'):
+        logger = logging.getLogger('django.error')
+        logger.error("Profiles: access_token: Access token failed for user with id: " + user.id)      
+    return responseJSON
+
+
 def send_mail(subject_template_name, email_template_name, context, from_email, to_email, html_email_template_name=None):
     """
     Sends a django.core.mail.EmailMultiAlternatives to `to_email`.
