@@ -7,3 +7,4 @@ webapp/statics
 *.pyc
 *.swp**/.DS_Store
 webapp/static
+*.swp
