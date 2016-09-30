@@ -11,7 +11,7 @@ from dateutil.relativedelta import relativedelta
 
 
 from api import utils as api_utils
-from external_api.models import Pincode, BankDetails
+from external_api.models import Pincode, BankDetails, Vendor
 from . import manager, constants, helpers
 
 from enum import Enum
@@ -248,6 +248,27 @@ class User(AbstractBaseUser, TimeStampedModel):
             return None
         return min(texts),len(texts)
     
+
+class UserVendor(TimeStampedModel):
+    MANDATE_STATUS = (
+        (constants.LEVEL_0, 'Pending'),
+        (constants.LEVEL_1, 'Ongoing'),
+        (constants.LEVEL_2, 'Completed'),
+    )
+
+    user = models.OneToOneField(settings.AUTH_USER_MODEL)
+    vendor = models.ForeignKey(Vendor, related_name="user_vendor", blank=False, null=False)
+    ucc = models.CharField(max_length=40, default=None, blank=True, null=True)
+    mandate_reg_no = models.CharField(_('Mandate Registration Number'), max_length=100, default=None, blank=True,
+                                      null=True)
+    ucc_registered = models.BooleanField(default=False)
+    fatca_filed = models.BooleanField(default=False)
+    tiff_mailed = models.BooleanField(default=False)
+    tiff_accepted = models.BooleanField(default=False)
+    mandate_status = models.CharField(max_length=1, choices=MANDATE_STATUS, blank=True, default=constants.LEVEL_0)
+
+    class Meta:
+        unique_together = (('user', 'vendor'),)
 
 class VerificationSMSCode(TimeStampedModel):
     """
