@@ -4,7 +4,7 @@ from external_api.nse import create_validate_nserequests
 from external_api.nse import constants as nse_constants
 from external_api import constants
 from external_api import models
-from external_api.exchange_backend import ExchangeBackend 
+from external_api import ExchangeBackend
 from profiles import models as pr_models
 from external_api.nse import bank_mandate
 from external_api.nse import nse_iinform_generation
@@ -17,15 +17,11 @@ import requests
 import logging
 
 
-class NseBackend(object, ExchangeBackend):
+class bseBackend(object, ExchangeBackend):
     """
     A wrapper that manages the NSE Purchase Transactions Backend
     """
-    error_logger = logging.getLogger('django.error')
 
-    def __init__(self, vendor_name):
-        super(ExchangeBackend, self).__init__(vendor_name)
-        
     def _get_data(self, method_name, xml_request_body):
         """
 
@@ -96,15 +92,6 @@ class NseBackend(object, ExchangeBackend):
             else:
                 raise AttributeError
 
-    def update_ucc(self, user_id, ucc):
-        user_vendor = super(ExchangeBackend, self).update_ucc(user_id, ucc)
-        if user_vendor:
-            try: 
-                user_vendor.ucc_registered = True
-                user_vendor.save()
-            except Exception as e:
-                self.error_logger.error("Error updating ucc status: " + str(e))
-        
     def create_customer(self, user_id):
         """
         # Complete with iin form upload flow
@@ -112,6 +99,7 @@ class NseBackend(object, ExchangeBackend):
         :param:
         :return:
         """
+        error_logger = logging.getLogger('django.error')
         xml_request_body = self._get_request_body(nse_constants.METHOD_CREATECUSTOMER, user_id)
         root = self._get_data(nse_constants.METHOD_CREATECUSTOMER, xml_request_body=xml_request_body)
         return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
@@ -119,20 +107,21 @@ class NseBackend(object, ExchangeBackend):
             return_msg = root.find(nse_constants.SERVICE_RETURN_MSG_PATH).text
             return_msg = return_msg.replace(" ", "")
             iin_customer_id = re.search('ID:(.+?)', return_msg)
-            self.update_ucc(user_id, iin_customer_id)
+            # save this to NseDetails table
+            # save to UserVendors table that this user is nse registered
+            self.upload_img(user_id=user_id, image_type="A")
             return nse_constants.RETURN_CODE_SUCCESS
         else:
             error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
             for error in error_responses:
                 error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text
                 print(error_msg)
-                self.error_logger.info(error_msg)
+                error_logger.info(error_msg)
             return nse_constants.RETURN_CODE_FAILURE
 
     def upload_aof_image(self, user_id):
-        self.upload_img(user_id=user_id, image_type="A")
-        return nse_constants.RETURN_CODE_SUCCESS
-
+        return
+    
     def purchase_trxn(self, user_id):
         """
 
