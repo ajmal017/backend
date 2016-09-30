@@ -292,6 +292,27 @@ class UserVendor(TimeStampedModel):
     class Meta:
         unique_together = (('user', 'vendor'),)
 
+class UserVendor(TimeStampedModel):
+    MANDATE_STATUS = (
+        (constants.LEVEL_0, 'Pending'),
+        (constants.LEVEL_1, 'Ongoing'),
+        (constants.LEVEL_2, 'Completed'),
+    )
+
+    user = models.OneToOneField(settings.AUTH_USER_MODEL)
+    vendor = models.ForeignKey(Vendor, related_name="user_vendor", blank=False, null=False)
+    ucc = models.CharField(max_length=40, default=None, blank=True, null=True)
+    mandate_reg_no = models.CharField(_('Mandate Registration Number'), max_length=100, default=None, blank=True,
+                                      null=True)
+    ucc_registered = models.BooleanField(default=False)
+    fatca_filed = models.BooleanField(default=False)
+    tiff_mailed = models.BooleanField(default=False)
+    tiff_accepted = models.BooleanField(default=False)
+    mandate_status = models.CharField(max_length=1, choices=MANDATE_STATUS, blank=True, default=constants.LEVEL_0)
+
+    class Meta:
+        unique_together = (('user', 'vendor'),)
+
 class VerificationSMSCode(TimeStampedModel):
     """
     Stores a short 5 digit activation code for verification

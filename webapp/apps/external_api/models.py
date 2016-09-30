@@ -9,7 +9,6 @@ from djutil.models import TimeStampedModel
 
 from . import constants
 from payment import constants as payment_constants
-from payment.models import Transaction
 
 
 
