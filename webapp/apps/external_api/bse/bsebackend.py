@@ -20,8 +20,6 @@ import requests
 import logging
 
 
-
-
 class BSEBackend(object, ExchangeBackend):
     """
     A wrapper that manages the NSE Purchase Transactions Backend
@@ -146,7 +144,6 @@ class BSEBackend(object, ExchangeBackend):
                 error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text
                 error_logger.info(error_msg)
             return nse_constants.RETURN_CODE_FAILURE
-
 
 
     def bulk_create_customer(self, user_list):
