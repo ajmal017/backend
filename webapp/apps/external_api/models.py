@@ -9,9 +9,7 @@ from djutil.models import TimeStampedModel
 
 from . import constants
 from payment import constants as payment_constants
-from payment.models import Transaction
 
-from enum import IntEnum
 
 
 class SMS(TimeStampedModel):
@@ -93,40 +91,10 @@ class BankDetails(models.Model):
         else:
             return True
 
-class Vendors(models.Model):
-    name = models.CharField(max_length=100, blank=False, null=False)
+
+class Vendor(TimeStampedModel):
+    name = models.CharField(max_length=100, blank=False, null=False, unique=True)
     active = models.BooleanField(default=False)
-
-class UserVendors(models.Model):
-    MANDATE_STATUS = (
-        (constants.LEVEL_0, 'Pending'),
-        (constants.LEVEL_1, 'Ongoing'),
-        (constants.LEVEL_2, 'Completed'),
-    )
-
-    user = models.OneToOneField(settings.AUTH_USER_MODEL)
-    vendor = models.ForeignKey(Vendors, related_name="user_vendor", blank=False, null=False)
-    ucc = models.CharField(max_length=40, default=None, blank=True, null=True)
-    mandate_reg_no = models.CharField(_('Mandate Registration Number'), max_length=100, default=None, blank=True,
-                                      null=True)
-    ucc_registered = models.BooleanField(default=False)
-    fatca_filed = models.BooleanField(default=False)
-    tiff_mailed = models.BooleanField(default=False)
-    tiff_accepted = models.BooleanField(default=False)
-    mandate_status = models.CharField(max_length=1, choices=MANDATE_STATUS, blank=True, default=constants.LEVEL_0)
-
-
-class NseDetails(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL)
-    iin_customer_id = models.CharField(max_length=12, blank=False, null=False)
-    ach_inserted = models.BooleanField(default=False)
-
-class OrderDetail(models.Model):
-    user_vendor = models.ForeignKey(UserVendors, related_name="user_vendor", blank=False, null=False)
-    # from core.models import Fund
-    # fund = models.ForeignKey(Fund, blank=False, null=False)
-    transaction_detail = models.ForeignKey(Transaction, blank=False, null=False)
-    payment_link = models.CharField(max_length=254, blank=False, null=False)
 
 
 # class OrderEntryParam(models.Model):
