@@ -9,6 +9,7 @@ from rest_framework import permissions
 
 from external_api.nse.nsebackend import NseBackend
 from external_api.nse import constants as nse_contants
+from external_api import helpers
 from . import investor_info_generation, bse_investor_info_generation, bulk_order_entry, kyc_pdf_generator, \
     xsip_registration, bank_mandate
 from core.models import OrderDetail, RedeemDetail, GroupedRedeemDetail
@@ -91,6 +92,13 @@ class KycApi(APIView):
                                           status.HTTP_404_NOT_FOUND, constants.UNACCEPTABLE_PAN_NUMBER)
         return api_utils.response({"status": new_status, "name": name})
 
+class RegisterUCC(object):
+    def get(self, user_id_list):
+        """
+        :param request: the email_id of the pertinent user is received from this.
+        :return: send the generated pipe file
+        """
+
 
 class GenerateInvestorPdf(View):
     """
@@ -162,7 +170,7 @@ class GenerateKycPdf(View):
             # non-admin is trying to access the file. Prevent access.
             return HttpResponse(constants.FORBIDDEN_ERROR, status=403)
 
-
+    
 class GenerateBseOrderPipe(View):
     """
     An api to generate pipe file for bulk order entry
