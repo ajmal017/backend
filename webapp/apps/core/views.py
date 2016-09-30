@@ -310,6 +310,8 @@ class RecommendedPortfolios(APIView):
         portfolio_items, errors = utils.get_portfolio_items(request.user.id, overall_allocation, sip_lumpsum_allocation)
         if portfolio_items is not None:
             portfolio_items.update(overall_allocation)
+            logger = logging.getLogger('django.debug')
+            logger.debug("recommended schemes: " + str(portfolio_items))
             request.user.rebuild_portfolio = False
             request.user.save()
             msg=api_utils.response(portfolio_items, status.HTTP_200_OK)
