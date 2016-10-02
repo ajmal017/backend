@@ -92,13 +92,23 @@ class KycApi(APIView):
                                           status.HTTP_404_NOT_FOUND, constants.UNACCEPTABLE_PAN_NUMBER)
         return api_utils.response({"status": new_status, "name": name})
 
-class RegisterUCC(object):
-    def get(self, user_id_list):
+class BulkRegisterUCC(object):
+    def get(self, user_list):
         """
         :param request: the email_id of the pertinent user is received from this.
         :return: send the generated pipe file
         """
+        exch_backend = helpers.get_backend_instance()
+        if exch_backend:
+            not_set = []
+            for i in user_list:
+                user = pr_models.User.objects.get(id=i)
+                if not is_investable(user):
+                    not_set.append(user.id)
+            if len(not_set) > 0:
+                return not_set
 
+            return exch_backend.bulk_create_customer(user_list)
 
 class GenerateInvestorPdf(View):
     """
@@ -243,7 +253,7 @@ class GenerateXsipRegistration(View):
             return HttpResponse(constants.FORBIDDEN_ERROR, status=403)
 
 
-class GenerateBankMandate(View):
+class GenerateBankMandateRegistration(View):
     """
     An api to generate bank mandate.
     """
@@ -303,7 +313,7 @@ class NseOrder(View):
                 if status_code == nse_contants.RETURN_CODE_FAILURE:
                     return_code = nse.create_customer(user_id=user_id)
                 if investor_bank.sip_check:
-                        nse.ach_mandate_registrations(user_id=user_id)
+                        nse.generate_bank_mandate_registration(user_id=user_id)
                         nse.upload_img(user_id=user_id, image_type="X")  # 'X' for Transaction type of image and 'A' for IIN Form
                 status_code = nse.purchase_trxn(user_id=user_id)
                 if status_code == nse_contants.RETURN_CODE_SUCCESS:
@@ -320,8 +330,7 @@ class NseOrder(View):
             return api_utils.response({constants.MESSAGE: constants.USER_NOT_FOUND}, status.HTTP_404_NOT_FOUND,
                                       constants.USER_NOT_FOUND)
 
-
-class GenerateBseInfoTiff(View):
+class UploadAOFTiff(View):
     """
     an api to generate Bse Investor info pdf
     """
@@ -337,21 +346,52 @@ class GenerateBseInfoTiff(View):
         # makes sure that only superuser can access this file.
 
         if request.user.is_superuser:
-            user = pr_models.User.objects.get(email=request.GET.get('email'))
-            if is_investable(user) and user.signature != "":
-                output_file = bse_investor_info_generation.bse_investor_info_generator(user.id).split('/')[-1]
-                prefix = 'webapp'
-                my_file_path = prefix + constants.STATIC + output_file
-                my_file = open(my_file_path, "rb")
-                content_type = 'image/tiff'
-                download_name = user.id
-                response = HttpResponse(my_file, content_type=content_type, status=200)
-                response['Content-Disposition'] = 'attachment;filename=%s' % download_name + ".tiff"
-                my_file.close()
-                return response  # contains the pdf of the pertinent user
-            else:
-                # file doesn't exist because investor vault is incomplete.
-                return HttpResponse(payment_constant.CANNOT_GENERATE_FILE, status=404)
+            exch_backend = helpers.get_backend_instance()
+            if exch_backend:
+                user = pr_models.User.objects.get(email=request.GET.get('email'))
+                if is_investable(user) and user.signature != "":
+                    result = exch_backend.upload_aof_image(user.id)
+                    if result == constants.RETURN_CODE_SUCCESS:
+                        return HttpResponse(constants.SUCCESS, status=200)
+            # file doesn't exist because investor vault is incomplete.
+            return HttpResponse(payment_constant.CANNOT_GENERATE_FILE, status=404)
+        else:
+            # non-admin is trying to access the file. Prevent access.
+            return HttpResponse(constants.FORBIDDEN_ERROR, status=403)
+
+class GenerateAOFTiff(View):
+    """
+    an api to generate Bse Investor info pdf
+    """
+
+    def get(self, request):
+        """
+        Only admin user is allowed to access the private Bse info Tiff file.
+
+        :param request: the email_id of the pertinent user is received from this.
+        :return: send the generated tiff file
+        """
+
+        # makes sure that only superuser can access this file.
+
+        if request.user.is_superuser:
+            exch_backend = helpers.get_backend_instance()
+            if exch_backend:
+                user = pr_models.User.objects.get(email=request.GET.get('email'))
+                if is_investable(user) and user.signature != "":
+                    output_file = exch_backend.generate_aof_image(user.id).split('/')[-1]
+                    prefix = 'webapp'
+                    my_file_path = prefix + constants.STATIC + output_file
+                    my_file = open(my_file_path, "rb")
+                    content_type = 'image/tiff'
+                    download_name = user.id
+                    response = HttpResponse(my_file, content_type=content_type, status=200)
+                    response['Content-Disposition'] = 'attachment;filename=%s' % download_name + ".tiff"
+                    my_file.close()
+                    return response  # contains the pdf of the pertinent user
+                else:
+                    # file doesn't exist because investor vault is incomplete.
+                    return HttpResponse(payment_constant.CANNOT_GENERATE_FILE, status=404)
         else:
             # non-admin is trying to access the file. Prevent access.
             return HttpResponse(constants.FORBIDDEN_ERROR, status=403)
@@ -410,23 +450,25 @@ class GenerateMandatePdf(View):
         # makes sure that only superuser can access this file.
 
         if request.user.is_superuser:
-            user = pr_models.User.objects.get(email=request.GET.get('email'))
-            if is_investable(user) and user.signature != "":
-                output_file, error = bank_mandate.generate_bank_mandate_pdf(user.id)
-                if output_file is None:
-                    return HttpResponse(error, status=404)
-                output_file = output_file.split('/')[-1]
-                prefix = 'webapp'
-                my_file_path = prefix + constants.STATIC + output_file
-                my_file = open(my_file_path, "rb")
-                content_type = 'application/pdf'
-                response = HttpResponse(my_file, content_type=content_type, status=200)
-                response['Content-Disposition'] = 'attachment;filename=%s' % str(user.id) + '_mandate.pdf'
-                my_file.close()
-                return response  # contains the pdf of the pertinent user
-            else:
-                # file doesn't exist because investor vault is incomplete.
-                return HttpResponse(payment_constant.CANNOT_GENERATE_FILE, status=404)
+            exch_backend = helpers.get_backend_instance()
+            if exch_backend:
+                user = pr_models.User.objects.get(email=request.GET.get('email'))
+                if is_investable(user) and user.signature != "":
+                    output_file, error = exch_backend.generate_bank_mandate(user.id)
+                    if output_file is None:
+                        return HttpResponse(error, status=404)
+                    output_file = output_file.split('/')[-1]
+                    prefix = 'webapp'
+                    my_file_path = prefix + constants.STATIC + output_file
+                    my_file = open(my_file_path, "rb")
+                    content_type = 'application/pdf'
+                    response = HttpResponse(my_file, content_type=content_type, status=200)
+                    response['Content-Disposition'] = 'attachment;filename=%s' % str(user.id) + '_mandate.pdf'
+                    my_file.close()
+                    return response  # contains the pdf of the pertinent user
+
+            # file doesn't exist because investor vault is incomplete.
+            return HttpResponse(payment_constant.CANNOT_GENERATE_FILE, status=404)
         else:
             # non-admin is trying to access the file. Prevent access.
             return HttpResponse(constants.FORBIDDEN_ERROR, status=403)
