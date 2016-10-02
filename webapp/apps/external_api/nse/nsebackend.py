@@ -178,7 +178,8 @@ class NSEBackend(object, ExchangeBackend):
             # 0 for pending transactions assuming there is only one pending transaction
             current_transaction.payment_link= payment_link
             current_transaction.save()
-            return nse_constants.RETURN_CODE_SUCCESS
+            # Save payment link Order_detail Table
+            return constants.RETURN_CODE_SUCCESS
         else:
             error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
             for error in error_responses:
