@@ -9,9 +9,17 @@ class ExchangeBackend(ABC):
     def __init__(self, vendor_name):
         self.vendor_name = vendor_name
         self.vendor = None
-        
+
     @classmethod
     def create_customer(cls, user_id):
+        return NotImplementedError
+
+    @classmethod
+    def bulk_create_customer(cls, user_list):
+        return NotImplementedError
+
+    @classmethod
+    def generate_aof_image(cls, user_id):
         return NotImplementedError
     
     @classmethod
@@ -30,3 +38,12 @@ class ExchangeBackend(ABC):
             logger.error("Error updating ucc: " + str(e))
         
         return None
+    
+    def generate_bank_mandate(self, user_id):
+        return NotImplementedError
+
+    def upload_bank_mandate(self, user_id):
+        return NotImplementedError
+    
+    def generate_bank_mandate_registration(self, user_id):
+        return NotImplementedError

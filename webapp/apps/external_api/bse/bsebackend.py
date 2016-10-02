@@ -6,8 +6,11 @@ from external_api import constants
 from external_api import models
 from external_api import ExchangeBackend
 from profiles import models as pr_models
-from external_api.nse import bank_mandate
-from external_api.nse import nse_iinform_generation
+from profiles import constants as profile_constants
+from external_api.bse import bank_mandate
+from external_api.bse import bse_investor_info_generation
+from external_api.bse import bulk_upload
+
 import os
 import re
 import pdb
@@ -17,7 +20,9 @@ import requests
 import logging
 
 
-class bseBackend(object, ExchangeBackend):
+
+
+class BSEBackend(object, ExchangeBackend):
     """
     A wrapper that manages the NSE Purchase Transactions Backend
     """
@@ -93,34 +98,10 @@ class bseBackend(object, ExchangeBackend):
                 raise AttributeError
 
     def create_customer(self, user_id):
-        """
-        # Complete with iin form upload flow
-
-        :param:
-        :return:
-        """
-        error_logger = logging.getLogger('django.error')
-        xml_request_body = self._get_request_body(nse_constants.METHOD_CREATECUSTOMER, user_id)
-        root = self._get_data(nse_constants.METHOD_CREATECUSTOMER, xml_request_body=xml_request_body)
-        return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
-        if return_code == nse_constants.RETURN_CODE_SUCCESS:
-            return_msg = root.find(nse_constants.SERVICE_RETURN_MSG_PATH).text
-            return_msg = return_msg.replace(" ", "")
-            iin_customer_id = re.search('ID:(.+?)', return_msg)
-            # save this to NseDetails table
-            # save to UserVendors table that this user is nse registered
-            self.upload_img(user_id=user_id, image_type="A")
-            return nse_constants.RETURN_CODE_SUCCESS
-        else:
-            error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
-            for error in error_responses:
-                error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text
-                print(error_msg)
-                error_logger.info(error_msg)
-            return nse_constants.RETURN_CODE_FAILURE
-
+        return constants.RETURN_CODE_FAILURE
+    
     def upload_aof_image(self, user_id):
-        return
+        return constants.RETURN_CODE_FAILURE
     
     def purchase_trxn(self, user_id):
         """
@@ -167,29 +148,25 @@ class bseBackend(object, ExchangeBackend):
             return nse_constants.RETURN_CODE_FAILURE
 
 
-    def upload_img(self, user_id, ref_no='', image_type=''):
-        error_logger = logging.getLogger('django.error')
-        nse_user = models.NseDetails.get(user_id=user_id)
-        queryString = "?BrokerCode=" + nse_constants.NSE_NMF_BROKER_CODE + "&Appln_id=" + nse_constants.NSE_NMF_APPL_ID + \
-                      "&Password=" + nse_constants.NSE_NMF_PASSWORD + "&CustomerID=" + nse_user.iin_customer_id + "&Refno=" + ref_no + \
-                      "&ImageType=" + image_type
-        api_url = nse_constants.NSE_NMF_BASE_API_URL + nse_constants.METHOD_UPLOADIMG + queryString
-        filePath = ""
-        if image_type == "A":
-            filePath = nse_iinform_generation.nse_investor_info_generator(user_id)
-        elif image_type == "X":
-            filePath = bank_mandate.generate_bank_mandate_tiff(user_id)
 
-        headers = {'Content-Type': 'image/tiff'}
-        with open(filePath, 'rb') as f:
-            response = requests.post(api_url, files={'image': f}, headers=headers)
-        root = self._get_valid_response(response)
-        return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
-        if return_code == nse_constants.RETURN_CODE_SUCCESS:
-            return nse_constants.RETURN_CODE_SUCCESS
-        else:
-            error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
-            for error in error_responses:
-                error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text
-                error_logger.info(error_msg)
-            return nse_constants.RETURN_CODE_FAILURE
+    def bulk_create_customer(self, user_list):
+        """
+        This function generates a pipe separated file for bulk order entry.
+        
+        :param user_list: list of users to be bulk uploaded.
+        :return: url of the generated pipe separated file of the bulk order entry
+        """
+        return bulk_upload.generate_client_pipe(user_list, self)
+    
+    def generate_aof_image(self, user_id):
+        filePath = bse_investor_info_generation.bse_investor_info_generator(user_id)
+        return filePath
+
+    def generate_bank_mandate(self, user_id):
+        return bank_mandate.generate_bank_mandate_pdf(user_id)
+
+    def upload_bank_mandate(self, user_id):
+        return constants.RETURN_CODE_FAILURE
+    
+    def generate_bank_mandate_registration(self, user_id):
+        return NotImplementedError
