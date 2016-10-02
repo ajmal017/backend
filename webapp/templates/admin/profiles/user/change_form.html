@@ -8,6 +8,7 @@
         <input type="submit" value="{% trans 'Resend email' %}" id="button_email" />
         <input type="submit" value="{% trans 'Generate Investor Pdf' %}"  id="button_investor_pdf" />
         <input type="submit" value="{% trans 'Generate Tiff' %}"  id="button_tiff" />
+        <input type="submit" value="{% trans 'Upload AOF Tiff' %}"  id="button_upload_tiff" />
         <input type="submit" value="{% trans 'Generate Kyc pdf' %}" id="button_kyc_pdf" />
         <input type="submit" value="{% trans 'Generate Bank Mandate pdf' %}" id="bank_mandate_pdf" />
         <div class="loader" style="display: none;">
@@ -52,6 +53,13 @@
                     email = element.value;
                     // this opens a new window for the download of the private resource.
                     window.open("/v2.0/open/generate/bse/investor/tiff/?email="+email);
+                });
+
+                $('#button_upload_tiff').click(function(){
+                    var element = document.getElementById("id_email");
+                    email = element.value;
+                    // this opens a new window for the download of the private resource.
+                    window.open("/v2.0/open/upload/investor/tiff/?email="+email);
                 });
 
                 $('#bank_mandate_pdf').click(function(){

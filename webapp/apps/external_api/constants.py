@@ -704,3 +704,7 @@ GET_PASSWORD_URL = 'http://tempuri.org/IMFUploadService/getPassword'
 BSE_ORDER_WSDL = 'http://bsestarmfdemo.bseindia.com/MFOrderEntry/MFOrder.svc?singleWsdl'
 BSE_ORDER_GET_PASSWORD_URL = 'http://bsestarmf.in/MFOrderEntry/getPassword'
 EXCHNAME_BSE = "B"
+
+RETURN_CODE_FAILURE = '1'
+
+RETURN_CODE_SUCCESS = '0'

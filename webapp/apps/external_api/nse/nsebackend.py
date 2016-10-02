@@ -17,7 +17,7 @@ import requests
 import logging
 
 
-class NseBackend(object, ExchangeBackend):
+class NSEBackend(object, ExchangeBackend):
     """
     A wrapper that manages the NSE Purchase Transactions Backend
     """
@@ -82,7 +82,7 @@ class NseBackend(object, ExchangeBackend):
         root = self._get_data(nse_constants.METHOD_GETIIN, xml_request_body=xml_request_body)
         return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
         if return_code == nse_constants.RETURN_CODE_SUCCESS:
-            return nse_constants.RETURN_CODE_SUCCESS
+            return constants.RETURN_CODE_SUCCESS
         else:
             createFlag = False
             error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
@@ -92,7 +92,7 @@ class NseBackend(object, ExchangeBackend):
                     createFlag = True
                 error_logger.info(error_msg)
             if createFlag:
-                return nse_constants.RETURN_CODE_FAILURE
+                return constants.RETURN_CODE_FAILURE
             else:
                 raise AttributeError
 
@@ -120,18 +120,18 @@ class NseBackend(object, ExchangeBackend):
             return_msg = return_msg.replace(" ", "")
             iin_customer_id = re.search('ID:(.+?)', return_msg)
             self.update_ucc(user_id, iin_customer_id)
-            return nse_constants.RETURN_CODE_SUCCESS
+            return constants.RETURN_CODE_SUCCESS
         else:
             error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
             for error in error_responses:
                 error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text
                 print(error_msg)
                 self.error_logger.info(error_msg)
-            return nse_constants.RETURN_CODE_FAILURE
+            return constants.RETURN_CODE_FAILURE
 
     def upload_aof_image(self, user_id):
         self.upload_img(user_id=user_id, image_type="A")
-        return nse_constants.RETURN_CODE_SUCCESS
+        return constants.RETURN_CODE_SUCCESS
 
     def purchase_trxn(self, user_id):
         """
@@ -147,16 +147,16 @@ class NseBackend(object, ExchangeBackend):
         if return_code == nse_constants.RETURN_CODE_SUCCESS:
             payment_link = root.find(nse_constants.RESPONSE_PAYMENT_LINK_PATH).text
             # Save payment link Order_detail Table
-            return nse_constants.RETURN_CODE_SUCCESS
+            return constants.RETURN_CODE_SUCCESS
         else:
             error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
             for error in error_responses:
                 error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text
                 error_logger.info(error_msg)
-            return nse_constants.RETURN_CODE_FAILURE
+            return constants.RETURN_CODE_FAILURE
 
 
-    def ach_mandate_registrations(self, user_id):
+    def generate_bank_mandate_registration(self, user_id):
         """
 
         :param:
@@ -169,13 +169,13 @@ class NseBackend(object, ExchangeBackend):
         return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
         if return_code == nse_constants.RETURN_CODE_SUCCESS:
             # save this entry to NSE_Details table
-            return nse_constants.RETURN_CODE_SUCCESS
+            return constants.RETURN_CODE_SUCCESS
         else:
             error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
             for error in error_responses:
                 error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text
                 error_logger.info(error_msg)
-            return nse_constants.RETURN_CODE_FAILURE
+            return constants.RETURN_CODE_FAILURE
 
 
     def upload_img(self, user_id, ref_no='', image_type=''):
@@ -187,7 +187,7 @@ class NseBackend(object, ExchangeBackend):
         api_url = nse_constants.NSE_NMF_BASE_API_URL + nse_constants.METHOD_UPLOADIMG + queryString
         filePath = ""
         if image_type == "A":
-            filePath = nse_iinform_generation.nse_investor_info_generator(user_id)
+            filePath = self.generate_aof_image(user_id)
         elif image_type == "X":
             filePath = bank_mandate.generate_bank_mandate_tiff(user_id)
 
@@ -197,10 +197,37 @@ class NseBackend(object, ExchangeBackend):
         root = self._get_valid_response(response)
         return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
         if return_code == nse_constants.RETURN_CODE_SUCCESS:
-            return nse_constants.RETURN_CODE_SUCCESS
+            return constants.RETURN_CODE_SUCCESS
         else:
             error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
             for error in error_responses:
                 error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text
                 error_logger.info(error_msg)
-            return nse_constants.RETURN_CODE_FAILURE
+            return constants.RETURN_CODE_FAILURE
+        
+    @classmethod
+    def bulk_create_customer(self, user_list):
+        base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps', '')
+        output_path = base_dir + '/webapp/statics/'
+        outfile = open(output_path+"bulk_client_ucc.txt", "w")
+
+        for i in range(len(user_list)):
+            return_code = self.create_customer(user_list[i])
+            outfile.write(user_list[i] + ", " + str(return_code))
+            if i < len(user_list)-1:
+                outfile.write("\r")
+                
+        outfile.close()
+        return "/webapp/static/bulk_client_ucc.txt"
+
+    def generate_aof_image(self, user_id):
+        filePath = nse_iinform_generation.nse_investor_info_generator(user_id)
+        return filePath
+
+    def generate_bank_mandate(self, user_id):
+        filePath = bank_mandate.generate_bank_mandate_tiff(user_id)
+        return filePath
+    
+    def upload_bank_mandate(self, user_id):
+        return self.upload_img(user_id, image_type="X")
+
