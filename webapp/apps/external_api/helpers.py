@@ -63,4 +63,3 @@ class VendorHelper():
         
         if vendor_name == "BSE":
             return BSEBackend(vendor_name)
-        

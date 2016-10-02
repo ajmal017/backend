@@ -317,7 +317,7 @@ class NseOrder(View):
                 if status_code == nse_contants.RETURN_CODE_FAILURE:
                     return_code = nse.create_customer(user_id=user_id)
                 if investor_bank.sip_check:
-                        nse.ach_mandate_registrations(user_id=user_id)
+                        nse.generate_bank_mandate_registration(user_id=user_id)
                         nse.upload_img(user_id=user_id, image_type="X")  # 'X' for Transaction type of image and 'A' for IIN Form
                 status_code = nse.purchase_trxn(user_id=user_id)
                 if status_code == nse_contants.RETURN_CODE_SUCCESS:
@@ -333,7 +333,6 @@ class NseOrder(View):
         except pr_models.User.DoesNotExist:
             return api_utils.response({constants.MESSAGE: constants.USER_NOT_FOUND}, status.HTTP_404_NOT_FOUND,
                                       constants.USER_NOT_FOUND)
-
 
 class UploadAOFTiff(View):
     """
