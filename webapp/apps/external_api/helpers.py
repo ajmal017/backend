@@ -1,5 +1,8 @@
 from external_api import models
 import logging
+from external_api.nse.nsebackend import NSEBackend
+from external_api.bse.bsebackend import BSEBackend
+ 
 
 def generate_logger_message(field, fund):
     """
@@ -38,7 +41,7 @@ class VendorHelper():
     activeVendor = None
     logger = logging.getLogger("django.error")
     
-    def getActiveVendor(self):
+    def get_active_vendor(self):
         if not self.activeVendor:
             try:
                 activeVendors = models.Vendor.objects.filter(active=True)
@@ -48,3 +51,16 @@ class VendorHelper():
                 self.logger.error("Error getting active vendor:" + str(e))
                 
         return self.activeVendor
+    
+    def get_backend_instance(self, vendor_name):
+        if not vendor_name:
+            active_vendor = self.get_active_vendor()
+            if active_vendor:
+                vendor_name = active_vendor.name
+                
+        if vendor_name == "NSE":
+            return NSEBackend(vendor_name)
+        
+        if vendor_name == "BSE":
+            return BSEBackend(vendor_name)
+        
