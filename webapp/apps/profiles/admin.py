@@ -13,7 +13,8 @@ from import_export.fields import Field
 from . import models
 from external_api.bulk_order_entry import generate_client_pipe
 from external_api.bulk_order_entry import generate_client_fatca_pipe
-
+from django.http import HttpResponse
+import os
 
 class BseOrKra(admin.SimpleListFilter):
     title = 'Bse Or Kra'
@@ -155,8 +156,16 @@ class UserAdmin(admin.ModelAdmin):
             context = dict(failed_users_list=response)
             return render(request, 'admin/profiles/user/failure.html', context)
         else:
-            message = mark_safe("Successfully generated the bulk client master upload file.<a href='/"+"/".join(response.split("/")[-2:])+"'>Click here.</a>")
-            self.message_user(request, message, level="success")
+            my_file = open(response, "rb")
+            content_type = 'text/plain'
+            http_response = HttpResponse(my_file, content_type=content_type, status=200)
+            http_response['Content-Disposition'] = 'attachment;filename=%s' % os.path.basename(response)
+            my_file.close()
+            return http_response  # contains the pipe file of the pertinent user
+        
+            #message = mark_safe("Successfully generated the bulk client master upload file.<a href='/"+"/".join(response.split("/")[-2:])+"'>Click here.</a>")
+            #self.message_user(request, message, level="success")
+
 
     def generate_client_fatca_pipe_file(self, request, queryset):
         """
@@ -176,8 +185,15 @@ class UserAdmin(admin.ModelAdmin):
             context = dict(failed_users_list=response)
             return render(request, 'admin/profiles/user/failure.html', context)
         else:
-            message = mark_safe("Successfully generated the bulk client fatca upload file.<a href='/"+"/".join(response.split("/")[-2:])+"'>Click here.</a>")
-            self.message_user(request, message, level="success")
+            my_file = open(response, "rb")
+            content_type = 'text/plain'
+            http_response = HttpResponse(my_file, content_type=content_type, status=200)
+            http_response['Content-Disposition'] = 'attachment;filename=%s' % os.path.basename(response)
+            my_file.close()
+            return http_response  # contains the pipe file of the pertinent user
+
+            #message = mark_safe("Successfully generated the bulk client fatca upload file.<a href='/"+"/".join(response.split("/")[-2:])+"'>Click here.</a>")
+            #self.message_user(request, message, level="success")
 
     def button(self, obj):
         """
