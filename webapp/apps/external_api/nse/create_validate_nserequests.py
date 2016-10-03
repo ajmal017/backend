@@ -288,7 +288,7 @@ def purchasetxnrequest(root, user_id):
     return getValidRequest(investor_dict, root)
 
 
-def achmandateregistrationsrequest(root, user_id):
+def achmandateregistrationsrequest(root, user_id, **kwargs):
     """
 
     :param user_id: id of user for whom the nse_request is to be generated
@@ -298,8 +298,6 @@ def achmandateregistrationsrequest(root, user_id):
     nse_details = NseDetails.objects.get(user=user)
     curr_trxn = Transaction.objects.get(user=user, txn_status=0)
     investor = models.InvestorInfo.objects.get(user=user)
-    nominee = models.NomineeInfo.objects.get(user=user)
-    contact = models.ContactInfo.objects.get(user=user)
     investor_bank = models.InvestorBankDetails.objects.get(user=user)
     curr_date = datetime.now()
     year = timedelta(days=365)
