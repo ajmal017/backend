@@ -290,7 +290,7 @@ def purchasetxnrequest(root, user_id):
     return getValidRequest(investor_dict, root)
 
 
-def achmandateregistrationsrequest(root, user_id):
+def achmandateregistrationsrequest(root, user_id, **kwargs):
     """
 
     :param user_id: id of user for whom the nse_request is to be generated
@@ -300,27 +300,24 @@ def achmandateregistrationsrequest(root, user_id):
     nse_details = NseDetails.objects.get(user=user)
     curr_trxn = Transaction.objects.get(user=user, txn_status=0)
     investor = models.InvestorInfo.objects.get(user=user)
-    nominee = models.NomineeInfo.objects.get(user=user)
-    contact = models.ContactInfo.objects.get(user=user)
     investor_bank = models.InvestorBankDetails.objects.get(user=user)
     curr_date = datetime.now()
-    year = timedelta(days=365)
-    ach_end_date = curr_date + year
+    mandate_amount = kwargs.get('mandate_amount')
+    exch_backend = kwargs.get('exchange_backend')
+    user_vendor = models.UserVendor.objects.get(user=user, name=exch_backend.vendor_name)
 
-    # Default ach is set to 1 yr (365 days)
 
     investor_dict = {
-        constants.IIN_XPATH: nse_details.iin_customer_id,
+        constants.IIN_XPATH: user_vendor.ucc,
         constants.ACC_NO_XPATH: investor_bank.account_number,
-        constants.ACC_TYPE_XPATH: 'SB', #TODO: investor_bank.account_type
+        constants.ACC_TYPE_XPATH: None,
         constants.IFSC_CODE_XPATH: investor_bank.ifsc_code.ifsc_code,
         constants.BANK_NAME_XPATH: investor_bank.ifsc_code.name,
-        constants.BRANCH_NAME_XPATH: investor_bank.ifsc_code.bank_branch,
-        constants.MICR_NO_XPATH: investor_bank.ifsc_code.micr_code,
-        constants.UC_XPATH: 'Y', # Until Cancelled - default date will be 31-Dec-2999
-        constants.ACH_FROM_DATE_XPATH: curr_date.strftime('%d-%b-%Y'),
-        constants.ACH_TO_DATE_XPATH: ach_end_date.strftime('%d-%b-%Y'),
-        constants.ACH_AMOUNT_XPATH: curr_trxn.txn_amount
+        constants.MICR_NO_XPATH: None,
+        constants.UC_XPATH: None,
+        constants.ACH_FROM_DATE_XPATH: None,
+        constants.ACH_TO_DATE_XPATH: None,
+        constants.ACH_AMOUNT_XPATH: mandate_amount
     }
 
     return getValidRequest(investor_dict, root)
