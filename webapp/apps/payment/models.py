@@ -60,6 +60,7 @@ class Transaction(TimeStampedModel):
     product_id = models.CharField(_('Product Id'), max_length=100, default=None, null=True, blank=True)
     response_string = HStoreField(blank=True, null=True)
     request_string = HStoreField(blank=True, null=True)
+    payment_link = models.CharField(_('Payment_link'), max_length=254, default=None, null=True, blank=True)
 
     def __str__(self):
         return str(self.id) + " " + str(self.user) + " " + str(self.additional_info_1 )

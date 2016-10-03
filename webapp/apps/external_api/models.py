@@ -105,13 +105,6 @@ class NseDetails(models.Model):
     iin_customer_id = models.CharField(max_length=12, blank=False, null=False)
     ach_inserted = models.BooleanField(default=False)
 
-class OrderDetail(models.Model):
-    user_vendor = models.ForeignKey(UserVendors, related_name="user_vendor", blank=False, null=False)
-    # from core.models import Fund
-    # fund = models.ForeignKey(Fund, blank=False, null=False)
-    transaction_detail = models.ForeignKey(Transaction, blank=False, null=False)
-    payment_link = models.CharField(max_length=254, blank=False, null=False)
-
 
 # class OrderEntryParam(models.Model):
 #     """

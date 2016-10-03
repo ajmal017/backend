@@ -5,6 +5,7 @@ from external_api.nse import constants as nse_constants
 from external_api import constants
 from external_api import models
 from profiles import models as pr_models
+from payment import models as payment_models
 from external_api.nse import bank_mandate
 from external_api.nse import nse_iinform_generation
 import os
@@ -79,14 +80,14 @@ class NseBackend():
         if return_code == nse_constants.RETURN_CODE_SUCCESS:
             return nse_constants.RETURN_CODE_SUCCESS
         else:
-            createFlag = False
+            createCustomerFlag = False
             error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
             for error in error_responses:
                 error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text
                 if error_msg == nse_constants.NO_DATA_FOUND:
-                    createFlag = True
+                    createCustomerFlag = True
                 error_logger.info(error_msg)
-            if createFlag:
+            if createCustomerFlag:
                 return nse_constants.RETURN_CODE_FAILURE
             else:
                 raise AttributeError
@@ -106,8 +107,10 @@ class NseBackend():
             return_msg = root.find(nse_constants.SERVICE_RETURN_MSG_PATH).text
             return_msg = return_msg.replace(" ", "")
             iin_customer_id = re.search('ID:(.+?)', return_msg)
-            # save this to NseDetails table
-            # save to UserVendors table that this user is nse registered
+            nse_user = pr_models.User.get(id=user_id)
+            vendor = models.Vendors.get(name='NSE')
+            models.NseDetails(user=nse_user, iin_customer_id=iin_customer_id).save()
+            models.UserVendors(user=nse_user, vendor=vendor).save()
             self.upload_img(user_id=user_id, image_type="A")
             return nse_constants.RETURN_CODE_SUCCESS
         else:
@@ -127,12 +130,14 @@ class NseBackend():
         """
         error_logger = logging.getLogger('django.error')
         xml_request_body = self._get_request_body(nse_constants.METHOD_PURCHASETXN, user_id)
-        # make an entry to db for this order and transaction
         root = self._get_data(nse_constants.METHOD_PURCHASETXN, xml_request_body=xml_request_body)
         return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
         if return_code == nse_constants.RETURN_CODE_SUCCESS:
             payment_link = root.find(nse_constants.RESPONSE_PAYMENT_LINK_PATH).text
-            # Save payment link Order_detail Table
+            current_transaction = payment_models.Transaction.get(user_id=user_id, txn_status=0)
+            # 0 for pending transactions assuming there is only one pending transaction
+            current_transaction.payment_link= payment_link
+            current_transaction.save()
             return nse_constants.RETURN_CODE_SUCCESS
         else:
             error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
@@ -154,7 +159,10 @@ class NseBackend():
                                           xml_request_body=xml_request_body)
         return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
         if return_code == nse_constants.RETURN_CODE_SUCCESS:
-            # save this entry to NSE_Details table
+            nse_user = pr_models.User.get(id=user_id)
+            nse_details = models.NseDetails.get(user=nse_user)
+            nse_details.ach_inserted = True
+            nse_details.save()
             return nse_constants.RETURN_CODE_SUCCESS
         else:
             error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
