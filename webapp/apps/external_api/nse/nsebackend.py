@@ -65,6 +65,9 @@ class NseBackend():
         elif method_name == nse_constants.METHOD_ACHMANDATEREGISTRATIONS:
             root = ET.fromstring(nse_constants.REQUEST_ACHMANDATEREGISTRATIONS)
             return create_validate_nserequests.achmandateregistrationsrequest(root, user_id)
+        elif method_name == nse_constants.METHOD_CEASESIP:
+            root = ET.fromstring(nse_constants.REQUEST_CEASESIP)
+            return create_validate_nserequests.ceasesystematictrxn(root, user_id)
         return
 
     def get_iin(self, user_id):
@@ -91,6 +94,25 @@ class NseBackend():
                 return nse_constants.RETURN_CODE_FAILURE
             else:
                 raise AttributeError
+
+    def cease_sip(self, user_id):
+        """
+
+        :param:
+        :return:
+        """
+        error_logger = logging.getLogger('django.error')
+        xml_request_body = self._get_request_body(nse_constants.METHOD_CEASESIP, user_id)
+        root = self._get_data(nse_constants.METHOD_CEASESIP, xml_request_body=xml_request_body)
+        return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
+        if return_code == nse_constants.RETURN_CODE_SUCCESS:
+            return nse_constants.RETURN_CODE_SUCCESS
+        else:
+            error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
+            for error in error_responses:
+                error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text
+                error_logger.info(error_msg)
+            return nse_constants.RETURN_CODE_FAILURE
 
     def create_customer(self, user_id):
         """

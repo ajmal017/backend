@@ -1,6 +1,5 @@
 NO_DATA_FOUND = 'No Data Found'
 
-
 # XPATHS FOR READING NSE_RESPONSE FIELDS
 
 RESPONSE_BASE_PATH = './{urn:schemas-microsoft-com:xml-diffgram-v1}diffgram/NMFIISERVICES'
@@ -24,7 +23,6 @@ BROKER_CODE_XPATH = './broker_code'
 # for GETIIN
 IIN_XPATH = './iin'
 
-GUARDIAN_PAN_XPATH = SERVICE_REQUEST_PATH + '/guardian_pan'
 JH1_EXEMPT_FLAG_XPATH = SERVICE_REQUEST_PATH + '/jh1_exempt_flag'
 JH2_EXEMPT_FLAG_XPATH = SERVICE_REQUEST_PATH + '/jh2_exempt_flag'
 EXEMPT_FLAG_XPATH = SERVICE_REQUEST_PATH + '/exempt_flag'
@@ -149,7 +147,6 @@ SIP_PERIOD_DAY_XPATH = CHILD_TRANS_XPATH + '/sip_period_day'
 
 SUB_TRXN_TYPE_XPATH = SERVICE_REQUEST_PATH + '/sub_trxn_type'
 POA_XPATH = SERVICE_REQUEST_PATH + '/poa'
-TRXN_ACCEPTANCE_XPATH = SERVICE_REQUEST_PATH + '/trxn_acceptance'
 DEMAT_USER_XPATH = SERVICE_REQUEST_PATH + '/demat_user'
 BANK_XPATH = SERVICE_REQUEST_PATH + '/bank'
 AC_NO_XPATH = SERVICE_REQUEST_PATH + '/ac_no'
@@ -195,6 +192,13 @@ CLIENT_CALLBACK_URL_XPATH = SERVICE_REQUEST_PATH + '/Client_callback_url'
 TRANS_COUNT_XPATH = SERVICE_REQUEST_PATH + '/trans_count'
 UC_XPATH = SERVICE_REQUEST_PATH + '/uc'
 
+REQUEST_IIN_XPATH = SERVICE_REQUEST_PATH + '/iin'
+TRXN_NO_XPATH = SERVICE_REQUEST_PATH + '/trxn_no'
+CEASE_REQ_DATE_XPATH = SERVICE_REQUEST_PATH + '/cease_req_date'
+INSTBY_XPATH = SERVICE_REQUEST_PATH + '/initiated_by'
+NIGO_REMARKS_XPATH = SERVICE_REQUEST_PATH + '/nigo_remarks'
+
+
 # NSE VARIABLES
 
 RETURN_CODE_FAILURE = '1'
@@ -213,6 +217,7 @@ METHOD_PURCHASETXN = "PURCHASETRXN"
 METHOD_UPLOADIMG = "UPLOADIMG"
 METHOD_GETIIN = "GETIIN"
 METHOD_ACHMANDATEREGISTRATIONS = "ACHMANDATEREGISTRATIONS"
+METHOD_CEASESIP = "CEASESIP"
 
 REQUEST_CREATECUSTOMER = '''<NMFIIService>
                     <service_request>
@@ -448,3 +453,16 @@ REQUEST_ACHMANDATEREGISTRATIONS = '''<NMFIIService>
                                             <ach_amount></ach_amount>
                                         </service_request>
                                     </NMFIIService>'''
+
+REQUEST_CEASESIP = '''<NMFIIService>
+                        <service_request>
+                            <appln_id>''' + NSE_NMF_APPL_ID + '''</appln_id>
+                            <password>''' + NSE_NMF_PASSWORD + '''</password>
+                            <broker_code>''' + NSE_NMF_BROKER_CODE + '''</broker_code>
+                            <iin></iin>
+                            <trxn_no></trxn_no>
+                            <cease_req_date></cease_req_date>
+                            <initiated_by></initiated_by>
+                            <nigo_remarks></nigo_remarks>
+                        </service_request>
+                    </NMFIIService>'''
