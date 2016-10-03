@@ -201,8 +201,11 @@ class NSEBackend(object, ExchangeBackend):
                                           xml_request_body=xml_request_body)
         return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
         if return_code == nse_constants.RETURN_CODE_SUCCESS:
-            # save this entry to NSE_Details table
-            return constants.RETURN_CODE_SUCCESS
+            nse_user = pr_models.User.get(id=user_id)
+            nse_details = models.NseDetails.get(user=nse_user)
+            nse_details.ach_inserted = True
+            nse_details.save()
+            return nse_constants.RETURN_CODE_SUCCESS
         else:
             error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
             for error in error_responses:
