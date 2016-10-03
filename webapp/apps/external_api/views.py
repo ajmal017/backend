@@ -335,8 +335,8 @@ class NseOrder(View):
                         nse.upload_img(user_id=user_id, image_type="X")  # 'X' for Transaction type of image and 'A' for IIN Form
                 status_code = nse.purchase_trxn(user_id=user_id)
                 if status_code == nse_contants.RETURN_CODE_SUCCESS:
-                    # fetch payment link from database
-                    payment_link = ''
+                    current_transaction = Transaction.get(user_id=user_id, txn_status=0)
+                    payment_link = current_transaction.payment_link
                     return api_utils.response({"payment_link": payment_link})
                 else:
                     return api_utils.response({constants.MESSAGE: constants.PURCHASE_TXN_FAILED}, status.HTTP_404_NOT_FOUND,
