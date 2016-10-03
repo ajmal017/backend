@@ -197,7 +197,7 @@ class FundSerializerForFundDividedIntoCategory(serializers.ModelSerializer):
 
     class Meta:
         model = models.Fund
-        fields = ("id", "fund_name", "three_year_return")
+        fields = ("id", "fund_name", "three_year_return", "category_name")
 
 
 class LeaderBoardSerializer(serializers.ModelSerializer):

@@ -34,7 +34,7 @@ def investor_info_generator(user_id):
         blank_address.pincode = blank_pincode
         nominee.nominee_address = blank_address
 
-    mandate_amount_no = max(utils.get_investor_mandate_amount(user), 100000)
+    mandate_amount_no = utils.get_investor_mandate_amount(user, None)
 
     investor_dict = {
         # 'MandateDebitTypeMaxAmount': True,

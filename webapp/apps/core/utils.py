@@ -890,7 +890,8 @@ def get_recommended_schemes(user_id, type):
                                                           ).select_related('fund').order_by('fund__fund_rank')
     for portfolio_item in portfolio_items:
         portfolio_data.append({"id": portfolio_item.fund.id, "fund_name": portfolio_item.fund.fund_name,
-                               "sip": portfolio_item.sip, "lumpsum": portfolio_item.lumpsum})
+                               "sip": portfolio_item.sip, "lumpsum": portfolio_item.lumpsum, 
+                               "category_name": portfolio_item.fund.category_name})
     portfolio_dict['data'] = portfolio_data
     return portfolio_dict
 
