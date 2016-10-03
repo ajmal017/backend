@@ -957,7 +957,7 @@ def get_scheme_details(fund, monthly_data_points, daily_data_points):
                                     "(" + str(round(fund_detail[constants.CAPITAL_GAIN_PERCENTAGE], 2)) + "%)"
         elif field == constants.IMAGE_URL:
             # TODO: http or https?
-            scheme_details[field] = "http://" + settings.SITE_API_BASE_URL + fund_detail[constants.IMAGE_URL]
+            scheme_details[field] = fund_detail[constants.IMAGE_URL]
         elif field == constants.DAY_END_DATE:
             day_end_date = datetime.strptime(fund_detail[field], '%Y-%m-%d').date()
             # scheme_details[field] = datetime.strftime(day_end_date, '%d-%m-%Y')
