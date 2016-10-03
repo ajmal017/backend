@@ -50,7 +50,7 @@ class NSEBackend(object, ExchangeBackend):
             return root
         response.raise_for_status()
 
-    def _get_request_body(self, method_name, user_id):
+    def _get_request_body(self, method_name, user_id, **kwargs):
 
         """
 
@@ -68,7 +68,7 @@ class NSEBackend(object, ExchangeBackend):
             return create_validate_nserequests.purchasetxnrequest(root, user_id)
         elif method_name == nse_constants.METHOD_ACHMANDATEREGISTRATIONS:
             root = ET.fromstring(nse_constants.REQUEST_ACHMANDATEREGISTRATIONS)
-            return create_validate_nserequests.achmandateregistrationsrequest(root, user_id)
+            return create_validate_nserequests.achmandateregistrationsrequest(root, user_id, **kwargs)
         return
 
     def get_iin(self, user_id):
@@ -156,14 +156,15 @@ class NSEBackend(object, ExchangeBackend):
             return constants.RETURN_CODE_FAILURE
 
 
-    def generate_bank_mandate_registration(self, user_id):
+    def generate_bank_mandate_registration(self, user_id, mandate_amount):
         """
 
         :param:
         :return:
         """
         error_logger = logging.getLogger('django.error')
-        xml_request_body = self._get_request_body(nse_constants.METHOD_ACHMANDATEREGISTRATIONS, user_id)
+        kwargs = {"mandate_amount":mandate_amount, 'exchange_backend': self}
+        xml_request_body = self._get_request_body(nse_constants.METHOD_ACHMANDATEREGISTRATIONS, user_id, **kwargs)
         root = self._get_data(nse_constants.METHOD_ACHMANDATEREGISTRATIONS,
                                           xml_request_body=xml_request_body)
         return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
@@ -178,7 +179,7 @@ class NSEBackend(object, ExchangeBackend):
             return constants.RETURN_CODE_FAILURE
 
 
-    def upload_img(self, user_id, ref_no='', image_type=''):
+    def upload_img(self, user_id, ref_no='', image_type='', **kwargs):
         error_logger = logging.getLogger('django.error')
         nse_user = models.NseDetails.get(user_id=user_id)
         queryString = "?BrokerCode=" + nse_constants.NSE_NMF_BROKER_CODE + "&Appln_id=" + nse_constants.NSE_NMF_APPL_ID + \
@@ -189,7 +190,7 @@ class NSEBackend(object, ExchangeBackend):
         if image_type == "A":
             filePath = self.generate_aof_image(user_id)
         elif image_type == "X":
-            filePath = bank_mandate.generate_bank_mandate_tiff(user_id)
+            filePath = bank_mandate.generate_bank_mandate_tiff(user_id, **kwargs)
 
         headers = {'Content-Type': 'image/tiff'}
         with open(filePath, 'rb') as f:
@@ -224,10 +225,12 @@ class NSEBackend(object, ExchangeBackend):
         filePath = nse_iinform_generation.nse_investor_info_generator(user_id)
         return filePath
 
-    def generate_bank_mandate(self, user_id):
-        filePath = bank_mandate.generate_bank_mandate_tiff(user_id)
+    def generate_bank_mandate(self, user_id, mandate_amount):
+        kwargs = {'mandate_amount': mandate_amount}
+        filePath = bank_mandate.generate_bank_mandate_tiff(user_id, **kwargs)
         return filePath
     
-    def upload_bank_mandate(self, user_id):
-        return self.upload_img(user_id, image_type="X")
+    def upload_bank_mandate(self, user_id, mandate_amount):
+        kwargs = {'mandate_amount': mandate_amount}
+        return self.upload_img(user_id, image_type="X", **kwargs)
 

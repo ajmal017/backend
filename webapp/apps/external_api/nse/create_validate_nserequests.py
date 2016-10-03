@@ -288,7 +288,7 @@ def purchasetxnrequest(root, user_id):
     return getValidRequest(investor_dict, root)
 
 
-def achmandateregistrationsrequest(root, user_id):
+def achmandateregistrationsrequest(root, user_id, **kwargs):
     """
 
     :param user_id: id of user for whom the nse_request is to be generated
@@ -296,29 +296,24 @@ def achmandateregistrationsrequest(root, user_id):
     """
     user = models.User.objects.get(id=user_id)
     investor = models.InvestorInfo.objects.get(user=user)
-    nominee = models.NomineeInfo.objects.get(user=user)
-    contact = models.ContactInfo.objects.get(user=user)
     investor_bank = models.InvestorBankDetails.objects.get(user=user)
     curr_date = datetime.now()
+    mandate_amount = kwargs.get('mandate_amount')
+    exch_backend = kwargs.get('exchange_backend')
+    user_vendor = models.UserVendor.objects.get(user=user, name=exch_backend.vendor_name)
 
-    nominee_address = nominee.nominee_address
-    if nominee.nominee_address == None:
-        blank_pincode = Pincode(None, None, None)
-        blank_address = models.Address(None, None, None, None)
-        blank_address.pincode = blank_pincode
-        nominee.nominee_address = blank_address
 
     investor_dict = {
-        constants.IIN_XPATH: None,
-        constants.ACC_NO_XPATH: None,
+        constants.IIN_XPATH: user_vendor.ucc,
+        constants.ACC_NO_XPATH: investor_bank.account_number,
         constants.ACC_TYPE_XPATH: None,
-        constants.IFSC_CODE_XPATH: None,
-        constants.BANK_NAME_XPATH: None,
+        constants.IFSC_CODE_XPATH: investor_bank.ifsc_code.ifsc_code,
+        constants.BANK_NAME_XPATH: investor_bank.ifsc_code.name,
         constants.MICR_NO_XPATH: None,
         constants.UC_XPATH: None,
         constants.ACH_FROM_DATE_XPATH: None,
         constants.ACH_TO_DATE_XPATH: None,
-        constants.ACH_AMOUNT_XPATH: None
+        constants.ACH_AMOUNT_XPATH: mandate_amount
     }
 
     return getValidRequest(investor_dict, root)

@@ -16,6 +16,8 @@ from core.models import OrderDetail, RedeemDetail, GroupedRedeemDetail
 from . import models, constants, serializers, cvl
 from api import utils as api_utils
 from profiles.utils import is_investable
+from profiles import pr_utils
+
 from profiles import models as pr_models
 from payment import constants as payment_constant
 
@@ -271,7 +273,8 @@ class GenerateBankMandateRegistration(View):
         if request.user.is_superuser:
             order_detail = OrderDetail.objects.get(order_id=request.GET.get('order_id'))
             if is_investable(order_detail.user):
-                output_file = bank_mandate.generate_bank_mandate_file(order_detail.user, order_detail).split('/')[-1]
+                mandate_amount = pr_utils.get_investor_mandate_amount(order_detail.user, order_detail)
+                output_file = bank_mandate.generate_bank_mandate_file(order_detail.user.id, mandate_amount).split('/')[-1]
                 prefix = 'webapp'
                 my_file_path = prefix + constants.STATIC + output_file
                 my_file = open(my_file_path, "rb")
@@ -454,7 +457,8 @@ class GenerateMandatePdf(View):
             if exch_backend:
                 user = pr_models.User.objects.get(email=request.GET.get('email'))
                 if is_investable(user) and user.signature != "":
-                    output_file, error = exch_backend.generate_bank_mandate(user.id)
+                    mandate_amount = pr_utils.get_investor_mandate_amount(user, None)
+                    output_file, error = exch_backend.generate_bank_mandate(user.id, mandate_amount)
                     if output_file is None:
                         return HttpResponse(error, status=404)
                     output_file = output_file.split('/')[-1]
