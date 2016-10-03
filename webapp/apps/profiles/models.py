@@ -143,6 +143,7 @@ class User(AbstractBaseUser, TimeStampedModel):
     mandate_reg_no = models.CharField(_('Mandate Registration Number'), max_length=100, default=None, blank=True,
                                       null=True)
     bse_registered = models.BooleanField(default=False)
+    fatca_filed = models.BooleanField(default=False)
     tiff_mailed = models.BooleanField(default=False)
     tiff_accepted = models.BooleanField(default=False)
     kyc_mailed = models.BooleanField(default=False)
@@ -184,9 +185,9 @@ class User(AbstractBaseUser, TimeStampedModel):
         super(User, self).save(*args, **kwargs)
 
     def clean(self):
-        if self.username:
-            self.username = self.username.strip()
         super(User, self).clean()
+        if self.email:
+            self.username = self.email 
     
     @property
     def is_superuser(self):
@@ -238,7 +239,7 @@ class User(AbstractBaseUser, TimeStampedModel):
         texts = list(filter(lambda key: key != 0, texts))
         if len(texts) == 0:
             return None
-        return min(texts)
+        return min(texts),len(texts)
 
 
 class VerificationSMSCode(TimeStampedModel):

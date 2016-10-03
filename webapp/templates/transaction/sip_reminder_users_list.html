@@ -1,0 +1,5 @@
+SIP reminder email from {{current_date}} to {{target_date}}  has sent to following customers - 
+{% for user in users %}
+   {{user}} ,
+
+{% endfor %}

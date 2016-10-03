@@ -58,6 +58,7 @@ class Transaction(TimeStampedModel):
                                    blank=True)
     customer_id = models.CharField(_('Customer Id'), unique=True, max_length=100)
     product_id = models.CharField(_('Product Id'), max_length=100, default=None, null=True, blank=True)
+    txn_time = models.DateTimeField(_('Transaction Time'), max_length=100, auto_now_add=False, default=None, null=True, blank=True)
     response_string = HStoreField(blank=True, null=True)
     request_string = HStoreField(blank=True, null=True)
     payment_link = models.CharField(_('Payment_link'), max_length=254, default=None, null=True, blank=True)

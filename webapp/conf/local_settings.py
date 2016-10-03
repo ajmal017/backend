@@ -2,6 +2,7 @@ import os
 
 BASE_URL="http://localhost:8000"
 SITE_BASE_URL="www.finaskus.com"
+SITE_API_BASE_URL = "api.finaskus.com"
 
 CVL_POSCODE=os.environ.get('CVL_POSCODE')
 CVL_PASSWORD=os.environ.get('CVL_PASSWORD')

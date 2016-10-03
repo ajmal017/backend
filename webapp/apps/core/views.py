@@ -22,6 +22,10 @@ from datetime import timedelta, datetime, date
 import logging
 import copy
 
+from profiles.utils import is_investable
+from django.views.generic import View
+from django.http import HttpResponse
+from external_api import constants as external_constants
 
 def index(request):
     """
@@ -166,6 +170,12 @@ def mfarticles(request):
     """
     return render(request, 'base/mutual-fund-articles.html')
 
+def mailer1(request):
+    """
+    :param request:
+    :return:
+    """
+    return render(request, 'base/MarketingEmailer1.html')
 
 def aboutus(request):
     """
@@ -206,6 +216,11 @@ def sitemap(request):
     """
     return render(request, 'base/sitemap.xml')
 
+
+def get_all_portfolio_detail():
+    return_value = utils.get_portfolio_dashboard()
+    return return_value
+   
 class VersionInfo(APIView):
     
     def get(self, request):
@@ -226,13 +241,15 @@ class VersionInfo(APIView):
 
 
 class DeprecateAPI(APIView):
+    def generateResponse(self):
+        deprecateMessage = "Please visit Play Store and update the FinAskus application to continue."
+        return api_utils.response({"message": deprecateMessage, "login_error": deprecateMessage}, status.HTTP_401_UNAUTHORIZED, deprecateMessage)
+        
     def post(self, request):
-        deprecateMessage = "Please update the FinAskus application to continue."
-        return api_utils.response({"message": deprecateMessage, "login_error": "deprecateMessage"}, status.HTTP_401_UNAUTHORIZED, deprecateMessage)
+        return self.generateResponse()
 
     def get(self, request):
-        deprecateMessage = "Please update the FinAskus application to continue."
-        return api_utils.response({"message": deprecateMessage, "login_error": "deprecateMessage"}, status.HTTP_401_UNAUTHORIZED, deprecateMessage)
+        return self.generateResponse()
         
 class AssessAnswerNew(APIView):
     """
@@ -282,7 +299,7 @@ class RecommendedPortfolios(APIView):
     API to return the recommended portfolio for a user
     """
     permission_classes = [permissions.IsAuthenticated]
-
+    
     def get(self, request):
         """
 
@@ -295,12 +312,15 @@ class RecommendedPortfolios(APIView):
             portfolio_items.update(overall_allocation)
             request.user.rebuild_portfolio = False
             request.user.save()
-            return api_utils.response(portfolio_items, status.HTTP_200_OK)
+            msg=api_utils.response(portfolio_items, status.HTTP_200_OK)
+            return msg
         else:
             return api_utils.response({constants.MESSAGE: errors},
                                       status.HTTP_400_BAD_REQUEST, api_utils.create_error_message(errors))
-
-
+        
+        
+             
+         
 class ReviewCard(APIView):
     """
     API to return the goal summary
@@ -746,18 +766,24 @@ class BilldeskComplete(APIView):
         # ]
         # msg = msg[0]
         msg = request.data.get('msg',[])
-        order_id, ref_no, txn_amount, auth_status  = billdesk.parse_billdesk_response(msg)
+        order_id, ref_no, txn_amount, auth_status, txn_time  = billdesk.parse_billdesk_response(msg)
+        txn_time_dt = None
+        if txn_time:
+            try:
+                txn_time_dt = datetime.strptime(txn_time, '%d-%m-%Y %H:%M:%S')
+            except:
+                logger.info("Billdesk response: Error parsing transaction time: " + txn_time)
         if not billdesk.verify_billdesk_checksum(msg) or auth_status!= "0300":
-            txn = billdesk.update_transaction_failure(order_id, ref_no, float(txn_amount), auth_status, msg)
-            query_params = {"txn_amount" :txn_amount, "auth_status": auth_status, "order_id": order_id,
+            txn = billdesk.update_transaction_failure(order_id, ref_no, float(txn_amount), auth_status, msg, txn_time_dt)
+            query_params = {"txn_amount" :txn_amount, "auth_status": auth_status, "order_id": ref_no,
                             "message" : msg.split("|")[24] # as error message is the 24th pipe seperated in the string
                             }
             query_params_string = self.create_query_params(query_params)
             full_url = reverse("api_urls:core_urls:billdesk-fail") + "?" + query_params_string
         else:
-            txn = billdesk.update_transaction_success(order_id, ref_no, float(txn_amount), auth_status, msg)
+            txn = billdesk.update_transaction_success(order_id, ref_no, float(txn_amount), auth_status, msg, txn_time_dt)
             utils.convert_to_investor(txn)
-            query_params = {"txn_amount" :txn_amount, "auth_status": auth_status, "order_id": order_id,
+            query_params = {"txn_amount" :txn_amount, "auth_status": auth_status, "order_id": ref_no,
                             "message": "Payment successful"}
             query_params_string = self.create_query_params(query_params)
             full_url = reverse("api_urls:core_urls:billdesk-success") + "?" + query_params_string
@@ -1574,3 +1600,31 @@ class PortfolioTracker(APIView):
             return api_utils.response({constants.DATE: dates, constants.CURRENT_AMOUNT: historic_performance,
                                        constants.INVESTED_AMOUNT: invested_amount, constants.XIRR: xirr},
                                       status.HTTP_200_OK)
+
+
+class TransactionComplete(View):
+    """
+    An api to trigger Transaction Complete Email.
+    """
+    def get(self, request):
+        """
+        Only admin user is allowed to trigger the transaction complete email.
+
+        :param request: 
+        :return: send the generated pipe file
+        """
+        # makes sure that only superuser can access this file.
+        if request.user.is_superuser:
+            try:
+                order_detail = models.OrderDetail.objects.get(order_id=request.GET.get('order_id'))
+            except models.OrderDetail.DoesNotExist:
+                order_detail = None
+                   
+            response = models.order_detail_transaction_mail_send(order_detail)
+            return HttpResponse(response) 
+             
+        else:
+            return HttpResponse(external_constants.FORBIDDEN_ERROR, status=403)     
+            
+             
+    

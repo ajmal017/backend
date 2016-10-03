@@ -1,7 +1,6 @@
 """
 To make structure of code more organised. We are keeping all those functions that don't involve model queries here
 
-
 """
 from django.conf import settings
 from django.template import loader
@@ -15,6 +14,10 @@ from requests.auth import HTTPBasicAuth
 
 from . import constants as profile_constants
 import logging
+import copy
+from django.db.models import Sum
+import datetime
+
 
 def unique_filename(path, context):
     if path and context:
@@ -93,14 +96,14 @@ def send_email_change_notify_to_old_email(old_email,applicant_name, new_email, s
     :return:
     """
     if applicant_name is not None:
-       userName = applicant_name.title()
+        userName = applicant_name.title()
     else:
-       userName = old_email
+        userName = old_email
     context = {
         'old_email': old_email,
         'new_email': new_email,
         'user_name':userName,
-        'domain': settings.SITE_BASE_URL,
+        'domain': settings.SITE_API_BASE_URL,
         'site_name': profile_constants.SITE_NAME,
         'protocol': 'https' if use_https else 'http',
     }
@@ -117,7 +120,7 @@ def send_bse_registration_email(user_email_list, domain_override=None,
      Sends an email of list of user emil whose bse registration has to be done
     """
     context = {
-        'domain': settings.SITE_BASE_URL,
+        'domain': settings.SITE_API_BASE_URL,
         'site_name': "Finaskus",
         'user_list': user_email_list,
         'protocol': 'https' if use_https else 'http',
@@ -136,9 +139,9 @@ def send_kra_verified_email(user,applicant_name, domain_override=None, subject_t
     
     
     if applicant_name is not None:
-         userName = applicant_name.title()
+        userName = applicant_name.title()
     else:
-         userName = user.email
+        userName = user.email
 
     
        
@@ -149,7 +152,7 @@ def send_kra_verified_email(user,applicant_name, domain_override=None, subject_t
         'user': user,
         'email': user.email,
         'user_name':userName,
-        'domain': settings.SITE_BASE_URL,
+        'domain': settings.SITE_API_BASE_URL,
         'site_name': "Finaskus",
         'protocol': 'https' if use_https else 'http',
     }
@@ -170,7 +173,7 @@ def send_kyc_verification_email(user_email_list, domain_override=None,
      Sends an email of list of user emil whose kyc is pending
     """
     context = {
-        'domain': settings.SITE_BASE_URL,
+        'domain': settings.SITE_API_BASE_URL,
         'site_name': "Finaskus",
         'user_list': user_email_list,
         'protocol': 'https' if use_https else 'http',
@@ -192,7 +195,7 @@ def send_vault_completion_email_user(user, applicant_name,user_email, domain_ove
         userName = user.email
     context = {
         'user_name':userName,
-        'domain': settings.SITE_BASE_URL,
+        'domain': settings.SITE_API_BASE_URL,
         'site_name': "Finaskus",
         'user_email': user_email,
         'user': user,
@@ -218,7 +221,7 @@ def send_vault_completion_email(user, user_email, domain_override=None,
      Sends an email when vault is completed.
     """
     context = {
-        'domain': settings.SITE_BASE_URL,
+        'domain': settings.SITE_API_BASE_URL,
         'site_name': "Finaskus",
         'user_email': user_email,
         'user': user,
@@ -228,7 +231,7 @@ def send_vault_completion_email(user, user_email, domain_override=None,
               html_email_template_name=html_email_template_name)
     
 
-def send_transaction_completed_email(order_detail,applicant_name,user_email, domain_override=None, subject_template_name='transaction/subject.txt',
+def send_transaction_completed_email(order_detail_lumpsum,order_detail_sip,applicant_name,user_email,sip_tenure,goal_len, payment_completed, domain_override=None, subject_template_name='transaction/subject.txt',
                                      email_template_name='transaction/transaction_completed.html', use_https=False,
                                      token_generator=default_token_generator, from_email=None,
                                      request=None,html_email_template_name='transaction/user-confirm-pay.html', extra_email_context=None):
@@ -240,20 +243,91 @@ def send_transaction_completed_email(order_detail,applicant_name,user_email, dom
     else:
         user_name = user_email
     
-    context = {          
+    context = {   
+        'order_detail_lumpsum':order_detail_lumpsum,
+        'order_detail_sip':order_detail_sip,       
         'user_name':user_name,
-        'order_detail': order_detail,
-        'domain': settings.SITE_BASE_URL,
+        'sip_tenure':sip_tenure,
+        'goal_len':goal_len,
+        'domain': settings.SITE_API_BASE_URL,
         'site_name': "Finaskus",
         'protocol': 'https' if use_https else 'http',
     }
+    
+    if payment_completed == True:
+        html_email_template_name='transaction/user-confirm-payment-complete.html'
+        
     send_mail(subject_template_name, email_template_name, context, from_email, settings.DEFAULT_TO_EMAIL,
               html_email_template_name=None)
     
-    send_mail('transaction/user-subject.txt', None, context, from_email, order_detail.user.email,
-              html_email_template_name=html_email_template_name)
     
+    send_mail('transaction/user-subject.txt', None, context, from_email, user_email,
+              html_email_template_name=html_email_template_name)
 
+
+def send_transaction_change_email(first_order,order_detail,applicant_name,user,email_attachment,attachment_error,sip_tenure,goal_len,domain_override=None, subject_template_name='transaction/subject.txt',
+                                     email_template_name='transaction/transaction_status_change.html', use_https=False,
+                                     token_generator=default_token_generator, from_email=None,
+                                     request=None,extra_email_context=None):
+    
+    
+    """
+    Template changes according to mandate status of the user 
+    """ 
+    if first_order == True:      
+        if user.mandate_status == "0":   
+            if all(sips < 1 for sips in order_detail.all_sips) & any(lumpsums > 0 for lumpsums in order_detail.all_lumpsums):
+                html_email_template_name='transaction/user-confirm-status-change.html'
+            else:
+                html_email_template_name='transaction/user-confirm-status-change-sip.html'
+        else:
+            html_email_template_name='transaction/user-confirm-status-change-ongoing.html'
+    else:
+        html_email_template_name='transaction/user-confirm-following-sip.html'
+    
+    list1 = zip(order_detail.fund_order_list,order_detail.nav_list)
+    
+    if applicant_name is not None:
+        user_name = applicant_name.title()
+    else:
+        user_name = user.email
+        
+    month = datetime.datetime.strftime(order_detail.created_at, '%B')    
+
+    context = {
+        'sip_tenure':sip_tenure,
+        'goal_len':goal_len,
+        'order_detail':list1,        
+        'user_name':user_name,
+        'transaction_detail':order_detail,
+        'sip_allotment_date':order_detail.fund_order_items.first().allotment_date,
+        'month':month,
+        'domain': settings.SITE_API_BASE_URL,
+        'site_name': "Finaskus",
+        'protocol': 'https' if use_https else 'http',
+    }
+    """
+    Sends a django.core.mail.EmailMultiAlternatives to `to_email`.
+    """
+    if order_detail.unit_alloted == True and attachment_error == None:
+        subject = loader.render_to_string('transaction/user-status-change-subject.txt', context)
+        subject = ''.join(subject.splitlines())
+        body = loader.render_to_string(html_email_template_name, context)
+        email_message = EmailMultiAlternatives(subject, body, from_email, [user.email], bcc=[settings.DEFAULT_TO_EMAIL])
+        if user.mandate_status == "0" and email_attachment is not None:
+            attachment = open(email_attachment, 'rb')
+            email_message.attach('bank_mandate.pdf', attachment.read(),'application/pdf')
+            user.mandate_status = 1
+            user.save()
+        email_message.attach_alternative(body, 'text/html')
+        email_message.send()
+        return "success"
+    else:
+        send_mail(subject_template_name, email_template_name, context, from_email, settings.DEFAULT_TO_EMAIL,
+              html_email_template_name=None)
+        return "Failed"
+    
+    
 
 def send_reset_email(user,applicant_name,domain_override=None, subject_template_name='registration/password_reset_request_subject.txt',
                      email_template_name=None, use_https=False,
@@ -271,7 +345,7 @@ def send_reset_email(user,applicant_name,domain_override=None, subject_template_
         context = {
             'email': user.email,
             'user_name':user_name,
-            'domain': settings.SITE_BASE_URL,
+            'domain': settings.SITE_API_BASE_URL,
             'site_name': "Finaskus",
             'uid': urlsafe_base64_encode(force_bytes(user.pk)),
             'user': user,
@@ -310,7 +384,7 @@ def send_verify_email(user, applicant_name, code, domain_override=None, subject_
     context = {
         'user_name':user_name,      
         'email': user.email,
-        'domain': settings.SITE_BASE_URL,
+        'domain': settings.SITE_API_BASE_URL,
         'site_name': profile_constants.SITE_NAME,
         'user': user,
         'token': code,
@@ -349,12 +423,12 @@ def send_phone_number_change_email(user_email,applicant_name,previous_number, ne
      Sends an email when user has successfully changed his phone number.
     """
     if applicant_name is not None:
-       userName = applicant_name.title()
+        userName = applicant_name.title()
     else:
-       userName = user.email
+        userName = user_email
        
     context = {
-        'domain': settings.SITE_BASE_URL,
+        'domain': settings.SITE_API_BASE_URL,
         'site_name': "Finaskus",
         'user_email': user_email,
         'user_name':userName,
@@ -375,9 +449,87 @@ def send_redeem_completed_email(redeem_detail, domain_override=None, subject_tem
     """
     context = {
         'redeem_detail': redeem_detail,
-        'domain': settings.SITE_BASE_URL,
+        'domain': settings.SITE_API_BASE_URL,
         'site_name': "Finaskus",
         'protocol': 'https' if use_https else 'http',
     }
     send_mail(subject_template_name, email_template_name, context, from_email, settings.DEFAULT_TO_EMAIL,
               html_email_template_name=html_email_template_name)
+    
+
+
+def send_mail_reminder_next_sip(fund_order_items,target_date,total_sip,bank_details,applicant_name,user,domain_override=None, subject_template_name='transaction/sip-reminder-subject.txt',
+                                     email_template_name=None, use_https=False,
+                                     token_generator=default_token_generator, from_email=None,
+                                     request=None,html_email_template_name='transaction/sip-reminder.html', extra_email_context=None):
+                   
+    if applicant_name is not None:
+        userName = applicant_name.title()
+    else:
+        userName = user.email
+        
+    if bank_details is not None and bank_details.account_number is not None:
+        x = bank_details.account_number
+        y = list(x)
+        y.reverse()
+        index = 0
+        while index < len(y):
+            if index > 3:
+                y[index] = 'X'
+            index = index + 1
+                
+        y.reverse() 
+        bank_account_number = ''.join(y)
+    else:
+        bank_account_number = None
+       
+    context = {     
+              'domain': settings.SITE_API_BASE_URL,
+              'site_name': "Finaskus",
+              'user': user,
+              'bank_details':bank_details,
+              'bank_account_number':bank_account_number,
+              'total_sip':total_sip,
+              'user_name':userName,
+              'fund_order_items':fund_order_items,
+              'next_allotment_date':target_date,
+              'protocol': 'https' if use_https else 'http',
+               }
+    send_mail(subject_template_name, email_template_name, context, from_email, user.email,
+                          html_email_template_name=html_email_template_name) 
+    return True
+                    
+def send_mail_weekly_portfolio(portfolio_details,user,applicant_name,domain_override=None, subject_template_name='transaction/weekly-portfolio-subject.txt',
+                                     email_template_name=None, use_https=False,
+                                     token_generator=default_token_generator, from_email=None,
+                                     request=None,html_email_template_name='transaction/weekly_portfolio_snapshot.html', extra_email_context=None):                
+    if applicant_name is not None:
+        userName = applicant_name.title()
+    else:
+        userName = user.email
+    context = {     
+             'domain': settings.SITE_API_BASE_URL,
+             'site_name': "Finaskus",
+             'user': user,
+             'user_name':userName,
+             'portfolio_details':portfolio_details,
+             'protocol': 'https' if use_https else 'http',
+               }
+    send_mail(subject_template_name, email_template_name, context, from_email, user.email,
+                          html_email_template_name=html_email_template_name) 
+    
+
+def send_mail_admin_next_sip(users,current_date,target_date, domain_override=None, subject_template_name='transaction/sip-reminder-subject.txt',
+                                     email_template_name='transaction/sip_reminder_users_list.html', use_https=False,
+                                     token_generator=default_token_generator, from_email=None,
+                                     request=None,html_email_template_name=None, extra_email_context=None):
+    context = {     
+             'domain': settings.SITE_API_BASE_URL,
+             'site_name': "Finaskus",
+             'users': users,
+             'current_date':current_date,
+             'target_date':target_date,
+             'protocol': 'https' if use_https else 'http',
+               }
+    send_mail(subject_template_name, email_template_name, context, from_email, settings.DEFAULT_TO_EMAIL,
+              html_email_template_name=None)    

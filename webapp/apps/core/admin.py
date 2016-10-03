@@ -63,7 +63,7 @@ class OrderDetailAdmin(admin.ModelAdmin):
     2. custom list display
     """
     list_filter = ['order_status', 'is_lumpsum', UserFilter]
-    list_display = ['user', 'order_id', 'order_status', 'created_at', 'button3', 'button4', 'bank_mandate']
+    list_display = ['user', 'order_id', 'order_status', 'created_at', 'button3', 'button4', 'bank_mandate','button5']
     search_fields = ['order_id', 'user__email']
     readonly_fields = ('user', 'transaction', 'order_id', 'list_of_fund_order_items')
     exclude = ('fund_order_items', )
@@ -110,6 +110,16 @@ class OrderDetailAdmin(admin.ModelAdmin):
         return mark_safe('<input type="button" class="xsip_registration" value="Generate Xsip registration">')
     button4.short_description = 'Generate XSIP registration'
     button4.allow_tags = True
+    
+    def button5(self, obj):
+        """
+        :param obj: an obj of user Admin
+        :return: a button
+        """
+
+        return mark_safe('<input type="button" class="send_transaction_complete_mail"  value="Send Mail for Transaction Complete">')
+    button5.short_description = 'Send Mail for Transaction Complete'
+    button5.allow_tags = True
 
     def bank_mandate(self, obj):
         """

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<!-- fallback page if failure in client pipe file generation -->
+<!-- This file displays the user_ids for which the pipe file generation failed because they have incomplete
+ vaults. -->
+<html lang="en">
+<head>
+    <title>PIPE FILE GENERATION FAILURE</title>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" crossorigin="anonymous">
+</head>
+<body>
+    <h4>These fund order items are missing bse transaction id, hence the pipe file cannot be created.</h4>
+    {% if failed_orders_list %}
+    <ul id="list">
+        {% for i in failed_orders_list %}
+            <li>
+                <p>{{ i }}</p>
+            </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+        <h3 id="fallback">No orders are available</h3>
+    {% endif %}
+<!-- javascript files -->
+<!-- jquery cdn -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" crossorigin="anonymous"></script>
+</body>
+</html>

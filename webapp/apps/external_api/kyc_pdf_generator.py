@@ -54,7 +54,7 @@ def generate_kyc_pdf(user_id):
 
         call((("rm %s") % kyc_temp_file_name).split())
 
-    prefix = "webapp"  # prefix is needed to access the images from media directory.
+    prefix = ""  # prefix is needed to access the images from media directory.
     # the list of images to be embedded into the pdf follows
     list_of_embeddable_images = []
 

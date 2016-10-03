@@ -8,6 +8,9 @@ from . import models, serializers, constants, helpers, xirr, new_xirr
 from profiles import models as profile_models
 from profiles import helpers as profiles_helpers
 from webapp.apps import random_with_N_digits
+from payment import models as payment_models
+
+from external_api import bank_mandate as bank_mandate
 
 from collections import OrderedDict, defaultdict
 from datetime import date, datetime, timedelta
@@ -18,10 +21,44 @@ import copy
 import re
 import hmac
 import hashlib
+import threading
+
+from itertools import chain
 
 debug_logger = logging.getLogger('django.debug')
 
-
+def get_all_portfolio_details(user,fund_order_items):
+    is_transient_dashboard = False
+    # query all fund_order_items of a user
+    all_investments_of_user = [fund_order_item for fund_order_item in fund_order_items if fund_order_item.portfolio_item.portfolio.user==user]
+    if all_investments_of_user:
+        # query all redeems of user
+        all_redeems_of_user = models.FundRedeemItem.objects.filter(portfolio_item__portfolio__user=user,is_verified=True)
+        # club all investments and redeems of a user according to the funds
+        transaction_fund_map, today_portfolio, portfolios_to_be_considered = club_investment_redeem_together(all_investments_of_user, all_redeems_of_user)
+        info =  get_dashboard_version_two(transaction_fund_map, today_portfolio, portfolios_to_be_considered, is_transient_dashboard)
+        return info
+    
+    
+def get_portfolio_dashboard():
+    fund_order_items = models.FundOrderItem.objects.filter(is_cancelled=False,is_verified=True)
+    users = []
+    if fund_order_items is not None:
+        for fund_order_item in fund_order_items:
+            if fund_order_item.portfolio_item.portfolio.user not in users:
+                user = fund_order_item.portfolio_item.portfolio.user
+                users.append(user)
+                
+                portfolio_details = get_all_portfolio_details(user,fund_order_items)
+                   
+                try:
+                    applicant_name = investor_info_check(user)
+                except:
+                    applicant_name = None
+ 
+                profiles_helpers.send_mail_weekly_portfolio(portfolio_details,user,applicant_name,use_https=settings.USE_HTTPS)
+            
+    
 #investor info check
 def investor_info_check(user):
     applicant_name = None
@@ -34,7 +71,59 @@ def investor_info_check(user):
             applicant_name = None
     return applicant_name
 
+def reminder_next_sip_allotment():
+    curr_date = date.today()
+    target_date = curr_date + timedelta(days=settings.SIP_REMINDER_DAYS)  
+    target_date_1 = target_date + timedelta(days=1)
+    buffer_date = target_date + timedelta(days=settings.SIP_BUFFER_DAYS)
+    fund_order_items = models.FundOrderItem.objects.filter(next_allotment_date__range=(curr_date,target_date),order_amount__gt=0 , agreed_sip__gt=0,sip_reminder_sent=False)      
+    users = []
+    if len(fund_order_items) > 0:
+        buffer_fund_order_items = models.FundOrderItem.objects.filter(next_allotment_date__range=(target_date_1,buffer_date) , order_amount__gt=0 , agreed_sip__gt=0,sip_reminder_sent=False)
+        if len(buffer_fund_order_items) > 0:
+            all_fund_order_items = list(chain(fund_order_items, buffer_fund_order_items))
+        else:
+            all_fund_order_items = fund_order_items
+        for fund_order_item in all_fund_order_items:
+            if fund_order_item.portfolio_item.portfolio.user not in users:
+                user = fund_order_item.portfolio_item.portfolio.user
+                users.append(user)
+                user_fund_order_items,bank_details,applicant_name,total_sip =  reminder_next_sip_detail(all_fund_order_items,target_date,user)   
+                email = profiles_helpers.send_mail_reminder_next_sip(user_fund_order_items,target_date,total_sip,bank_details,applicant_name,user,use_https=settings.USE_HTTPS)    
+                if email == True:
+                    for fund_item in user_fund_order_items:
+                        fund_item.sip_reminder_sent = True
+                        fund_item.save()
+    if len(users) > 0:
+        profiles_helpers.send_mail_admin_next_sip(users,curr_date,target_date,use_https=settings.USE_HTTPS)
+  
+def reminder_next_sip_detail(fund_order_items,target_date,user):
+    try:
+        user_fund_order_items = [fund_order_item for fund_order_item in fund_order_items if fund_order_item.portfolio_item.portfolio.user==user]
+        total_sip = sum(fund_order_item.agreed_sip for fund_order_item in user_fund_order_items)
 
+    except:
+        user_fund_order_items = None
+        total_sip = None
+
+    if user_fund_order_items is not None:    
+        try:
+            bank_details = profile_models.InvestorBankDetails.objects.get(user=user)
+        except profile_models.InvestorBankDetails.DoesNotExist:
+            bank_details = None
+   
+        try:
+            applicant_name = models.investor_info_check(user)
+        except:
+            applicant_name = None
+                    
+    else:
+        bank_details = None
+        applicant_name = None
+        
+    return user_fund_order_items, bank_details,applicant_name,total_sip 
+                    
+        
 
 def get_answers(answers, questions, id):
     """
@@ -204,9 +293,6 @@ def process_retirement_answer(request):
     """
     post answer for retirement
     """
-    logger = logging.getLogger('django.debug')
-    logger.debug(str(request.data))
-
     allocation_dict = make_allocation_dict(float(request.data.get('monthly_investment')), 0,
                                            request.data.get("allocation"))
     equity_sip, equity_lumpsum, debt_sip, debt_lumpsum, elss_sip, elss_lumpsum, is_error, errors = \
@@ -870,7 +956,7 @@ def get_scheme_details(fund, monthly_data_points, daily_data_points):
                                     "(" + str(round(fund_detail[constants.CAPITAL_GAIN_PERCENTAGE], 2)) + "%)"
         elif field == constants.IMAGE_URL:
             # TODO: http or https?
-            scheme_details[field] = "http://" + settings.SITE_BASE_URL + fund_detail[constants.IMAGE_URL]
+            scheme_details[field] = "http://" + settings.SITE_API_BASE_URL + fund_detail[constants.IMAGE_URL]
         elif field == constants.DAY_END_DATE:
             day_end_date = datetime.strptime(fund_detail[field], '%Y-%m-%d').date()
             # scheme_details[field] = datetime.strftime(day_end_date, '%d-%m-%Y')
@@ -1133,8 +1219,6 @@ def get_annualised_return(portfolio_items, nav_list):
             category_value_map[constants.FUND_MAP_REVERSE[portfolio_item.broad_category_group]][index] += \
                 portfolio_fund_navs[index] * portfolio_item_weightage
             portfolio_value_map[index] += portfolio_fund_navs[index] * portfolio_item_weightage
-    logger = logging.getLogger('django.debug')
-    logger.debug(portfolio_value_map)
     for category in category_value_map:
         if category_value_map[category][3]:
             category_returns = get_annualized_returns(category_value_map[category])
@@ -1562,7 +1646,8 @@ def get_financial_goal_status_for_dashboard(asset_overview, portfolio):
         if category_allocation is not None:
             corpus, debt_investment, equity_investment, elss_investment, term = \
                 calculate_corpus_and_investment_till_date(answer_map, portfolio, category, category_allocation)
-            goal_data = generate_goals_data(user_answers, category_allocation)
+            user_answers_category = [ans for ans in user_answers if ans.question.question_for==constants.MAP[category]]
+            goal_data = generate_goals_data(user_answers_category, category_allocation)
 
             goal_map[constants.MAP[category]][0].append({
                 constants.EXPECTD_VALUE: corpus,
@@ -1890,7 +1975,7 @@ def calculate_financial_goal_status(asset_class_overview, portfolios_to_be_consi
             if category_allocation is not None:
                 corpus, debt_investment, equity_investment, elss_investment, term = \
                     calculate_corpus_and_investment_till_date(answer_map, portfolio, category, category_allocation)
-                user_answers_portfolio = [ans for ans in user_answers if ans.portfolio_id == portfolio.id]
+                user_answers_portfolio = [ans for ans in user_answers if ans.portfolio_id == portfolio.id and ans.question.question_for==constants.MAP[category]]
                 goal_data = generate_goals_data(user_answers_portfolio, category_allocation)
                 goal_map[constants.MAP[category]][0].append({
                     constants.EXPECTD_VALUE: corpus,
@@ -1937,6 +2022,9 @@ def make_financial_goal_response(goal_map, total_equity_invested, total_debt_inv
                     goal_current_value += category_individual_goal.get(constants.ELSS) * (
                         current_value_map[constants.ELSS] / total_elss_invested)
                 progress = round(goal_current_value * 100 / category_individual_goal.get(constants.EXPECTD_VALUE), 1)
+                
+                debug_logger.debug(str(constants.ASSET_ALLOCATION_MAP[category][2]) +
+                                    str(goal_map[category][1] + 1) + str(category_individual_goal.get(constants.GOAL_ANSWERS)))
                 
                 goal_status = {
                     constants.NAME: str(constants.ASSET_ALLOCATION_MAP[category][2]) +
@@ -2245,7 +2333,11 @@ def make_fund_dict_for_portfolio_detail(fund_name, fund_current_value, fund_gain
     :param sum_invested_in_fund: the sum(lumpsum+sip) paid by user till present in a fund
     :return:
     """
-    return {constants.FUND_NAME: fund_name, constants.RETURN_PERCENTAGE: round(fund_gain * 100, 1),
+    try:
+        fund_gain_rounded = round(fund_gain * 100, 1)
+    except:
+        fund_gain_rounded = 0
+    return {constants.FUND_NAME: fund_name, constants.RETURN_PERCENTAGE: fund_gain_rounded,
             constants.IS_GAIN: True if float(round(fund_current_value - sum_invested_in_fund)) >= 0 else False,
             constants.CURRENT_VALUE: round(fund_current_value),
             constants.INVESTED_VALUE: round(sum_invested_in_fund),
@@ -2415,6 +2507,16 @@ def get_finaskus_id(user):
             result_id += last_six_digits
     return result_id
 
+def send_transaction_complete_email(txn, user, portfolio, order_detail_lumpsum,order_detail_sip):
+    sip_tenure = 0
+    goal_len = 0
+    if order_detail_sip is not None:
+        sip_tenure,goal_len = user.get_sip_tenure(portfolio) 
+       
+    applicant_name = investor_info_check(user)
+
+    payment_completed = True if txn.txn_status == payment_models.Transaction.Status.Success else False
+    profiles_helpers.send_transaction_completed_email(order_detail_lumpsum,order_detail_sip,applicant_name,user.email,sip_tenure,goal_len,payment_completed, use_https=settings.USE_HTTPS)
 
 def convert_to_investor(txn):
     """
@@ -2425,32 +2527,25 @@ def convert_to_investor(txn):
     #TODO intil amount fixing
     user = txn.user
     portfolio = models.Portfolio.objects.get(user=user, has_invested=False)
-    order_detail = save_portfolio_snapshot(txn)
-    
+    order_detail_lumpsum, order_detail_sip = save_portfolio_snapshot(txn)
     
     portfolio.has_invested = True
     portfolio.investment_date = date.today()
     portfolio.save()
+    
+    portfolio.portfolioitem_set.all().update(investment_date = date.today())
 
-    for item in portfolio.portfolioitem_set.all():
-        item.investment_date = date.today()
-        item.save()
-
-    for answer in models.Answer.objects.filter(user=user, portfolio=None).exclude(
-            question__question_for__in=[constants.ASSESS, constants.PLAN]):
-        answer.portfolio = portfolio
-        answer.save()
+    models.Answer.objects.filter(user=user, portfolio=None).exclude(
+            question__question_for__in=[constants.ASSESS, constants.PLAN]).update(portfolio=portfolio)
 
     allocation_asset = models.PlanAssestAllocation.objects.get(user=user, portfolio=None)
     allocation_asset.portfolio = portfolio
     allocation_asset.save()
     profile_models.AggregatePortfolio.objects.update_or_create(
         user=txn.user, defaults={"update_date":datetime.now().date()})
-    
-           
-    applicant_name = investor_info_check(user)
-    
-    profiles_helpers.send_transaction_completed_email(order_detail,applicant_name,user.email,use_https=settings.USE_HTTPS)
+
+    send_email_thread = threading.Thread(target=send_transaction_complete_email, args=(txn, user, portfolio, order_detail_lumpsum,order_detail_sip,))
+    send_email_thread.start()
 
 
 def save_portfolio_snapshot(txn):
@@ -2467,6 +2562,7 @@ def save_portfolio_snapshot(txn):
                                                               agreed_sip=portfolio_item.sip,
                                                               agreed_lumpsum=portfolio_item.lumpsum,
                                                               internal_ref_no="FIN" + str(random_with_N_digits(7)))
+        
         order_item_list_lumpsum.append(order_item_lump)
 
         if portfolio_item.sip != 0:
@@ -2476,18 +2572,19 @@ def save_portfolio_snapshot(txn):
                                                                  agreed_lumpsum=0,
                                                                  internal_ref_no="FIN" + str(random_with_N_digits(7)))
             order_item_list_sip.append(order_item_sip)
+            
 
     order_detail_lump = models.OrderDetail.objects.create(user=txn.user, order_status=0, transaction=txn,
                                                           is_lumpsum=True)
-    for index in range(len(order_item_list_lumpsum)):
-        order_detail_lump.fund_order_items.add(order_item_list_lumpsum[index])
+    order_detail_lump.fund_order_items.set(order_item_list_lumpsum)
 
+    order_detail_sip = None
     if order_item_list_sip:
         order_detail_sip = models.OrderDetail.objects.create(user=txn.user, order_status=0, transaction=txn)
-        for index in range(len(order_item_list_sip)):
-            order_detail_sip.fund_order_items.add(order_item_list_sip[index])
+        order_detail_sip.fund_order_items.set(order_item_list_sip)
+            
     
-    return order_detail_lump
+    return order_detail_lump, order_detail_sip
 
 
 def get_is_enabled(portfolio_item):
@@ -3516,11 +3613,14 @@ def get_dashboard_version_two(transaction_fund_map, today_portfolio, portfolios_
 
     financial_goal_status = calculate_financial_goal_status(asset_class_overview, portfolios_to_be_considered)
 
+    
     return {constants.FINANCIAL_GOAL_STATUS: financial_goal_status,
-            constants.ASSET_CLASS_OVERVIEW: asset_class_overview, constants.PORTFOLIO_OVERVIEW: portfolio_overview,
-            constants.YESTERDAY_CHANGE: yesterday_changes, constants.DATE: get_dashboard_change_date(),
+            constants.ASSET_CLASS_OVERVIEW: asset_class_overview, 
+            constants.PORTFOLIO_OVERVIEW: portfolio_overview,
+            constants.YESTERDAY_CHANGE: yesterday_changes, 
+            constants.DATE: get_dashboard_change_date(),
             constants.IS_VIRTUAL: False}
-
+    
 
 def convert_dashboard_to_leaderboard(dashboard_data):
     """
@@ -3619,6 +3719,8 @@ def make_xirr_calculations_for_dashboard_version_two(transaction_fund_map, api_t
                 gain_percentage_of_a_fund = 0.0
         else:
             gain_percentage_of_a_fund = 0
+        
+        debug_logger.debug("gain percent: " + str(gain_percentage_of_a_fund))
         # make asset class overview for portfolio details
         for category in asset_class_overview:
             if category.get(constants.KEY) == constants.FUND_MAP_REVERSE[fund.type_of_fund]:
@@ -4023,3 +4125,5 @@ def store_most_popular_fund_data():
     models.CachedData.objects.update_or_create(key=constants.MOST_POPULAR_FUND,
                                                defaults={"value":{constants.MOST_POPULAR_FUND: str(popular_funds)}})
     return 0
+
+        

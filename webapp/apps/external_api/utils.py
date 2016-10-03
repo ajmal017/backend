@@ -7,6 +7,7 @@ from reportlab.lib.units import cm
 from reportlab.lib.utils import ImageReader
 from PIL import Image
 
+import requests
 
 import csv
 import logging
@@ -106,6 +107,7 @@ def generate_tiff(pdf_name, bank_cheque_image):
     prefix_out_tiff_file = tiff_output_path + out_tiff_file
     uncompressed_combined_tiff_file = tiff_output_path + "combined" + timestamp + ".tiff"
     out_pdf_tiff_file = tiff_output_path + "pdfTIFF" + timestamp + ".tiff"
+    out_image_png_file = tiff_output_path + "imagePNG_" + timestamp + ".png"
     out_image_pdf_file = tiff_output_path + "imagePDF_" + timestamp + ".pdf"
     out_image_tiff_file = tiff_output_path + "imageTIFF_" + timestamp + ".tiff"
 
@@ -115,10 +117,11 @@ def generate_tiff(pdf_name, bank_cheque_image):
     ghostscript.Ghostscript(*args)
 
     if bank_cheque_image:
-        actual_image = Image.open("webapp" + bank_cheque_image.url)
+        response = requests.get(bank_cheque_image.url)
+        actual_image = Image.open(BytesIO(response.content))
         original_size = actual_image.size  # actual image dimensions (width, height)
         size = constants.TIFF_LANDSCAPE_SIZE  # assume by default landscape.
-        if original_size[1] >= 1200:
+        if original_size[0] < original_size[1]:
             # the original image is portrait.
             size = constants.TIFF_PORTRAIT_SIZE
             if settings.ROTATE_IMAGE:
@@ -128,17 +131,27 @@ def generate_tiff(pdf_name, bank_cheque_image):
 
         # aspect ratio maintenance logic.
         image_w, image_h = actual_image.size
-        aspect_ratio = image_w / float(image_h)
-        new_height = int(size[0] / aspect_ratio)
-        # note it is width X height always, in real life too not just python.
-        # portrait is 800 x 1,200 these are minimum dimensions.
-        # landscape is 1,024 x 512 these are minimum dimensions.
-        if new_height < 1200:
-            size = constants.TIFF_LANDSCAPE_SIZE
+        if (size == constants.TIFF_LANDSCAPE_SIZE and (image_w > 1920 or image_w < 840)) or \
+            (size == constants.TIFF_PORTRAIT_SIZE and (image_h > 1920 or image_h < 840)):
+            aspect_ratio = image_w / float(image_h)
+            new_height = int(size[0] / aspect_ratio)
+            # note it is width X height always, in real life too not just python.
+            # portrait is 800 x 1,200 these are minimum dimensions.
+            # landscape is 1,024 x 512 these are minimum dimensions.
+            if new_height < 1200:
+                size = constants.TIFF_LANDSCAPE_SIZE
+            else:
+                # the given image is portrait
+                size = constants.TIFF_PORTRAIT_SIZE
+            resized_image = actual_image.resize(size, Image.ANTIALIAS)
         else:
-            # the given image is portrait
-            size = constants.TIFF_PORTRAIT_SIZE
-        resized_image = actual_image.resize(size, Image.ANTIALIAS)
+            resized_image = actual_image
+        """
+        temp_image_outfile = open(out_image_png_file, 'wb')
+        resized_image.save(temp_image_outfile, "PNG", optimize=True)
+        temp_image_outfile.close()
+        resized_image = Image.open(out_image_png_file)
+        """
         outfile = open(out_image_pdf_file, 'wb')
         # save the image as pdf for input to ghostscript
         resized_image.save(outfile, "PDF", resolution=100.0)
@@ -181,9 +194,9 @@ def embed_images(images_list, sizes, coords, target_pages, images_count_each_pag
         Co-ordinates must be (x,y) of the lower left corner of the area in which the image should be inserted
         :return: the generated image canvas
         """
-
         img_temp = BytesIO()
-        actual_image = Image.open(the_image)
+        response = requests.get(the_image)
+        actual_image = Image.open(BytesIO(response.content))
         width = constants.SEMI_WALLPAPER_WIDTH * cm
         height = constants.SEMI_WALLPAPER_HEIGHT * cm
 
@@ -299,7 +312,8 @@ def attach_images(images_list, source_pdf, output_location):
     count = 0
     for image in images_list:
         if image:
-            actual_image = Image.open(image, "r")
+            response = requests.get(image)
+            actual_image = Image.open(BytesIO(response.content))
             # in case of size==constants.FIT_SIZE
             original_size = actual_image.size  # actual image dimensions (width, height)
             size = constants.LANDSCAPE_SIZE  # assume by default landscape.

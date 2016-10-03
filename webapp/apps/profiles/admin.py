@@ -12,6 +12,7 @@ from import_export.fields import Field
 
 from . import models
 from external_api.bulk_order_entry import generate_client_pipe
+from external_api.bulk_order_entry import generate_client_fatca_pipe
 
 
 class BseOrKra(admin.SimpleListFilter):
@@ -105,7 +106,7 @@ class UserAdmin(admin.ModelAdmin):
         internal_models.EmailField: {'widget': TextInput(attrs={'size': '17'})},
         internal_models.TextField: {'widget': Textarea(attrs={'rows': '2', 'cols': '40'})},
     }
-    search_fields = ['phone_number', 'email']
+    search_fields = ['phone_number', 'email', 'finaskus_id']
     list_display = ['id', 'email', 'phone_number', 'get_vault_complete', 'get_kra_verification', 'bse_registered',
                     'tiff_mailed', 'tiff_accepted', 'kyc_mailed', 'kyc_accepted', 'mandate_status', 'xsip_status',
                     'finaskus_id', 'mandate_reg_no', 'remarks', 'button', 'button1', 'button2', 'button3', 'button4']
@@ -113,7 +114,7 @@ class UserAdmin(admin.ModelAdmin):
     list_filter = ['phone_number_verified', 'email_verified', 'mandate_status', BseOrKra, VaultComplete, KraVerified]
     exclude = ('password', 'id', 'username', 'last_login', )
     empty_value_display = 'unknown'
-    actions = ['generate_client_pipe_file']
+    actions = ['generate_client_ucc_pipe_file', 'generate_client_fatca_pipe_file']
 
     # disable delete action as well as delete button.
     def get_actions(self, request):
@@ -135,7 +136,7 @@ class UserAdmin(admin.ModelAdmin):
         """
         return False
 
-    def generate_client_pipe_file(self, request, queryset):
+    def generate_client_ucc_pipe_file(self, request, queryset):
         """
 
         :param modeladmin:
@@ -155,6 +156,27 @@ class UserAdmin(admin.ModelAdmin):
             return render(request, 'admin/profiles/user/failure.html', context)
         else:
             message = mark_safe("Successfully generated the bulk client master upload file.<a href='/"+"/".join(response.split("/")[-2:])+"'>Click here.</a>")
+            self.message_user(request, message, level="success")
+
+    def generate_client_fatca_pipe_file(self, request, queryset):
+        """
+
+        :param modeladmin:
+        :param request:
+        :param queryset: selected users
+        :return:call a function that returns pipe separated file of selected id
+        """
+        user_id_list = []
+        for item in queryset:
+            user_id_list.append(item.id)
+        response = generate_client_fatca_pipe(user_id_list)
+
+        if isinstance(response, list):
+            self.message_user(request, "Error encountered.", level="error")
+            context = dict(failed_users_list=response)
+            return render(request, 'admin/profiles/user/failure.html', context)
+        else:
+            message = mark_safe("Successfully generated the bulk client fatca upload file.<a href='/"+"/".join(response.split("/")[-2:])+"'>Click here.</a>")
             self.message_user(request, message, level="success")
 
     def button(self, obj):

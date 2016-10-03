@@ -24,6 +24,12 @@
             // this opens a new window for the download of the private resource.
             window.open("/v2.0/open/generate/bank/mandate/?order_id="+order_id);
         });
+        
+        $('.send_transaction_complete_mail').click(function() {
+        	var allElems = $(this).parent().parent().children();
+            order_id = allElems[1].innerText;
+            window.open("/v2.0/core/transaction/complete/?order_id="+order_id);
+        });
     }
 </script>
 

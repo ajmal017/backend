@@ -1,7 +1,7 @@
 from django.conf import settings
 
 from . import utils, models
-
+import logging
 
 def verify_billdesk_checksum(string):
     """
@@ -24,7 +24,7 @@ def verify_billdesk_checksum(string):
     return True if hash_generated == response_checksum else False
 
 
-def update_transaction_failure(order_number, ref_no, txn_amount, auth_status, msg):
+def update_transaction_failure(order_number, ref_no, txn_amount, auth_status, msg, txn_time):
     """
     :return: Changes the status of the transaction to failure code(ie 2)
     """
@@ -34,12 +34,13 @@ def update_transaction_failure(order_number, ref_no, txn_amount, auth_status, ms
         txn.txn_status = models.Transaction.Status.Failure.value
         txn.auth_status = auth_status
         txn.txn_reference_no = ref_no
+        txn.txn_time = txn_time
         txn.response_string = {"string": msg}
         txn.save()
     return txn
 
 
-def update_transaction_success(order_number, ref_no, txn_amount, auth_status, msg):
+def update_transaction_success(order_number, ref_no, txn_amount, auth_status, msg, txn_time):
     """
     :return:  Changes the status of the transaction to failure code(ie 1)
     """
@@ -50,12 +51,13 @@ def update_transaction_success(order_number, ref_no, txn_amount, auth_status, ms
             txn.txn_status = models.Transaction.Status.Success.value
             txn.auth_status = auth_status
             txn.txn_reference_no = ref_no
+            txn.txn_time = txn_time
             txn.response_string = {"string": msg}
             txn.save()
             return txn
 
     else:
-        txn = update_transaction_failure(order_number, ref_no, txn_amount, auth_status, msg)
+        txn = update_transaction_failure(order_number, ref_no, txn_amount, auth_status, msg, txn_time)
         return txn
 
 
@@ -70,7 +72,7 @@ def parse_billdesk_response(string):
     auth_status: parsed_string[14]
     """
     parsed_string = string.split('|')
-    return parsed_string[1], parsed_string[2], parsed_string[4], parsed_string[14]
+    return parsed_string[1], parsed_string[2], parsed_string[4], parsed_string[14], parsed_string[13]
 
 
 

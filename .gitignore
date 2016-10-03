@@ -5,4 +5,6 @@ error_log
 webapp/media
 webapp/statics
 *.pyc
+*.swp**/.DS_Store
+webapp/static
 *.swp

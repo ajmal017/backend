@@ -665,7 +665,7 @@ PHYS = "PHYS"
 CLIENT_TYPE_P = "P"
 DEFAULT_BANK_Y = "Y"
 DEFAULT_BANK_N = "N"
-
+FATCA_DATA_SRC_E = "E"
 
 UNSUPPORTED_BANK = "Payment is not supported through this bank as of now."
 
@@ -676,8 +676,8 @@ PORTRAIT_SIZE = (800, 1200)  # international portrait is 800 x 1,200 these are m
 PASSPORT_SIZE = (600, 600)  # international standard 600 pixels X 600 pixels
 SIGNATURE_SIZE = (1000, 300)  # international standard 1000 pixels X 300 pixels
 TIFF_SIGNATURE_SIZE = (900, 220)  # international standard 1000 pixels X 300 pixels
-TIFF_LANDSCAPE_SIZE = (1920, 1080)
-TIFF_PORTRAIT_SIZE = (1080, 1920)
+TIFF_LANDSCAPE_SIZE = (840, 500)
+TIFF_PORTRAIT_SIZE = (500, 840)
 WALLPAPER_SIZE = (1920, 1080)  # standard wallpaper publishing 1920 X 1080 pixels
 SEMI_WALLPAPER_SIZE = (900, 900)  # standard semi_wallpaper publishing 1920 X 1080 pixels
 ORIGINAL_SIZE = 1  # maintain original size.
@@ -703,3 +703,4 @@ GET_PASSWORD_URL = 'http://tempuri.org/IMFUploadService/getPassword'
 
 BSE_ORDER_WSDL = 'http://bsestarmfdemo.bseindia.com/MFOrderEntry/MFOrder.svc?singleWsdl'
 BSE_ORDER_GET_PASSWORD_URL = 'http://bsestarmf.in/MFOrderEntry/getPassword'
+EXCHNAME_BSE = "B"
