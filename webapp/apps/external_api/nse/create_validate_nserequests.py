@@ -51,6 +51,26 @@ def getiinrequest(root, user_id):
 
     return getValidRequest(investor_dict, root)
 
+def ceasesystematictrxn(root, user_id):
+    """
+
+    :param user_id: id of user for whom the nse_request is to be generated
+    :return:
+    """
+    user = models.User.objects.get(id=user_id)
+    nse_details = NseDetails.objects.get(user=user)
+    curr_date = datetime.now()
+
+    investor_dict = {
+        constants.REQUEST_IIN_XPATH: nse_details.iin_customer_id,
+        constants.TRXN_NO_XPATH: '155',  # TODO : Get this from systematic registration report
+        constants.CEASE_REQ_DATE_XPATH: curr_date.strftime('%d-%b-%Y'),
+        constants.INSTBY_XPATH: 'B', # 'B' for broker and 'I' for investor
+        constants.NIGO_REMARKS_XPATH: 'test'
+    }
+
+    return getValidRequest(investor_dict, root)
+
 
 def createcustomerrequest(root, user_id):
     """
@@ -267,7 +287,7 @@ def purchasetxnrequest(root, user_id):
         constants.SIP_ACC_NO_XPATH: investor_bank.account_number,
         constants.SIP_AC_TYPE_XPATH: 'SB',
         constants.SIP_IFSC_CODE_XPATH: investor_bank.ifsc_code.ifsc_code,
-        constants.UMRN_XPATH: None,      #TODO: Provided by ACH Mandate , no need to give ach details here
+        constants.UMRN_XPATH: None,      #TODO: Provided by ACH Mandate Report , no need to give ach details here
         constants.ACH_AMT_XPATH: None,
         constants.ACH_FROM_DATE_XPATH: None,
         constants.ACH_END_DATE_XPATH: None,

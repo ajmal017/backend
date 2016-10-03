@@ -191,6 +191,13 @@ CLIENT_CALLBACK_URL_XPATH = SERVICE_REQUEST_PATH + '/Client_callback_url'
 TRANS_COUNT_XPATH = SERVICE_REQUEST_PATH + '/trans_count'
 UC_XPATH = SERVICE_REQUEST_PATH + '/uc'
 
+REQUEST_IIN_XPATH = SERVICE_REQUEST_PATH + '/iin'
+TRXN_NO_XPATH = SERVICE_REQUEST_PATH + '/trxn_no'
+CEASE_REQ_DATE_XPATH = SERVICE_REQUEST_PATH + '/cease_req_date'
+INSTBY_XPATH = SERVICE_REQUEST_PATH + '/initiated_by'
+NIGO_REMARKS_XPATH = SERVICE_REQUEST_PATH + '/nigo_remarks'
+
+
 # NSE VARIABLES
 
 RETURN_CODE_FAILURE = '1'
@@ -445,3 +452,16 @@ REQUEST_ACHMANDATEREGISTRATIONS = '''<NMFIIService>
                                             <ach_amount></ach_amount>
                                         </service_request>
                                     </NMFIIService>'''
+
+REQUEST_CEASESIP = '''<NMFIIService>
+                        <service_request>
+                            <appln_id>''' + NSE_NMF_APPL_ID + '''</appln_id>
+                            <password>''' + NSE_NMF_PASSWORD + '''</password>
+                            <broker_code>''' + NSE_NMF_BROKER_CODE + '''</broker_code>
+                            <iin></iin>
+                            <trxn_no></trxn_no>
+                            <cease_req_date></cease_req_date>
+                            <initiated_by></initiated_by>
+                            <nigo_remarks></nigo_remarks>
+                        </service_request>
+                    </NMFIIService>'''
