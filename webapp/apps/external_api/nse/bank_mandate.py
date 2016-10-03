@@ -12,7 +12,7 @@ import os
 import time
 
 
-def generate_bank_mandate_tiff(user_id):
+def generate_bank_mandate_tiff(user_id, **kwargs):
     """
     This function fills the bank mandate pdf with pertinent user's data.
     :param user_id: The id of the user for whom the mandate is generated.
@@ -25,12 +25,12 @@ def generate_bank_mandate_tiff(user_id):
     investor_bank = models.InvestorBankDetails.objects.get(user=user)
     curr_date = datetime.now()
 
-    mandate_amount_no = max(utils.get_investor_mandate_amount(user), 100000)
+    mandate_amount = kwargs.get('mandate_amount')
 
     mandate_dict = {
         'MandateAccountHolderName': investor_bank.account_holder_name,
-        'MandateAmountNumber': mandate_amount_no,
-        'MandateAmountWords': str(num2words(mandate_amount_no, lang="en_IN")) + " ONLY",
+        'MandateAmountNumber': mandate_amount,
+        'MandateAmountWords': str(num2words(mandate_amount, lang="en_IN")) + " ONLY",
         'MandateBank': investor_bank.ifsc_code.name,
         'MandateBankACNumber': investor_bank.account_number,
         'MandateBankACType': investor_bank.account_type,
