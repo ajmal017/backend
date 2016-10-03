@@ -6,6 +6,7 @@ from external_api import constants
 from external_api import models
 from external_api.exchange_backend import ExchangeBackend 
 from profiles import models as pr_models
+from payment import models as payment_models
 from external_api.nse import bank_mandate
 from external_api.nse import nse_iinform_generation
 import os
@@ -84,15 +85,15 @@ class NSEBackend(object, ExchangeBackend):
         if return_code == nse_constants.RETURN_CODE_SUCCESS:
             return constants.RETURN_CODE_SUCCESS
         else:
-            createFlag = False
+            createCustomerFlag = False
             error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
             for error in error_responses:
                 error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text
                 if error_msg == nse_constants.NO_DATA_FOUND:
-                    createFlag = True
+                    createCustomerFlag = True
                 error_logger.info(error_msg)
-            if createFlag:
-                return constants.RETURN_CODE_FAILURE
+            if createCustomerFlag:
+                return nse_constants.RETURN_CODE_FAILURE
             else:
                 raise AttributeError
 
@@ -141,13 +142,15 @@ class NSEBackend(object, ExchangeBackend):
         """
         error_logger = logging.getLogger('django.error')
         xml_request_body = self._get_request_body(nse_constants.METHOD_PURCHASETXN, user_id)
-        # make an entry to db for this order and transaction
         root = self._get_data(nse_constants.METHOD_PURCHASETXN, xml_request_body=xml_request_body)
         return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
         if return_code == nse_constants.RETURN_CODE_SUCCESS:
             payment_link = root.find(nse_constants.RESPONSE_PAYMENT_LINK_PATH).text
-            # Save payment link Order_detail Table
-            return constants.RETURN_CODE_SUCCESS
+            current_transaction = payment_models.Transaction.get(user_id=user_id, txn_status=0)
+            # 0 for pending transactions assuming there is only one pending transaction
+            current_transaction.payment_link= payment_link
+            current_transaction.save()
+            return nse_constants.RETURN_CODE_SUCCESS
         else:
             error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
             for error in error_responses:
@@ -168,8 +171,11 @@ class NSEBackend(object, ExchangeBackend):
                                           xml_request_body=xml_request_body)
         return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
         if return_code == nse_constants.RETURN_CODE_SUCCESS:
-            # save this entry to NSE_Details table
-            return constants.RETURN_CODE_SUCCESS
+            nse_user = pr_models.User.get(id=user_id)
+            nse_details = models.NseDetails.get(user=nse_user)
+            nse_details.ach_inserted = True
+            nse_details.save()
+            return nse_constants.RETURN_CODE_SUCCESS
         else:
             error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
             for error in error_responses:

@@ -1,11 +1,12 @@
 import xml.etree.ElementTree as ET
 
 from profiles import models
-from external_api.models import Pincode
+from external_api.models import Pincode,NseDetails
+from payment.models import Transaction
 from . import constants
 from external_api import constants as api_constants
 
-from datetime import datetime
+from datetime import datetime,timedelta
 
 
 def getValidRequest(investor_dict, root):
@@ -25,7 +26,7 @@ def getValidRequest(investor_dict, root):
     return ET.tostring(root, encoding="us-ascii", method="xml")
 
 def changeDobFormat(dob):
-    return '01-Jan-1990'
+    return dob.strftime('%d-%b-%Y')
 
 def getiinrequest(root, user_id):
     """
@@ -191,6 +192,7 @@ def purchasetxnrequest(root, user_id):
     :return:
     """
     user = models.User.objects.get(id=user_id)
+    nse_details = NseDetails.objects.get(user=user)
     investor = models.InvestorInfo.objects.get(user=user)
     nominee = models.NomineeInfo.objects.get(user=user)
     contact = models.ContactInfo.objects.get(user=user)
@@ -205,21 +207,21 @@ def purchasetxnrequest(root, user_id):
         nominee.nominee_address = blank_address
 
     investor_dict = {
-        constants.IIN_XPATH: None,
-        constants.SUB_TRXN_TYPE_XPATH: None,
-        constants.POA_XPATH: None,
-        constants.TRXN_ACCEPTANCE_XPATH: None,
-        constants.DEMAT_USER_XPATH: None,
+        constants.IIN_XPATH: nse_details.iin_customer_id,
+        constants.SUB_TRXN_TYPE_XPATH: 'S', # TODO: 'N' for normal and 'S' for systematic
+        constants.POA_XPATH: 'Y', # Executed by POA , values 'Y' or 'N'
+        constants.TRXN_ACCEPTANCE_XPATH: 'ALL', # By Phone , online or both
+        constants.DEMAT_USER_XPATH: 'Y', #TODO: Is demat user or not
         constants.DP_ID_XPATH: None,
-        constants.BANK_NAME_XPATH: None,
-        constants.AC_NO_XPATH: None,
-        constants.IFSC_CODE_XPATH: None,
+        constants.BANK_NAME_XPATH: investor_bank.ifsc_code.name,
+        constants.AC_NO_XPATH: investor_bank.account_number,
+        constants.IFSC_CODE_XPATH: investor_bank.ifsc_code.ifsc_code,
         constants.SUB_BROKER_ARN_CODE_XPATH: None,
         constants.SUB_BROKER_CODE_XPATH: None,
-        constants.EUIN_OPTED_XPATH: None,
+        constants.EUIN_OPTED_XPATH: 'Y',# TODO
         constants.TRXN_EXECUTION_XPATH: None,
         constants.REMARKS_XPATH: None,
-        constants.PAYMENT_MODE_XPATH: None,
+        constants.PAYMENT_MODE_XPATH: 'OL', #TODO :For Online
         constants.BILLDESK_BANK_XPATH: None,
         constants.INSTRM_BANK_XPATH: None,
         constants.INSTRM_AC_NO_XPATH: None,
@@ -236,18 +238,18 @@ def purchasetxnrequest(root, user_id):
         constants.DD_CHARGE_XPATH: None,
         constants.DEBIT_AMOUNT_TYPE_XPATH: None,
         constants.NOMINEE_FLAG_XPATH: None,
-        constants.NO_OF_NOMINEE_XPATH: None,
-        constants.NOMINEE1_NAME_XPATH: None,
-        constants.NOMINEE1_DOB_XPATH: None,
-        constants.NOMINEE1_ADDR1_XPATH: None,
-        constants.NOMINEE1_ADDR2_XPATH: None,
-        constants.NOMINEE1_ADDR3_XPATH: None,
-        constants.NOMINEE1_CITY_XPATH: None,
-        constants.NOMINEE1_STATE_XPATH: None,
-        constants.NOMINEE1_PINCODE_XPATH: None,
-        constants.NOMINEE1_RELATION_XPATH: None,
-        constants.NOMINEE1_PERCENT_XPATH: None,
-        constants.NOMINEE1_GUARD_NAME_XPATH: None,
+        constants.NO_OF_NOMINEE_XPATH: '1' if nominee else '0',
+        constants.NOMINEE1_NAME_XPATH: nominee.nominee_name,
+        constants.NOMINEE1_DOB_XPATH: changeDobFormat(nominee.nominee_dob),
+        constants.NOMINEE1_ADDR1_XPATH: nominee.nominee_address.address_line_1,
+        constants.NOMINEE1_ADDR2_XPATH: nominee.nominee_address.address_line_2,
+        constants.NOMINEE1_ADDR3_XPATH: nominee.nominee_address.nearest_landmark,
+        constants.NOMINEE1_CITY_XPATH: nominee.nominee_address.pincode.city,
+        constants.NOMINEE1_STATE_XPATH: nominee.nominee_address.pincode.state,
+        constants.NOMINEE1_PINCODE_XPATH: nominee.nominee_address.pincode.pincode,
+        constants.NOMINEE1_RELATION_XPATH: nominee.relationship_with_investor,
+        constants.NOMINEE1_PERCENT_XPATH: '100',
+        constants.NOMINEE1_GUARD_NAME_XPATH: nominee.guardian_name,
         constants.NOMINEE1_GUARD_PAN_XPATH: None,
         constants.NOMINEE2_NAME_XPATH: None,
         constants.NOMINEE2_DOB_XPATH: None,
@@ -260,18 +262,18 @@ def purchasetxnrequest(root, user_id):
         constants.NOMINEE3_PERCENT_XPATH: None,
         constants.NOMINEE3_GUARD_NAME_XPATH: None,
         constants.NOMINEE3_GUARD_PAN_XPATH: None,
-        constants.SIP_MICR_NO_XPATH: None,
-        constants.SIP_BANK_XPATH: None,
-        constants.SIP_ACC_NO_XPATH: None,
-        constants.SIP_AC_TYPE_XPATH: None,
-        constants.SIP_IFSC_CODE_XPATH: None,
-        constants.UMRN_XPATH: None,
+        constants.SIP_MICR_NO_XPATH: investor_bank.ifsc_code.micr_code,
+        constants.SIP_BANK_XPATH: investor_bank.ifsc_code.name,
+        constants.SIP_ACC_NO_XPATH: investor_bank.account_number,
+        constants.SIP_AC_TYPE_XPATH: 'SB',
+        constants.SIP_IFSC_CODE_XPATH: investor_bank.ifsc_code.ifsc_code,
+        constants.UMRN_XPATH: None,      #TODO: Provided by ACH Mandate , no need to give ach details here
         constants.ACH_AMT_XPATH: None,
         constants.ACH_FROM_DATE_XPATH: None,
         constants.ACH_END_DATE_XPATH: None,
         constants.UNTIL_CANCELLED_XPATH: None,
-        constants.RETURN_PAYMENT_FLAG_XPATH: None,
-        constants.CLIENT_CALLBACK_URL_XPATH: None,
+        constants.RETURN_PAYMENT_FLAG_XPATH: 'Y',
+        constants.CLIENT_CALLBACK_URL_XPATH: 'give callback url',#TODO
         constants.TRANS_COUNT_XPATH: None,
         constants.AMC_XPATH: None,
         constants.FOLIO_XPATH: None,
@@ -293,30 +295,30 @@ def achmandateregistrationsrequest(root, user_id):
     :return:
     """
     user = models.User.objects.get(id=user_id)
+    nse_details = NseDetails.objects.get(user=user)
+    curr_trxn = Transaction.objects.get(user=user, txn_status=0)
     investor = models.InvestorInfo.objects.get(user=user)
     nominee = models.NomineeInfo.objects.get(user=user)
     contact = models.ContactInfo.objects.get(user=user)
     investor_bank = models.InvestorBankDetails.objects.get(user=user)
     curr_date = datetime.now()
+    year = timedelta(days=365)
+    ach_end_date = curr_date + year
 
-    nominee_address = nominee.nominee_address
-    if nominee.nominee_address == None:
-        blank_pincode = Pincode(None, None, None)
-        blank_address = models.Address(None, None, None, None)
-        blank_address.pincode = blank_pincode
-        nominee.nominee_address = blank_address
+    # Default ach is set to 1 yr (365 days)
 
     investor_dict = {
-        constants.IIN_XPATH: None,
-        constants.ACC_NO_XPATH: None,
-        constants.ACC_TYPE_XPATH: None,
-        constants.IFSC_CODE_XPATH: None,
-        constants.BANK_NAME_XPATH: None,
-        constants.MICR_NO_XPATH: None,
-        constants.UC_XPATH: None,
-        constants.ACH_FROM_DATE_XPATH: None,
-        constants.ACH_TO_DATE_XPATH: None,
-        constants.ACH_AMOUNT_XPATH: None
+        constants.IIN_XPATH: nse_details.iin_customer_id,
+        constants.ACC_NO_XPATH: investor_bank.account_number,
+        constants.ACC_TYPE_XPATH: 'SB', #TODO: investor_bank.account_type
+        constants.IFSC_CODE_XPATH: investor_bank.ifsc_code.ifsc_code,
+        constants.BANK_NAME_XPATH: investor_bank.ifsc_code.name,
+        constants.BRANCH_NAME_XPATH: investor_bank.ifsc_code.bank_branch,
+        constants.MICR_NO_XPATH: investor_bank.ifsc_code.micr_code,
+        constants.UC_XPATH: 'Y', # Until Cancelled - default date will be 31-Dec-2999
+        constants.ACH_FROM_DATE_XPATH: curr_date.strftime('%d-%b-%Y'),
+        constants.ACH_TO_DATE_XPATH: ach_end_date.strftime('%d-%b-%Y'),
+        constants.ACH_AMOUNT_XPATH: curr_trxn.txn_amount
     }
 
     return getValidRequest(investor_dict, root)
