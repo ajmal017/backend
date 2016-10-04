@@ -28,7 +28,7 @@ def getValidRequest(investor_dict, root):
 def changeDobFormat(dob):
     return dob.strftime('%d-%b-%Y')
 
-def getiinrequest(root, user_id):
+def getiinrequest(root, user_id, **kwargs):
     """
 
     :param user_id: id of user for whom the nse_request is to be generated
@@ -51,18 +51,19 @@ def getiinrequest(root, user_id):
 
     return getValidRequest(investor_dict, root)
 
-def ceasesystematictrxn(root, user_id):
+def ceasesystematictrxn(root, user_id, **kwargs):
     """
 
     :param user_id: id of user for whom the nse_request is to be generated
     :return:
     """
     user = models.User.objects.get(id=user_id)
-    nse_details = NseDetails.objects.get(user=user)
+    exch_backend = kwargs.get('exchange_backend')
+    user_vendor = models.UserVendor.objects.get(user=user, name=exch_backend.vendor_name)
     curr_date = datetime.now()
 
     investor_dict = {
-        constants.REQUEST_IIN_XPATH: nse_details.iin_customer_id,
+        constants.REQUEST_IIN_XPATH: user_vendor.ucc,
         constants.TRXN_NO_XPATH: '155',  # TODO : Get this from systematic registration report
         constants.CEASE_REQ_DATE_XPATH: curr_date.strftime('%d-%b-%Y'),
         constants.INSTBY_XPATH: 'B', # 'B' for broker and 'I' for investor
@@ -205,17 +206,16 @@ def createcustomerrequest(root, user_id):
 
     return getValidRequest(investor_dict, root)
 
-def purchasetxnrequest(root, user_id):
+def purchasetxnrequest(root, user_id, **kwargs):
     """
 
     :param user_id: id of user for whom the nse_request is to be generated
     :return:
     """
     user = models.User.objects.get(id=user_id)
-    nse_details = NseDetails.objects.get(user=user)
-    investor = models.InvestorInfo.objects.get(user=user)
+    exch_backend = kwargs.get('exchange_backend')
+    user_vendor = models.UserVendor.objects.get(user=user, name=exch_backend.vendor_name)
     nominee = models.NomineeInfo.objects.get(user=user)
-    contact = models.ContactInfo.objects.get(user=user)
     investor_bank = models.InvestorBankDetails.objects.get(user=user)
     curr_date = datetime.now()
 
@@ -227,7 +227,7 @@ def purchasetxnrequest(root, user_id):
         nominee.nominee_address = blank_address
 
     investor_dict = {
-        constants.IIN_XPATH: nse_details.iin_customer_id,
+        constants.IIN_XPATH: user_vendor.ucc,
         constants.SUB_TRXN_TYPE_XPATH: 'S', # TODO: 'N' for normal and 'S' for systematic
         constants.POA_XPATH: 'Y', # Executed by POA , values 'Y' or 'N'
         constants.TRXN_ACCEPTANCE_XPATH: 'ALL', # By Phone , online or both
@@ -315,9 +315,9 @@ def achmandateregistrationsrequest(root, user_id, **kwargs):
     :return:
     """
     user = models.User.objects.get(id=user_id)
-    nse_details = NseDetails.objects.get(user=user)
-    curr_trxn = Transaction.objects.get(user=user, txn_status=0)
-    investor = models.InvestorInfo.objects.get(user=user)
+    mandate_amount = kwargs.get('mandate_amount')
+    exch_backend = kwargs.get('exchange_backend')
+    user_vendor = models.UserVendor.objects.get(user=user, name=exch_backend.vendor_name)
     investor_bank = models.InvestorBankDetails.objects.get(user=user)
     curr_date = datetime.now()
     mandate_amount = kwargs.get('mandate_amount')
@@ -331,9 +331,10 @@ def achmandateregistrationsrequest(root, user_id, **kwargs):
         constants.ACC_TYPE_XPATH: None,
         constants.IFSC_CODE_XPATH: investor_bank.ifsc_code.ifsc_code,
         constants.BANK_NAME_XPATH: investor_bank.ifsc_code.name,
-        constants.MICR_NO_XPATH: None,
-        constants.UC_XPATH: None,
-        constants.ACH_FROM_DATE_XPATH: None,
+        constants.BRANCH_NAME_XPATH: investor_bank.ifsc_code.bank_branch,
+        constants.MICR_NO_XPATH: investor_bank.ifsc_code.micr_code,
+        constants.UC_XPATH: 'Y', # Until Cancelled - default date will be 31-Dec-2999
+        constants.ACH_FROM_DATE_XPATH: curr_date.strftime('%d-%b-%Y'),
         constants.ACH_TO_DATE_XPATH: None,
         constants.ACH_AMOUNT_XPATH: mandate_amount
     }
