@@ -60,19 +60,19 @@ class NSEBackend(object, ExchangeBackend):
         """
         if method_name == nse_constants.METHOD_GETIIN:
             root = ET.fromstring(nse_constants.REQUEST_GETIIN)
-            return create_validate_nserequests.getiinrequest(root, user_id)
+            return create_validate_nserequests.getiinrequest(root, user_id, **kwargs)
         elif method_name == nse_constants.METHOD_CREATECUSTOMER:
             root = ET.fromstring(nse_constants.REQUEST_CREATECUSTOMER)
             return create_validate_nserequests.createcustomerrequest(root, user_id)
         elif method_name == nse_constants.METHOD_PURCHASETXN:
             root = ET.fromstring(nse_constants.REQUEST_PURCHASETXN)
-            return create_validate_nserequests.purchasetxnrequest(root, user_id)
+            return create_validate_nserequests.purchasetxnrequest(root, user_id, **kwargs)
         elif method_name == nse_constants.METHOD_ACHMANDATEREGISTRATIONS:
             root = ET.fromstring(nse_constants.REQUEST_ACHMANDATEREGISTRATIONS)
             return create_validate_nserequests.achmandateregistrationsrequest(root, user_id, **kwargs)
         elif method_name == nse_constants.METHOD_CEASESIP:
             root = ET.fromstring(nse_constants.REQUEST_CEASESIP)
-            return create_validate_nserequests.ceasesystematictrxn(root, user_id)
+            return create_validate_nserequests.ceasesystematictrxn(root, user_id, **kwargs)
         return
 
     def get_iin(self, user_id):
@@ -82,7 +82,8 @@ class NSEBackend(object, ExchangeBackend):
         :return:
         """
         error_logger = logging.getLogger('django.error')
-        xml_request_body = self._get_request_body(nse_constants.METHOD_GETIIN, user_id)
+        kwargs = {'exchange_backend': self}
+        xml_request_body = self._get_request_body(nse_constants.METHOD_GETIIN, user_id, **kwargs)
         root = self._get_data(nse_constants.METHOD_GETIIN, xml_request_body=xml_request_body)
         return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
         if return_code == nse_constants.RETURN_CODE_SUCCESS:
@@ -116,7 +117,8 @@ class NSEBackend(object, ExchangeBackend):
         :return:
         """
         error_logger = logging.getLogger('django.error')
-        xml_request_body = self._get_request_body(nse_constants.METHOD_CEASESIP, user_id)
+        kwargs = {'exchange_backend': self}
+        xml_request_body = self._get_request_body(nse_constants.METHOD_CEASESIP, user_id, **kwargs)
         root = self._get_data(nse_constants.METHOD_CEASESIP, xml_request_body=xml_request_body)
         return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
         if return_code == nse_constants.RETURN_CODE_SUCCESS:
@@ -142,7 +144,8 @@ class NSEBackend(object, ExchangeBackend):
         :param:
         :return:
         """
-        xml_request_body = self._get_request_body(nse_constants.METHOD_CREATECUSTOMER, user_id)
+        kwargs = {'exchange_backend': self}
+        xml_request_body = self._get_request_body(nse_constants.METHOD_CREATECUSTOMER, user_id, **kwargs)
         root = self._get_data(nse_constants.METHOD_CREATECUSTOMER, xml_request_body=xml_request_body)
         return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
         if return_code == nse_constants.RETURN_CODE_SUCCESS:
@@ -170,7 +173,8 @@ class NSEBackend(object, ExchangeBackend):
         :return:
         """
         error_logger = logging.getLogger('django.error')
-        xml_request_body = self._get_request_body(nse_constants.METHOD_PURCHASETXN, user_id)
+        kwargs = {'exchange_backend': self}
+        xml_request_body = self._get_request_body(nse_constants.METHOD_PURCHASETXN, user_id, **kwargs)
         root = self._get_data(nse_constants.METHOD_PURCHASETXN, xml_request_body=xml_request_body)
         return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
         if return_code == nse_constants.RETURN_CODE_SUCCESS:
@@ -179,7 +183,6 @@ class NSEBackend(object, ExchangeBackend):
             # 0 for pending transactions assuming there is only one pending transaction
             current_transaction.payment_link= payment_link
             current_transaction.save()
-            # Save payment link Order_detail Table
             return constants.RETURN_CODE_SUCCESS
         else:
             error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
@@ -202,24 +205,21 @@ class NSEBackend(object, ExchangeBackend):
                                           xml_request_body=xml_request_body)
         return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
         if return_code == nse_constants.RETURN_CODE_SUCCESS:
-            nse_user = pr_models.User.get(id=user_id)
-            nse_details = models.NseDetails.get(user=nse_user)
-            nse_details.ach_inserted = True
-            nse_details.save()
-            return nse_constants.RETURN_CODE_SUCCESS
+            super(ExchangeBackend, self).update_mandate_registration(user_id)
+            return constants.RETURN_CODE_SUCCESS, None
         else:
             error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
             for error in error_responses:
                 error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text
                 error_logger.info(error_msg)
-            return constants.RETURN_CODE_FAILURE
+            return constants.RETURN_CODE_FAILURE, None
 
 
     def upload_img(self, user_id, ref_no='', image_type='', **kwargs):
         error_logger = logging.getLogger('django.error')
-        nse_user = models.NseDetails.get(user_id=user_id)
+        user_vendor = models.UserVendor.objects.get(user__id=user_id, vendor__name=self.vendor_name)
         queryString = "?BrokerCode=" + nse_constants.NSE_NMF_BROKER_CODE + "&Appln_id=" + nse_constants.NSE_NMF_APPL_ID + \
-                      "&Password=" + nse_constants.NSE_NMF_PASSWORD + "&CustomerID=" + nse_user.iin_customer_id + "&Refno=" + ref_no + \
+                      "&Password=" + nse_constants.NSE_NMF_PASSWORD + "&CustomerID=" + user_vendor.ucc + "&Refno=" + ref_no + \
                       "&ImageType=" + image_type
         api_url = nse_constants.NSE_NMF_BASE_API_URL + nse_constants.METHOD_UPLOADIMG + queryString
         filePath = ""
