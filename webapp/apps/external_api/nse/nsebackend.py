@@ -6,6 +6,7 @@ from external_api import constants
 from external_api import models
 from external_api.exchange_backend import ExchangeBackend 
 from profiles import models as pr_models
+from payment import models as payment_models
 from external_api.nse import bank_mandate
 from external_api.nse import nse_iinform_generation
 import os
@@ -69,6 +70,9 @@ class NSEBackend(object, ExchangeBackend):
         elif method_name == nse_constants.METHOD_ACHMANDATEREGISTRATIONS:
             root = ET.fromstring(nse_constants.REQUEST_ACHMANDATEREGISTRATIONS)
             return create_validate_nserequests.achmandateregistrationsrequest(root, user_id, **kwargs)
+        elif method_name == nse_constants.METHOD_CEASESIP:
+            root = ET.fromstring(nse_constants.REQUEST_CEASESIP)
+            return create_validate_nserequests.ceasesystematictrxn(root, user_id, **kwargs)
         return
 
     def get_iin(self, user_id):
@@ -78,20 +82,21 @@ class NSEBackend(object, ExchangeBackend):
         :return:
         """
         error_logger = logging.getLogger('django.error')
-        xml_request_body = self._get_request_body(nse_constants.METHOD_GETIIN, user_id)
+        kwargs = {'exchange_backend': self}
+        xml_request_body = self._get_request_body(nse_constants.METHOD_GETIIN, user_id, **kwargs)
         root = self._get_data(nse_constants.METHOD_GETIIN, xml_request_body=xml_request_body)
         return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
         if return_code == nse_constants.RETURN_CODE_SUCCESS:
             return constants.RETURN_CODE_SUCCESS
         else:
-            createFlag = False
+            createCustomerFlag = False
             error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
             for error in error_responses:
                 error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text
                 if error_msg == nse_constants.NO_DATA_FOUND:
-                    createFlag = True
+                    createCustomerFlag = True
                 error_logger.info(error_msg)
-            if createFlag:
+            if createCustomerFlag:
                 return constants.RETURN_CODE_FAILURE
             else:
                 raise AttributeError
@@ -105,6 +110,26 @@ class NSEBackend(object, ExchangeBackend):
             except Exception as e:
                 self.error_logger.error("Error updating ucc status: " + str(e))
         
+    def cease_sip(self, user_id):
+        """
+
+        :param:
+        :return:
+        """
+        error_logger = logging.getLogger('django.error')
+        kwargs = {'exchange_backend': self}
+        xml_request_body = self._get_request_body(nse_constants.METHOD_CEASESIP, user_id, **kwargs)
+        root = self._get_data(nse_constants.METHOD_CEASESIP, xml_request_body=xml_request_body)
+        return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
+        if return_code == nse_constants.RETURN_CODE_SUCCESS:
+            return constants.RETURN_CODE_SUCCESS
+        else:
+            error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
+            for error in error_responses:
+                error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text
+                error_logger.info(error_msg)
+            return constants.RETURN_CODE_FAILURE
+
     def create_customer(self, user_id):
         """
         # Complete with iin form upload flow
@@ -112,7 +137,8 @@ class NSEBackend(object, ExchangeBackend):
         :param:
         :return:
         """
-        xml_request_body = self._get_request_body(nse_constants.METHOD_CREATECUSTOMER, user_id)
+        kwargs = {'exchange_backend': self}
+        xml_request_body = self._get_request_body(nse_constants.METHOD_CREATECUSTOMER, user_id, **kwargs)
         root = self._get_data(nse_constants.METHOD_CREATECUSTOMER, xml_request_body=xml_request_body)
         return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
         if return_code == nse_constants.RETURN_CODE_SUCCESS:
@@ -140,13 +166,16 @@ class NSEBackend(object, ExchangeBackend):
         :return:
         """
         error_logger = logging.getLogger('django.error')
-        xml_request_body = self._get_request_body(nse_constants.METHOD_PURCHASETXN, user_id)
-        # make an entry to db for this order and transaction
+        kwargs = {'exchange_backend': self}
+        xml_request_body = self._get_request_body(nse_constants.METHOD_PURCHASETXN, user_id, **kwargs)
         root = self._get_data(nse_constants.METHOD_PURCHASETXN, xml_request_body=xml_request_body)
         return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
         if return_code == nse_constants.RETURN_CODE_SUCCESS:
             payment_link = root.find(nse_constants.RESPONSE_PAYMENT_LINK_PATH).text
-            # Save payment link Order_detail Table
+            current_transaction = payment_models.Transaction.get(user_id=user_id, txn_status=0)
+            # 0 for pending transactions assuming there is only one pending transaction
+            current_transaction.payment_link= payment_link
+            current_transaction.save()
             return constants.RETURN_CODE_SUCCESS
         else:
             error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
@@ -169,14 +198,14 @@ class NSEBackend(object, ExchangeBackend):
                                           xml_request_body=xml_request_body)
         return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
         if return_code == nse_constants.RETURN_CODE_SUCCESS:
-            # save this entry to NSE_Details table
-            return constants.RETURN_CODE_SUCCESS
+            super(ExchangeBackend, self).update_mandate_registration(user_id)
+            return constants.RETURN_CODE_SUCCESS, None
         else:
             error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
             for error in error_responses:
                 error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text
                 error_logger.info(error_msg)
-            return constants.RETURN_CODE_FAILURE
+            return constants.RETURN_CODE_FAILURE, None
 
 
     def upload_img(self, user_id, ref_no='', image_type='', **kwargs):

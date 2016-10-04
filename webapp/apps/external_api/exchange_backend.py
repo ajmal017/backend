@@ -38,6 +38,21 @@ class ExchangeBackend(ABC):
             logger.error("Error updating ucc: " + str(e))
         
         return None
+
+    def update_mandate_registered(self, user_id):
+        logger = logging.getLogger('django.error')
+        try:
+            user = pr_models.User.objects.get(id=user_id)
+            if not self.vendor:
+                self.vendor = eapi_models.Vendor.objects.get(name=self.vendor_name)
+            user_vendor = pr_models.UserVendor.objects.get(user=user, vendor=self.vendor)
+            user_vendor.mandate_registered = True
+            user_vendor.save()
+            return user_vendor
+        except Exception as e:
+            logger.error("Error updating ucc: " + str(e))
+        
+        return None
     
     def generate_bank_mandate(self, user_id):
         return NotImplementedError

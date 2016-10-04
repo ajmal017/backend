@@ -8,6 +8,7 @@ from rest_framework.views import APIView
 from rest_framework import permissions
 
 from external_api.nse.nsebackend import NseBackend
+from payment.models import Transaction
 from external_api.nse import constants as nse_contants
 from external_api import helpers
 from . import investor_info_generation, bse_investor_info_generation, bulk_order_entry, kyc_pdf_generator, \
@@ -273,19 +274,24 @@ class GenerateBankMandateRegistration(View):
         if request.user.is_superuser:
             order_detail = OrderDetail.objects.get(order_id=request.GET.get('order_id'))
             if is_investable(order_detail.user):
-                mandate_amount = pr_utils.get_investor_mandate_amount(order_detail.user, order_detail)
-                output_file = bank_mandate.generate_bank_mandate_file(order_detail.user.id, mandate_amount).split('/')[-1]
-                prefix = 'webapp'
-                my_file_path = prefix + constants.STATIC + output_file
-                my_file = open(my_file_path, "rb")
-                content_type = 'text/plain'
-                response = HttpResponse(my_file, content_type=content_type, status=200)
-                response['Content-Disposition'] = 'attachment;filename=%s' % str(order_detail.id) + '_order.txt'
-                my_file.close()
-                return response  # contains the pipe file of the pertinent user
-            else:
-                # file doesn't exist because investor vault is incomplete.
-                return HttpResponse(payment_constant.CANNOT_GENERATE_FILE, status=404)
+                exch_backend = helpers.get_backend_instance()
+                if exch_backend:
+                    mandate_amount = pr_utils.get_investor_mandate_amount(order_detail.user, order_detail)
+                    status, output_file = exch_backend.generate_bank_mandate_registration(order_detail.user.id, mandate_amount).split('/')[-1]
+                    if status == constants.RETURN_CODE_SUCCESS:
+                        if output_file:
+                            output_file = output_file.split('/')[-1]
+                            prefix = 'webapp'
+                            my_file_path = prefix + constants.STATIC + output_file
+                            my_file = open(my_file_path, "rb")
+                            content_type = 'text/plain'
+                            response = HttpResponse(my_file, content_type=content_type, status=200)
+                            response['Content-Disposition'] = 'attachment;filename=%s' % str(order_detail.id) + '_order.txt'
+                            my_file.close()
+                            return response  # contains the pipe file of the pertinent user
+                        else:
+                            return HttpResponse(constants.SUCCESS, status=200)
+            return HttpResponse(payment_constant.CANNOT_GENERATE_FILE, status=404)
         else:
             # non-admin is trying to access the file. Prevent access.
             return HttpResponse(constants.FORBIDDEN_ERROR, status=403)
@@ -320,8 +326,8 @@ class NseOrder(View):
                         nse.upload_img(user_id=user_id, image_type="X")  # 'X' for Transaction type of image and 'A' for IIN Form
                 status_code = nse.purchase_trxn(user_id=user_id)
                 if status_code == nse_contants.RETURN_CODE_SUCCESS:
-                    # fetch payment link from database
-                    payment_link = ''
+                    current_transaction = Transaction.get(user_id=user_id, txn_status=0)
+                    payment_link = current_transaction.payment_link
                     return api_utils.response({"payment_link": payment_link})
                 else:
                     return api_utils.response({constants.MESSAGE: constants.PURCHASE_TXN_FAILED}, status.HTTP_404_NOT_FOUND,

@@ -252,6 +252,7 @@ class UserVendor(TimeStampedModel):
     user = models.OneToOneField(settings.AUTH_USER_MODEL)
     vendor = models.ForeignKey(Vendor, related_name="user_vendor", blank=False, null=False)
     ucc = models.CharField(max_length=40, default=None, blank=True, null=True)
+    mandate_registered = models.BooleanField(default=False)
     mandate_reg_no = models.CharField(_('Mandate Registration Number'), max_length=100, default=None, blank=True,
                                       null=True)
     ucc_registered = models.BooleanField(default=False)
