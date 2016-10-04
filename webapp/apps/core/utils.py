@@ -890,7 +890,8 @@ def get_recommended_schemes(user_id, type):
                                                           ).select_related('fund').order_by('fund__fund_rank')
     for portfolio_item in portfolio_items:
         portfolio_data.append({"id": portfolio_item.fund.id, "fund_name": portfolio_item.fund.fund_name,
-                               "sip": portfolio_item.sip, "lumpsum": portfolio_item.lumpsum})
+                               "sip": portfolio_item.sip, "lumpsum": portfolio_item.lumpsum, 
+                               "category_name": portfolio_item.fund.category_name})
     portfolio_dict['data'] = portfolio_data
     return portfolio_dict
 
@@ -956,7 +957,7 @@ def get_scheme_details(fund, monthly_data_points, daily_data_points):
                                     "(" + str(round(fund_detail[constants.CAPITAL_GAIN_PERCENTAGE], 2)) + "%)"
         elif field == constants.IMAGE_URL:
             # TODO: http or https?
-            scheme_details[field] = "http://" + settings.SITE_API_BASE_URL + fund_detail[constants.IMAGE_URL]
+            scheme_details[field] = fund_detail[constants.IMAGE_URL]
         elif field == constants.DAY_END_DATE:
             day_end_date = datetime.strptime(fund_detail[field], '%Y-%m-%d').date()
             # scheme_details[field] = datetime.strftime(day_end_date, '%d-%m-%Y')

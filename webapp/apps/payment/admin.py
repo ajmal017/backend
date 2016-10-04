@@ -7,6 +7,9 @@ from django.shortcuts import render
 from . import models
 
 from external_api.bse import billdesk_payment
+from django.http import HttpResponse
+import os
+
 
 class TransactionAdmin(admin.ModelAdmin):
     """
@@ -70,8 +73,15 @@ class TransactionAdmin(admin.ModelAdmin):
             context = dict(failed_orders_list=response)
             return render(request, 'admin/payment/transaction/failure.html', context)
         else:
-            message = mark_safe("Successfully generated the bulk client master upload file.<a href='/"+"/".join(response.split("/")[-2:])+"'>Click here.</a>")
-            self.message_user(request, message, level="success")
+            my_file = open(response, "rb")
+            content_type = 'text/plain'
+            http_response = HttpResponse(my_file, content_type=content_type, status=200)
+            http_response['Content-Disposition'] = 'attachment;filename=%s' % os.path.basename(response)
+            my_file.close()
+            return http_response  # contains the pipe file of the pertinent user
+
+            #message = mark_safe("Successfully generated the bulk client master upload file.<a href='/"+"/".join(response.split("/")[-2:])+"'>Click here.</a>")
+            #self.message_user(request, message, level="success")
 
 
     order_details.allow_tags = True

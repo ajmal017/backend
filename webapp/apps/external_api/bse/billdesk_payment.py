@@ -15,7 +15,7 @@ class BillDeskPayment(object):
         
     def createOutputFile(self, name):
         base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps/external_api', '')
-        output_path = base_dir + '/webapp/statics/'
+        output_path = base_dir + '/webapp/static/'
         outfile = open(output_path + name, "w")
         return outfile, output_path + name
 
@@ -49,7 +49,7 @@ class BillDeskPayment(object):
         if len(missing_order_ids) > 0:
             return missing_order_ids, "MISSING_BSE_ORDER_ID"
         
-        return "/webapp/static/" + os.path.basename(out_filepath), None
+        return "webapp/static/" + os.path.basename(out_filepath), None
         
     def generateBSEUploadFileForDate(self, paydate):
         from payment import models as payment_models

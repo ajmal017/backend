@@ -616,7 +616,7 @@ def generate_client_pipe(user_list):
     """
 
     base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps', '')
-    output_path = base_dir + '/webapp/statics/'
+    output_path = base_dir + '/webapp/static/'
     outfile = open(output_path+"bulk_client_pipe.txt", "w")
     
     def create_user_dict(user_id):
@@ -731,7 +731,7 @@ def generate_client_pipe(user_list):
             bulk_order_dict.clear()
         outfile.close()
 
-        return "/webapp/static/bulk_client_pipe.txt"
+        return "webapp/static/bulk_client_pipe.txt"
 
 def generate_client_fatca_pipe(user_list):
     """
@@ -742,7 +742,7 @@ def generate_client_fatca_pipe(user_list):
     """
 
     base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps', '')
-    output_path = base_dir + '/webapp/statics/'
+    output_path = base_dir + '/webapp/static/'
     outfile = open(output_path+"fatca_pipe.txt", "w")
     
     def get_pan_idenitfication_type():
@@ -760,7 +760,7 @@ def generate_client_fatca_pipe(user_list):
         bse_dict = OrderedDict([("CLIENT PAN", investor.pan_number),
                                ("CLIENT PAN EXEMPT", None),
                                ("CLIENT APPNAME1", investor.applicant_name),
-                               ("CLIENT DOB", investor.dob.strftime("%d/%m/%Y")),
+                               ("CLIENT DOB", investor.dob.strftime("%m/%d/%Y")),
                                ("CLIENT FATHERHUSBAND", None),
                                ("CLIENT SP NAME", None),
                                ("CLIENT TAXSTATUS", cons.CLIENT_TAX_STATUS_MAP["Individual"]),
@@ -862,4 +862,4 @@ def generate_client_fatca_pipe(user_list):
             bulk_order_dict.clear()
         outfile.close()
 
-        return "/webapp/static/fatca_pipe.txt"
+        return "webapp/static/fatca_pipe.txt"
