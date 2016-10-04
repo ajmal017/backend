@@ -1,5 +1,5 @@
 from external_api.utils import generate_tiff
-from profiles import models, utils
+from profiles import models
 
 from num2words import num2words
 from collections import OrderedDict
@@ -11,7 +11,7 @@ import os
 import time
 
 
-def generate_bank_mandate_file(user, order_detail):
+def generate_bank_mandate_file(user, mandate_amount):
     """
     This function generates a pipe separated file for bank mandate.
     :param order_items: list of order_items for that order_detail
@@ -23,10 +23,9 @@ def generate_bank_mandate_file(user, order_detail):
     timestamp = time.strftime("%Y%m%d-%H%M%S")
     bank_mandate_pipe_file_name = "bank_mandate_pipe" + timestamp + ".txt"
     outfile = open(output_path + bank_mandate_pipe_file_name, "w")
-    total_sip = utils.get_investor_mandate_amount(user, order_detail)
     bank_mandate_dict = OrderedDict([('Member Code', cons.MEMBER_CODE),
                                      ('UCC', str(user.finaskus_id)),
-                                     ('Amount', str(total_sip)),
+                                     ('Amount', str(mandate_amount)),
                                      ('IFSC Code', user.investorbankdetails.ifsc_code.ifsc_code),
                                      ('Account Number', user.investorbankdetails.account_number), ])
     outfile.write("|".join(bank_mandate_dict.values()))
@@ -35,7 +34,7 @@ def generate_bank_mandate_file(user, order_detail):
     return output_path + bank_mandate_pipe_file_name
 
 
-def generate_bank_mandate_pdf(user_id):
+def generate_bank_mandate_pdf(user_id, mandate_amount):
     """
     This function fills the bank mandate pdf with pertinent user's data.
     :param user_id: The id of the user for whom the mandate is generated.
@@ -51,12 +50,10 @@ def generate_bank_mandate_pdf(user_id):
     if not user.mandate_reg_no:
         return None, "Mandate Registration Number Missing"
     
-    mandate_amount_no = utils.get_investor_mandate_amount(user, None)
-
     mandate_dict = {
         'MandateAccountHolderName': investor_bank.account_holder_name,
-        'MandateAmountNumber': mandate_amount_no,
-        'MandateAmountWords': str(num2words(mandate_amount_no, lang="en_IN")) + " ONLY",
+        'MandateAmountNumber': mandate_amount,
+        'MandateAmountWords': str(num2words(mandate_amount, lang="en_IN")) + " ONLY",
         'MandateBank': investor_bank.ifsc_code.name,
         'MandateBankACNumber': investor_bank.account_number,
         'MandateCreate': True,
