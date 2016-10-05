@@ -1105,7 +1105,6 @@ class OrderDetail(TimeStampedModel):
                                         default=OrderStatus.Pending.value)
     transaction = models.ForeignKey(payment_models.Transaction, null=True, blank=True)
     vendor = models.ForeignKey(profile_models.Vendor, related_name="vendor", blank=True, null=True)
-    payment_link = models.CharField(max_length=500, blank=True, null=True)
 
     def save(self, *args, **kwargs):
         # If order_id is zero set to a OO+random 8 digit number
