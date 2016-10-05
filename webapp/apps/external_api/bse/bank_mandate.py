@@ -6,7 +6,7 @@ from collections import OrderedDict
 from datetime import datetime
 from subprocess import call
 from fdfgen import forge_fdf
-from . import constants as cons
+from external_api import constants as cons
 import os
 import time
 
