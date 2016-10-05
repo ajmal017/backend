@@ -61,5 +61,5 @@ class BSEBackend(ExchangeBackend):
     def generate_bank_mandate_registration(self, user_id, mandate_amount):
         file_path = bank_mandate.generate_bank_mandate_file(user_id, mandate_amount)
         if file_path:
-            super(ExchangeBackend, self).update_mandate_registered(user_id)
+            self.update_mandate_registered(user_id)
         return constants.RETURN_CODE_SUCCESS, file_path
