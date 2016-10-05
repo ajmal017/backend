@@ -17,7 +17,6 @@ import xml.etree.ElementTree as ET
 import requests
 import logging
 
-
 class BSEBackend(ExchangeBackend):
     """
     A wrapper that manages the BSE  Backend
