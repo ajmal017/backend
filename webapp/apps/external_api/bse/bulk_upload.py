@@ -851,3 +851,4 @@ def generate_client_fatca_pipe(user_list):
         outfile.close()
 
         return "webapp/static/fatca_pipe.txt"
+
