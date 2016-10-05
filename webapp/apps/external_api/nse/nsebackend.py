@@ -235,7 +235,6 @@ class NSEBackend(ExchangeBackend):
                 error_logger.info(error_msg)
             return constants.RETURN_CODE_FAILURE
         
-    @classmethod
     def bulk_create_customer(self, user_list):
         base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps/external_api', '')
         output_path = base_dir + '/webapp/static/'
