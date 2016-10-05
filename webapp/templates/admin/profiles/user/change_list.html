@@ -44,6 +44,12 @@
                 // this opens a new window for the download of the private resource.
                 window.open("/v2.0/open/generate/bse/investor/tiff/?email="+email);
             });
+            $('.upload_tiff').click(function(){
+                var allElems = $(this).parent().parent().children().children();
+                email = allElems[2].value;
+                // this opens a new window for the download of the private resource.
+                window.open("/v2.0/open/upload/investor/tiff/?email="+email);
+            });
 
             $('.mandate').click(function(){
                 var allElems = $(this).parent().parent().children().children();
