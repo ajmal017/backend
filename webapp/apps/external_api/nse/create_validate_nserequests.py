@@ -25,7 +25,7 @@ def getValidRequest(investor_dict, root):
     return ET.tostring(root, encoding="us-ascii", method="xml")
 
 def changeDobFormat(dob):
-    return dob.strftime('%m/%d/%Y')
+    return dob.strftime('%d-%b-%Y')
 
 def getiinrequest(root, user_id, **kwargs):
     """
