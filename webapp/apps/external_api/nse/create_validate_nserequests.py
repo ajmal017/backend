@@ -39,7 +39,7 @@ def getValidRequestWithMultipleChildren(investor_dict, child_items, root, child_
     return ET.tostring(root, encoding="us-ascii", method="xml")
 
 def changeDobFormat(dob):
-    return dob.strftime('%d-%b-%Y')
+    return dob.strftime('%m/%d/%Y')
 
 def get_amc_code(code):
     AMC_CODE_MAP = {
