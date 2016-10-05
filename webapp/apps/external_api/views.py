@@ -24,6 +24,7 @@ from payment import constants as payment_constant
 
 import time
 
+vendor_helper = helpers.VendorHelper()
 
 class VerifiablePincode(APIView):
     """
@@ -101,7 +102,7 @@ class BulkRegisterUCC(object):
         :param request: the email_id of the pertinent user is received from this.
         :return: send the generated pipe file
         """
-        exch_backend = helpers.get_backend_instance()
+        exch_backend = vendor_helper.get_backend_instance()
         if exch_backend:
             not_set = []
             for i in user_list:
@@ -274,7 +275,7 @@ class GenerateBankMandateRegistration(View):
         if request.user.is_superuser:
             order_detail = OrderDetail.objects.get(order_id=request.GET.get('order_id'))
             if is_investable(order_detail.user):
-                exch_backend = helpers.get_backend_instance()
+                exch_backend = vendor_helper.get_backend_instance()
                 if exch_backend:
                     mandate_amount = pr_utils.get_investor_mandate_amount(order_detail.user, order_detail)
                     status, output_file = exch_backend.generate_bank_mandate_registration(order_detail.user.id, mandate_amount)
@@ -356,7 +357,7 @@ class UploadAOFTiff(View):
         # makes sure that only superuser can access this file.
 
         if request.user.is_superuser:
-            exch_backend = helpers.get_backend_instance()
+            exch_backend = vendor_helper.get_backend_instance()
             if exch_backend:
                 user = pr_models.User.objects.get(email=request.GET.get('email'))
                 if is_investable(user) and user.signature != "":
@@ -385,7 +386,7 @@ class GenerateAOFTiff(View):
         # makes sure that only superuser can access this file.
 
         if request.user.is_superuser:
-            exch_backend = helpers.get_backend_instance()
+            exch_backend = vendor_helper.get_backend_instance()
             if exch_backend:
                 user = pr_models.User.objects.get(email=request.GET.get('email'))
                 if is_investable(user) and user.signature != "":
@@ -460,7 +461,7 @@ class GenerateMandatePdf(View):
         # makes sure that only superuser can access this file.
 
         if request.user.is_superuser:
-            exch_backend = helpers.get_backend_instance()
+            exch_backend = vendor_helper.get_backend_instance()
             if exch_backend:
                 user = pr_models.User.objects.get(email=request.GET.get('email'))
                 if is_investable(user) and user.signature != "":
