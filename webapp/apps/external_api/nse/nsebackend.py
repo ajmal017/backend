@@ -153,14 +153,15 @@ class NSEBackend(ExchangeBackend):
             return_msg = return_msg.replace(" ", "")
             iin_customer_id = re.search('ID:(.+?)', return_msg)
             self.update_ucc(user_id, iin_customer_id)
-            return constants.RETURN_CODE_SUCCESS
+            return constants.RETURN_CODE_SUCCESS, None
         else:
             error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
+            error_string = ""
             for error in error_responses:
                 error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text
-                print(error_msg)
-                self.error_logger.info(error_msg)
-            return constants.RETURN_CODE_FAILURE
+                error_string += error_msg + " ; "
+                self.error_logger.error(error_msg)
+            return constants.RETURN_CODE_FAILURE, error_string
 
     def upload_aof_image(self, user_id):
         self.upload_img(user_id=user_id, image_type="A")
@@ -248,8 +249,10 @@ class NSEBackend(ExchangeBackend):
         outfile = open(output_path+"bulk_client_ucc.txt", "w")
 
         for i in range(len(user_list)):
-            return_code = self.create_customer(user_list[i])
+            return_code, error_string = self.create_customer(user_list[i])
             outfile.write(user_list[i] + ", " + str(return_code))
+            if error_string:
+                outfile.write(", " + error_string)
             if i < len(user_list)-1:
                 outfile.write("\r")
                 
