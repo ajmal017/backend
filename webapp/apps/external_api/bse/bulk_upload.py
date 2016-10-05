@@ -1,4 +1,4 @@
-from . import constants as cons
+from external_api import constants as cons
 from profiles import models as profile_models
 from profiles.utils import is_investable
 from profiles import constants as profile_constants
@@ -753,7 +753,7 @@ def generate_client_fatca_pipe(user_list):
         bse_dict = OrderedDict([("CLIENT PAN", investor.pan_number),
                                ("CLIENT PAN EXEMPT", None),
                                ("CLIENT APPNAME1", investor.applicant_name),
-                               ("CLIENT DOB", investor.dob.strftime("%d/%m/%Y")),
+                               ("CLIENT DOB", investor.dob.strftime("%m/%d/%Y")),
                                ("CLIENT FATHERHUSBAND", None),
                                ("CLIENT SP NAME", None),
                                ("CLIENT TAXSTATUS", cons.CLIENT_TAX_STATUS_MAP["Individual"]),

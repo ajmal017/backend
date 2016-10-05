@@ -1,9 +1,9 @@
 from fdfgen import forge_fdf
 
-from .utils import generate_tiff, embed_images
+from external_api.utils import generate_tiff, embed_images
 from profiles import models
-from .models import Pincode
-from . import constants
+from external_api.models import Pincode
+from external_api import constants
 
 import os
 from datetime import datetime
