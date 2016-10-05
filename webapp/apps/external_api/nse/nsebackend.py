@@ -18,7 +18,7 @@ import requests
 import logging
 
 
-class NSEBackend(object, ExchangeBackend):
+class NSEBackend(ExchangeBackend):
     """
     A wrapper that manages the NSE Purchase Transactions Backend
     """

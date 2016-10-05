@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework import permissions
 
-from external_api.nse.nsebackend import NseBackend
+from external_api.nse.nsebackend import NSEBackend
 from payment.models import Transaction
 from external_api.nse import constants as nse_contants
 from external_api import helpers
@@ -17,7 +17,7 @@ from core.models import OrderDetail, RedeemDetail, GroupedRedeemDetail
 from . import models, constants, serializers, cvl
 from api import utils as api_utils
 from profiles.utils import is_investable
-from profiles import pr_utils
+from profiles import utils as pr_utils
 
 from profiles import models as pr_models
 from payment import constants as payment_constant
@@ -318,7 +318,7 @@ class NseOrder(View):
             user = pr_models.User.objects.get(id=user_id)
             investor_bank = pr_models.InvestorBankDetails.objects.get(user=user)
             if user.vault_locked:
-                nse = NseBackend()
+                nse = NSEBackend()
                 status_code = nse.get_iin(user_id=user_id)
                 if status_code == nse_contants.RETURN_CODE_FAILURE:
                     return_code = nse.create_customer(user_id=user_id)

@@ -2,7 +2,7 @@ from rest_framework import status
 
 from external_api import constants
 from external_api import models
-from external_api import ExchangeBackend
+from external_api.exchange_backend import ExchangeBackend
 from profiles import models as pr_models
 from profiles import constants as profile_constants
 from external_api.bse import bank_mandate
@@ -18,7 +18,7 @@ import requests
 import logging
 
 
-class BSEBackend(object, ExchangeBackend):
+class BSEBackend(ExchangeBackend):
     """
     A wrapper that manages the BSE  Backend
     """
