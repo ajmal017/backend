@@ -137,7 +137,7 @@ def bse_investor_info_generator(user_id):
     fdf_file.write(fdf)
     fdf_file.close()
     
-    base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps', '')
+    base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps/external_api', '')
     bse_investor_pdf_path = base_dir + '/bse_docs/'
     output_path = base_dir + '/webapp/static/'
     aof_file_name = bse_investor_pdf_path + "aof.pdf"
