@@ -42,8 +42,21 @@ class SMSAdmin(admin.ModelAdmin):
     """
     search_fields = ['to']
 
+class VendorAdmin(admin.ModelAdmin):
+    """
+    to display list on basis of city, state, pincode
+    """
+    list_display = ['name', 'active']
+    list_editable = ['active']
+    filter = ['name']
+    actions = None
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 admin.site.register(models.SMS, SMSAdmin)
 admin.site.register(models.VerifiablePincode, VerifiablePincodeAdmin)
 admin.site.register(models.Pincode, PincodeAdmin)
 admin.site.register(models.BankDetails, BankDetailsAdmin)
+admin.site.register(models.Vendor, VendorAdmin)
 
