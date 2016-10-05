@@ -17,7 +17,7 @@ def generate_order_pipe_file(user, order_items):
     :return: url of the generated pipe separated file of the bulk order entry
     """
 
-    base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps', '')
+    base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps/external_api', '')
     output_path = base_dir + '/webapp/static/'
     timestamp = time.strftime("%Y%m%d-%H%M%S")
     bulk_order_pipe_file_name = "bulk_order_pipe" + timestamp + ".txt"
@@ -615,8 +615,8 @@ def generate_client_pipe(user_list, bse_backend):
     :return: url of the generated pipe separated file of the bulk order entry
     """
 
-    base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps', '')
-    output_path = base_dir + '/webapp/statics/'
+    base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps/external_api', '')
+    output_path = base_dir + '/webapp/static/'
     outfile = open(output_path+"bulk_client_pipe.txt", "w")
     
     def create_user_dict(user_id):
@@ -724,7 +724,7 @@ def generate_client_pipe(user_list, bse_backend):
         bulk_order_dict.clear()
     outfile.close()
 
-    return "/webapp/static/bulk_client_pipe.txt"
+    return "webapp/static/bulk_client_pipe.txt"
 
 def generate_client_fatca_pipe(user_list):
     """
@@ -734,8 +734,8 @@ def generate_client_fatca_pipe(user_list):
     :return: url of the generated pipe separated file of the bulk order entry
     """
 
-    base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps', '')
-    output_path = base_dir + '/webapp/statics/'
+    base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps/external_api', '')
+    output_path = base_dir + '/webapp/static/'
     outfile = open(output_path+"fatca_pipe.txt", "w")
     
     def get_pan_idenitfication_type():
@@ -855,4 +855,4 @@ def generate_client_fatca_pipe(user_list):
             bulk_order_dict.clear()
         outfile.close()
 
-        return "/webapp/static/fatca_pipe.txt"
+        return "webapp/static/fatca_pipe.txt"
