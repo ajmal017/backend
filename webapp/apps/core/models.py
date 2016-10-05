@@ -188,9 +188,9 @@ def get_next_allotment_date(fund_id, send_date):
 
 def get_next_allotment_date_or_start_date(fund_order_item):
     if fund_order_item.allotment_date:
-        days = relativedelta(fund_order_item.allotment_date, fund_order_item.portfolio_item.investment_date).days
+        days = (fund_order_item.allotment_date - fund_order_item.portfolio_item.investment_date).days
     else:
-        days = relativedelta(fund_order_item.created_at, fund_order_item.portfolio_item.investment_date).days
+        days = (fund_order_item.created_at - fund_order_item.portfolio_item.investment_date).days
     if (days > 25):
         if fund_order_item.allotment_date:
             next_allotment_date = get_next_allotment_date(fund_order_item.portfolio_item.fund.id, fund_order_item.allotment_date)
