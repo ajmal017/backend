@@ -6,6 +6,7 @@ webapp/media
 webapp/statics
 *.pyc
 **/.DS_Store
+*/**/.DS_Store
 *.swp**/.DS_Store
 webapp/static
 webapp/conf/local_settings.py
