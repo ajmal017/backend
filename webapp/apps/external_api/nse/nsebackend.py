@@ -198,7 +198,7 @@ class NSEBackend(ExchangeBackend):
                                           xml_request_body=xml_request_body)
         return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
         if return_code == nse_constants.RETURN_CODE_SUCCESS:
-            super(ExchangeBackend, self).update_mandate_registered(user_id)
+            self.update_mandate_registered(user_id)
             return constants.RETURN_CODE_SUCCESS, None
         else:
             error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
