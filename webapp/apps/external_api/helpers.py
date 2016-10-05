@@ -52,7 +52,7 @@ class VendorHelper():
                 
         return self.activeVendor
     
-    def get_backend_instance(self, vendor_name):
+    def get_backend_instance(self, vendor_name=None):
         if not vendor_name:
             active_vendor = self.get_active_vendor()
             if active_vendor:
