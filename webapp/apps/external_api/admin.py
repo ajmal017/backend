@@ -49,10 +49,6 @@ class VendorAdmin(admin.ModelAdmin):
     list_display = ['name', 'active']
     list_editable = ['active']
     filter = ['name']
-    actions = None
-
-    def has_delete_permission(self, request, obj=None):
-        return False
 
 admin.site.register(models.SMS, SMSAdmin)
 admin.site.register(models.VerifiablePincode, VerifiablePincodeAdmin)
