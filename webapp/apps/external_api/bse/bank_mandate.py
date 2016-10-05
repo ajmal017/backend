@@ -11,18 +11,19 @@ import os
 import time
 
 
-def generate_bank_mandate_file(user, mandate_amount):
+def generate_bank_mandate_file(user_id, mandate_amount):
     """
     This function generates a pipe separated file for bank mandate.
     :param order_items: list of order_items for that order_detail
     :param user: The user for which the file is being generated
     :return: url of the generated pipe separated file of the bank mandate
     """
-    base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps', '')
+    base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps/external_api', '')
     output_path = base_dir + '/webapp/static/'
     timestamp = time.strftime("%Y%m%d-%H%M%S")
     bank_mandate_pipe_file_name = "bank_mandate_pipe" + timestamp + ".txt"
     outfile = open(output_path + bank_mandate_pipe_file_name, "w")
+    user = models.User.objects.get(id=user_id)
     bank_mandate_dict = OrderedDict([('Member Code', cons.MEMBER_CODE),
                                      ('UCC', str(user.finaskus_id)),
                                      ('Amount', str(mandate_amount)),
@@ -95,7 +96,7 @@ def generate_bank_mandate_pdf(user_id, mandate_amount):
     fdf_file.write(fdf)
     fdf_file.close()
     
-    base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps', '')
+    base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps/external_api', '')
     bank_mandate_pdf_path = base_dir + '/bse_docs/'
     output_path = base_dir + '/webapp/static/'
 
