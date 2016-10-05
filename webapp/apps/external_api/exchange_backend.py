@@ -7,6 +7,7 @@ import logging
 
 class ExchangeBackend(ABC):
     def __init__(self, vendor_name):
+        super(ABC, self).__init__()
         self.vendor_name = vendor_name
         self.vendor = None
 
