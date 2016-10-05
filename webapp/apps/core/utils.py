@@ -76,7 +76,7 @@ def reminder_next_sip_allotment():
     target_date = curr_date + timedelta(days=settings.SIP_REMINDER_DAYS)  
     target_date_1 = target_date + timedelta(days=1)
     buffer_date = target_date + timedelta(days=settings.SIP_BUFFER_DAYS)
-    fund_order_items = models.FundOrderItem.objects.filter(next_allotment_date__range=(curr_date,target_date),order_amount__gt=0 , agreed_sip__gt=0,sip_reminder_sent=False)      
+    fund_order_items = models.FundOrderItem.objects.filter(next_allotment_date__range=(curr_date,target_date),order_amount__gt=0 , agreed_sip__gt=0,sip_reminder_sent=False, is_future_sip_cancelled=False)      
     users = []
     if len(fund_order_items) > 0:
         buffer_fund_order_items = models.FundOrderItem.objects.filter(next_allotment_date__range=(target_date_1,buffer_date) , order_amount__gt=0 , agreed_sip__gt=0,sip_reminder_sent=False)
@@ -2798,7 +2798,7 @@ def create_order_items_based_on_next_allotment_date():
     #TODO add amount to portfolio/portfolio item
     order_detail_map = {}
     # search all fund order items with next allotment date of today
-    fund_order_items_with_today_allotment_date = models.FundOrderItem.objects.filter(next_allotment_date=date.today())
+    fund_order_items_with_today_allotment_date = models.FundOrderItem.objects.filter(next_allotment_date=date.today(), is_future_sip_cancelled=False)
 
     # create a fund order item object and club them in a dict with key as uer
     for fund_order_item in fund_order_items_with_today_allotment_date:
