@@ -25,7 +25,7 @@ class NSEBackend(ExchangeBackend):
     error_logger = logging.getLogger('django.error')
 
     def __init__(self, vendor_name):
-        super(ExchangeBackend, self).__init__(vendor_name)
+        super(NSEBackend, self).__init__(vendor_name)
         
     def _get_data(self, method_name, xml_request_body):
         """
@@ -244,8 +244,8 @@ class NSEBackend(ExchangeBackend):
         
     @classmethod
     def bulk_create_customer(self, user_list):
-        base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps', '')
-        output_path = base_dir + '/webapp/statics/'
+        base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps/external_api', '')
+        output_path = base_dir + '/webapp/static/'
         outfile = open(output_path+"bulk_client_ucc.txt", "w")
 
         for i in range(len(user_list)):
@@ -255,7 +255,7 @@ class NSEBackend(ExchangeBackend):
                 outfile.write("\r")
                 
         outfile.close()
-        return "/webapp/static/bulk_client_ucc.txt"
+        return "webapp/static/bulk_client_ucc.txt"
 
     def generate_aof_image(self, user_id):
         filePath = nse_iinform_generation.nse_investor_info_generator(user_id)

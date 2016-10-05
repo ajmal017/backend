@@ -23,7 +23,7 @@ class BSEBackend(ExchangeBackend):
     A wrapper that manages the BSE  Backend
     """
     def __init__(self, vendor_name):
-        super(ExchangeBackend, self).__init__(vendor_name)
+        super(BSEBackend, self).__init__(vendor_name)
 
     def create_customer(self, user_id):
         return constants.RETURN_CODE_FAILURE
