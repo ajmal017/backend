@@ -26,7 +26,7 @@ def getValidRequest(investor_dict, root):
     return ET.tostring(root, encoding="us-ascii", method="xml")
 
 def changeDobFormat(dob):
-    return dob.strftime('%d-%b-%Y')
+    return dob.strftime('%m/%d/%Y')
 
 def getiinrequest(root, user_id, **kwargs):
     """
@@ -109,7 +109,7 @@ def createcustomerrequest(root, user_id):
         constants.EXEMPTION_XPATH: 'N',
         constants.EXEMPT_CATEGORY_XPATH: None,  # TODO
         constants.EXEMPT_REF_NO_XPATH: None,  # TODO
-        constants.DOB_XPATH: changeDobFormat(user.dob),
+        constants.DOB_XPATH: changeDobFormat(investor.dob),
         constants.HOLD_NATURE_XPATH: 'SI',  # TODO
         constants.TAX_STATUS_XPATH: '01',
         constants.KYC_XPATH: user.kyc_accepted,
