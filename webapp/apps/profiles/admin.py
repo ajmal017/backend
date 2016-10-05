@@ -525,6 +525,17 @@ class AggregatePortfolioAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
+class UserVendorAdmin(admin.ModelAdmin):
+    """
+    disbale the option of deleting
+    """
+    search_fields = ['user__email', 'vendor__name']
+    list_display = ['user', 'vendor', 'ucc', 'mandate_registered', 'mandate_reg_no', 'ucc_registered', 'fatca_filed', 'tiff_mailed', 'tiff_accepted', 'mandate_status']
+    actions = None
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 admin.site.register(models.User, UserAdmin)
 admin.site.register(models.VerificationSMSCode,VerificationSMSCodeAdmin)
 admin.site.register(models.EmailCode,EmailCodeAdmin)
@@ -536,3 +547,4 @@ admin.site.register(models.AggregatePortfolio, AggregatePortfolioAdmin)
 admin.site.register(models.InvestorBankDetails, InvestorBankDetails)
 admin.site.register(models.AppointmentDetails, AppointmentDetailsAdmin)
 admin.site.register(models.UserChangedPhoneNumber, UserChangedPhoneNumberAdmin)
+admin.site.register(models.UserVendor, UserVendorAdmin)
