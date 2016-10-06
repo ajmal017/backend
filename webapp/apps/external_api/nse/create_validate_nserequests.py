@@ -618,4 +618,3 @@ def achmandateregistrationsrequest(root, user_id, **kwargs):
     }
 
     return getValidRequest(investor_dict, root)
-
