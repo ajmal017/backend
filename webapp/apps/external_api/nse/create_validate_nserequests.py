@@ -224,6 +224,7 @@ def createcustomerrequest(root, user_id):
     user = models.User.objects.get(id=user_id)
     investor = models.InvestorInfo.objects.get(user=user)
     nominee = models.NomineeInfo.objects.get(user=user)
+    nominee_present = True if nominee and nominee.nominee_absent == False else False
     contact = models.ContactInfo.objects.get(user=user)
     investor_bank = models.InvestorBankDetails.objects.get(user=user)
     curr_date = datetime.now()
@@ -301,19 +302,19 @@ def createcustomerrequest(root, user_id):
         constants.JH2_EXEMPT_REF_NO_XPATH: None,
         constants.JH2_DOB_XPATH: None,
         constants.JH2_KYC_XPATH: None,
-        constants.NO_OF_NOMINEE_XPATH: '1' if nominee else '0',
-        constants.NOMINEE1_TYPE_XPATH: 'Y' if nominee and nominee.guardian_name else 'N' if nominee else None,
-        constants.NOMINEE1_NAME_XPATH: nominee.nominee_name if nominee else None,
-        constants.NOMINEE1_DOB_XPATH: changeDobFormat(nominee.nominee_dob) if nominee else None,
-        constants.NOMINEE1_ADDR1_XPATH: nominee.nominee_address.address_line_1 if nominee else None,
-        constants.NOMINEE1_ADDR2_XPATH: nominee.nominee_address.address_line_2 if nominee else None,
-        constants.NOMINEE1_ADDR3_XPATH: nominee.nominee_address.nearest_landmark if nominee else None,
-        constants.NOMINEE1_CITY_XPATH: nominee.nominee_address.pincode.city if nominee else None,
-        constants.NOMINEE1_STATE_XPATH: get_state_code(nominee.nominee_address.pincode.state) if nominee else None,
-        constants.NOMINEE1_PINCODE_XPATH: nominee.nominee_address.pincode.pincode if nominee else None,
-        constants.NOMINEE1_RELATION_XPATH: nominee.get_relationship_with_investor_display() if nominee else None,
-        constants.NOMINEE1_PERCENT_XPATH: '100' if nominee else None,
-        constants.NOMINEE1_GUARD_NAME_XPATH: nominee.guardian_name if nominee else None,
+        constants.NO_OF_NOMINEE_XPATH: '1' if nominee_present else '0',
+        constants.NOMINEE1_TYPE_XPATH: 'Y' if nominee_present and nominee.guardian_name else 'N' if nominee_present else None,
+        constants.NOMINEE1_NAME_XPATH: nominee.nominee_name if nominee_present else None,
+        constants.NOMINEE1_DOB_XPATH: changeDobFormat(nominee.nominee_dob) if nominee_present else None,
+        constants.NOMINEE1_ADDR1_XPATH: nominee.nominee_address.address_line_1 if nominee_present else None,
+        constants.NOMINEE1_ADDR2_XPATH: nominee.nominee_address.address_line_2 if nominee_present else None,
+        constants.NOMINEE1_ADDR3_XPATH: nominee.nominee_address.nearest_landmark if nominee_present else None,
+        constants.NOMINEE1_CITY_XPATH: nominee.nominee_address.pincode.city if nominee_present else None,
+        constants.NOMINEE1_STATE_XPATH: get_state_code(nominee.nominee_address.pincode.state) if nominee_present else None,
+        constants.NOMINEE1_PINCODE_XPATH: nominee.nominee_address.pincode.pincode if nominee_present else None,
+        constants.NOMINEE1_RELATION_XPATH: nominee.get_relationship_with_investor_display() if nominee_present else None,
+        constants.NOMINEE1_PERCENT_XPATH: '100' if nominee_present else None,
+        constants.NOMINEE1_GUARD_NAME_XPATH: nominee.guardian_name if nominee_present else None,
         constants.NOMINEE1_GUARD_PAN_XPATH: None,
         constants.NOMINEE2_TYPE_XPATH: None,
         constants.NOMINEE2_NAME_XPATH: None,
