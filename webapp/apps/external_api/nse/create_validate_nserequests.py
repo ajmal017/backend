@@ -64,6 +64,7 @@ def get_occupation_code(code):
     return OCCUPATION_MAP.get(code, "08")
 
 def get_country_code(code):
+    code = code.title()
     
     COUNTRY_CODE_MAP = {
                         "Australia" : "AUS",
@@ -127,6 +128,7 @@ def get_country_code(code):
     return COUNTRY_CODE_MAP.get(code, "India")
 
 def get_state_code(code):
+    code = code.title()
     STATE_CODE_MAP = {
                       "Andaman and Nicobar Islands" : "AN",
                         "Andhra Pradesh" : "AP",
