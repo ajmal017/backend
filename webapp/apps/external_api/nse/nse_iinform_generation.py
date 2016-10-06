@@ -54,19 +54,21 @@ def nse_investor_info_generator(user_id):
      "GuardianPAN" : None,
      "IFSCCode" : investor_bank.ifsc_code.ifsc_code,
      "Mobile" : contact.phone_number,
-     "ModeofHolding" : None,  # TODO
+     "ModeofHolding" : "Single",  # TODO
      "MotherName" : None,  # TODO
      "NameofThirdApplicant" : None,
      "NameFirstApplicant" : investor.applicant_name,
      "NameGuardian" : nominee.guardian_name if nominee else None,
      "NameofBank" : investor_bank.ifsc_code.name,
      "NameofSecondApplicant" : None,
-     "NomineeAddress" : nominee.nominee_address.address_line_1,
-     "NomineeCity" : nominee.nominee_address.pincode.city,
+     "NomineeDOB"  : nominee.dob.strftime("%d-%m-%Y") if nominee and nominee.dob else None,
+     "NomineeAddress" : nominee.nominee_address.address_line_1 if nominee else None,
+     "NomineeCity" : nominee.nominee_address.pincode.city if nominee else None,
      "NomineeName" : nominee.nominee_name if nominee else None,
-     "NomineePincode" : nominee.nominee_address.pincode.pincode,
+     "NomineePincode" : nominee.nominee_address.pincode.pincode if nominee else None,
      "NomineeRelationship" : nominee.get_relationship_with_investor_display() if nominee else None,
-     "NomineeState" : nominee.nominee_address.pincode.state,
+     "NomineeState" : nominee.nominee_address.pincode.state if nominee else None,
+     "Occupation" : investor.get_occupation_type_display() if investor.occupation_type != "OTH" else investor.occupation_specific,
      "OverseasAddress" : None,
      "OverseasCity" : None,
      "OverseasCountry" : None,
@@ -78,7 +80,7 @@ def nse_investor_info_generator(user_id):
      "SignatureDate" : curr_date.strftime('%d-%m-%Y'),
      "SignaturePlace" : contact.communication_address.pincode.city,
      "State" : contact.communication_address.pincode.state,
-     "TaxStatus" : None,  # TODO
+     "TaxStatus" : "Individual",  # TODO
      "TelOff" : None,
      "TelRes": None
      }

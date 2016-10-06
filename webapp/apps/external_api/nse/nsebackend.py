@@ -40,9 +40,9 @@ class NSEBackend(ExchangeBackend):
             response = requests.request("POST", api_url, data=xml_request_body, headers=headers)
             return self._get_valid_response(response)
         except ConnectionError:
-            error_logger.info(constants.CONNECTION_ERROR + api_url)
+            error_logger.error(constants.CONNECTION_ERROR + api_url)
         except requests.HTTPError:
-            error_logger.info(constants.HTTP_ERROR + api_url)
+            error_logger.error(constants.HTTP_ERROR + api_url)
 
     def _get_valid_response(self, response):
         if response.status_code == requests.codes.ok:
@@ -95,7 +95,7 @@ class NSEBackend(ExchangeBackend):
                 error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text
                 if error_msg == nse_constants.NO_DATA_FOUND:
                     createCustomerFlag = True
-                error_logger.info(error_msg)
+                error_logger.error(error_msg)
             if createCustomerFlag:
                 return constants.RETURN_CODE_FAILURE
             else:
@@ -122,7 +122,7 @@ class NSEBackend(ExchangeBackend):
         root = self._get_data(nse_constants.METHOD_CEASESIP, xml_request_body=xml_request_body)
         return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
         if return_code == nse_constants.RETURN_CODE_SUCCESS:
-            return nse_constants.RETURN_CODE_SUCCESS
+            return constants.RETURN_CODE_SUCCESS
         else:
             createFlag = False
             error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
@@ -132,7 +132,7 @@ class NSEBackend(ExchangeBackend):
                     createFlag = True
                 error_logger.info(error_msg)
             if createFlag:
-                return nse_constants.RETURN_CODE_FAILURE
+                return constants.RETURN_CODE_FAILURE
             else:
                 raise AttributeError
 
@@ -193,7 +193,7 @@ class NSEBackend(ExchangeBackend):
             error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
             for error in error_responses:
                 error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text
-                error_logger.info(error_msg)
+                error_logger.error(error_msg)
             return constants.RETURN_CODE_FAILURE
 
 
@@ -216,7 +216,7 @@ class NSEBackend(ExchangeBackend):
             error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
             for error in error_responses:
                 error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text
-                error_logger.info(error_msg)
+                error_logger.error(error_msg)
             return constants.RETURN_CODE_FAILURE, None
 
 
@@ -244,7 +244,7 @@ class NSEBackend(ExchangeBackend):
             error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
             for error in error_responses:
                 error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text
-                error_logger.info(error_msg)
+                error_logger.error(error_msg)
             return constants.RETURN_CODE_FAILURE
         
     def bulk_create_customer(self, user_list):
