@@ -203,7 +203,7 @@ def ceasesystematictrxn(root, user_id, **kwargs):
     """
     user = models.User.objects.get(id=user_id)
     exch_backend = kwargs.get('exchange_backend')
-    user_vendor = models.UserVendor.objects.get(user=user, name=exch_backend.vendor_name)
+    user_vendor = models.UserVendor.objects.get(user=user, vendor__name=exch_backend.vendor_name)
     curr_date = datetime.now()
 
     investor_dict = {
@@ -351,7 +351,7 @@ def purchasetxnrequest(root, user_id, **kwargs):
     """
     user = models.User.objects.get(id=user_id)
     exch_backend = kwargs.get('exchange_backend')
-    user_vendor = models.UserVendor.objects.get(user=user, name=exch_backend.vendor_name)
+    user_vendor = models.UserVendor.objects.get(user=user, vendor__name=exch_backend.vendor_name)
     nominee = models.NomineeInfo.objects.get(user=user)
     investor_bank = models.InvestorBankDetails.objects.get(user=user)
     curr_date = datetime.now()
@@ -456,7 +456,7 @@ def achmandateregistrationsrequest(root, user_id, **kwargs):
     curr_date = datetime.now()
     mandate_amount = kwargs.get('mandate_amount')
     exch_backend = kwargs.get('exchange_backend')
-    user_vendor = models.UserVendor.objects.get(user=user, name=exch_backend.vendor_name)
+    user_vendor = models.UserVendor.objects.get(user=user, vendor__name=exch_backend.vendor_name)
 
 
     investor_dict = {
