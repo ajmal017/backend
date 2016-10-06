@@ -156,4 +156,3 @@ def nse_investor_info_generator(user_id, exch_backend):
 
     final_tiff_file_name = generate_tiff(output_path + iin_destination_file_name, investor_bank.bank_cheque_image)
     return output_path + final_tiff_file_name
-
