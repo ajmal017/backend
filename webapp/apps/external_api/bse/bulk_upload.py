@@ -202,17 +202,6 @@ def get_bse_srcwealth_code(code):
     :return: Occupation code according to BSE standards
 
     Routes our model mapping to BSE mapping as shown below
-
-    CLIENT_OCCUPATION_CODE_MAP = {
-    "Business": "01",
-    "Services": "02",
-    "Professional": "03",
-    "Agriculture": "04",
-    "Retired": "05",
-    "Housewife": "06",
-    "Student": "07",
-    "Others": "08"
-    }
     """
 
     OCCUPATION_TO_SRCWEALTH_MAP = {
