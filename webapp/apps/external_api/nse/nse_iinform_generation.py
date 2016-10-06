@@ -12,13 +12,14 @@ from subprocess import call
 import time
 
 
-def nse_investor_info_generator(user_id):
+def nse_investor_info_generator(user_id, exch_backend):
     """
 
     :param user_id: id of user for whom the bse investor info is to be generated
     :return:
     """
     user=models.User.objects.get(id=user_id)
+    user_vendor = models.UserVendor.objects.get(user=user, name=exch_backend.vendor_name)
     investor=models.InvestorInfo.objects.get(user=user)
     nominee=models.NomineeInfo.objects.get(user=user)
     contact=models.ContactInfo.objects.get(user=user)
@@ -41,12 +42,14 @@ def nse_investor_info_generator(user_id):
      "BankCountry" : constants.INDIA,
      "BankPincode" : None,
      "Branch" : investor_bank.ifsc_code.bank_branch,
+     "BrokerAgentCodeARN" : "ARN-108537",
      "City" : contact.communication_address.pincode.city,
      "ContactAddress" : contact.communication_address.address_line_1,
      "Country" : constants.INDIA,
      "DateofBirth" : investor.dob.strftime('%d-%m-%Y'),
      "DpId" : None,
      "Email" : contact.email,
+     "EUIN" : "MFS108537",
      "FatherName" : investor.father_name,
      "FaxOff" : None,
      "FaxRes" : None,
@@ -82,7 +85,8 @@ def nse_investor_info_generator(user_id):
      "State" : contact.communication_address.pincode.state,
      "TaxStatus" : "Individual",  # TODO
      "TelOff" : None,
-     "TelRes": None
+     "TelRes": None,
+     "UCC": user_vendor.ucc
      }
 
     for key, value in investor_dict.items():
@@ -138,7 +142,7 @@ def nse_investor_info_generator(user_id):
 
     dest = output_path + iin_destination_file_name  # the final pdf with all images in place.
     exist = output_path + out_file_name   # the source pdf without the images.
-    coords = [(205, 194), ]  # the lower left bottom corner
+    coords = [(205, 155), ]  # the lower left bottom corner
     #  co-ordinates for each of the images.
 
     target_pages = (0, )  # pages of the existing/source pdf into which the images from the images list must be
