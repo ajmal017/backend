@@ -76,10 +76,10 @@ def reminder_next_sip_allotment():
     target_date = curr_date + timedelta(days=settings.SIP_REMINDER_DAYS)  
     target_date_1 = target_date + timedelta(days=1)
     buffer_date = target_date + timedelta(days=settings.SIP_BUFFER_DAYS)
-    fund_order_items = models.FundOrderItem.objects.filter(next_allotment_date__range=(curr_date,target_date),order_amount__gt=0 , agreed_sip__gt=0,sip_reminder_sent=False)      
+    fund_order_items = models.FundOrderItem.objects.filter(next_allotment_date__range=(curr_date,target_date),order_amount__gt=0 , agreed_sip__gt=0,sip_reminder_sent=False, is_future_sip_cancelled=False)      
     users = []
     if len(fund_order_items) > 0:
-        buffer_fund_order_items = models.FundOrderItem.objects.filter(next_allotment_date__range=(target_date_1,buffer_date) , order_amount__gt=0 , agreed_sip__gt=0,sip_reminder_sent=False)
+        buffer_fund_order_items = models.FundOrderItem.objects.filter(next_allotment_date__range=(target_date_1,buffer_date) , order_amount__gt=0 , agreed_sip__gt=0,sip_reminder_sent=False, is_future_sip_cancelled=False)
         if len(buffer_fund_order_items) > 0:
             all_fund_order_items = list(chain(fund_order_items, buffer_fund_order_items))
         else:
@@ -957,7 +957,7 @@ def get_scheme_details(fund, monthly_data_points, daily_data_points):
                                     "(" + str(round(fund_detail[constants.CAPITAL_GAIN_PERCENTAGE], 2)) + "%)"
         elif field == constants.IMAGE_URL:
             # TODO: http or https?
-            scheme_details[field] = "http://" + settings.SITE_API_BASE_URL + fund_detail[constants.IMAGE_URL]
+            scheme_details[field] = fund_detail[constants.IMAGE_URL]
         elif field == constants.DAY_END_DATE:
             day_end_date = datetime.strptime(fund_detail[field], '%Y-%m-%d').date()
             # scheme_details[field] = datetime.strftime(day_end_date, '%d-%m-%Y')
@@ -1803,8 +1803,6 @@ def get_portfolio_historic_data(funds_historic_data_list, portfolio_items, for_p
         for fund in funds_relative_nav_list:
             portfolio_date_performance += fund[index]
         portfolio_historic_data.append(portfolio_date_performance)
-    logger = logging.getLogger('django.debug')
-    logger.debug(portfolio_historic_data)
     if for_portfolio_tracker:
         return portfolio_historic_data, funds_historic_data_list.get(constants.DATES)
     portfolio_historic_data, index_historic = normalize_portfolio_data(
@@ -2023,9 +2021,6 @@ def make_financial_goal_response(goal_map, total_equity_invested, total_debt_inv
                     goal_current_value += category_individual_goal.get(constants.ELSS) * (
                         current_value_map[constants.ELSS] / total_elss_invested)
                 progress = round(goal_current_value * 100 / category_individual_goal.get(constants.EXPECTD_VALUE), 1)
-                
-                debug_logger.debug(str(constants.ASSET_ALLOCATION_MAP[category][2]) +
-                                    str(goal_map[category][1] + 1) + str(category_individual_goal.get(constants.GOAL_ANSWERS)))
                 
                 goal_status = {
                     constants.NAME: str(constants.ASSET_ALLOCATION_MAP[category][2]) +
@@ -2798,7 +2793,7 @@ def create_order_items_based_on_next_allotment_date():
     #TODO add amount to portfolio/portfolio item
     order_detail_map = {}
     # search all fund order items with next allotment date of today
-    fund_order_items_with_today_allotment_date = models.FundOrderItem.objects.filter(next_allotment_date=date.today())
+    fund_order_items_with_today_allotment_date = models.FundOrderItem.objects.filter(next_allotment_date=date.today(), is_future_sip_cancelled=False)
 
     # create a fund order item object and club them in a dict with key as uer
     for fund_order_item in fund_order_items_with_today_allotment_date:

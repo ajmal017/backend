@@ -310,8 +310,6 @@ class RecommendedPortfolios(APIView):
         portfolio_items, errors = utils.get_portfolio_items(request.user.id, overall_allocation, sip_lumpsum_allocation)
         if portfolio_items is not None:
             portfolio_items.update(overall_allocation)
-            logger = logging.getLogger('django.debug')
-            logger.debug("recommended schemes: " + str(portfolio_items))
             request.user.rebuild_portfolio = False
             request.user.save()
             msg=api_utils.response(portfolio_items, status.HTTP_200_OK)
@@ -1131,14 +1129,17 @@ class TransactionHistoryNew(APIView):
                 fund_order_items = portfolio_item.fundorderitem_set.filter(is_cancelled=False).order_by('-created_at')
                 for fund_order_item in fund_order_items:
                     if fund_order_item.orderdetail_set.all().filter(is_lumpsum=False):
-                        latest_fund_order_item.append(fund_order_item)
+                        if fund_order_item.is_future_sip_cancelled == False:
+                            latest_fund_order_item.append(fund_order_item)
                         break
-            future_fund_order_item_serializer = serializers.FutureFundOrderItemSerializer(latest_fund_order_item, many=True)
+                    
+            if len(latest_fund_order_item) > 0:
+                future_fund_order_item_serializer = serializers.FutureFundOrderItemSerializer(latest_fund_order_item, many=True)
 
-            if future_fund_order_item_serializer.is_valid:
-                txn_history += future_fund_order_item_serializer.data
-            else:
-                return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(future_fund_order_item_serializer.errors))
+                if future_fund_order_item_serializer.is_valid:
+                    txn_history += future_fund_order_item_serializer.data
+                else:
+                    return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(future_fund_order_item_serializer.errors))
 
         sorted_txn_history = sorted(txn_history, key=lambda k: k['transaction_date'], reverse=True)
         return api_utils.response(sorted_txn_history, status.HTTP_200_OK)

@@ -188,9 +188,9 @@ def get_next_allotment_date(fund_id, send_date):
 
 def get_next_allotment_date_or_start_date(fund_order_item):
     if fund_order_item.allotment_date:
-        days = relativedelta(fund_order_item.allotment_date, fund_order_item.portfolio_item.investment_date).days
+        days = (fund_order_item.allotment_date - fund_order_item.portfolio_item.investment_date).days
     else:
-        days = relativedelta(fund_order_item.created_at, fund_order_item.portfolio_item.investment_date).days
+        days = (fund_order_item.created_at - fund_order_item.portfolio_item.investment_date).days
     if (days > 25):
         if fund_order_item.allotment_date:
             next_allotment_date = get_next_allotment_date(fund_order_item.portfolio_item.fund.id, fund_order_item.allotment_date)
@@ -1003,6 +1003,7 @@ class FundOrderItem(TimeStampedModel):
     next_allotment_date = models.DateField(null=True, blank=True, default=None)
     is_verified = models.BooleanField(_('is verified'), default=False)
     is_cancelled = models.BooleanField(_('is cancelled'), default=False)
+    is_future_sip_cancelled = models.BooleanField(_('is future sip cancelled'), default=False)
     unit_alloted = models.FloatField(null=True, blank=True)
     agreed_sip = models.FloatField(default=0.00)
     agreed_lumpsum = models.FloatField(default=0.00)
@@ -1066,7 +1067,7 @@ class FundOrderItem(TimeStampedModel):
                 unit_alloted = round(self.order_amount / nav, 3)
                 self.unit_alloted = unit_alloted
                 self.is_verified = True
-                if not self.orderdetail_set.all()[0].is_lumpsum:
+                if not self.orderdetail_set.all()[0].is_lumpsum and not self.is_future_sip_cancelled:
                     next_allotment_date = get_next_allotment_date_or_start_date(self)
                     self.next_allotment_date = next_allotment_date
 
