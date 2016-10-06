@@ -5,6 +5,7 @@ from profiles import models
 from external_api.models import Pincode
 from external_api import constants
 
+from django.conf import settings
 import os
 from datetime import datetime
 from subprocess import call
@@ -118,7 +119,11 @@ def nse_investor_info_generator(user_id):
 
     # remove the temporary generated fdf file.
     call(("rm " + temp_file_name).split())
-    prefix = "webapp"  # prefix is needed to access the images from media directory.
+
+    if settings.USING_S3 is True:
+        prefix = ""
+    else:
+        prefix = "webapp"  # prefix is needed to access the images from media directory.
 
     # the list of images to be embedded into the pdf follows
     user_signature = prefix + user.signature.url if user.signature != "" else constants.DEFAULT_IMAGE  # signature_image location.
