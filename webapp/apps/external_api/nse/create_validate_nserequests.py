@@ -180,7 +180,6 @@ def get_country_code(code):
 
 def get_state_code(code):
     code = code.title()
-
     STATE_CODE_MAP = {
                       "Andaman and Nicobar Islands" : "AN",
                         "Andhra Pradesh" : "AP",
