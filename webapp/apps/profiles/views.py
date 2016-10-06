@@ -1783,6 +1783,7 @@ class GoogleLogin(APIView):
                     
                     if access_token is not None:
                         convert_token = helpers.convert_social_access_token(access_token)
+                        
                         return api_utils.response({"res":{"user": serializer.data,
                                                     "tokens":convert_token,
                                                     "assess": core_utils.get_assess_answer(user),
@@ -1798,8 +1799,8 @@ class GoogleLogin(APIView):
                                                    })
                     else:
                         return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": "login_error"},
-                                                    status.HTTP_404_NOT_FOUND,
-                                                    "unable to communicate with google server with auth code")  
+                                                    status.HTTP_408_REQUEST_TIMEOUT,
+                                                    "Login Failed for google Please try again")  
  
             else:
                 login_error = constants.LOGIN_ERROR_6
@@ -1888,9 +1889,11 @@ class GoogleRegister(APIView):
                 else:
                     return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(serializer.errors))
             else:
-                return api_utils.response({}, status.HTTP_404_NOT_FOUND, "unable to register the user , bad access token")
+                return api_utils.response({}, status.HTTP_408_REQUEST_TIMEOUT,
+                                          "Login Failed for google Please try again")
         else:
-            return api_utils.response({}, status.HTTP_404_NOT_FOUND, "unable to communicate with google server") 
+            return api_utils.response({}, status.HTTP_408_REQUEST_TIMEOUT,
+                                      "Login Failed for google Please try again") 
         
 
 
@@ -1984,8 +1987,8 @@ class GoogleRegisterFirst(APIView):
             else:
                 login_error = constants.LOGIN_ERROR_5
                 return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": login_error},
-                                                  status.HTTP_404_NOT_FOUND,
-                                                  constants.LOGIN_ERROR)
+                                                  status.HTTP_408_REQUEST_TIMEOUT,
+                                                  "Login Failed for google Please try again")
         else:
             login_error = constants.LOGIN_ERROR_5
             return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": login_error},
