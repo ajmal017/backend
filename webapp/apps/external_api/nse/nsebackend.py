@@ -258,7 +258,7 @@ class NSEBackend(ExchangeBackend):
         return "webapp/static/bulk_client_ucc.txt"
 
     def generate_aof_image(self, user_id):
-        filePath = nse_iinform_generation.nse_investor_info_generator(user_id)
+        filePath = nse_iinform_generation.nse_investor_info_generator(user_id, self)
         return filePath
 
     def generate_bank_mandate(self, user_id, mandate_amount):
