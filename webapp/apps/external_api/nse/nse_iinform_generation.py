@@ -61,7 +61,7 @@ def nse_investor_info_generator(user_id):
      "NameGuardian" : nominee.guardian_name if nominee else None,
      "NameofBank" : investor_bank.ifsc_code.name,
      "NameofSecondApplicant" : None,
-     "NomineeDOB"  : nominee.dob.strftime("%d-%m-%Y") if nominee and nominee.dob else None,
+     "NomineeDOB"  : nominee.nominee_dob.strftime("%d-%m-%Y") if nominee and nominee.nominee_dob else None,
      "NomineeAddress" : nominee.nominee_address.address_line_1 if nominee else None,
      "NomineeCity" : nominee.nominee_address.pincode.city if nominee else None,
      "NomineeName" : nominee.nominee_name if nominee else None,
