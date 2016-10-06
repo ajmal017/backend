@@ -102,7 +102,7 @@ class NSEBackend(ExchangeBackend):
                 raise AttributeError
 
     def update_ucc(self, user_id, ucc):
-        user_vendor = super(ExchangeBackend, self).update_ucc(user_id, ucc)
+        user_vendor = super(NSEBackend, self).update_ucc(user_id, ucc)
         if user_vendor:
             try: 
                 user_vendor.ucc_registered = True
