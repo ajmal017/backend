@@ -15,6 +15,8 @@ from profiles.utils import is_investable
 from profiles import models as pr_models
 from payment import constants as payment_constant
 
+from external_api.bse import orders as bse_orders
+
 import time
 
 
@@ -178,7 +180,8 @@ class GenerateBseOrderPipe(View):
             order_detail = OrderDetail.objects.get(order_id=request.GET.get('order_id'))
             order_items = order_detail.fund_order_items.all()
             if is_investable(order_detail.user):
-                output_file = bulk_order_entry.generate_order_pipe_file(order_detail.user, order_items).split('/')[-1]
+                output_files,bulk_orders = bulk_order_entry.generate_order_pipe_file(order_detail.user, order_items)
+                output_file = output_files.split('/')[-1]
                 prefix = 'webapp'
                 my_file_path = prefix+constants.STATIC + output_file
                 my_file = open(my_file_path, "rb")
@@ -368,6 +371,38 @@ class GenerateMandatePdf(View):
                 response['Content-Disposition'] = 'attachment;filename=%s' % str(user.id)+'_mandate.pdf'
                 my_file.close()
                 return response  # contains the pdf of the pertinent user
+            else:
+                # file doesn't exist because investor vault is incomplete.
+                return HttpResponse(payment_constant.CANNOT_GENERATE_FILE, status=404)
+        else:
+            # non-admin is trying to access the file. Prevent access.
+            return HttpResponse(constants.FORBIDDEN_ERROR, status=403)
+        
+class GenerateBseOrderPost(View):
+    """
+    An api to generate pipe file for bulk order entry
+    """
+
+    def get(self, request):
+        """
+        Only admin user is allowed to access the private Bse order pipe file.
+
+
+        :param request: the email_id of the pertinent user is received from this.
+        :return: send the generated pipe file
+        """
+
+        # makes sure that only superuser can access this file.
+
+        if request.user.is_superuser:
+            order_detail = OrderDetail.objects.get(order_id=request.GET.get('order_id'))
+            order_items = order_detail.fund_order_items.all()
+            if is_investable(order_detail.user):
+                output_files,bulk_orders = bulk_order_entry.generate_order_pipe_file(order_detail.user, order_items)
+                for index,val in enumerate(bulk_orders):
+                    order_post = bse_orders.Order(bulk_orders[index])
+                    return HttpResponse(order_post)
+                    #return HttpResponse(val.values())
             else:
                 # file doesn't exist because investor vault is incomplete.
                 return HttpResponse(payment_constant.CANNOT_GENERATE_FILE, status=404)

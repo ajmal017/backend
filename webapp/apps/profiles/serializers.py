@@ -5,6 +5,7 @@ from rest_framework.validators import UniqueValidator
 from . import models
 from external_api.models import Pincode, BankDetails
 from external_api import serializers as external_api_serializers
+from django.conf import settings
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -28,6 +29,19 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.User
         fields = ('email', 'phone_number', 'password', 'risk_score', 'name', 'email_verified', 'phone_number_verified')
+
+
+class SocialUserRegisterSerializer(serializers.ModelSerializer):
+    """
+    User Information after login and signup
+    """
+    
+    name = serializers.CharField(read_only=True, source="get_full_name")
+
+    class Meta:
+        model = models.User
+        fields = ('email', 'phone_number', 'risk_score', 'name', 'email_verified', 'phone_number_verified')
+        
 
 
 class SaveIdentityImageSerializer(serializers.ModelSerializer):

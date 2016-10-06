@@ -36,6 +36,18 @@ import warnings
 import logging
 import threading
 
+from django.core.files.base import ContentFile
+import urllib.request as urllib2
+
+
+## Yeti Social Login
+from rest_framework.response import Response
+from social.apps.django_app.utils import load_strategy
+from social.apps.django_app.utils import load_backend
+from social.backends.oauth import BaseOAuth1, BaseOAuth2
+from social.exceptions import AuthAlreadyAssociated
+
+
 def deprecate_current_app(func):
     """
     Handle deprecation of the current_app parameter of the views.
@@ -1709,3 +1721,273 @@ class LockVault(APIView):
             helpers.send_vault_completion_email_user(request.user, user_name,request.user.email, use_https=settings.USE_HTTPS)
 
         return api_utils.response({constants.MESSAGE:constants.SUCCESS})
+
+
+
+class GoogleLogin(APIView):
+    """
+    Google Register views , User already Registered through google and trying to login through google  ## 1
+    """
+    def post(self, request, format=None):
+        
+        serializer = serializers.UserRegisterSerializer(data=request.data)
+        email = serializer.initial_data.get("email")
+        
+        auth_code = request.data['auth_code']
+        print(auth_code)
+        
+        kwargs = {'email': email, 'access_token': ''}
+        user,user_detail = utils.check_existing_user_email(**kwargs)
+        
+        print(user_detail)
+        
+        if user_detail == constants.GOOGLE_LOGIN_2:
+            ## registered Through Google  --> login Details
+            phone_number = user.phone_number
+            user_status = constants.GOOGLE_LOGIN_2
+        
+        elif user_detail == constants.GOOGLE_LOGIN_4:
+            ## registered Through Finaskus App  --> it has to be merge with google
+            user_status = constants.GOOGLE_LOGIN_4
+            return api_utils.response({"res":{},"user_status":user_status})
+           
+        else:
+            ## Not yet Registered 
+            user_status = constants.GOOGLE_LOGIN_3
+            login_error = constants.LOGIN_ERROR_1
+            return api_utils.response({"res":{},"user_status":user_status})
+        
+        if not user.phone_number_verified and not user.email_verified:
+            login_error = constants.LOGIN_ERROR_2
+            return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": login_error},
+                                      status.HTTP_404_NOT_FOUND,
+                                      constants.PHONE_AND_EMAIL_NOT_VERIFIED)
+        if phone_number and not user.phone_number_verified:
+            login_error = constants.LOGIN_ERROR_3
+            return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": login_error},
+                                      status.HTTP_404_NOT_FOUND,
+                                      constants.PHONE_NOT_VERIFIED)
+        if email and not user.email_verified:
+            login_error = constants.LOGIN_ERROR_4
+            return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": login_error},
+                                      status.HTTP_404_NOT_FOUND,
+                                      constants.EMAIL_NOT_VERIFIED)
+
+        serializer = serializers.UserRegisterSerializer(user)
+        if serializer.is_valid:
+            if user.is_active:
+                if user_status == constants.GOOGLE_LOGIN_2:
+                    
+                    access_token = helpers.convert_auth_to_access_token(auth_code)
+                    print(access_token)
+                    
+                    if access_token is not None:
+                        convert_token = helpers.convert_social_access_token(access_token)
+                        return api_utils.response({"res":{"user": serializer.data,
+                                                    "tokens":convert_token,
+                                                    "assess": core_utils.get_assess_answer(user),
+                                                    "plan": core_utils.get_plan_answers(user),
+                                                    "retirement": core_utils.get_category_answers(user, "retirement"),
+                                                    "tax": core_utils.get_category_answers(user, "tax"),
+                                                    "invest": core_utils.get_category_answers(user, "invest"),
+                                                    "education": core_utils.get_category_answers(user, "education"),
+                                                    "wedding": core_utils.get_category_answers(user, "wedding"),
+                                                    "property": core_utils.get_category_answers(user, "property"),
+                                                    "event": core_utils.get_category_answers(user, "event")},
+                                                    "user_status":user_status
+                                                   })
+                    else:
+                        return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": "login_error"},
+                                                    status.HTTP_404_NOT_FOUND,
+                                                    "unable to communicate with google server with auth code")  
+ 
+            else:
+                login_error = constants.LOGIN_ERROR_6
+                return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": login_error},
+                                          status.HTTP_404_NOT_FOUND,
+                                          constants.NON_ACTIVE_USER_ERROR)
+        else:
+            login_error = constants.LOGIN_ERROR_0
+            return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": login_error},
+                                      status.HTTP_404_NOT_FOUND, generate_error_message(serializer.errors))
+            
+            
+class GoogleRegister(APIView):
+    """
+    Google Register views , User not registered through either finaskus or google   ## 3
+    """
+
+    def post(self, request, format=None):
+        
+        user = None
+        serializer = serializers.SocialUserRegisterSerializer(data=request.data)
+        email = serializer.initial_data.get("email")
+        phone = serializer.initial_data.get("phone_number")
+        kwargs = {'email': email, 'phone_number': phone, 'password': ''}
+        utils.check_existing_user(**kwargs)
+        result = utils.get_situation(**kwargs)
+        kwargs.pop('password')
+        # print(result)
+        if result in (0, 2):
+            return api_utils.response({"message": constants.SIGNUP_ERROR, "signup_error": result},
+                                      status.HTTP_404_NOT_FOUND,
+                                      constants.USER_ALREADY_EXISTS)
+        
+        elif result == 4:
+            return api_utils.response({"message": constants.SIGNUP_ERROR, "signup_error": result}, status.HTTP_404_NOT_FOUND,
+                                      constants.EMAIL_EXISTS)
+        elif result == 5:
+            return api_utils.response({"message": constants.SIGNUP_ERROR, "signup_error": result}, status.HTTP_404_NOT_FOUND,
+                                      constants.PHONE_EXISTS)
+        
+            
+        auth_code = request.POST.get('auth_code', False)
+        print(auth_code)
+        access_token = helpers.convert_auth_to_access_token(auth_code)
+        print(access_token)
+            
+        if access_token is not None:
+            convert_token = helpers.convert_social_access_token(access_token)
+            print(convert_token)
+            user = utils.get_social_user(email)
+                
+            if user is not None:
+                user.username = email
+                user.phone_number = phone
+                user.email_verified = True
+                  
+                if request.data['image'] is not None:
+                    url = request.data['image']
+                    ext = url.split('.')[-1]
+                    user.image.save('{0}.{1}'.format('image', ext),ContentFile(urllib2.urlopen(url).read()),save=False)
+                    user.identity_info_image.save('{0}.{1}'.format('image', ext),ContentFile(urllib2.urlopen(url).read()),save=False)
+                
+                user.save()
+                serializer = serializers.SocialUserRegisterSerializer(user, data=request.data)
+                if serializer.is_valid():
+                    user_response = dict(serializer.data)
+                    user_response['risk_score'], user_response['name'] = None, ""
+                    
+                    sms_code = utils.get_sms_verification_code(user)
+                        # TODO : add provisions to add country code?
+                    send_sms_thread = threading.Thread(target=api.send_sms, args=(constants.OTP.format(sms_code), int(phone),))
+                    send_sms_thread.start()           
+                        #sms_code_sent = api.send_sms(constants.OTP.format(sms_code), int(phone))            
+                    return api_utils.response({"user": user_response, 
+                                                   "tokens": convert_token,
+                                                   "assess": core_utils.get_assess_answer(user),
+                                                   "plan": core_utils.get_plan_answers(user),
+                                                   "retirement": core_utils.get_category_answers(user, "retirement"),
+                                                   "tax": core_utils.get_category_answers(user, "tax"),
+                                                   "invest": core_utils.get_invest_answers(user),
+                                                   "education": core_utils.get_category_answers(user, "education"),
+                                                   "wedding": core_utils.get_category_answers(user, "wedding"),
+                                                   "property": core_utils.get_category_answers(user, "property"),
+                                                   "event": core_utils.get_category_answers(user, "event"),
+                                                   })
+                else:
+                    return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(serializer.errors))
+            else:
+                return api_utils.response({}, status.HTTP_404_NOT_FOUND, "unable to register the user , bad access token")
+        else:
+            return api_utils.response({}, status.HTTP_404_NOT_FOUND, "unable to communicate with google server") 
+        
+
+
+
+class GoogleRegisterFirst(APIView):
+    """
+    Google Register views , User have registered through finaskus app but through google its first time ##4
+    """
+    def post(self, request, *args, **kwargs):
+        serializer = serializers.UserRegisterSerializer(data=request.data)
+        provider = 'google-oauth2'
+        email = request.data['email']
+        password = request.data['password']
+        auth_code = request.POST.get('auth_code', False)
+        user = utils.get_social_user(email)
+        print(auth_code)
+        if user.check_password(password):
+            access_token = helpers.convert_auth_to_access_token(auth_code)
+            
+            print(access_token)
+            
+            if access_token is not None:
+        
+                if user is not None:
+                    if not user.phone_number_verified and not user.email_verified:
+                        login_error = constants.LOGIN_ERROR_2
+                        return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": login_error},
+                                                  status.HTTP_404_NOT_FOUND,
+                                                  constants.PHONE_AND_EMAIL_NOT_VERIFIED)
+                    
+                    #authed_user = request.user if not request.user.is_anonymous() else None
+                    authed_user = user
+                    strategy = load_strategy(request)
+                    backend = load_backend(strategy=strategy, name=provider, redirect_uri=None)
+                    if isinstance(backend, BaseOAuth1):
+                        token = {
+                            'oauth_token': access_token,
+                            'oauth_token_secret': '',
+                        }
+                    elif isinstance(backend, BaseOAuth2):
+                        #token = request.POST.get('access_token', False)
+                        token = access_token
+            
+                    try:
+                        user = backend.do_auth(token, user=authed_user)
+                        convert_token = helpers.convert_social_access_token(access_token)
+                        print(convert_token)
+                        
+                    except AuthAlreadyAssociated:
+                        # You can't associate a social account with more than user
+                        return Response({"errors": "That social media account is already in use"},
+                                        status=status.HTTP_400_BAD_REQUEST)
+            
+                    if user and user.is_active:
+                        auth_created = user.social_auth.get(provider=provider)
+                        if not auth_created.extra_data['access_token']:
+                            auth_created.extra_data['access_token'] = token
+                            auth_created.save()
+    
+                        serializer = serializers.UserRegisterSerializer(user)
+                        if serializer.is_valid:
+                            user_response = dict(serializer.data)
+                            return api_utils.response({"user": user_response, 
+                                                           "tokens": convert_token,
+                                                           "assess": core_utils.get_assess_answer(user),
+                                                           "plan": core_utils.get_plan_answers(user),
+                                                           "retirement": core_utils.get_category_answers(user, "retirement"),
+                                                           "tax": core_utils.get_category_answers(user, "tax"),
+                                                           "invest": core_utils.get_invest_answers(user),
+                                                           "education": core_utils.get_category_answers(user, "education"),
+                                                           "wedding": core_utils.get_category_answers(user, "wedding"),
+                                                           "property": core_utils.get_category_answers(user, "property"),
+                                                           "event": core_utils.get_category_answers(user, "event"),
+                                                           })
+                              
+                        else:
+                            login_error = constants.LOGIN_ERROR_5
+                            return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": login_error},
+                                                  status.HTTP_404_NOT_FOUND,
+                                                  constants.LOGIN_ERROR)
+                    else:
+                        login_error = constants.LOGIN_ERROR_5
+                        return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": login_error},
+                                                  status.HTTP_404_NOT_FOUND,
+                                                  constants.LOGIN_ERROR)
+                else:
+                    login_error = constants.LOGIN_ERROR_5
+                    return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": login_error},
+                                                  status.HTTP_404_NOT_FOUND,
+                                                  constants.LOGIN_ERROR)
+            else:
+                login_error = constants.LOGIN_ERROR_5
+                return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": login_error},
+                                                  status.HTTP_404_NOT_FOUND,
+                                                  constants.LOGIN_ERROR)
+        else:
+            login_error = constants.LOGIN_ERROR_5
+            return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": login_error},
+                                                  status.HTTP_404_NOT_FOUND,
+                                                  constants.LOGIN_ERROR)   

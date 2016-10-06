@@ -9,6 +9,7 @@ from external_api import cvl
 from webapp.apps import random_with_N_digits
 from . import helpers
 import logging
+import social.apps.django_app.default.models as social_model
 
 from datetime import datetime
 from numpy.ma.core import remainder
@@ -484,11 +485,47 @@ def get_investor_mandate_amount(user, order_detail):
         mandate_amount = max(sip_amount*2, cons.DEFAULT_BANK_MANDATE_AMOUNT)
         
         if mandate_amount > cons.DEFAULT_BANK_MANDATE_AMOUNT:
-            if mandate_amount <= cons.DEFAULT_BANK_MANDATE_AMOUNT_NEXT:
-                mandate_amount = cons.DEFAULT_BANK_MANDATE_AMOUNT_NEXT
-            else:
-                amount_remainder = mandate_amount%10000
-                if amount_remainder > 0:
-                    mandate_amount = (mandate_amount - amount_remainder) + 10000
+            amount_remainder = mandate_amount%10000
+            if amount_remainder > 0:
+                mandate_amount = (mandate_amount - amount_remainder) + 10000
             
         return mandate_amount
+
+
+def check_existing_user_email(**kwargs):
+    email = kwargs['email']
+
+    logger = logging.getLogger('django.info')
+    logger.info("Profiles: check_existing_user_email")
+
+    try:
+        ## Check the user in the profile user table
+        user = profile_models.User.objects.get(email=email)
+        try:
+            ## If user in profile user table , check user in social auth user table
+            social_user = social_model.UserSocialAuth.objects.filter(user=user).exists()
+           
+            ## returns True if exist else Flase
+            if social_user == True:
+                result =  cons.GOOGLE_LOGIN_2
+            else:
+                result = cons.GOOGLE_LOGIN_4
+        except:
+            result =  cons.GOOGLE_LOGIN_4
+    except profile_models.User.DoesNotExist:
+        result = cons.GOOGLE_LOGIN_3
+        user = None
+        
+    return user,result
+
+
+def get_social_user(email):
+    try:
+        user = profile_models.User.objects.get(email=email)
+    except profile_models.User.DoesNotExist:
+        user = None
+    return user
+
+  
+
+    

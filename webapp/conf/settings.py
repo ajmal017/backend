@@ -47,7 +47,9 @@ THIRD_PARTY_APPS = [
     'django_crontab',
     'import_export',
     'rangefilter',
-    'django_smtp_ssl'
+    'django_smtp_ssl',
+    'social.apps.django_app.default',
+    'rest_framework_social_oauth2',
 ]
 
 LOCAL_APPS = [
@@ -135,6 +137,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
 
+
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -153,7 +157,9 @@ TEMPLATES = [
                 'django.template.context_processors.static',
                 'django.template.context_processors.tz',
                 'django.contrib.messages.context_processors.messages',
-                "django.core.context_processors.request",
+                "django.template.context_processors.request",
+                'social.apps.django_app.context_processors.backends',
+                'social.apps.django_app.context_processors.login_redirect',
             ],
             'debug': True
         },
@@ -297,8 +303,36 @@ OAUTH2_PROVIDER = {
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'oauth2_provider.ext.rest_framework.OAuth2Authentication',
+        'rest_framework_social_oauth2.authentication.SocialAuthentication',
     )
 }
+
+AUTHENTICATION_BACKENDS = (
+   'rest_framework_social_oauth2.backends.DjangoOAuth2',
+   'django.contrib.auth.backends.ModelBackend',
+   
+   # Facebook OAuth2
+    #'social.backends.facebook.FacebookAppOAuth2',
+    #'social.backends.facebook.FacebookOAuth2',
+    
+    # google oAuth2
+    #'social.backends.google.GooglePlusAuth',
+    'social.backends.google.GoogleOAuth2',
+    #'social.backends.google.GoogleOpenId',
+    
+    # twitter
+    #'social.backends.twitter.TwitterOAuth',
+    
+)
+
+
+#SOCIAL_AUTH_GOOGLE_PLUS_KEY ='1061936421025-6vt4vt8priomiil882coi2t36juso92t.apps.googleusercontent.com'
+#SOCIAL_AUTH_GOOGLE_PLUS_SECRET ='3YWaHpOgvYDFYwEe8NYyuNiR'
+
+# google configuaration
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '408406696644-sesnpe3i5lftggivp41njj1hk6845o08.apps.googleusercontent.com'
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = 'LrQr2OXOaVlIFutcHtAOZNFp'
+
 
 LOGIN_URL = '/login/'
 DEFAULT_CHARSET = 'ISO-8859-1'

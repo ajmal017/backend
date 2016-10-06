@@ -30,6 +30,12 @@
             order_id = allElems[1].innerText;
             window.open("/v2.0/core/transaction/complete/?order_id="+order_id);
         });
+        
+        $('.order_post').click(function() {
+        	var allElems = $(this).parent().parent().children();
+            order_id = allElems[1].innerText;
+            window.open("/v2.0/open/generate/bse/order/post/?order_id="+order_id);
+        });
     }
 </script>
 
