@@ -48,20 +48,20 @@ def get_occupation_code(code):
     """
 
     OCCUPATION_MAP = {
-        profile_constants.BUSINESS: '01',
-        profile_constants.PRIVATE_SECTOR: '02',
-        profile_constants.PUBLIC_SECTOR: '02',
-        profile_constants.GOVERNMENT: '02',
-        profile_constants.PROFESSIONAL: '03',
-        profile_constants.AGRICULTURE: '04',
-        profile_constants.RETIRED: '05',
-        profile_constants.HOUSEWIFE: '06',
-        profile_constants.STUDENT: '07',
-        profile_constants.OTHER: '08',
-        profile_constants.FOREX_DEALER: '08',
+        profile_constants.BUSINESS: '1',
+        profile_constants.PRIVATE_SECTOR: '2',
+        profile_constants.PUBLIC_SECTOR: '2',
+        profile_constants.GOVERNMENT: '2',
+        profile_constants.PROFESSIONAL: '3',
+        profile_constants.AGRICULTURE: '4',
+        profile_constants.RETIRED: '5',
+        profile_constants.HOUSEWIFE: '6',
+        profile_constants.STUDENT: '7',
+        profile_constants.OTHER: '8',
+        profile_constants.FOREX_DEALER: '8',
     }
 
-    return OCCUPATION_MAP.get(code, "08")
+    return OCCUPATION_MAP.get(code, "8")
 
 def get_country_code(code):
     code = code.title()
