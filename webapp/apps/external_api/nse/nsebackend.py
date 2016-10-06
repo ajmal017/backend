@@ -150,8 +150,12 @@ class NSEBackend(ExchangeBackend):
         return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
         if return_code == nse_constants.RETURN_CODE_SUCCESS:
             return_msg = root.find(nse_constants.SERVICE_RETURN_MSG_PATH).text
-            return_msg = return_msg.replace(" ", "")
-            iin_customer_id = re.search('ID:(.+?)', return_msg)
+            self.error_logger.error("IIN str: " + return_msg)
+            iin_match = re.search('ID\s*:\s*(.+)', return_msg)
+            iin_customer_id = ""
+            if iin_match:
+                iin_customer_id = iin_match.group(1) 
+            self.error_logger.error("IIN : " + str(iin_customer_id))
             self.update_ucc(user_id, iin_customer_id)
             return constants.RETURN_CODE_SUCCESS, None
         else:
