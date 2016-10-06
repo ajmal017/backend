@@ -151,7 +151,7 @@ class NSEBackend(ExchangeBackend):
         if return_code == nse_constants.RETURN_CODE_SUCCESS:
             return_msg = root.find(nse_constants.SERVICE_RETURN_MSG_PATH).text
             self.error_logger.error("IIN str: " + return_msg)
-            iin_match = re.search('ID\s*:\s*(.+)', return_msg)
+            iin_match = re.search('IIN\s*:\s*(.+)', return_msg)
             iin_customer_id = ""
             if iin_match:
                 iin_customer_id = iin_match.group(1) 

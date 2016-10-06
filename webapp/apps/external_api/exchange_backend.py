@@ -33,7 +33,7 @@ class ExchangeBackend(ABC):
             user = pr_models.User.objects.get(id=user_id)
             if not self.vendor:
                 self.vendor = eapi_models.Vendor.objects.get(name=self.vendor_name)
-            user_vendor = pr_models.UserVendor.objects.update_or_create(user=user, vendor=self.vendor, defaults={'ucc':ucc})
+            user_vendor, created = pr_models.UserVendor.objects.update_or_create(user=user, vendor=self.vendor, defaults={'ucc':ucc})
             return user_vendor
         except Exception as e:
             logger.error("Error updating ucc: " + str(e))
