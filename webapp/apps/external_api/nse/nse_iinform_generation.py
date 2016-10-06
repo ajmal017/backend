@@ -19,7 +19,7 @@ def nse_investor_info_generator(user_id, exch_backend):
     :return:
     """
     user=models.User.objects.get(id=user_id)
-    user_vendor = models.UserVendor.objects.get(user=user, name=exch_backend.vendor_name)
+    user_vendor = models.UserVendor.objects.get(user=user, vendor__name=exch_backend.vendor_name)
     investor=models.InvestorInfo.objects.get(user=user)
     nominee=models.NomineeInfo.objects.get(user=user)
     contact=models.ContactInfo.objects.get(user=user)
