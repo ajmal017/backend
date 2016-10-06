@@ -197,21 +197,6 @@ CEASE_REQ_DATE_XPATH = SERVICE_REQUEST_PATH + '/cease_req_date'
 INSTBY_XPATH = SERVICE_REQUEST_PATH + '/initiated_by'
 NIGO_REMARKS_XPATH = SERVICE_REQUEST_PATH + '/nigo_remarks'
 
-    OCCUPATION_MAP = {
-        profile_constants.BUSINESS: '01',
-        profile_constants.PRIVATE_SECTOR: '02',
-        profile_constants.PUBLIC_SECTOR: '02',
-        profile_constants.GOVERNMENT: '02',
-        profile_constants.PROFESSIONAL: '03',
-        profile_constants.AGRICULTURE: '04',
-        profile_constants.RETIRED: '05',
-        profile_constants.HOUSEWIFE: '06',
-        profile_constants.STUDENT: '07',
-        profile_constants.OTHER: '08',
-        profile_constants.FOREX_DEALER: '08',
-    }
-
-
 
 # NSE VARIABLES
 
