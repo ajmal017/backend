@@ -1,8 +1,8 @@
 import xml.etree.ElementTree as ET
 
 from profiles import models
-from external_api.models import Pincode,NseDetails
-from payment.models import Transaction
+from profiles import constants as profile_constants
+from external_api.models import Pincode
 from . import constants
 from external_api import constants as api_constants
 from external_api.nse import bankcodes
@@ -27,6 +27,148 @@ def getValidRequest(investor_dict, root):
 
 def changeDobFormat(dob):
     return dob.strftime('%d-%b-%Y')
+
+def get_occupation_code(code):
+    """
+    :param code: Our mapping for the occupation
+    :return: Occupation code according to BSE standards
+
+    Routes our model mapping to BSE mapping as shown below
+
+    CLIENT_OCCUPATION_CODE_MAP = {
+    "Business": "01",
+    "Services": "02",
+    "Professional": "03",
+    "Agriculture": "04",
+    "Retired": "05",
+    "Housewife": "06",
+    "Student": "07",
+    "Others": "08"
+    }
+    """
+
+    OCCUPATION_MAP = {
+        profile_constants.BUSINESS: '01',
+        profile_constants.PRIVATE_SECTOR: '02',
+        profile_constants.PUBLIC_SECTOR: '02',
+        profile_constants.GOVERNMENT: '02',
+        profile_constants.PROFESSIONAL: '03',
+        profile_constants.AGRICULTURE: '04',
+        profile_constants.RETIRED: '05',
+        profile_constants.HOUSEWIFE: '06',
+        profile_constants.STUDENT: '07',
+        profile_constants.OTHER: '08',
+        profile_constants.FOREX_DEALER: '08',
+    }
+
+    return OCCUPATION_MAP.get(code, "08")
+
+def get_country_code(code):
+    
+    COUNTRY_CODE_MAP = {
+                        "Australia" : "AUS",
+                        "BAHRAIN" : "BHR",
+                        "Bangladesh" : "BAN",
+                        "Belgium" : "BEL",
+                        "Brazil" : "BRA",
+                        "Brunei Darussalam" : "BRN",
+                        "CANADA" : "CAN",
+                        "China" : "CHN",
+                        "DOMINICA" : "DMA",
+                        "England" : "ENG",
+                        "Ethiopia" : "ETH",
+                        "Europe" : "EUR",
+                        "Fiji" : "FJI",
+                        "Finland" : "FIN",
+                        "France" : "FRA",
+                        "Germany" : "GER",
+                        "Ghana" : "GHA",
+                        "HONG KONG" : "HKG",
+                        "India" : "IND",
+                        "Indonesia" : "INA",
+                        "Iran" : "IRN",
+                        "Iraq" : "IRQ",
+                        "Japan" : "JPN",
+                        "KUWAIT" : "KWT",
+                        "Kenya" : "KEN",
+                        "LIBYA" : "LBY",
+                        "Madagascar" : "MDG",
+                        "Malaysia" : "MYS",
+                        "Mauritius" : "MUS",
+                        "Myanmar" : "MMR",
+                        "Nepal" : "NEP",
+                        "Netherland" : "NET",
+                        "New Zealand" : "NZL",
+                        "Nigeria" : "NGA",
+                        "North Korea" : "NKR",
+                        "Norway" : "NOR",
+                        "OMAN" : "OMN",
+                        "Pakistan" : "PAK",
+                        "Qatar" : "QAT",
+                        "Republic of Ireland" : "IRL",
+                        "Russia" : "RUS",
+                        "SWEDEN" : "SWE",
+                        "Saudi Arabia" : "SAU",
+                        "Singapore" : "SGP",
+                        "South Africa" : "ZA",
+                        "South Korea" : "SKR",
+                        "Sri Lanka" : "SRI",
+                        "Sudan" : "SUD",
+                        "Switzerland" : "CHE",
+                        "Tanzania" : "TZA",
+                        "Thailand" : "THA",
+                        "Uganda" : "UGA",
+                        "Unite State of America" : "USA",
+                        "United Arab Emirates" : "UAE",
+                        "United Kingdom" : "GBR",
+                        "ZAMBIA" : "ZMB",
+    }
+    
+    return COUNTRY_CODE_MAP.get(code, "India")
+
+def get_state_code(code):
+    STATE_CODE_MAP = {
+                      "Andaman and Nicobar Islands" : "AN",
+                        "Andhra Pradesh" : "AP",
+                        "Arunachal Pradesh" : "AR",
+                        "Assam" : "AS",
+                        "Bihar" : "BH",
+                        "Chandigarh" : "CH",
+                        "Chhattisgarh" : "CG",
+                        "Dadra and Nagar Haveli" : "DN",
+                        "Daman and Diu" : "DD",
+                        "Goa" : "GO",
+                        "Gujarat" : "GU",
+                        "Haryana" : "HA",
+                        "Himachal Pradesh" : "HP",
+                        "Jammu and Kashmir" : "KR",
+                        "Jharkhand" : "JD",
+                        "Karnataka" : "KA",
+                        "Kerala" : "KE",
+                        "Lakshadweep" : "LD",
+                        "Madhya Pradesh" : "MP",
+                        "Maharashtra" : "MA",
+                        "Manipur" : "MN",
+                        "Meghalaya" : "ME",
+                        "Mizoram" : "MI",
+                        "Nagaland" : "NA",
+                        "New Delhi" : "ND",
+                        "ODISHA" : "OD",
+                        "Others" : "OT",
+                        "Puducherry" : "PO",
+                        "Punjab" : "PU",
+                        "Rajasthan" : "RA",
+                        "Sikkim" : "SI",
+                        "Tamil Nadu" : "TN",
+                        "Telangana" : "TE",
+                        "Tripura" : "TR",
+                        "Uttar Pradesh" : "UP",
+                        "Uttarakhand" : "UR",
+                        "West Bengal" : "WB",
+    }
+    
+    return STATE_CODE_MAP.get(code, "")
+
 
 def getiinrequest(root, user_id, **kwargs):
     """
@@ -93,16 +235,8 @@ def createcustomerrequest(root, user_id):
         blank_address.pincode = blank_pincode
         nominee.nominee_address = blank_address
 
-    title = None
-    if user.gender == 'M':
-        title = "Mr."
-    elif user.gender == 'F' & user.marital_status == 'Married':
-        title = "Mrs."
-    else:
-        title = "Ms."
-
     investor_dict = {
-        constants.TITLE_XPATH: title,
+        constants.TITLE_XPATH: None,
         constants.INV_NAME_XPATH: investor.applicant_name,
         constants.PAN_XPATH: investor.pan_number,
         constants.VALID_PAN_XPATH: 'Y',
@@ -110,10 +244,10 @@ def createcustomerrequest(root, user_id):
         constants.EXEMPT_CATEGORY_XPATH: None,  # TODO
         constants.EXEMPT_REF_NO_XPATH: None,  # TODO
         constants.DOB_XPATH: changeDobFormat(investor.dob),
-        constants.HOLD_NATURE_XPATH: 'SI',  # TODO
-        constants.TAX_STATUS_XPATH: '01',
-        constants.KYC_XPATH: user.kyc_accepted,
-        constants.OCCUPATION_XPATH: None,
+        constants.HOLD_NATURE_XPATH: api_constants.CLIENT_HOLDING_MAP["Single"], 
+        constants.TAX_STATUS_XPATH: api_constants.CLIENT_TAX_STATUS_MAP["Individual"],
+        constants.KYC_XPATH: investor.kra_verified,
+        constants.OCCUPATION_XPATH: get_occupation_code(investor.occupation_type),
     # TODO : Refer master services for 2 letter occupation code
         constants.MFU_CAN_XPATH: None,  # TODO
         constants.DP_ID_XPATH: None,  # TODO
@@ -124,9 +258,9 @@ def createcustomerrequest(root, user_id):
         constants.ADDR2_XPATH: contact.communication_address.address_line_2,
         constants.ADDR3_XPATH: contact.communication_address.nearest_landmark,
         constants.CITY_XPATH: contact.communication_address.pincode.city,
-        constants.STATE_XPATH: contact.communication_address.pincode.state,
+        constants.STATE_XPATH: get_state_code(contact.communication_address.pincode.state),
         constants.PINCODE_XPATH: contact.communication_address.pincode.pincode,
-        constants.COUNTRY_XPATH: api_constants.INDIA,
+        constants.COUNTRY_XPATH: get_country_code(api_constants.INDIA),
         constants.MOBILE_XPATH: contact.phone_number,
         constants.RES_PHONE_XPATH: None,
         constants.OFF_PHONE_XPATH: None,
@@ -150,7 +284,7 @@ def createcustomerrequest(root, user_id):
         constants.BRANCH_ADDR3_XPATH: None,
         constants.BRANCH_CITY_XPATH: investor_bank.ifsc_code.city,
         constants.BRANCH_PINCODE_XPATH: None,  # TODO
-        constants.BRANCH_COUNTRY_XPATH: api_constants.INDIA,
+        constants.BRANCH_COUNTRY_XPATH: get_country_code(api_constants.INDIA),
         constants.JH1_NAME_XPATH: None,
         constants.JH1_PAN_XPATH: None,
         constants.JH1_VALID_PAN_XPATH: None,
@@ -168,18 +302,18 @@ def createcustomerrequest(root, user_id):
         constants.JH2_DOB_XPATH: None,
         constants.JH2_KYC_XPATH: None,
         constants.NO_OF_NOMINEE_XPATH: '1' if nominee else '0',
-        constants.NOMINEE1_TYPE_XPATH: 'N',
-        constants.NOMINEE1_NAME_XPATH: nominee.nominee_name,
-        constants.NOMINEE1_DOB_XPATH: changeDobFormat(nominee.nominee_dob),
-        constants.NOMINEE1_ADDR1_XPATH: nominee.nominee_address.address_line_1,
-        constants.NOMINEE1_ADDR2_XPATH: nominee.nominee_address.address_line_2,
-        constants.NOMINEE1_ADDR3_XPATH: nominee.nominee_address.nearest_landmark,
-        constants.NOMINEE1_CITY_XPATH: nominee.nominee_address.pincode.city,
-        constants.NOMINEE1_STATE_XPATH: nominee.nominee_address.pincode.state,
-        constants.NOMINEE1_PINCODE_XPATH: nominee.nominee_address.pincode.pincode,
-        constants.NOMINEE1_RELATION_XPATH: nominee.relationship_with_investor,
-        constants.NOMINEE1_PERCENT_XPATH: '100',
-        constants.NOMINEE1_GUARD_NAME_XPATH: nominee.guardian_name,
+        constants.NOMINEE1_TYPE_XPATH: 'Y' if nominee and nominee.guardian_name else 'N' if nominee else None,
+        constants.NOMINEE1_NAME_XPATH: nominee.nominee_name if nominee else None,
+        constants.NOMINEE1_DOB_XPATH: changeDobFormat(nominee.nominee_dob) if nominee else None,
+        constants.NOMINEE1_ADDR1_XPATH: nominee.nominee_address.address_line_1 if nominee else None,
+        constants.NOMINEE1_ADDR2_XPATH: nominee.nominee_address.address_line_2 if nominee else None,
+        constants.NOMINEE1_ADDR3_XPATH: nominee.nominee_address.nearest_landmark if nominee else None,
+        constants.NOMINEE1_CITY_XPATH: nominee.nominee_address.pincode.city if nominee else None,
+        constants.NOMINEE1_STATE_XPATH: get_state_code(nominee.nominee_address.pincode.state) if nominee else None,
+        constants.NOMINEE1_PINCODE_XPATH: nominee.nominee_address.pincode.pincode if nominee else None,
+        constants.NOMINEE1_RELATION_XPATH: nominee.get_relationship_with_investor_display() if nominee else None,
+        constants.NOMINEE1_PERCENT_XPATH: '100' if nominee else None,
+        constants.NOMINEE1_GUARD_NAME_XPATH: nominee.guardian_name if nominee else None,
         constants.NOMINEE1_GUARD_PAN_XPATH: None,
         constants.NOMINEE2_TYPE_XPATH: None,
         constants.NOMINEE2_NAME_XPATH: None,
@@ -259,17 +393,17 @@ def purchasetxnrequest(root, user_id, **kwargs):
         constants.DEBIT_AMOUNT_TYPE_XPATH: None,
         constants.NOMINEE_FLAG_XPATH: None,
         constants.NO_OF_NOMINEE_XPATH: '1' if nominee else '0',
-        constants.NOMINEE1_NAME_XPATH: nominee.nominee_name,
-        constants.NOMINEE1_DOB_XPATH: changeDobFormat(nominee.nominee_dob),
-        constants.NOMINEE1_ADDR1_XPATH: nominee.nominee_address.address_line_1,
-        constants.NOMINEE1_ADDR2_XPATH: nominee.nominee_address.address_line_2,
-        constants.NOMINEE1_ADDR3_XPATH: nominee.nominee_address.nearest_landmark,
-        constants.NOMINEE1_CITY_XPATH: nominee.nominee_address.pincode.city,
-        constants.NOMINEE1_STATE_XPATH: nominee.nominee_address.pincode.state,
-        constants.NOMINEE1_PINCODE_XPATH: nominee.nominee_address.pincode.pincode,
-        constants.NOMINEE1_RELATION_XPATH: nominee.relationship_with_investor,
-        constants.NOMINEE1_PERCENT_XPATH: '100',
-        constants.NOMINEE1_GUARD_NAME_XPATH: nominee.guardian_name,
+        constants.NOMINEE1_NAME_XPATH: nominee.nominee_name if nominee else None,
+        constants.NOMINEE1_DOB_XPATH: changeDobFormat(nominee.nominee_dob) if nominee else None,
+        constants.NOMINEE1_ADDR1_XPATH: nominee.nominee_address.address_line_1 if nominee else None,
+        constants.NOMINEE1_ADDR2_XPATH: nominee.nominee_address.address_line_2 if nominee else None,
+        constants.NOMINEE1_ADDR3_XPATH: nominee.nominee_address.nearest_landmark if nominee else None,
+        constants.NOMINEE1_CITY_XPATH: nominee.nominee_address.pincode.city if nominee else None,
+        constants.NOMINEE1_STATE_XPATH: nominee.nominee_address.pincode.state if nominee else None,
+        constants.NOMINEE1_PINCODE_XPATH: nominee.nominee_address.pincode.pincode if nominee else None,
+        constants.NOMINEE1_RELATION_XPATH: nominee.get_relationship_with_investor_display() if nominee else None,
+        constants.NOMINEE1_PERCENT_XPATH: '100' if nominee else None,
+        constants.NOMINEE1_GUARD_NAME_XPATH: nominee.guardian_name if nominee else None,
         constants.NOMINEE1_GUARD_PAN_XPATH: None,
         constants.NOMINEE2_NAME_XPATH: None,
         constants.NOMINEE2_DOB_XPATH: None,
