@@ -22,7 +22,6 @@ FREQUENCY = '&frequency=D&format=json'
 
 
 
-
 CAPITAL_GAIN = 'capital_gain'
 CAPITAL_GAIN_PERCENTAGE = 'capital_gain_percentage'
 DAY_END_DATE = 'day_end_date'
