@@ -5,8 +5,8 @@ from external_api.models import Pincode,NseDetails
 from payment.models import Transaction
 from . import constants
 from external_api import constants as api_constants
-
-from datetime import datetime,timedelta
+from external_api.nse import bankcodes
+from datetime import datetime
 
 
 def getValidRequest(investor_dict, root):
@@ -140,7 +140,7 @@ def createcustomerrequest(root, user_id):
         constants.NRI_STATE_XPATH: None,
         constants.NRI_PINCODE_XPATH: None,
         constants.NRI_COUNTRY_XPATH: None,
-        constants.BANK_NAME_XPATH: investor_bank.ifsc_code.name,
+        constants.BANK_NAME_XPATH: bankcodes.bank_code_map.get(investor_bank.ifsc_code.name, None),
         constants.ACC_NO_XPATH: investor_bank.account_number,
         constants.ACC_TYPE_XPATH: 'SB', #TODO: investor_bank.account_type
         constants.IFSC_CODE_XPATH: investor_bank.ifsc_code.ifsc_code,
