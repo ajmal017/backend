@@ -162,8 +162,7 @@ class NSEBackend(ExchangeBackend):
             return constants.RETURN_CODE_FAILURE, error_string
 
     def upload_aof_image(self, user_id):
-        self.upload_img(user_id=user_id, image_type="A")
-        return constants.RETURN_CODE_SUCCESS
+        return self.upload_img(user_id=user_id, image_type="A")
 
     def purchase_trxn(self, user_id):
         """
@@ -217,10 +216,11 @@ class NSEBackend(ExchangeBackend):
     def upload_img(self, user_id, ref_no='', image_type='', **kwargs):
         error_logger = logging.getLogger('django.error')
         user_vendor = pr_models.UserVendor.objects.get(user__id=user_id, vendor__name=self.vendor_name)
-        queryString = "?BrokerCode=" + nse_constants.NSE_NMF_BROKER_CODE + "&Appln_id=" + nse_constants.NSE_NMF_APPL_ID + \
+        queryString = "?BrokCode=" + nse_constants.NSE_NMF_BROKER_CODE + "&Appln_id=" + nse_constants.NSE_NMF_APPL_ID + \
                       "&Password=" + nse_constants.NSE_NMF_PASSWORD + "&CustomerID=" + user_vendor.ucc + "&Refno=" + ref_no + \
                       "&ImageType=" + image_type
         api_url = nse_constants.NSE_NMF_UPLOAD_BASE_API_URL + nse_constants.METHOD_UPLOADIMG + queryString
+        error_logger.error("Query string: " + api_url)
         filePath = ""
         if image_type == "A":
             filePath = self.generate_aof_image(user_id)
@@ -262,7 +262,7 @@ class NSEBackend(ExchangeBackend):
         return filePath
 
     def generate_bank_mandate(self, user_id, mandate_amount):
-        kwargs = {'mandate_amount': mandate_amount}
+        kwargs = {'mandate_amount': mandate_amount, 'exchange_backend': self}
         filePath = bank_mandate.generate_bank_mandate_tiff(user_id, **kwargs)
         return filePath
     
