@@ -21,7 +21,7 @@ PASSWORD_PATH = './password'
 BROKER_CODE_XPATH = './broker_code'
 
 # for GETIIN
-IIN_XPATH = './iin'
+IIN_XPATH = SERVICE_REQUEST_PATH + '/iin'
 
 JH1_EXEMPT_FLAG_XPATH = SERVICE_REQUEST_PATH + '/jh1_exempt_flag'
 JH2_EXEMPT_FLAG_XPATH = SERVICE_REQUEST_PATH + '/jh2_exempt_flag'
