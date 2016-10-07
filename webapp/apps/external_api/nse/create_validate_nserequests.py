@@ -472,7 +472,7 @@ def achmandateregistrationsrequest(root, user_id, **kwargs):
         constants.MICR_NO_XPATH: investor_bank.ifsc_code.micr_code,
         constants.UC_XPATH: 'Y', # Until Cancelled - default date will be 31-Dec-2999
         constants.ACH_FROM_DATE_XPATH: curr_date.strftime('%d-%b-%Y'),
-        constants.ACH_TO_DATE_XPATH: None,
+        constants.ACH_TO_DATE_XPATH: '31-Dec-2999',
         constants.ACH_AMOUNT_XPATH: mandate_amount
     }
 
