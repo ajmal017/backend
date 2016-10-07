@@ -68,7 +68,7 @@ def generate_bank_mandate_tiff(user_id, **kwargs):
     fdf_file.write(fdf)
     fdf_file.close()
 
-    base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps', '')
+    base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps/external_api', '')
     bank_mandate_pdf_path = base_dir + '/nse_docs/'
     output_path = base_dir + '/webapp/static/'
 
@@ -78,30 +78,4 @@ def generate_bank_mandate_tiff(user_id, **kwargs):
 
     call(("rm " + temp_file_name).split())
 
-    prefix = "webapp"  # prefix is needed to access the images from media directory.
-
-    # the list of images to be embedded into the pdf follows
-    user_signature = prefix + user.signature.url if user.signature != "" else constants.DEFAULT_IMAGE  # signature_image location.
-    list_of_embeddable_images = [user_signature, ]
-
-    # list of individual image type/size (passport/signature) they are based on international standards.
-    image_sizes = [constants.TIFF_SIGNATURE_SIZE, ]
-
-    bank_mandate = "bank_mandate" + timestamp + ".pdf"
-
-    dest = output_path + bank_mandate  # the final pdf with all images in place.
-    exist = output_path + out_file_name   # the source pdf without the images.
-    coords = [(125, 24), ]  # the lower left bottom corner
-    #  co-ordinates for each of the images.
-
-    target_pages = (0, )  # pages of the existing/source pdf into which the images from the images list must be
-    #  embedded onto
-
-    images_count_each_page = [1, ]  # number of images on each of the target pages.
-
-    # following makes a call to the embed images function in the utils
-    embed_images(list_of_embeddable_images, image_sizes, coords, target_pages, images_count_each_page, dest, exist)
-    # following generates the tiff file.
-
-    final_tiff_file_name = generate_tiff(output_path + bank_mandate, investor_bank.bank_cheque_image)
-    return output_path + final_tiff_file_name
+    return output_path + out_file_name, None
