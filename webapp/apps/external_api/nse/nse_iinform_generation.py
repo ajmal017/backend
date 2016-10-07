@@ -142,7 +142,7 @@ def nse_investor_info_generator(user_id, exch_backend):
 
     dest = output_path + iin_destination_file_name  # the final pdf with all images in place.
     exist = output_path + out_file_name   # the source pdf without the images.
-    coords = [(205, 152), ]  # the lower left bottom corner
+    coords = [(205, 150), ]  # the lower left bottom corner
     #  co-ordinates for each of the images.
 
     target_pages = (0, )  # pages of the existing/source pdf into which the images from the images list must be
