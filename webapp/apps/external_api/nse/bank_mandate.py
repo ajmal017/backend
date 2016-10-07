@@ -20,7 +20,8 @@ def generate_bank_mandate_tiff(user_id, **kwargs):
     """
 
     user = models.User.objects.get(id=user_id)
-    investor = models.InvestorInfo.objects.get(user=user)
+    exch_backend = kwargs.get('exchange_backend')
+    user_vendor = models.UserVendor.objects.get(user=user, vendor__name=exch_backend.vendor_name)
     contact = models.ContactInfo.objects.get(user=user)
     investor_bank = models.InvestorBankDetails.objects.get(user=user)
     curr_date = datetime.now()
@@ -37,10 +38,13 @@ def generate_bank_mandate_tiff(user_id, **kwargs):
         'MandateDate-dd': curr_date.strftime("%d"),
         'MandateDate-mm': curr_date.strftime("%m"),
         'MandateDate-yyyy': curr_date.strftime("%Y"),
+        'MandateEmailID': contact.email,
         'MandateIFSC': investor_bank.ifsc_code.ifsc_code,
         'MandatePeriodFrom-dd': curr_date.strftime("%d"),
         'MandatePeriodFrom-mm': curr_date.strftime("%m"),
-        'MandatePeriodFrom-yyyy': curr_date.strftime("%Y")
+        'MandatePeriodFrom-yyyy': curr_date.strftime("%Y"),
+        'MandatePhoneNo': contact.phone_number,
+        'MandateUCC': user_vendor.ucc
     }
 
     for key, value in mandate_dict.items():
