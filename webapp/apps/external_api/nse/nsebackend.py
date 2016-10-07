@@ -226,16 +226,16 @@ class NSEBackend(ExchangeBackend):
         queryString = "?BrokerCode=" + nse_constants.NSE_NMF_BROKER_CODE + "&Appln_id=" + nse_constants.NSE_NMF_APPL_ID + \
                       "&Password=" + nse_constants.NSE_NMF_PASSWORD + "&CustomerID=" + user_vendor.ucc + "&Refno=" + ref_no + \
                       "&ImageType=" + image_type
-        api_url = nse_constants.NSE_NMF_BASE_API_URL + nse_constants.METHOD_UPLOADIMG + queryString
+        api_url = nse_constants.NSE_NMF_UPLOAD_BASE_API_URL + nse_constants.METHOD_UPLOADIMG + queryString
         filePath = ""
         if image_type == "A":
             filePath = self.generate_aof_image(user_id)
         elif image_type == "X":
             filePath = bank_mandate.generate_bank_mandate_tiff(user_id, **kwargs)
 
-        headers = {'Content-Type': 'image/tiff'}
+        headers = {'Content-Type': 'application/octet-stream'}
         with open(filePath, 'rb') as f:
-            response = requests.post(api_url, files={'image': f}, headers=headers)
+            response = requests.request("POST", api_url, files={'image': f}, headers=headers)
         root = self._get_valid_response(response)
         return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
         if return_code == nse_constants.RETURN_CODE_SUCCESS:
