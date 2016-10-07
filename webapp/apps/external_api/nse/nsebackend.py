@@ -216,7 +216,7 @@ class NSEBackend(ExchangeBackend):
 
     def upload_img(self, user_id, ref_no='', image_type='', **kwargs):
         error_logger = logging.getLogger('django.error')
-        user_vendor = models.UserVendor.objects.get(user__id=user_id, vendor__name=self.vendor_name)
+        user_vendor = pr_models.UserVendor.objects.get(user__id=user_id, vendor__name=self.vendor_name)
         queryString = "?BrokerCode=" + nse_constants.NSE_NMF_BROKER_CODE + "&Appln_id=" + nse_constants.NSE_NMF_APPL_ID + \
                       "&Password=" + nse_constants.NSE_NMF_PASSWORD + "&CustomerID=" + user_vendor.ucc + "&Refno=" + ref_no + \
                       "&ImageType=" + image_type
