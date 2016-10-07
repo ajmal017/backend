@@ -15,6 +15,10 @@ OTP = "Welcome to FinAskus. To complete signup," \
 FORGOT_PASSWORD_OTP = "You have requested for a password change for your FinAskus account. " \
                       "For verification, please use {} as One Time Password (OTP). " \
                       "Do not share this OTP with anyone for security reasons."
+                      
+PORTFOLIO_WEEKLY_DT = "You have FinAskus change for your FinAskus account. " \
+                      "For verification, please use {} as One Time Password {}. " \
+                      "Do not {} this OTP with anyone for security reasons."
 
 RESET_PHONE_NUMBER_OTP = "You have requested for a phone number change for your FinAskus account." \
                          " For verification, please use {} as One Time Password (OTP). " \

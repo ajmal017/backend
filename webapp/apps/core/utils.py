@@ -7,11 +7,13 @@ from dateutil.relativedelta import relativedelta
 from . import models, serializers, constants, helpers, xirr, new_xirr
 from profiles import models as profile_models
 from profiles import helpers as profiles_helpers
+from profiles import constants as profile_constants
 from webapp.apps import random_with_N_digits
 from payment import models as payment_models
 
 from external_api import bank_mandate as bank_mandate
 
+from external_api import api
 from collections import OrderedDict, defaultdict
 from datetime import date, datetime, timedelta
 import math
@@ -55,9 +57,25 @@ def get_portfolio_dashboard():
                     applicant_name = investor_info_check(user)
                 except:
                     applicant_name = None
- 
+
                 profiles_helpers.send_mail_weekly_portfolio(portfolio_details,user,applicant_name,use_https=settings.USE_HTTPS)
             
+
+def send_sms_weekly_portfolio_snapshot():
+    """
+    Send sms for the weekly portfolio snapshot for all users 
+    """
+    fund_order_items = models.FundOrderItem.objects.filter(is_cancelled=False,is_verified=True)
+    users = []
+    if fund_order_items is not None:
+        for fund_order_item in fund_order_items:
+            if fund_order_item.portfolio_item.portfolio.user not in users:
+                user = fund_order_item.portfolio_item.portfolio.user
+                users.append(user)
+                
+                portfolio_details = get_all_portfolio_details(user,fund_order_items)
+    
+                sms_code_sent = api.send_sms(profile_constants.PORTFOLIO_WEEKLY_DT.format(portfolio_details.date,portfolio_details.portfolio_overview.invested,portfolio_details.portfolio_overview.current_value.value), int(user.phone_number))
     
 #investor info check
 def investor_info_check(user):

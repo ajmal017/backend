@@ -328,7 +328,7 @@ def send_transaction_change_email(first_order,order_detail,applicant_name,user,e
         subject = loader.render_to_string('transaction/user-status-change-subject.txt', context)
         subject = ''.join(subject.splitlines())
         body = loader.render_to_string(html_email_template_name, context)
-        email_message = EmailMultiAlternatives(subject, body, from_email, [user.email], bcc=[settings.DEFAULT_TO_EMAIL])
+        email_message = EmailMultiAlternatives(subject, body, from_email, [user.email], bcc=[settings.DEFAULT_TO_EMAIL,settings.DEFAULT_FROM_EMAIL])
         if user.mandate_status == "0" and email_attachment is not None:
             attachment = open(email_attachment, 'rb')
             email_message.attach('bank_mandate.pdf', attachment.read(),'application/pdf')
