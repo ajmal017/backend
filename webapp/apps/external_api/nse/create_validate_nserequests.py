@@ -464,7 +464,7 @@ def achmandateregistrationsrequest(root, user_id, **kwargs):
         constants.ACC_NO_XPATH: investor_bank.account_number,
         constants.ACC_TYPE_XPATH: 'SB', #TODO: investor_bank.account_type
         constants.IFSC_CODE_XPATH: investor_bank.ifsc_code.ifsc_code,
-        constants.BANK_NAME_XPATH: investor_bank.ifsc_code.name,
+        constants.BANK_NAME_XPATH: bankcodes.bank_code_map.get(investor_bank.ifsc_code.name),
         constants.BRANCH_NAME_XPATH: investor_bank.ifsc_code.bank_branch,
         constants.MICR_NO_XPATH: investor_bank.ifsc_code.micr_code,
         constants.UC_XPATH: 'Y',
