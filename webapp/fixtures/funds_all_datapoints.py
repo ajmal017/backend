@@ -26,6 +26,7 @@ funds.csv as if that data.
 from django.db.models import Min
 
 from external_api import morningstar
+from external_api import models as api_models
 from core.utils import get_current_invested_value_date
 from core.models import Fund
 from core import models, constants
@@ -41,6 +42,23 @@ import csv
 morningstar_object = morningstar.MorningStarBackend()
 
 DUMMY_ANALYSIS = "A fund with top-of-mind recall in the large-cap category, this fund stayed true-to-label through three market cycles over the last 20 years. It has rarely slipped below four-five stars throughout its 20-year tenure. The fund typically holds about 35-40 stocks, striving to maintain adequate diversification across companies and sectors. It adopts a buy-hold approach, with the average holding period for individual stocks at around two years. The fund's investment style leans towards growth at a reasonable price. The fund selects stocks based on classic fundamental metrics such as high RoCE, good management and the ability to deliver sustainable earnings growth."
+
+def read_csv_and_update_fund_vendor_info(csv_file_name):
+    data_reader = csv.reader(open(csv_file_name), delimiter=',', quotechar='"')
+    nse = api_models.Vendor.objects.get(name='NSE')
+    bse = api_models.Vendor.objects.get(name='BSE')
+    for row in data_reader:
+        if row[0] != 'mstar_id':
+            fund = models.Fund.objects.get(mstar_id=row[0])
+            bse_neft_scheme_code = row[10]
+            bse_rtgs_scheme_code = row[11]
+            nse_neft_scheme_code = row[13]
+            nse_rtgs_scheme_code = row[14]
+
+            models.FundVendorInfo.objects.update_or_create(fund=fund,vendor=nse, 
+                                                    defaults={'neft_scheme_code':nse_neft_scheme_code, 'rtgs_scheme_code':nse_rtgs_scheme_code})
+            models.FundVendorInfo.objects.update_or_create(fund=fund,vendor=bse, 
+                                                    defaults={'neft_scheme_code':bse_neft_scheme_code, 'rtgs_scheme_code':bse_rtgs_scheme_code})
 
 def read_csv_and_populate_indices_data(csv_file_name):
     data_reader = csv.reader(open(csv_file_name), delimiter=',', quotechar='"')
