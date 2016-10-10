@@ -10,6 +10,7 @@ from djutil.models import TimeStampedModel
 from . import constants, utils
 
 from external_api import constants as external_cons 
+from external_api.bse import constants as bse_cons 
 
 from enum import IntEnum
 
@@ -79,7 +80,7 @@ class Transaction(TimeStampedModel):
                  self.txt_bank_id, "NA", "NA", "INR", self.product_id, "R", "finaskus" , "NA", "NA", "F",
                  self.additional_info_2, self.additional_info_3, self.additional_info_4, self.additional_info_5,
                  self.additional_info_6, self.concated_additional_info(),
-                 utils.date_time_format(self.additional_info_8, self.txn_amount), constants.RU]
+                 utils.date_time_format(self.additional_info_8, self.txn_amount), bse_cons.PAYMENT_RU]
         return "|".join(parts)
 
     def concated_additional_info(self):

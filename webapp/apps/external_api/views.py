@@ -24,8 +24,6 @@ from payment import constants as payment_constant
 
 import time
 
-vendor_helper = helpers.VendorHelper()
-
 class VerifiablePincode(APIView):
     """
     Sends the current email verification status of a user
@@ -102,7 +100,7 @@ class BulkRegisterUCC(object):
         :param request: the email_id of the pertinent user is received from this.
         :return: send the generated pipe file
         """
-        exch_backend = vendor_helper.get_backend_instance()
+        exch_backend = helpers.get_exchange_vendor_helper().get_backend_instance()
         if exch_backend:
             not_set = []
             for i in user_list:
@@ -113,6 +111,7 @@ class BulkRegisterUCC(object):
                 return not_set
 
             return exch_backend.bulk_create_customer(user_list)
+
 
 class GenerateInvestorPdf(View):
     """
@@ -202,20 +201,25 @@ class GenerateBseOrderPipe(View):
 
         if request.user.is_superuser:
             order_detail = OrderDetail.objects.get(order_id=request.GET.get('order_id'))
-            order_items = order_detail.fund_order_items.all()
             if is_investable(order_detail.user):
-                output_file = bulk_order_entry.generate_order_pipe_file(order_detail.user, order_items).split('/')[-1]
-                prefix = 'webapp'
-                my_file_path = prefix + constants.STATIC + output_file
-                my_file = open(my_file_path, "rb")
-                content_type = 'text/plain'
-                response = HttpResponse(my_file, content_type=content_type, status=200)
-                response['Content-Disposition'] = 'attachment;filename=%s' % str(order_detail.id) + '_order.txt'
-                my_file.close()
-                return response  # contains the pdf of the pertinent user
-            else:
-                # file doesn't exist because investor vault is incomplete.
-                return HttpResponse(payment_constant.CANNOT_GENERATE_FILE, status=404)
+                exch_backend = helpers.get_exchange_vendor_helper().get_backend_instance()
+                if exch_backend:
+                    error_status, output_file = exch_backend.create_order(order_detail.user.id, order_detail).split('/')[-1]
+                    if error_status == constants.RETURN_CODE_SUCCESS:
+                        if output_file:
+                            output_file = output_file.split('/')[-1]
+                            prefix = 'webapp'
+                            my_file_path = prefix + constants.STATIC + output_file
+                            my_file = open(my_file_path, "rb")
+                            content_type = 'text/plain'
+                            response = HttpResponse(my_file, content_type=content_type, status=200)
+                            response['Content-Disposition'] = 'attachment;filename=%s' % str(order_detail.id) + '_order.txt'
+                            my_file.close()
+                            return response  # contains the pdf of the pertinent user
+                        else:
+                            return HttpResponse(constants.SUCCESS, status=200)
+            # file doesn't exist because investor vault is incomplete.
+            return HttpResponse(payment_constant.CANNOT_GENERATE_FILE, status=404)
         else:
             # non-admin is trying to access the file. Prevent access.
             return HttpResponse(constants.FORBIDDEN_ERROR, status=403)
@@ -275,7 +279,7 @@ class GenerateBankMandateRegistration(View):
         if request.user.is_superuser:
             order_detail = OrderDetail.objects.get(order_id=request.GET.get('order_id'))
             if is_investable(order_detail.user):
-                exch_backend = vendor_helper.get_backend_instance()
+                exch_backend = helpers.get_exchange_vendor_helper().get_backend_instance()
                 if exch_backend:
                     mandate_amount = pr_utils.get_investor_mandate_amount(order_detail.user, order_detail)
                     status, output_file = exch_backend.generate_bank_mandate_registration(order_detail.user.id, mandate_amount)
@@ -355,7 +359,7 @@ class UploadAOFTiff(View):
         # makes sure that only superuser can access this file.
 
         if request.user.is_superuser:
-            exch_backend = vendor_helper.get_backend_instance()
+            exch_backend = helpers.get_exchange_vendor_helper().get_backend_instance()
             if exch_backend:
                 user = pr_models.User.objects.get(email=request.GET.get('email'))
                 if is_investable(user) and user.signature != "":
@@ -384,7 +388,7 @@ class GenerateAOFTiff(View):
         # makes sure that only superuser can access this file.
 
         if request.user.is_superuser:
-            exch_backend = vendor_helper.get_backend_instance()
+            exch_backend = helpers.get_exchange_vendor_helper().get_backend_instance()
             if exch_backend:
                 user = pr_models.User.objects.get(email=request.GET.get('email'))
                 if is_investable(user) and user.signature != "":
@@ -459,7 +463,7 @@ class GenerateMandatePdf(View):
         # makes sure that only superuser can access this file.
 
         if request.user.is_superuser:
-            exch_backend = vendor_helper.get_backend_instance()
+            exch_backend = helpers.get_exchange_vendor_helper().get_backend_instance()
             if exch_backend:
                 user = pr_models.User.objects.get(email=request.GET.get('email'))
                 if is_investable(user) and user.signature != "":

@@ -9,14 +9,16 @@ import os
 import time
 
 
-def generate_order_pipe_file(user, order_items):
+def generate_order_pipe_file(user_id, order_detail):
     """
     This function generates a pipe separated file for bulk order entry.
     :param order_items: list of order_items for that order_detail
     :param user: The user for which the file is being generated
     :return: url of the generated pipe separated file of the bulk order entry
     """
-
+    user = profile_models.User.objects.get(id=user_id)
+    order_items = order_detail.fund_order_items.all()
+    
     base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps/external_api', '')
     output_path = base_dir + '/webapp/static/'
     timestamp = time.strftime("%Y%m%d-%H%M%S")

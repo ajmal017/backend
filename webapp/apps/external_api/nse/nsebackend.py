@@ -6,6 +6,8 @@ from external_api import constants
 from external_api import models
 from external_api.exchange_backend import ExchangeBackend 
 from profiles import models as pr_models
+from core import utils as core_utils
+from core import models as core_models
 from payment import models as payment_models
 from external_api.nse import bank_mandate
 from external_api.nse import nse_iinform_generation
@@ -66,7 +68,8 @@ class NSEBackend(ExchangeBackend):
             return create_validate_nserequests.createcustomerrequest(root, user_id)
         elif method_name == nse_constants.METHOD_PURCHASETXN:
             root = ET.fromstring(nse_constants.REQUEST_PURCHASETXN)
-            return create_validate_nserequests.purchasetxnrequest(root, user_id, **kwargs)
+            child_root = ET.fromstring(nse_constants.REQUEST_PURCHASE_CHILDTXN)
+            return create_validate_nserequests.purchasetxnrequest(root, child_root, user_id, **kwargs)
         elif method_name == nse_constants.METHOD_ACHMANDATEREGISTRATIONS:
             root = ET.fromstring(nse_constants.REQUEST_ACHMANDATEREGISTRATIONS)
             return create_validate_nserequests.achmandateregistrationsrequest(root, user_id, **kwargs)
@@ -162,16 +165,19 @@ class NSEBackend(ExchangeBackend):
             return constants.RETURN_CODE_FAILURE, error_string
 
     def upload_aof_image(self, user_id):
-        return self.upload_img(user_id=user_id, image_type="A")
+        status = self.upload_img(user_id=user_id, image_type="A")
+        if status == constants.RETURN_CODE_SUCCESS:
+            self.update_aof_sent(user_id)
+        return status
 
-    def purchase_trxn(self, user_id):
+    def purchase_trxn(self, user_id, order_detail):
         """
 
         :param:
         :return:
         """
         error_logger = logging.getLogger('django.error')
-        kwargs = {'exchange_backend': self}
+        kwargs = {'exchange_backend': self, "order" : order_detail}
         xml_request_body = self._get_request_body(nse_constants.METHOD_PURCHASETXN, user_id, **kwargs)
         root = self._get_data(nse_constants.METHOD_PURCHASETXN, xml_request_body=xml_request_body)
         return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
@@ -215,12 +221,16 @@ class NSEBackend(ExchangeBackend):
 
     def upload_img(self, user_id, ref_no='', image_type='', **kwargs):
         error_logger = logging.getLogger('django.error')
-        user_vendor = pr_models.UserVendor.objects.get(user__id=user_id, vendor__name=self.vendor_name)
+        try:
+            user_vendor = pr_models.UserVendor.objects.get(user__id=user_id, vendor__name=self.vendor_name)
+        except Exception as e:
+            error_logger.error("User vendor missing: " + user_id + " : " + self.vendor_name + " : " + str(e))
+            return constants.RETURN_CODE_FAILURE
+        
         queryString = "?BrokCode=" + nse_constants.NSE_NMF_BROKER_CODE + "&Appln_id=" + nse_constants.NSE_NMF_APPL_ID + \
                       "&Password=" + nse_constants.NSE_NMF_PASSWORD + "&CustomerID=" + user_vendor.ucc + "&Refno=" + ref_no + \
                       "&ImageType=" + image_type
         api_url = nse_constants.NSE_NMF_UPLOAD_BASE_API_URL + nse_constants.METHOD_UPLOADIMG + queryString
-        error_logger.error("Query string: " + api_url)
         filePath = ""
         if image_type == "A":
             filePath = self.generate_aof_image(user_id)
@@ -229,13 +239,15 @@ class NSEBackend(ExchangeBackend):
 
         headers = {'Content-Type': 'application/octet-stream'}
         with open(filePath, 'rb') as f:
-            response = requests.request("POST", api_url, files={'image': f}, headers=headers)
+            img_data = f.read()
+            response = requests.request("POST", api_url, data=img_data, headers=headers)
         root = self._get_valid_response(response)
         return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
         if return_code == nse_constants.RETURN_CODE_SUCCESS:
             return constants.RETURN_CODE_SUCCESS
         else:
             error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
+            error_logger.error("Response str: " + response.text)
             for error in error_responses:
                 error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text
                 error_logger.error(error_msg)
@@ -269,4 +281,31 @@ class NSEBackend(ExchangeBackend):
     def upload_bank_mandate(self, user_id, mandate_amount):
         kwargs = {'mandate_amount': mandate_amount}
         return self.upload_img(user_id, image_type="X", **kwargs)
+    
+    def create_order(self, user_id, order_detail):
+        return self.purchase_trxn(user_id, order_detail), None
 
+    def generate_payment_link(self, transaction):
+        error_logger = logging.getLogger('django.error')
+        core_utils.convert_to_investor(transaction, self.get_vendor(), inlinePayment=True)
+        try:
+            order_detail = core_models.OrderDetail.objects.get(transaction=transaction, is_lumpsum=True)
+        except Exception as e:
+            error_logger.error("Failed to create orders: " + transaction.user.id + " : " + self.vendor_name + " : " + str(e))
+            return None, constants.ORDERS_DONT_EXIST
+
+        try:
+            pr_models.UserVendor.objects.get(user__id=transaction.user.id, vendor__name=self.vendor_name)
+        except Exception as e:
+            error_logger.error("User vendor missing: " + transaction.user.id + " : " + self.vendor_name + " : " + str(e))
+            return None, constants.USER_NOT_REGISTERED
+        
+        status = self.purchase_trxn(transaction.user.id, order_detail)
+        
+        if status == constants.RETURN_CODE_SUCCESS:
+            return transaction.payment_link
+        else:
+            return None, constants.FAILED_TO_PUNCH_TRANSACTION
+                
+        
+        
