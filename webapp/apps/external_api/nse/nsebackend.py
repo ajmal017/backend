@@ -259,7 +259,6 @@ class NSEBackend(ExchangeBackend):
                       "&Password=" + nse_constants.NSE_NMF_PASSWORD + "&CustomerID=" + user_vendor.ucc + "&Refno=" + ref_no + \
                       "&ImageType=" + image_type
         api_url = nse_constants.NSE_NMF_UPLOAD_BASE_API_URL + nse_constants.METHOD_UPLOADIMG + queryString
-        error_logger.error("Query string: " + api_url)
         filePath = ""
         if image_type == "A":
             filePath = self.generate_aof_image(user_id)

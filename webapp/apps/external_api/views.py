@@ -112,6 +112,7 @@ class BulkRegisterUCC(object):
 
             return exch_backend.bulk_create_customer(user_list)
 
+
 class GenerateInvestorPdf(View):
     """
     An api to generate pdf for the pertinent investor.
