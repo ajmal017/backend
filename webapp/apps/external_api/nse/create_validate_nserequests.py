@@ -2,10 +2,12 @@ import xml.etree.ElementTree as ET
 
 from profiles import models
 from profiles import constants as profile_constants
+from core import models as core_models
 from external_api.models import Pincode
 from . import constants
 from external_api import constants as api_constants
 from external_api.nse import bankcodes
+from payment import constants as payment_constants
 from datetime import datetime
 
 
@@ -25,9 +27,58 @@ def getValidRequest(investor_dict, root):
 
     return ET.tostring(root, encoding="us-ascii", method="xml")
 
+def getValidRequestWithMultipleChildren(investor_dict, child_items, root, child_root):
+    getValidRequest(investor_dict, root)
+    
+    child_str = ET.tostring(child_root, encoding="us-ascii", method="xml")
+    for child_dict in child_items:
+        child_root = ET.fromstring(child_str)
+        getValidRequest(child_dict, child_root)
+        root.extend(child_root)
+        
+    return ET.tostring(root, encoding="us-ascii", method="xml")
+
 def changeDobFormat(dob):
     return dob.strftime('%d-%b-%Y')
 
+def get_amc_code(code):
+    AMC_CODE_MAP = {
+        "AXIS MUTUAL FUND":"128",
+        "BNP PARIBAS MUTUAL FUND":"M",
+        "BOI AXA MUTUAL FUND":"116",
+        "BARODA PIONEER ASSET MANAGEMENT COMPANY LIMITED":"107",
+        "BIRLA SUN LIFE MUTUAL FUND":"B",
+        "CANARA ROBECO MUTUAL FUND":"101",
+        "DHFL PRAMERICA ASSET MANAGERS PRIVATE LIMITED":"129",
+        "DSP BLACKROCK MUTUAL FUND":"D",
+        "EDELWEISS MUTUAL FUND":"118",
+        "FRANKLIN TEMPLETON MUTUAL FUND":"FTI",
+        "HDFC MUTUAL FUND":"H",
+        "ICICI PRUDENTIAL MUTUAL FUND":"P",
+        "IDBI MUTUAL FUND":"135",
+        "IDFC MUTUAL FUND":"G",
+        "INVESCO MUTUAL FUND":"120",
+        "JPMORGAN MUTUAL FUND":"J",
+        "KOTAK MUTUAL FUND":"K",
+        "L AND T MUTUAL FUND":"F",
+        "LIC NOMURA MUTUAL FUND":"102",
+        "MIRAE ASSEST MUTUAL FUND":"117",
+        "MOTILAL OSWAL MUTUAL FUND":"127",
+        "PEERLESS MUTUAL FUND":"PLF",
+        "PPFAS MUTUAL FUND":"PP",
+        "PRINCIPAL MUTUAL FUND":"103",
+        "QUANTUM MUTUAL FUND":"123",
+        "RELIANCE MUTUAL FUND":"RMF",
+        "SBI MUTUAL FUND":"L",
+        "SHRIRAM MUTUAL FUND":"SH",
+        "SUNDARAM MUTUAL FUND":"S",
+        "TATA MUTUAL FUND.":"T",
+        "UTI MUTUAL FUND":"108",
+    }
+    
+    return AMC_CODE_MAP.get(code, None)
+
+    
 def get_occupation_code(code):
     """
     :param code: Our mapping for the occupation
@@ -343,7 +394,7 @@ def createcustomerrequest(root, user_id):
 
     return getValidRequest(investor_dict, root)
 
-def purchasetxnrequest(root, user_id, **kwargs):
+def purchasetxnrequest(root, child_root, user_id, **kwargs):
     """
 
     :param user_id: id of user for whom the nse_request is to be generated
@@ -352,34 +403,66 @@ def purchasetxnrequest(root, user_id, **kwargs):
     user = models.User.objects.get(id=user_id)
     exch_backend = kwargs.get('exchange_backend')
     user_vendor = models.UserVendor.objects.get(user=user, vendor__name=exch_backend.vendor_name)
-    nominee = models.NomineeInfo.objects.get(user=user)
     investor_bank = models.InvestorBankDetails.objects.get(user=user)
-    curr_date = datetime.now()
+    is_online_supported = investor_bank.ifsc_code.is_supported
+    if is_online_supported:
+        product_id_array = payment_constants.bank_product_id_map.get(investor_bank.ifsc_code.name, None)
+        billdeskbank = product_id_array[0] 
+    order_detail = kwargs.get("order")
+    order_items = order_detail.fund_order_items.all()
 
-    nominee_address = nominee.nominee_address
-    if nominee.nominee_address == None:
-        blank_pincode = Pincode(None, None, None)
-        blank_address = models.Address(None, None, None, None)
-        blank_address.pincode = blank_pincode
-        nominee.nominee_address = blank_address
+    child_items = []
+    for item in order_items:
+        item_fund = item.portfolio_item.fund
+        neft_code = ''
+        fund_vendor = core_models.FundVendor.get(fund=item_fund, vendor=user_vendor.vendor)
+        if fund_vendor.neft_scheme_code:
+            neft_code = fund_vendor.neft_scheme_code
+        rtgs_code = ""
+        if fund_vendor.rtgs_scheme_code:
+            rtgs_code = fund_vendor.rtgs_scheme_code
+
+        fund_house = None
+        folio_number = None
+        if item_fund.fund_house:
+            fund_house = item_fund.fund_house
+            try:
+                folio_number = models.FolioNumber.objects.get(user=user, fund_house=fund_house).folio_number
+            except models.FolioNumber.DoesNotExist:
+                folio_number = None
+
+        child_dict = {
+            constants.AMC_XPATH: get_amc_code(fund_house.name) if fund_house is not None else None,
+            constants.FOLIO_XPATH: folio_number,
+            constants.PRODUCT_CODE_XPATH: neft_code if item.order_amount < 200000 else rtgs_code,
+            constants.REINVEST_XPATH: 'N',
+            constants.AMOUNT_XPATH: item.order_amount,
+            constants.SIP_FROM_DATE_XPATH: None,
+            constants.SIP_END_DATE_XPATH: None,
+            constants.SIP_FREQ_XPATH: None,
+            constants.SIP_AMOUNT_XPATH: None,
+            constants.SIP_PERIOD_DAY_XPATH: None
+        }
+        
+        child_items.append(child_dict)
 
     investor_dict = {
         constants.IIN_XPATH: user_vendor.ucc,
         constants.SUB_TRXN_TYPE_XPATH: 'S', # TODO: 'N' for normal and 'S' for systematic
         constants.POA_XPATH: 'Y', # Executed by POA , values 'Y' or 'N'
         constants.TRXN_ACCEPTANCE_XPATH: 'ALL', # By Phone , online or both
-        constants.DEMAT_USER_XPATH: 'Y', #TODO: Is demat user or not
+        constants.DEMAT_USER_XPATH: 'N', #TODO: Is demat user or not
         constants.DP_ID_XPATH: None,
-        constants.BANK_NAME_XPATH: investor_bank.ifsc_code.name,
+        constants.BANK_NAME_XPATH: bankcodes.bank_code_map.get(investor_bank.ifsc_code.name),
         constants.AC_NO_XPATH: investor_bank.account_number,
         constants.IFSC_CODE_XPATH: investor_bank.ifsc_code.ifsc_code,
         constants.SUB_BROKER_ARN_CODE_XPATH: None,
         constants.SUB_BROKER_CODE_XPATH: None,
-        constants.EUIN_OPTED_XPATH: 'Y',# TODO
+        constants.EUIN_OPTED_XPATH: 'N',# TODO
         constants.TRXN_EXECUTION_XPATH: None,
         constants.REMARKS_XPATH: None,
-        constants.PAYMENT_MODE_XPATH: 'OL', #TODO :For Online
-        constants.BILLDESK_BANK_XPATH: None,
+        constants.PAYMENT_MODE_XPATH: 'OL' if is_online_supported else 'Q', #TODO :For Online
+        constants.BILLDESK_BANK_XPATH: billdeskbank if is_online_supported else None,
         constants.INSTRM_BANK_XPATH: None,
         constants.INSTRM_AC_NO_XPATH: None,
         constants.INSTRM_NO_XPATH: None,
@@ -394,19 +477,19 @@ def purchasetxnrequest(root, user_id, **kwargs):
         constants.CHEQUE_DEPOSIT_MODE_XPATH: None,
         constants.DD_CHARGE_XPATH: None,
         constants.DEBIT_AMOUNT_TYPE_XPATH: None,
-        constants.NOMINEE_FLAG_XPATH: None,
-        constants.NO_OF_NOMINEE_XPATH: '1' if nominee else '0',
-        constants.NOMINEE1_NAME_XPATH: nominee.nominee_name if nominee else None,
-        constants.NOMINEE1_DOB_XPATH: changeDobFormat(nominee.nominee_dob) if nominee else None,
-        constants.NOMINEE1_ADDR1_XPATH: nominee.nominee_address.address_line_1 if nominee else None,
-        constants.NOMINEE1_ADDR2_XPATH: nominee.nominee_address.address_line_2 if nominee else None,
-        constants.NOMINEE1_ADDR3_XPATH: nominee.nominee_address.nearest_landmark if nominee else None,
-        constants.NOMINEE1_CITY_XPATH: nominee.nominee_address.pincode.city if nominee else None,
-        constants.NOMINEE1_STATE_XPATH: nominee.nominee_address.pincode.state if nominee else None,
-        constants.NOMINEE1_PINCODE_XPATH: nominee.nominee_address.pincode.pincode if nominee else None,
-        constants.NOMINEE1_RELATION_XPATH: nominee.get_relationship_with_investor_display() if nominee else None,
-        constants.NOMINEE1_PERCENT_XPATH: '100' if nominee else None,
-        constants.NOMINEE1_GUARD_NAME_XPATH: nominee.guardian_name if nominee else None,
+        constants.NOMINEE_FLAG_XPATH: 'C',
+        constants.NO_OF_NOMINEE_XPATH: None,
+        constants.NOMINEE1_NAME_XPATH: None,
+        constants.NOMINEE1_DOB_XPATH: None,
+        constants.NOMINEE1_ADDR1_XPATH: None,
+        constants.NOMINEE1_ADDR2_XPATH: None,
+        constants.NOMINEE1_ADDR3_XPATH: None,
+        constants.NOMINEE1_CITY_XPATH: None,
+        constants.NOMINEE1_STATE_XPATH: None,
+        constants.NOMINEE1_PINCODE_XPATH: None,
+        constants.NOMINEE1_RELATION_XPATH: None,
+        constants.NOMINEE1_PERCENT_XPATH: None,
+        constants.NOMINEE1_GUARD_NAME_XPATH: None,
         constants.NOMINEE1_GUARD_PAN_XPATH: None,
         constants.NOMINEE2_NAME_XPATH: None,
         constants.NOMINEE2_DOB_XPATH: None,
@@ -419,30 +502,23 @@ def purchasetxnrequest(root, user_id, **kwargs):
         constants.NOMINEE3_PERCENT_XPATH: None,
         constants.NOMINEE3_GUARD_NAME_XPATH: None,
         constants.NOMINEE3_GUARD_PAN_XPATH: None,
-        constants.SIP_MICR_NO_XPATH: investor_bank.ifsc_code.micr_code,
-        constants.SIP_BANK_XPATH: investor_bank.ifsc_code.name,
-        constants.SIP_ACC_NO_XPATH: investor_bank.account_number,
-        constants.SIP_AC_TYPE_XPATH: 'SB',
-        constants.SIP_IFSC_CODE_XPATH: investor_bank.ifsc_code.ifsc_code,
+        constants.SIP_MICR_NO_XPATH: None,
+        constants.SIP_BANK_XPATH: None,
+        constants.SIP_ACC_NO_XPATH: None,
+        constants.SIP_AC_TYPE_XPATH: None,
+        constants.SIP_IFSC_CODE_XPATH: None,
         constants.UMRN_XPATH: None,      #TODO: Provided by ACH Mandate Report , no need to give ach details here
         constants.ACH_AMT_XPATH: None,
         constants.ACH_FROM_DATE_XPATH: None,
         constants.ACH_END_DATE_XPATH: None,
         constants.UNTIL_CANCELLED_XPATH: None,
         constants.RETURN_PAYMENT_FLAG_XPATH: 'Y',
-        constants.CLIENT_CALLBACK_URL_XPATH: 'give callback url',#TODO
-        constants.TRANS_COUNT_XPATH: None,
-        constants.AMC_XPATH: None,
-        constants.FOLIO_XPATH: None,
-        constants.AMOUNT_XPATH: None,
-        constants.SIP_FROM_DATE_XPATH: None,
-        constants.SIP_END_DATE_XPATH: None,
-        constants.SIP_FREQ_XPATH: None,
-        constants.SIP_AMOUNT_XPATH: None,
-        constants.SIP_PERIOD_DAY_XPATH: None
+        constants.CLIENT_CALLBACK_URL_XPATH: constants.PAYMENT_RU, #TODO
+        constants.TRANS_COUNT_XPATH: len(child_items)
     }
 
-    return getValidRequest(investor_dict, root)
+
+    return getValidRequestWithMultipleChildren(investor_dict, child_items, root, child_root)
 
 
 def achmandateregistrationsrequest(root, user_id, **kwargs):

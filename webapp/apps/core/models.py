@@ -18,9 +18,11 @@ from payment import models as payment_models
 import logging
 from django.http import HttpResponse
 from external_api import constants as external_constants
+from external_api import models as api_models
 import datetime
 
 from datetime import timedelta, date
+from webapp.apps.external_api.models import Vendor
 
 def unique_fund_image(instance, filename):
     return "fund/" + instance.mstar_id + "/image/" + filename
@@ -389,6 +391,17 @@ class Fund(TimeStampedModel):
     class Meta:
         ordering = ['type_of_fund', 'fund_rank']
 
+class FundVendorInfo(TimeStampedModel):
+    fund = models.ForeignKey(Fund, null=False)
+    vendor = models.ForeignKey(api_models.Vendor, null=False)
+    sip_dates = ArrayField(models.IntegerField(), null=True)
+    neft_scheme_code = models.CharField(_('Scheme Code when investment amount is below Rs. 2 lakhs '),
+                                            max_length=50, null=True, blank=True)
+    rtgs_scheme_code = models.CharField(_('Scheme Code when investment amount is above Rs. 2 lakhs '),
+                                            max_length=50, null=True, blank=True)
+
+    class Meta:
+        unique_together = (('fund', 'vendor'),)
 
 class Portfolio(TimeStampedModel):
     """
@@ -1104,7 +1117,7 @@ class OrderDetail(TimeStampedModel):
     order_status = models.IntegerField(choices=[(x.value, x.name) for x in OrderStatus],
                                         default=OrderStatus.Pending.value)
     transaction = models.ForeignKey(payment_models.Transaction, null=True, blank=True)
-    vendor = models.ForeignKey(profile_models.Vendor, related_name="vendor", blank=True, null=True)
+    vendor = models.ForeignKey(api_models.Vendor, related_name="vendor", blank=True, null=True)
 
     def save(self, *args, **kwargs):
         # If order_id is zero set to a OO+random 8 digit number

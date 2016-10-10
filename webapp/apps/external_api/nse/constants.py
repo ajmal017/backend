@@ -1,5 +1,7 @@
 NO_DATA_FOUND = 'No Data Found'
 
+PAYMENT_RU = "https://api.finaskus.com/v2.0/core/billdesk/nse/complete/"
+
 # XPATHS FOR READING NSE_RESPONSE FIELDS
 
 RESPONSE_BASE_PATH = './{urn:schemas-microsoft-com:xml-diffgram-v1}diffgram/NMFIISERVICES'
@@ -345,6 +347,21 @@ REQUEST_GETIIN = '''<NMFIIService>
                     </service_request>
                 </NMFIIService>'''
 
+REQUEST_PURCHASE_CHILDTXN = '''<NMFIIService>
+                                <childtrans>
+                                    <amc></amc>
+                                    <folio></folio>
+                                    <product_code></product_code>
+                                    <reinvest></reinvest>
+                                    <amount></amount>
+                                    <sip_from_date></sip_from_date>
+                                    <sip_end_date></sip_end_date>
+                                    <sip_freq></sip_freq>
+                                    <sip_amount></sip_amount>
+                                    <sip_period_day></sip_period_day>
+                                </childtrans>
+                            <NMFIIService>'''
+
 REQUEST_PURCHASETXN = '''<NMFIIService>
                             <service_request>
                             <appln_id>''' + NSE_NMF_APPL_ID + '''</appln_id>
@@ -422,18 +439,6 @@ REQUEST_PURCHASETXN = '''<NMFIIService>
                             <Client_callback_url></Client_callback_url>
                             <trans_count></trans_count>
                             </service_request>
-                            <childtrans>
-                                <amc></amc>
-                                <folio></folio>
-                                <product_code></product_code>
-                                <reinvest></reinvest>
-                                <amount></amount>
-                                <sip_from_date></sip_from_date>
-                                <sip_end_date></sip_end_date>
-                                <sip_freq></sip_freq>
-                                <sip_amount></sip_amount>
-                                <sip_period_day></sip_period_day>
-                            </childtrans>
                         </NMFIIService>'''
 
 REQUEST_ACHMANDATEREGISTRATIONS = '''<NMFIIService>
