@@ -26,6 +26,7 @@ from profiles.utils import is_investable
 from django.views.generic import View
 from django.http import HttpResponse
 from external_api import constants as external_constants
+from external_api import helpers as external_helpers
 
 def index(request):
     """
@@ -784,7 +785,8 @@ class BilldeskComplete(APIView):
             full_url = reverse("api_urls:core_urls:billdesk-fail") + "?" + query_params_string
         else:
             txn = billdesk.update_transaction_success(order_id, ref_no, float(txn_amount), auth_status, msg, txn_time_dt)
-            utils.convert_to_investor(txn)
+            active_exchange_vendor = external_helpers.get_exchange_vendor_helper().get_active_vendor()
+            utils.convert_to_investor(txn, active_exchange_vendor)
             query_params = {"txn_amount" :txn_amount, "auth_status": auth_status, "order_id": ref_no,
                             "message": "Payment successful"}
             query_params_string = self.create_query_params(query_params)

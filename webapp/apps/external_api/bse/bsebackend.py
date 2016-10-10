@@ -55,3 +55,10 @@ class BSEBackend(ExchangeBackend):
         if file_path:
             self.update_mandate_registered(user_id)
         return constants.RETURN_CODE_SUCCESS, file_path
+
+    def create_order(self, user_id, order_detail):
+        return constants.RETURN_CODE_SUCCESS, bulk_upload.generate_order_pipe_file(user_id, order_detail)
+    
+    def generate_payment_link(self, transaction):
+        return transaction.url_hashed(), constants.RETURN_CODE_SUCCESS 
+    
