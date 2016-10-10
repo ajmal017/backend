@@ -228,6 +228,17 @@ class FundAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
+class FundVendorInfoAdmin(admin.ModelAdmin):
+    """
+    defining list display and list editable
+    disable the option of deleting
+    """
+
+    list_display = ('fund', 'vendor', 'minimum_investment', 'neft_scheme_code', 'rtgs_scheme_code')
+    actions = None
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 class HistoricalFundDataAdmin(admin.ModelAdmin):
     """
@@ -515,3 +526,4 @@ admin.site.register(models.Indices, IndicesAdmin)
 admin.site.register(models.TopThreeSectors, TopThreeSectorsAdmin)
 admin.site.register(models.PlanAssestAllocation, PlanAssestAllocationAdmin)
 admin.site.register(models.UserEmail, UserEmailAdmin)
+admin.site.register(models.FundVendorInfo, FundVendorInfoAdmin)

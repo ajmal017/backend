@@ -14,3 +14,4 @@ encoding//webapp/apps/profiles/manager.py=utf-8
 encoding//webapp/apps/profiles/migrations/0001_initial.py=utf-8
 encoding//webapp/apps/profiles/models.py=utf-8
 encoding//webapp/apps/profiles/urls.py=utf-8
+encoding//webapp/conf/__init__.py=utf-8
