@@ -234,7 +234,7 @@ class FundVendorInfoAdmin(admin.ModelAdmin):
     disable the option of deleting
     """
 
-    list_display = ('fund', 'vendor', 'minimum_investment', 'neft_scheme_code', 'rtgs_scheme_code')
+    list_display = ('fund', 'vendor', 'neft_scheme_code', 'rtgs_scheme_code')
     actions = None
 
     def has_delete_permission(self, request, obj=None):
