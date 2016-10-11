@@ -360,7 +360,7 @@ REQUEST_PURCHASE_CHILDTXN = '''<NMFIIService>
                                     <sip_amount></sip_amount>
                                     <sip_period_day></sip_period_day>
                                 </childtrans>
-                            <NMFIIService>'''
+                            </NMFIIService>'''
 
 REQUEST_PURCHASETXN = '''<NMFIIService>
                             <service_request>
@@ -390,7 +390,7 @@ REQUEST_PURCHASETXN = '''<NMFIIService>
                             <instrm_amount></instrm_amount>
                             <instrm_date></instrm_date>
                             <instrm_branch></instrm_branch>
-                            <instrm_charges><instrm_charges>
+                            <instrm_charges></instrm_charges>
                             <micr></micr>
                             <rtgs_code></rtgs_code>
                             <neft_ifsc></neft_ifsc>
@@ -414,8 +414,8 @@ REQUEST_PURCHASETXN = '''<NMFIIService>
                             <nominee1_guard_pan></nominee1_guard_pan>
                             <nominee2_name></nominee2_name>
                             <nominee2_dob></nominee2_dob>
-                            <nominee2_relation><nominee2_relation>
-                            <nominee2_percent><nominee2_percent>
+                            <nominee2_relation></nominee2_relation>
+                            <nominee2_percent></nominee2_percent>
                             <nominee2_guard_name></nominee2_guard_name>
                             <nominee2_guard_pan></nominee2_guard_pan>
                             <nominee3_name></nominee3_name>
