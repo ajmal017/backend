@@ -50,7 +50,7 @@ def get_amc_code(code):
         "BIRLA SUN LIFE MUTUAL FUND":"B",
         "CANARA ROBECO MUTUAL FUND":"101",
         "DHFL PRAMERICA ASSET MANAGERS PRIVATE LIMITED":"129",
-        "DSP BLACKROCK MUTUAL FUND":"D",
+        "DSP BLACK ROCK MUTUAL FUND":"D",
         "EDELWEISS MUTUAL FUND":"118",
         "FRANKLIN TEMPLETON MUTUAL FUND":"FTI",
         "HDFC MUTUAL FUND":"H",
@@ -415,7 +415,7 @@ def purchasetxnrequest(root, child_root, user_id, **kwargs):
     for item in order_items:
         item_fund = item.portfolio_item.fund
         neft_code = ''
-        fund_vendor = core_models.FundVendor.get(fund=item_fund, vendor=user_vendor.vendor)
+        fund_vendor = core_models.FundVendorInfo.objects.get(fund=item_fund, vendor=user_vendor.vendor)
         if fund_vendor.neft_scheme_code:
             neft_code = fund_vendor.neft_scheme_code
         rtgs_code = ""
@@ -432,7 +432,7 @@ def purchasetxnrequest(root, child_root, user_id, **kwargs):
                 folio_number = None
 
         child_dict = {
-            constants.AMC_XPATH: get_amc_code(fund_house.name) if fund_house is not None else None,
+            constants.AMC_XPATH: get_amc_code(fund_house.name.upper()) if fund_house is not None else None,
             constants.FOLIO_XPATH: folio_number,
             constants.PRODUCT_CODE_XPATH: neft_code if item.order_amount < 200000 else rtgs_code,
             constants.REINVEST_XPATH: 'N',
@@ -448,17 +448,18 @@ def purchasetxnrequest(root, child_root, user_id, **kwargs):
 
     investor_dict = {
         constants.IIN_XPATH: user_vendor.ucc,
-        constants.SUB_TRXN_TYPE_XPATH: 'S', # TODO: 'N' for normal and 'S' for systematic
-        constants.POA_XPATH: 'Y', # Executed by POA , values 'Y' or 'N'
+        constants.SUB_TRXN_TYPE_XPATH: 'N', # TODO: 'N' for normal and 'S' for systematic
+        constants.POA_XPATH: 'N', # Executed by POA , values 'Y' or 'N'
         constants.TRXN_ACCEPTANCE_XPATH: 'ALL', # By Phone , online or both
         constants.DEMAT_USER_XPATH: 'N', #TODO: Is demat user or not
         constants.DP_ID_XPATH: None,
-        constants.BANK_NAME_XPATH: bankcodes.bank_code_map.get(investor_bank.ifsc_code.name),
+        constants.BANK_XPATH: bankcodes.bank_code_map.get(investor_bank.ifsc_code.name),
         constants.AC_NO_XPATH: investor_bank.account_number,
         constants.IFSC_CODE_XPATH: investor_bank.ifsc_code.ifsc_code,
         constants.SUB_BROKER_ARN_CODE_XPATH: None,
         constants.SUB_BROKER_CODE_XPATH: None,
-        constants.EUIN_OPTED_XPATH: 'N',# TODO
+        constants.EUIN_OPTED_XPATH: 'Y',# TODO
+        constants.EUIN_XPATH: api_constants.Order_EUIN_Number,
         constants.TRXN_EXECUTION_XPATH: None,
         constants.REMARKS_XPATH: None,
         constants.PAYMENT_MODE_XPATH: 'OL' if is_online_supported else 'Q', #TODO :For Online
