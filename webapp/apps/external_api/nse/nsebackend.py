@@ -70,6 +70,10 @@ class NSEBackend(ExchangeBackend):
             root = ET.fromstring(nse_constants.REQUEST_PURCHASETXN)
             child_root = ET.fromstring(nse_constants.REQUEST_PURCHASE_CHILDTXN)
             return create_validate_nserequests.purchasetxnrequest(root, child_root, user_id, **kwargs)
+        elif method_name == nse_constants.METHOD_REDEEMTXN:
+            root = ET.fromstring(nse_constants.REQUEST_REDEEMTXN)
+            child_root = ET.fromstring(nse_constants.REQUEST_REDEEM_CHILDTXN)
+            return create_validate_nserequests.redeemtxnrequest(root, child_root, user_id, **kwargs)
         elif method_name == nse_constants.METHOD_ACHMANDATEREGISTRATIONS:
             root = ET.fromstring(nse_constants.REQUEST_ACHMANDATEREGISTRATIONS)
             return create_validate_nserequests.achmandateregistrationsrequest(root, user_id, **kwargs)
@@ -194,6 +198,25 @@ class NSEBackend(ExchangeBackend):
                 error_logger.error(error_msg)
             return constants.RETURN_CODE_FAILURE
 
+    def redeem_trxn(self, user_id, grouped_redeem):
+        """
+
+        :param:
+        :return:
+        """
+        error_logger = logging.getLogger('django.error')
+        kwargs = {'exchange_backend': self, "redeem" : grouped_redeem}
+        xml_request_body = self._get_request_body(nse_constants.METHOD_REDEEMTXN, user_id, **kwargs)
+        root = self._get_data(nse_constants.METHOD_REDEEMTXN, xml_request_body=xml_request_body)
+        return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
+        if return_code == nse_constants.RETURN_CODE_SUCCESS:
+            return constants.RETURN_CODE_SUCCESS
+        else:
+            error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
+            for error in error_responses:
+                error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text
+                error_logger.error(error_msg)
+            return constants.RETURN_CODE_FAILURE
 
     def generate_bank_mandate_registration(self, user_id, mandate_amount):
         """
@@ -306,5 +329,7 @@ class NSEBackend(ExchangeBackend):
         else:
             return None, constants.FAILED_TO_PUNCH_TRANSACTION
                 
-        
+    def create_redeem(self, user_id, grouped_redeem):
+        return self.redeem_trxn(user_id, grouped_redeem), None
+    
         

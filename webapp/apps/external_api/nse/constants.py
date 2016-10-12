@@ -198,7 +198,9 @@ TRXN_NO_XPATH = SERVICE_REQUEST_PATH + '/trxn_no'
 CEASE_REQ_DATE_XPATH = SERVICE_REQUEST_PATH + '/cease_req_date'
 INSTBY_XPATH = SERVICE_REQUEST_PATH + '/initiated_by'
 NIGO_REMARKS_XPATH = SERVICE_REQUEST_PATH + '/nigo_remarks'
-
+AMOUNT_UNIT_TYPE_XPATH = SERVICE_REQUEST_PATH + '/amt_unit_type'
+AMOUNT_UNIT_XPATH = SERVICE_REQUEST_PATH + '/amt_unit'
+ALL_UNITS_XPATH = SERVICE_REQUEST_PATH + '/all_units'
 
 # NSE VARIABLES
 
@@ -217,6 +219,7 @@ NSE_NMF_BROKER_CODE = "ARN-108537"
 
 METHOD_CREATECUSTOMER = "CREATECUSTOMER"
 METHOD_PURCHASETXN = "PURCHASETRXN"
+METHOD_REDEEMTXN = "REDEEMTRXN"
 METHOD_UPLOADIMG = "UPLOADIMG"
 METHOD_GETIIN = "GETIIN"
 METHOD_ACHMANDATEREGISTRATIONS = "ACHMANDATEREGISTRATIONS"
@@ -437,6 +440,34 @@ REQUEST_PURCHASETXN = '''<NMFIIService>
                             <until_cancelled></until_cancelled>
                             <Return_paymnt_flag></Return_paymnt_flag>
                             <Client_callback_url></Client_callback_url>
+                            <trans_count></trans_count>
+                            </service_request>
+                        </NMFIIService>'''
+
+REQUEST_REDEEM_CHILDTXN = '''<NMFIIService>
+                                <childtrans>
+                                    <amc></amc>
+                                    <folio></folio>
+                                    <product_code></product_code>
+                                    <amt_unit_type></amt_unit_type>
+                                    <amt_unit></amt_unit>
+                                    <all_units></all_units>
+                                </childtrans>
+                            </NMFIIService>'''
+
+REQUEST_REDEEMTXN = '''<NMFIIService>
+                            <service_request>
+                            <appln_id>''' + NSE_NMF_APPL_ID + '''</appln_id>
+                            <password>''' + NSE_NMF_PASSWORD + '''</password>
+                            <broker_code>''' + NSE_NMF_BROKER_CODE + '''</broker_code>
+                            <iin></iin>
+                            <poa></poa>
+                            <trxn_acceptance></trxn_acceptance>
+                            <dp_id></dp_id>
+                            <bank_name></bank_name>
+                            <ac_no></ac_no>
+                            <ifsc_code></ifsc_code>
+                            <remarks></remarks>
                             <trans_count></trans_count>
                             </service_request>
                         </NMFIIService>'''
