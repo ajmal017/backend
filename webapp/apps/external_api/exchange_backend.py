@@ -94,4 +94,8 @@ class ExchangeBackend(ABC):
 
     def generate_payment_link(self, transaction):
         return NotImplementedError
+
+    def create_redeem(self, user_id, grouped_redeem):
+        return NotImplementedError
+
     

@@ -68,7 +68,7 @@ def generate_order_pipe_file(user_id, order_detail):
     return output_path + bulk_order_pipe_file_name
 
 
-def generate_redeem_pipe_file(user, redeem_items):
+def generate_redeem_pipe_file(user_id, grouped_redeem):
     """
     This function generates a pipe separated file for redeem.
     :param redeem_items: list of redeem_items for that redeem_detail
@@ -81,6 +81,10 @@ def generate_redeem_pipe_file(user, redeem_items):
     timestamp = time.strftime("%Y%m%d-%H%M%S")
     redeem_pipe_file_name = "redeem_pipe" + timestamp + ".txt"
     outfile = open(output_path + redeem_pipe_file_name, "w")
+    
+    redeem_items = grouped_redeem.redeem_details.all()
+    user = profile_models.User.objects.get(id=user_id)
+    
     for i, item in enumerate(redeem_items):
 
         neft_code = ''
