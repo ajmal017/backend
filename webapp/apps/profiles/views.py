@@ -1734,26 +1734,22 @@ class GoogleLogin(APIView):
         email = serializer.initial_data.get("email")
         
         auth_code = request.data['auth_code']
-        print(auth_code)
-        
+
         kwargs = {'email': email, 'access_token': ''}
         user,user_detail = utils.check_existing_user_email(**kwargs)
-        
-        print(user_detail)
-        
-        if user_detail == constants.GOOGLE_LOGIN_2:
+
+        if user_detail == constants.GOOGLE_LOGIN_EXIST_GOOGLE_USER:
             ## registered Through Google  --> login Details
-            phone_number = user.phone_number
-            user_status = constants.GOOGLE_LOGIN_2
+            user_status = constants.GOOGLE_LOGIN_EXIST_GOOGLE_USER
         
-        elif user_detail == constants.GOOGLE_LOGIN_4:
+        elif user_detail == constants.GOOGLE_LOGIN_EXIST_FINASKUS_USER:
             ## registered Through Finaskus App  --> it has to be merge with google
-            user_status = constants.GOOGLE_LOGIN_4
+            user_status = constants.GOOGLE_LOGIN_EXIST_FINASKUS_USER
             return api_utils.response({"res":{},"user_status":user_status})
            
         else:
             ## Not yet Registered 
-            user_status = constants.GOOGLE_LOGIN_3
+            user_status = constants.GOOGLE_REGISTER
             login_error = constants.LOGIN_ERROR_1
             return api_utils.response({"res":{},"user_status":user_status})
         
@@ -1762,24 +1758,13 @@ class GoogleLogin(APIView):
             return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": login_error},
                                       status.HTTP_404_NOT_FOUND,
                                       constants.PHONE_AND_EMAIL_NOT_VERIFIED)
-        if phone_number and not user.phone_number_verified:
-            login_error = constants.LOGIN_ERROR_3
-            return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": login_error},
-                                      status.HTTP_404_NOT_FOUND,
-                                      constants.PHONE_NOT_VERIFIED)
-        if email and not user.email_verified:
-            login_error = constants.LOGIN_ERROR_4
-            return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": login_error},
-                                      status.HTTP_404_NOT_FOUND,
-                                      constants.EMAIL_NOT_VERIFIED)
-
+            
         serializer = serializers.UserRegisterSerializer(user)
         if serializer.is_valid:
             if user.is_active:
-                if user_status == constants.GOOGLE_LOGIN_2:
+                if user_status == constants.GOOGLE_LOGIN_EXIST_GOOGLE_USER:
                     
                     access_token = helpers.convert_auth_to_access_token(auth_code)
-                    print(access_token)
                     
                     if access_token is not None:
                         convert_token = helpers.convert_social_access_token(access_token)
@@ -1799,9 +1784,8 @@ class GoogleLogin(APIView):
                                                    })
                     else:
                         return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": "login_error"},
-                                                    status.HTTP_408_REQUEST_TIMEOUT,
-                                                    "Login Failed for google Please try again")  
- 
+                                                    status.HTTP_404_NOT_FOUND,
+                                                    constants.GOOGLE_LOGIN_ERROR)  
             else:
                 login_error = constants.LOGIN_ERROR_6
                 return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": login_error},
@@ -1826,30 +1810,14 @@ class GoogleRegister(APIView):
         phone = serializer.initial_data.get("phone_number")
         kwargs = {'email': email, 'phone_number': phone, 'password': ''}
         utils.check_existing_user(**kwargs)
-        result = utils.get_situation(**kwargs)
-        kwargs.pop('password')
-        # print(result)
-        if result in (0, 2):
-            return api_utils.response({"message": constants.SIGNUP_ERROR, "signup_error": result},
-                                      status.HTTP_404_NOT_FOUND,
-                                      constants.USER_ALREADY_EXISTS)
-        
-        elif result == 4:
-            return api_utils.response({"message": constants.SIGNUP_ERROR, "signup_error": result}, status.HTTP_404_NOT_FOUND,
-                                      constants.EMAIL_EXISTS)
-        elif result == 5:
-            return api_utils.response({"message": constants.SIGNUP_ERROR, "signup_error": result}, status.HTTP_404_NOT_FOUND,
-                                      constants.PHONE_EXISTS)
-        
             
         auth_code = request.POST.get('auth_code', False)
-        print(auth_code)
+        
         access_token = helpers.convert_auth_to_access_token(auth_code)
-        print(access_token)
-            
+         
         if access_token is not None:
             convert_token = helpers.convert_social_access_token(access_token)
-            print(convert_token)
+            
             user = utils.get_social_user(email)
                 
             if user is not None:
@@ -1889,16 +1857,16 @@ class GoogleRegister(APIView):
                 else:
                     return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(serializer.errors))
             else:
-                return api_utils.response({}, status.HTTP_408_REQUEST_TIMEOUT,
-                                          "Login Failed for google Please try again")
+                return api_utils.response({}, status.HTTP_404_NOT_FOUND,
+                                              constants.GOOGLE_LOGIN_ERROR) 
         else:
-            return api_utils.response({}, status.HTTP_408_REQUEST_TIMEOUT,
-                                      "Login Failed for google Please try again") 
+            return api_utils.response({}, status.HTTP_404_NOT_FOUND,     
+                                              constants.GOOGLE_LOGIN_ERROR) 
         
 
 
 
-class GoogleRegisterFirst(APIView):
+class GoogleRegisterExistingUser(APIView):
     """
     Google Register views , User have registered through finaskus app but through google its first time ##4
     """
@@ -1909,11 +1877,8 @@ class GoogleRegisterFirst(APIView):
         password = request.data['password']
         auth_code = request.POST.get('auth_code', False)
         user = utils.get_social_user(email)
-        print(auth_code)
         if user.check_password(password):
             access_token = helpers.convert_auth_to_access_token(auth_code)
-            
-            print(access_token)
             
             if access_token is not None:
         
@@ -1940,8 +1905,7 @@ class GoogleRegisterFirst(APIView):
                     try:
                         user = backend.do_auth(token, user=authed_user)
                         convert_token = helpers.convert_social_access_token(access_token)
-                        print(convert_token)
-                        
+
                     except AuthAlreadyAssociated:
                         # You can't associate a social account with more than user
                         return Response({"errors": "That social media account is already in use"},
@@ -1987,8 +1951,8 @@ class GoogleRegisterFirst(APIView):
             else:
                 login_error = constants.LOGIN_ERROR_5
                 return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": login_error},
-                                                  status.HTTP_408_REQUEST_TIMEOUT,
-                                                  "Login Failed for google Please try again")
+                                                  status.HTTP_404_NOT_FOUND,
+                                                  constants.GOOGLE_LOGIN_ERROR) 
         else:
             login_error = constants.LOGIN_ERROR_5
             return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": login_error},

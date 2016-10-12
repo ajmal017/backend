@@ -334,6 +334,8 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '408406696644-sesnpe3i5lftggivp41njj1hk6845o08.a
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = 'LrQr2OXOaVlIFutcHtAOZNFp'
 
 
+GOOGLE_PLUS_AUTH_URL = 'https://accounts.google.com/o/oauth2/token'
+
 LOGIN_URL = '/login/'
 DEFAULT_CHARSET = 'ISO-8859-1'
 AUTH_USER_MODEL = 'profiles.User'

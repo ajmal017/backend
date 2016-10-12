@@ -95,9 +95,11 @@ SIGNUP_ERROR_5 = 5  # 101 - only phone matches: user with this phone_number alre
 SIGNUP_ERROR_6 = 6  # 110 - both same + different password + not verified: update user's password and
 #  ask them to verify.
 
-GOOGLE_LOGIN_2 = 2  # User already Registered through google and trying to login through google
-GOOGLE_LOGIN_3 = 3  # Fresh Registration through google
-GOOGLE_LOGIN_4 = 4  # User already Registered through Finaskus and trying to login through google
+GOOGLE_LOGIN_EXIST_GOOGLE_USER = 2  # User already Registered through google and trying to login through google
+GOOGLE_REGISTER = 3  # Fresh Registration through google
+GOOGLE_LOGIN_EXIST_FINASKUS_USER = 4  # User already Registered through Finaskus and trying to login through google
+
+GOOGLE_LOGIN_ERROR = "Login failed with Google. Please try again ."
 
 DEFAULT_CONTACT_INFO = {
                         "communication_address": {},

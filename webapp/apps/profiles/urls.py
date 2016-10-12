@@ -58,7 +58,7 @@ urlpatterns = [
     
     url(r"^google/login/$", views.GoogleLogin.as_view(), name='login-social-user'),
     url(r"^google/register/$", views.GoogleRegister.as_view(), name='register-social-user'),
-    url(r"^google/register/first/$", views.GoogleRegisterFirst.as_view(), name='register-social-user'),
+    url(r"^google/register/first/$", views.GoogleRegisterExistingUser.as_view(), name='register-social-user'),
    
     
 

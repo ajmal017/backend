@@ -507,13 +507,13 @@ def check_existing_user_email(**kwargs):
            
             ## returns True if exist else Flase
             if social_user == True:
-                result =  cons.GOOGLE_LOGIN_2
+                result =  cons.GOOGLE_LOGIN_EXIST_GOOGLE_USER
             else:
-                result = cons.GOOGLE_LOGIN_4
+                result = cons.GOOGLE_LOGIN_EXIST_FINASKUS_USER
         except:
-            result =  cons.GOOGLE_LOGIN_4
+            result =  cons.GOOGLE_LOGIN_EXIST_FINASKUS_USER
     except profile_models.User.DoesNotExist:
-        result = cons.GOOGLE_LOGIN_3
+        result = cons.GOOGLE_REGISTER
         user = None
         
     return user,result

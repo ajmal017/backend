@@ -71,7 +71,7 @@ def convert_social_access_token(access_token):
 
 def convert_auth_to_access_token(auth_code):
     data = {'grant_type':'authorization_code','code':auth_code,'client_id':settings.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY,'client_secret':settings.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET}
-    response = requests.post('https://accounts.google.com/o/oauth2/token', data=data)
+    response = requests.post(settings.GOOGLE_PLUS_AUTH_URL, data=data)
     responseJSON = response.json()
     if responseJSON.get('access_token'):     
         return responseJSON['access_token']
