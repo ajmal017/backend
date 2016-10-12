@@ -67,4 +67,3 @@ class VendorHelper():
 vendor_helper = VendorHelper()
 def get_exchange_vendor_helper():
     return vendor_helper
-            

@@ -129,9 +129,8 @@ class NSEBackend(ExchangeBackend):
         root = self._get_data(nse_constants.METHOD_CEASESIP, xml_request_body=xml_request_body)
         return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
         if return_code == nse_constants.RETURN_CODE_SUCCESS:
-            return nse_constants.RETURN_CODE_SUCCESS
+            return constants.RETURN_CODE_SUCCESS
         else:
-            createFlag = False
             error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
             for error in error_responses:
                 error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text

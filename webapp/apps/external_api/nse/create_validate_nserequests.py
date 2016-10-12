@@ -593,9 +593,6 @@ def achmandateregistrationsrequest(root, user_id, **kwargs):
     :return:
     """
     user = models.User.objects.get(id=user_id)
-    mandate_amount = kwargs.get('mandate_amount')
-    exch_backend = kwargs.get('exchange_backend')
-    user_vendor = models.UserVendor.objects.get(user=user, name=exch_backend.vendor_name)
     investor_bank = models.InvestorBankDetails.objects.get(user=user)
     curr_date = datetime.now()
     mandate_amount = kwargs.get('mandate_amount')
@@ -606,12 +603,12 @@ def achmandateregistrationsrequest(root, user_id, **kwargs):
     investor_dict = {
         constants.IIN_XPATH: user_vendor.ucc,
         constants.ACC_NO_XPATH: investor_bank.account_number,
-        constants.ACC_TYPE_XPATH: None,
+        constants.ACC_TYPE_XPATH: 'SB', #TODO: investor_bank.account_type
         constants.IFSC_CODE_XPATH: investor_bank.ifsc_code.ifsc_code,
         constants.BANK_NAME_XPATH: bankcodes.bank_code_map.get(investor_bank.ifsc_code.name),
         constants.BRANCH_NAME_XPATH: investor_bank.ifsc_code.bank_branch,
         constants.MICR_NO_XPATH: investor_bank.ifsc_code.micr_code,
-        constants.UC_XPATH: 'Y', # Until Cancelled - default date will be 31-Dec-2999
+        constants.UC_XPATH: 'Y',
         constants.ACH_FROM_DATE_XPATH: curr_date.strftime('%d-%b-%Y'),
         constants.ACH_TO_DATE_XPATH: '31-Dec-2999',
         constants.ACH_AMOUNT_XPATH: mandate_amount
