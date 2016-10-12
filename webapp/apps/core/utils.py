@@ -823,10 +823,16 @@ def get_funds_to_allocate_to_user(type, number_of_funds_by_sip, number_of_funds_
     fund ranks else the fund ids specified in the list will be added to portfolio
     :return: a dict of funds ids to allocate to user
     """
+    
     fund_ids_updated = []
     number_of_funds = max(number_of_funds_by_lumpsum, number_of_funds_by_sip)
     if funds is None:
-        fund_objects = models.Fund.objects.filter(type_of_fund=constants.FUND_MAP[type], is_enabled=True
+        if type == constants.EQUITY and number_of_funds == constants.MAX_NUMBER_EQUITY_FUNDS:
+            
+            fund_objects = recommendedPortfolio_equity(type)
+            
+        else:
+            fund_objects = models.Fund.objects.filter(type_of_fund=constants.FUND_MAP[type], is_enabled=True
                                            ).order_by('fund_rank')[:number_of_funds]
     else:
         fund_data = models.Fund.objects.in_bulk(funds)
@@ -846,6 +852,24 @@ def get_funds_to_allocate_to_user(type, number_of_funds_by_sip, number_of_funds_
         portfolio_id=portfolio, fund__type_of_fund=constants.FUND_MAP[type]).exclude(fund__id__in=fund_ids_updated)
     funds_to_be_deleted.delete()
 
+
+def recommendedPortfolio_equity(type):
+    fund_objects = []
+    
+    mid_cap_count = constants.MAX_NUMBER_EQUITY_FUNDS - constants.MAX_NUMBER_EQUITY_FUNDS_LARGE
+    
+    fund_object_cat1 = models.Fund.objects.filter(type_of_fund=constants.FUND_MAP[type], 
+                                                         category_name=constants.FUND_CATEGORY_NAME_LARGE, is_enabled=True
+                                                         ).order_by('fund_rank')[:constants.MAX_NUMBER_EQUITY_FUNDS_LARGE]
+    fund_objects.extend(fund_object_cat1)
+            
+    fund_object_cat2 = models.Fund.objects.filter(type_of_fund=constants.FUND_MAP[type], 
+                                                          category_name=constants.FUND_CATEGORY_NAME_MID, is_enabled=True
+                                                          ).order_by('fund_rank')[:mid_cap_count]
+    fund_objects.extend(fund_object_cat2)
+    
+    return fund_objects
+    
 
 def amount_allocation(type, number_of_funds_by_sip, number_of_funds_by_lumpsum, sip_lumpsum_allocation):
     """

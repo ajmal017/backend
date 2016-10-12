@@ -174,11 +174,18 @@ class User(AbstractBaseUser, TimeStampedModel):
         return str(self.email)
 
     def save(self, *args, **kwargs):
+        if self.pk is not None:
+            if self.user_video:
+                orig = User.objects.get(pk=self.pk)
+                if not orig.user_video:
+                    helpers.send_user_video_upload_email(self,use_https=settings.USE_HTTPS)
         if not self.id:
             self.id = api_utils.gen_hash(api_utils.expires())
         if self.vault_locked==False:
             self.is_terms = False
             self.is_declaration = False
+        
+        
 
         self.clean()
 

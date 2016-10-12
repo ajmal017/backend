@@ -342,3 +342,9 @@ CHECK_PORTFOLIO_DISTRIBUTION_MESSAGE = 'You have modified your portfolio and sel
                                        'another scheme.'
 
 MOST_POPULAR_FUND = "most_popular_funds"
+
+
+FUND_CATEGORY_NAME_LARGE = "Large-Cap"
+FUND_CATEGORY_NAME_MID = "Small/Mid-Cap"
+MAX_NUMBER_EQUITY_FUNDS = 4
+MAX_NUMBER_EQUITY_FUNDS_LARGE = 3

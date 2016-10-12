@@ -547,4 +547,18 @@ def send_mail_admin_next_sip(users,current_date,target_date, domain_override=Non
              'protocol': 'https' if use_https else 'http',
                }
     send_mail(subject_template_name, email_template_name, context, from_email, settings.DEFAULT_TO_EMAIL,
+              html_email_template_name=None)  
+    
+def send_user_video_upload_email(user,domain_override=None, subject_template_name='user_video/subject.txt',
+                                    email_template_name='user_video/user_video_email.html', use_https=False,
+                                    token_generator=default_token_generator, from_email=None, request=None,
+                                    html_email_template_name=None, extra_email_context=None):
+    
+    context = {     
+             'domain': settings.SITE_API_BASE_URL,
+             'site_name': "Finaskus",
+             'user': user,
+             'protocol': 'https' if use_https else 'http',
+               }
+    send_mail(subject_template_name, email_template_name, context, from_email, settings.DEFAULT_TO_EMAIL,
               html_email_template_name=None)    

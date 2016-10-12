@@ -1274,8 +1274,13 @@ class GetCategorySchemes(APIView):
         for category in constants.FUND_CATEGORY_LIST:
             if reset == category:
                 # serializes all categories of funds
-                user_category_fund_list = models.Fund.objects.filter(
-                    is_enabled=True, type_of_fund=constants.FUND_MAP[reset]).order_by("fund_rank")[:RANK_MAP[reset]]
+                if reset == constants.EQUITY and RANK_MAP[reset] == constants.MAX_NUMBER_EQUITY_FUNDS:
+                    
+                    user_category_fund_list = utils.recommendedPortfolio_equity(reset)
+                    
+                else:    
+                    user_category_fund_list = models.Fund.objects.filter(
+                        is_enabled=True, type_of_fund=constants.FUND_MAP[reset]).order_by("fund_rank")[:RANK_MAP[reset]]
                 user_category_fund_list_ids = [i.id for i in user_category_fund_list]
                 other_category_fund_list = models.Fund.objects.filter(
                     type_of_fund=constants.FUND_MAP[reset]).exclude(
