@@ -203,8 +203,11 @@ class GenerateBseOrderPipe(View):
             order_detail = OrderDetail.objects.get(order_id=request.GET.get('order_id'))
             if is_investable(order_detail.user):
                 exch_backend = helpers.get_exchange_vendor_helper().get_backend_instance()
+                order_vendor = order_detail.vendor
+                if order_vendor:
+                    exch_backend = helpers.get_exchange_vendor_helper().get_backend_instance(order_vendor.name) 
                 if exch_backend:
-                    error_status, output_file = exch_backend.create_order(order_detail.user.id, order_detail).split('/')[-1]
+                    error_status, output_file = exch_backend.create_order(order_detail.user.id, order_detail)
                     if error_status == constants.RETURN_CODE_SUCCESS:
                         if output_file:
                             output_file = output_file.split('/')[-1]
@@ -427,21 +430,23 @@ class GenerateBseRedeemPipe(View):
 
         if request.user.is_superuser:
             group_redeem_detail = GroupedRedeemDetail.objects.get(id=request.GET.get('group_redeem_id'))
-            redeem_items = group_redeem_detail.redeem_details.all()
             if is_investable(group_redeem_detail.user):
-                output_file = \
-                bulk_order_entry.generate_redeem_pipe_file(group_redeem_detail.user, redeem_items).split('/')[-1]
-                prefix = 'webapp'
-                my_file_path = prefix + constants.STATIC + output_file
-                my_file = open(my_file_path, "rb")
-                content_type = 'text/plain'
-                response = HttpResponse(my_file, content_type=content_type, status=200)
-                response['Content-Disposition'] = 'attachment;filename=%s' % str(group_redeem_detail.id) + 'redeem.txt'
-                my_file.close()
-                return response  # contains the pdf of the pertinent user
-            else:
-                # file doesn't exist because investor vault is incomplete.
-                return HttpResponse(payment_constant.CANNOT_GENERATE_FILE, status=404)
+                exch_backend = helpers.get_exchange_vendor_helper().get_backend_instance()
+                if exch_backend:
+                    error_status, output_file = exch_backend.create_redeem(group_redeem_detail.user.id, group_redeem_detail)
+                    if error_status == constants.RETURN_CODE_SUCCESS:
+                        if output_file:
+                            output_file =  output_file.split('/')[-1]
+                            prefix = 'webapp'
+                            my_file_path = prefix + constants.STATIC + output_file
+                            my_file = open(my_file_path, "rb")
+                            content_type = 'text/plain'
+                            response = HttpResponse(my_file, content_type=content_type, status=200)
+                            response['Content-Disposition'] = 'attachment;filename=%s' % str(group_redeem_detail.id) + 'redeem.txt'
+                            my_file.close()
+                            return response  # contains the pdf of the pertinent user
+            # file doesn't exist because investor vault is incomplete.
+            return HttpResponse(payment_constant.CANNOT_GENERATE_FILE, status=404)
         else:
             # non-admin is trying to access the file. Prevent access.
             return HttpResponse(constants.FORBIDDEN_ERROR, status=403)

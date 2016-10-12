@@ -412,7 +412,9 @@ def purchasetxnrequest(root, child_root, user_id, **kwargs):
     order_items = order_detail.fund_order_items.all()
 
     child_items = []
+    total_amount = 0
     for item in order_items:
+        total_amount += item.order_amount
         item_fund = item.portfolio_item.fund
         neft_code = ''
         fund_vendor = core_models.FundVendorInfo.objects.get(fund=item_fund, vendor=user_vendor.vendor)
@@ -427,8 +429,8 @@ def purchasetxnrequest(root, child_root, user_id, **kwargs):
         if item_fund.fund_house:
             fund_house = item_fund.fund_house
             try:
-                folio_number = models.FolioNumber.objects.get(user=user, fund_house=fund_house).folio_number
-            except models.FolioNumber.DoesNotExist:
+                folio_number = core_models.FolioNumber.objects.get(user=user, fund_house=fund_house).folio_number
+            except core_models.FolioNumber.DoesNotExist:
                 folio_number = None
 
         child_dict = {
@@ -467,7 +469,7 @@ def purchasetxnrequest(root, child_root, user_id, **kwargs):
         constants.INSTRM_BANK_XPATH: None,
         constants.INSTRM_AC_NO_XPATH: None,
         constants.INSTRM_NO_XPATH: None,
-        constants.INSTRM_AMOUNT_XPATH: None,
+        constants.INSTRM_AMOUNT_XPATH: total_amount,
         constants.INSTRM_DATE_XPATH: None,
         constants.INSTRM_BRANCH_XPATH: None,
         constants.INSTRM_CHARGES_XPATH: None,
@@ -517,10 +519,72 @@ def purchasetxnrequest(root, child_root, user_id, **kwargs):
         constants.CLIENT_CALLBACK_URL_XPATH: constants.PAYMENT_RU, #TODO
         constants.TRANS_COUNT_XPATH: len(child_items)
     }
-
-
     return getValidRequestWithMultipleChildren(investor_dict, child_items, root, child_root)
 
+def redeemtxnrequest(root, child_root, user_id, **kwargs):
+    """
+
+    :param user_id: id of user for whom the nse_request is to be generated
+    :return:
+    """
+    user = models.User.objects.get(id=user_id)
+    exch_backend = kwargs.get('exchange_backend')
+    user_vendor = models.UserVendor.objects.get(user=user, vendor__name=exch_backend.vendor_name)
+    investor_bank = models.InvestorBankDetails.objects.get(user=user)
+    grouped_redeem = kwargs.get("redeem")
+    redeem_items = grouped_redeem.redeem_details.all()
+
+    child_items = []
+    total_amount = 0
+    for item in redeem_items:
+        total_amount += item.order_amount
+        item_fund = item.portfolio_item.fund
+        neft_code = ''
+        fund_vendor = core_models.FundVendorInfo.objects.get(fund=item_fund, vendor=user_vendor.vendor)
+        if fund_vendor.neft_scheme_code:
+            neft_code = fund_vendor.neft_scheme_code
+        rtgs_code = ""
+        if fund_vendor.rtgs_scheme_code:
+            rtgs_code = fund_vendor.rtgs_scheme_code
+
+        fund_house = None
+        folio_number = None
+        if item_fund.fund_house:
+            fund_house = item_fund.fund_house
+            try:
+                folio_number = core_models.FolioNumber.objects.get(user=user, fund_house=fund_house).folio_number
+            except core_models.FolioNumber.DoesNotExist:
+                folio_number = None
+
+        redeem_value = str(item.redeem_amount)
+        all_units = "N"
+        if item.is_all_units_redeemed:
+            all_units = "Y"
+
+        child_dict = {
+            constants.AMC_XPATH: get_amc_code(fund_house.name.upper()) if fund_house is not None else None,
+            constants.FOLIO_XPATH: folio_number,
+            constants.PRODUCT_CODE_XPATH: neft_code if item.order_amount < 200000 else rtgs_code,
+            constants.AMOUNT_UNIT_TYPE_XPATH: item.order_amount,
+            constants.AMOUNT_UNIT_XPATH: item.order_amount,
+            constants.ALL_UNITS_XPATH: item.order_amount,
+        }
+        
+        child_items.append(child_dict)
+
+    investor_dict = {
+        constants.IIN_XPATH: user_vendor.ucc,
+        constants.POA_XPATH: 'N', # Executed by POA , values 'Y' or 'N'
+        constants.TRXN_ACCEPTANCE_XPATH: 'ALL', # By Phone , online or both
+        constants.DP_ID_XPATH: None,
+        constants.BANK_NAME_XPATH: bankcodes.bank_code_map.get(investor_bank.ifsc_code.name),
+        constants.AC_NO_XPATH: investor_bank.account_number,
+        constants.IFSC_CODE_XPATH: investor_bank.ifsc_code.ifsc_code,
+        constants.REMARKS_XPATH: None,
+        constants.TRANS_COUNT_XPATH: len(child_items)
+    }
+
+    return getValidRequestWithMultipleChildren(investor_dict, child_items, root, child_root)
 
 def achmandateregistrationsrequest(root, user_id, **kwargs):
     """
