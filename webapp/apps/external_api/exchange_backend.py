@@ -98,4 +98,3 @@ class ExchangeBackend(ABC):
     def create_redeem(self, user_id, grouped_redeem):
         return NotImplementedError
 
-    

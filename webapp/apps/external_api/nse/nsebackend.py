@@ -337,5 +337,3 @@ class NSEBackend(ExchangeBackend):
                 
     def create_redeem(self, user_id, grouped_redeem):
         return self.redeem_trxn(user_id, grouped_redeem), None
-
-    
