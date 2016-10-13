@@ -1746,9 +1746,6 @@ class GoogleLogin(APIView):
         elif user_detail == constants.GOOGLE_LOGIN_EXIST_FINASKUS_USER:
             ## registered Through Finaskus App  --> it has to be merge with google
             if not user.email_verified and not user.phone_number_verified:
-                logger = logging.getLogger('django.info')
-                logger.info("Profiles: check_existing_user: Deleting user: " + user.id)
-                user.delete()
                 user_status = constants.GOOGLE_REGISTER
                 login_error = constants.LOGIN_ERROR_1
                 return api_utils.response({"res":{},"user_status":user_status})
@@ -1826,7 +1823,11 @@ class GoogleRegister(APIView):
         access_token = helpers.convert_auth_to_access_token(auth_code)
          
         if access_token is not None:
-            convert_token = helpers.convert_social_access_token(access_token)
+            try:
+                convert_token = helpers.convert_social_access_token(access_token)
+            except:
+                return api_utils.response({}, status.HTTP_404_NOT_FOUND,
+                                              constants.GOOGLE_LOGIN_ERROR)
             
             user = utils.get_social_user(email)
                 
