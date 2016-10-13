@@ -396,13 +396,14 @@ class GenerateBseOrderPost(View):
 
         if request.user.is_superuser:
             order_detail = OrderDetail.objects.get(order_id=request.GET.get('order_id'))
+
             order_items = order_detail.fund_order_items.all()
             if is_investable(order_detail.user):
-                output_files,bulk_orders = bulk_order_entry.generate_order_pipe_file(order_detail.user, order_items)
+                output_files,bulk_orders = bulk_order_entry.generate_order_post_pipe_file(order_detail.user, order_items)
                 for index,val in enumerate(bulk_orders):
-                    order_post = bse_orders.Order(bulk_orders[index])
+                    data = list(bulk_orders[index].values())
+                    order_post = bse_orders.Order(data)
                     return HttpResponse(order_post)
-                    #return HttpResponse(val.values())
             else:
                 # file doesn't exist because investor vault is incomplete.
                 return HttpResponse(payment_constant.CANNOT_GENERATE_FILE, status=404)

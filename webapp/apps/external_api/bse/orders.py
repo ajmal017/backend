@@ -56,7 +56,7 @@ class Order(object):
         list_of_methods = [method for method in self.client.wsdl.services[0].ports[0].methods]
         print(list_of_methods)
 
-    def gp(self, bulk_orders, user_id, password, passkey="cat123"):
+    def gp(self, bulk_orders, user_id='1038201', password='123456#', passkey="cat123"):
         """
         # crete theTransaction objects as o = Order(constants.BSE_ORDER_GET_PASSWORD_URL)
         :param user_id:
@@ -71,7 +71,8 @@ class Order(object):
         
         if result is not None:
             token = result.split("|")
-            self.orderEntry(token[1],bulk_orders)
+            #self.orderEntry(token[1],bulk_orders)
+            return token
         else:
             return "Unable to get password"
          

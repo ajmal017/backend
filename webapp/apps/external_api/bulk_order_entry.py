@@ -7,6 +7,7 @@ from core import models
 from collections import OrderedDict
 import os
 import time
+import logging
 
 
 def generate_order_pipe_file(user, order_items):
@@ -64,6 +65,70 @@ def generate_order_pipe_file(user, order_items):
             bulk_order_dict.clear()
     outfile.close()
     return output_path + bulk_order_pipe_file_name
+
+
+def generate_order_post_pipe_file(user, order_items):
+    """
+    This function generates a pipe separated file for bulk order entry.
+    :param order_items: list of order_items for that order_detail
+    :param user: The user for which the file is being generated
+    :return: url of the generated pipe separated file of the bulk order entry
+    """
+
+    base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps', '')
+    output_path = base_dir + '/webapp/static/'
+    timestamp = time.strftime("%Y%m%d-%H%M%S")
+    bulk_order_pipe_file_name = "bulk_order_pipe" + timestamp + ".txt"
+    outfile = open(output_path + bulk_order_pipe_file_name, "w")
+    
+    bulk_order_dicts = []
+
+    for i, item in enumerate(order_items):
+        neft_code = ''
+        if item.portfolio_item.fund.bse_neft_scheme_code:
+            neft_code = item.portfolio_item.fund.bse_neft_scheme_code
+        rgts_code = ""
+        if item.portfolio_item.fund.bse_rgts_scheme_code:
+            rgts_code = item.portfolio_item.fund.bse_rgts_scheme_code
+
+        fund_house = ""
+        folio_number = ""
+        if item.portfolio_item.fund.fund_house:
+            fund_house = item.portfolio_item.fund.fund_house
+            try:
+                f_number = models.FolioNumber.objects.get(user=user, fund_house=fund_house).folio_number
+                if f_number:
+                    folio_number = f_number
+            except models.FolioNumber.DoesNotExist:
+                folio_number = ""
+
+        if int(order_items[i].agreed_lumpsum) < 10:
+            bulk_order_dict = OrderedDict([('SCHEME CODE', neft_code if item.order_amount < 200000 else rgts_code),
+                                           ('Purchase / Redeem', cons.Order_Purchase),
+                                           ('Buy Sell Type', cons.Order_Buy_Type),
+                                           ('Client Code', str(user.finaskus_id)),
+                                           ('Demat / Physical', cons.Order_Demat),
+                                           ('Order Val AMOUNT', str(order_items[i].agreed_lumpsum)),
+                                           ('Folio No (10 digits)', str(folio_number)),
+                                           ('Remarks', cons.Order_Remarks),
+                                           ('KYC Flag Char', cons.Order_KYC_Flag),
+                                           ('Sub Broker ARN Code', ''),
+                                           ('EUIN Number', cons.Order_EUIN_Number),
+                                           ('EUIN Declaration', cons.Order_EUIN_declaration),
+                                           ('MIN redemption flag', cons.Order_MIN_redemption_Flag),
+                                           ('DPC Flag', cons.Order_DPC_Flag),  # TODO:
+                                           ('All Units', cons.Order_All_Units),  # TODO:
+                                           ('Redemption Units', '')])  # TODO:
+                
+            outfile.write("|".join(bulk_order_dict.values()))
+            if i < len(order_items) - 1:
+                outfile.write("\r")
+            bulk_order_dicts.append(bulk_order_dict)    
+            #bulk_order_dict.clear()
+    outfile.close()
+    return output_path + bulk_order_pipe_file_name,bulk_order_dicts
+
+
 
 
 def generate_redeem_pipe_file(user, redeem_items):
