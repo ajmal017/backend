@@ -32,6 +32,7 @@ from datetime import datetime, timedelta, date
 from dateutil.relativedelta import relativedelta
 from copy import deepcopy
 import functools
+import logging
 import warnings
 import logging
 import threading
@@ -1730,7 +1731,7 @@ class GoogleLogin(APIView):
     """
     def post(self, request, format=None):
         
-        serializer = serializers.UserRegisterSerializer(data=request.data)
+        serializer = serializers.SocialUserRegisterSerializer(data=request.data)
         email = serializer.initial_data.get("email")
         
         auth_code = request.data['auth_code']
@@ -1744,8 +1745,17 @@ class GoogleLogin(APIView):
         
         elif user_detail == constants.GOOGLE_LOGIN_EXIST_FINASKUS_USER:
             ## registered Through Finaskus App  --> it has to be merge with google
-            user_status = constants.GOOGLE_LOGIN_EXIST_FINASKUS_USER
-            return api_utils.response({"res":{},"user_status":user_status})
+            if not user.email_verified and not user.phone_number_verified:
+                logger = logging.getLogger('django.info')
+                logger.info("Profiles: check_existing_user: Deleting user: " + user.id)
+                user.delete()
+                user_status = constants.GOOGLE_REGISTER
+                login_error = constants.LOGIN_ERROR_1
+                return api_utils.response({"res":{},"user_status":user_status})
+                
+            else:
+                user_status = constants.GOOGLE_LOGIN_EXIST_FINASKUS_USER
+                return api_utils.response({"res":{},"user_status":user_status})
            
         else:
             ## Not yet Registered 
@@ -1759,7 +1769,7 @@ class GoogleLogin(APIView):
                                       status.HTTP_404_NOT_FOUND,
                                       constants.PHONE_AND_EMAIL_NOT_VERIFIED)
             
-        serializer = serializers.UserRegisterSerializer(user)
+        serializer = serializers.SocialUserRegisterSerializer(user)
         if serializer.is_valid:
             if user.is_active:
                 if user_status == constants.GOOGLE_LOGIN_EXIST_GOOGLE_USER:
@@ -1871,7 +1881,7 @@ class GoogleRegisterExistingUser(APIView):
     Google Register views , User have registered through finaskus app but through google its first time ##4
     """
     def post(self, request, *args, **kwargs):
-        serializer = serializers.UserRegisterSerializer(data=request.data)
+        serializer = serializers.SocialUserRegisterSerializer(data=request.data)
         provider = 'google-oauth2'
         email = request.data['email']
         password = request.data['password']
@@ -1917,7 +1927,7 @@ class GoogleRegisterExistingUser(APIView):
                             auth_created.extra_data['access_token'] = token
                             auth_created.save()
     
-                        serializer = serializers.UserRegisterSerializer(user)
+                        serializer = serializers.SocialUserRegisterSerializer(user)
                         if serializer.is_valid:
                             user_response = dict(serializer.data)
                             return api_utils.response({"user": user_response, 
