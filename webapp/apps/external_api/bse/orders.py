@@ -56,7 +56,7 @@ class Order(object):
         list_of_methods = [method for method in self.client.wsdl.services[0].ports[0].methods]
         print(list_of_methods)
 
-    def gp(self, bulk_orders, user_id=settings.BSE_ORDER_USER_ID, password=settings.BSE_ORDER_PASSWORD, passkey="cat123"):
+    def gp(self, bulk_orders, user_id, password, passkey="cat123"):
         """
         # crete theTransaction objects as o = Order(constants.BSE_ORDER_GET_PASSWORD_URL)
         :param user_id:
