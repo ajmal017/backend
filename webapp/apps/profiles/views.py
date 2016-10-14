@@ -1818,62 +1818,67 @@ class GoogleRegister(APIView):
         kwargs = {'email': email, 'phone_number': phone, 'password': ''}
         utils.check_existing_user(**kwargs)
             
-        auth_code = request.POST.get('auth_code', False)
+        phone_exist = utils.phone_number_check(phone)
         
-        access_token = helpers.convert_auth_to_access_token(auth_code)
-         
-        if access_token is not None:
-            try:
-                convert_token = helpers.convert_social_access_token(access_token)
-            except:
-                return api_utils.response({}, status.HTTP_404_NOT_FOUND,
-                                              constants.GOOGLE_LOGIN_ERROR)
+        if phone_exist is None:     
+            auth_code = request.POST.get('auth_code', False)
             
-            user = utils.get_social_user(email)
+            access_token = helpers.convert_auth_to_access_token(auth_code)
+             
+            if access_token is not None:
+                try:
+                    convert_token = helpers.convert_social_access_token(access_token)
+                except:
+                    return api_utils.response({}, status.HTTP_404_NOT_FOUND,
+                                                  constants.GOOGLE_LOGIN_ERROR)
                 
-            if user is not None:
-                user.username = email
-                user.phone_number = phone
-                user.email_verified = True
-                  
-                if request.data['image'] is not None:
-                    url = request.data['image']
-                    ext = url.split('.')[-1]
-                    user.image.save('{0}.{1}'.format('image', ext),ContentFile(urllib2.urlopen(url).read()),save=False)
-                    user.identity_info_image.save('{0}.{1}'.format('image', ext),ContentFile(urllib2.urlopen(url).read()),save=False)
-                
-                user.save()
-                serializer = serializers.SocialUserRegisterSerializer(user, data=request.data)
-                if serializer.is_valid():
-                    user_response = dict(serializer.data)
-                    user_response['risk_score'], user_response['name'] = None, ""
+                user = utils.get_social_user(email)
                     
-                    sms_code = utils.get_sms_verification_code(user)
-                        # TODO : add provisions to add country code?
-                    send_sms_thread = threading.Thread(target=api.send_sms, args=(constants.OTP.format(sms_code), int(phone),))
-                    send_sms_thread.start()           
-                        #sms_code_sent = api.send_sms(constants.OTP.format(sms_code), int(phone))            
-                    return api_utils.response({"user": user_response, 
-                                                   "tokens": convert_token,
-                                                   "assess": core_utils.get_assess_answer(user),
-                                                   "plan": core_utils.get_plan_answers(user),
-                                                   "retirement": core_utils.get_category_answers(user, "retirement"),
-                                                   "tax": core_utils.get_category_answers(user, "tax"),
-                                                   "invest": core_utils.get_invest_answers(user),
-                                                   "education": core_utils.get_category_answers(user, "education"),
-                                                   "wedding": core_utils.get_category_answers(user, "wedding"),
-                                                   "property": core_utils.get_category_answers(user, "property"),
-                                                   "event": core_utils.get_category_answers(user, "event"),
-                                                   })
+                if user is not None:
+                    user.username = email
+                    user.phone_number = phone
+                    user.email_verified = True
+                      
+                    if request.data['image'] is not None:
+                        url = request.data['image']
+                        ext = url.split('.')[-1]
+                        user.image.save('{0}.{1}'.format('image', ext),ContentFile(urllib2.urlopen(url).read()),save=False)
+                        user.identity_info_image.save('{0}.{1}'.format('image', ext),ContentFile(urllib2.urlopen(url).read()),save=False)
+                    
+                    user.save()
+                    serializer = serializers.SocialUserRegisterSerializer(user, data=request.data)
+                    if serializer.is_valid():
+                        user_response = dict(serializer.data)
+                        user_response['risk_score'], user_response['name'] = None, ""
+                        
+                        sms_code = utils.get_sms_verification_code(user)
+                            # TODO : add provisions to add country code?
+                        send_sms_thread = threading.Thread(target=api.send_sms, args=(constants.OTP.format(sms_code), int(phone),))
+                        send_sms_thread.start()           
+                            #sms_code_sent = api.send_sms(constants.OTP.format(sms_code), int(phone))            
+                        return api_utils.response({"user": user_response, 
+                                                       "tokens": convert_token,
+                                                       "assess": core_utils.get_assess_answer(user),
+                                                       "plan": core_utils.get_plan_answers(user),
+                                                       "retirement": core_utils.get_category_answers(user, "retirement"),
+                                                       "tax": core_utils.get_category_answers(user, "tax"),
+                                                       "invest": core_utils.get_invest_answers(user),
+                                                       "education": core_utils.get_category_answers(user, "education"),
+                                                       "wedding": core_utils.get_category_answers(user, "wedding"),
+                                                       "property": core_utils.get_category_answers(user, "property"),
+                                                       "event": core_utils.get_category_answers(user, "event"),
+                                                       })
+                    else:
+                        return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(serializer.errors))
                 else:
-                    return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(serializer.errors))
+                    return api_utils.response({}, status.HTTP_404_NOT_FOUND,
+                                                  constants.GOOGLE_LOGIN_ERROR) 
             else:
-                return api_utils.response({}, status.HTTP_404_NOT_FOUND,
-                                              constants.GOOGLE_LOGIN_ERROR) 
+                return api_utils.response({}, status.HTTP_404_NOT_FOUND,     
+                                                  constants.GOOGLE_LOGIN_ERROR) 
         else:
-            return api_utils.response({}, status.HTTP_404_NOT_FOUND,     
-                                              constants.GOOGLE_LOGIN_ERROR) 
-        
+                return api_utils.response({}, status.HTTP_404_NOT_FOUND,
+                                               constants.PHONE_EXISTS)
 
 
 

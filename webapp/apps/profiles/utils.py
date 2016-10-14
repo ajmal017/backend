@@ -526,6 +526,13 @@ def get_social_user(email):
         user = None
     return user
 
+def phone_number_check(phone):
+    try:
+        user = profile_models.User.objects.get(phone_number=phone)
+    except profile_models.User.DoesNotExist:
+        user = None
+    return user
+
   
 
     

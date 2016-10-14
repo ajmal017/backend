@@ -17,7 +17,9 @@ class CustomUserManager(UserManager):
         """
 
         email = self.normalize_email(email)
+        temp_phone ='0000000000'
         extra_fields['username'] = extra_fields['username'] if extra_fields.get('username') else email
+        extra_fields['phone_number'] = extra_fields['phone_number'] if extra_fields.get('phone_number') else temp_phone
         user = self.model(email=email, is_staff=is_staff, is_active=True, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
