@@ -283,8 +283,11 @@ class GenerateBankMandateRegistration(View):
             order_detail = OrderDetail.objects.get(order_id=request.GET.get('order_id'))
             if is_investable(order_detail.user):
                 exch_backend = helpers.get_exchange_vendor_helper().get_backend_instance()
+                order_vendor = order_detail.vendor
+                if order_vendor:
+                    exch_backend = helpers.get_exchange_vendor_helper().get_backend_instance(order_vendor.name) 
                 if exch_backend:
-                    mandate_amount = pr_utils.get_investor_mandate_amount(order_detail.user, order_detail)
+                    mandate_amount = pr_utils.get_investor_mandate_amount(order_detail.user, order_detail, exch_backend.get_vendor())
                     status, output_file = exch_backend.generate_bank_mandate_registration(order_detail.user.id, mandate_amount)
                     if status == constants.RETURN_CODE_SUCCESS:
                         if output_file:
@@ -472,7 +475,7 @@ class GenerateMandatePdf(View):
             if exch_backend:
                 user = pr_models.User.objects.get(email=request.GET.get('email'))
                 if is_investable(user) and user.signature != "":
-                    mandate_amount = pr_utils.get_investor_mandate_amount(user, None)
+                    mandate_amount = pr_utils.get_investor_mandate_amount(user, None, exch_backend.get_vendor())
                     output_file, error = exch_backend.generate_bank_mandate(user.id, mandate_amount)
                     if output_file is None:
                         return HttpResponse(error, status=404)

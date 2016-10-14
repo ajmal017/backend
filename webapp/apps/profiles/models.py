@@ -293,6 +293,18 @@ class UserVendor(TimeStampedModel):
         unique_together = (('user', 'vendor'),)
 
 class UserVendor(TimeStampedModel):
+    user = models.ForeignKey(User)
+    vendor = models.ForeignKey(Vendor, related_name="user_vendor", blank=False, null=False)
+    ucc = models.CharField(max_length=40, default=None, blank=True, null=True)
+    ucc_registered = models.BooleanField(default=False)
+    fatca_filed = models.BooleanField(default=False)
+    tiff_mailed = models.BooleanField(default=False)
+    tiff_accepted = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = (('user', 'vendor'),)
+
+class UserBankMandate(TimeStampedModel):
     MANDATE_STATUS = (
         (constants.LEVEL_0, 'Pending'),
         (constants.LEVEL_1, 'Ongoing'),
@@ -301,18 +313,13 @@ class UserVendor(TimeStampedModel):
 
     user = models.ForeignKey(User)
     vendor = models.ForeignKey(Vendor, related_name="user_vendor", blank=False, null=False)
-    ucc = models.CharField(max_length=40, default=None, blank=True, null=True)
     mandate_registered = models.BooleanField(default=False)
     mandate_reg_no = models.CharField(_('Mandate Registration Number'), max_length=100, default=None, blank=True,
                                       null=True)
-    ucc_registered = models.BooleanField(default=False)
-    fatca_filed = models.BooleanField(default=False)
-    tiff_mailed = models.BooleanField(default=False)
-    tiff_accepted = models.BooleanField(default=False)
+    mandate_amount = models.FloatField(null=True, blank=True, default=0.00)
+    mandate_start_date = models.DateField()
+    mandate_ifsc_code = models.ForeignKey(BankDetails, blank=True, null=True)
     mandate_status = models.CharField(max_length=1, choices=MANDATE_STATUS, blank=True, default=constants.LEVEL_0)
-
-    class Meta:
-        unique_together = (('user', 'vendor'),)
 
 class VerificationSMSCode(TimeStampedModel):
     """
