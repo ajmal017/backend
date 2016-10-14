@@ -1,5 +1,6 @@
 from external_api.utils import generate_tiff
 from profiles import models
+from external_api import helpers
 
 from num2words import num2words
 from collections import OrderedDict
@@ -10,7 +11,17 @@ from . import constants as cons
 import os
 import time
 
-
+class BankMandateHelper(object):
+    def is_new_mandate_required(self, order_detail, create_new=False):
+        if order_detail:
+            mandate_vendor = order_detail.vendor
+        
+        if not mandate_vendor:
+            mandate_vendor = helpers.get_exchange_vendor_helper().get_active_vendor()
+            
+        return False;
+    
+    
 def generate_bank_mandate_file(user, mandate_amount):
     """
     This function generates a pipe separated file for bank mandate.

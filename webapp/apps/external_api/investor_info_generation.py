@@ -9,6 +9,7 @@ from .models import Pincode
 from .utils import embed_images
 from external_api import constants as cons
 from .kyc_pdf_generator import generate_kyc_pdf
+from external_api import helpers
 
 from datetime import datetime
 import time
@@ -27,6 +28,7 @@ def investor_info_generator(user_id):
     contact = models.ContactInfo.objects.get(user=user)
     investor_bank = models.InvestorBankDetails.objects.get(user=user)
     curr_date = datetime.now()
+    exch_backend = helpers.get_exchange_vendor_helper().get_backend_instance()
 
     if nominee.nominee_address == None:
         blank_pincode = Pincode(None, None, None)
@@ -34,7 +36,7 @@ def investor_info_generator(user_id):
         blank_address.pincode = blank_pincode
         nominee.nominee_address = blank_address
 
-    mandate_amount_no = utils.get_investor_mandate_amount(user, None)
+    mandate_amount_no = utils.get_investor_mandate_amount(user, None, exch_backend.get_vendor())
 
     investor_dict = {
         # 'MandateDebitTypeMaxAmount': True,
