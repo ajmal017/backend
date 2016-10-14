@@ -929,12 +929,14 @@ class LeaderBoard(APIView):
         hscore = request.data.get('hscore', constants.DEFAULT_HIGH_SCORE)
         gender = request.data.get('gender', constants.DEFAULT_GENDER)
         occupation_choice = request.data.get('occupation_choice', constants.DEFAULT_OCCUPATION)
+        
         """
         get the from and to filter date
         pass None if date has not from front end
+        
+        ldate = request.data.get('ldate', None)
+        hdate = request.data.get('hdate', None)
         """
-        ldate = '2016-10-01 15:58:15'
-        hdate = '2016-10-13 15:58:15'
         
         try:
             investor_portfolio = profile_models.AggregatePortfolio.objects.get(user=request.user)
@@ -970,13 +972,13 @@ class LeaderBoard(APIView):
             query["user__investorinfo__income"] = sal
         """  
         Adding date filter to the leader board filter
-        """ 
+        
         if ldate is not None:
             query["user__portfolio__created_at__gte"] = ldate
             
         if hdate is not None:
             query["user__portfolio__created_at__lte"] = hdate
-        
+        """ 
             
         if occupation_choice != constants.DEFAULT_OCCUPATION:
             if type(occupation_choice) == list:

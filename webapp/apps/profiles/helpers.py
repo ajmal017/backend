@@ -293,6 +293,7 @@ def send_transaction_change_email(first_order,order_detail,applicant_name,user,e
             if all(sips < 1 for sips in order_detail.all_sips) & any(lumpsums > 0 for lumpsums in order_detail.all_lumpsums):
                 html_email_template_name='transaction/user-confirm-status-change.html'
                 email_attachment = None
+                attachment_error = None
             else:
                 html_email_template_name='transaction/user-confirm-status-change-sip.html'
         else:
