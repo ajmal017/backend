@@ -247,7 +247,7 @@ class User(AbstractBaseUser, TimeStampedModel):
         if len(texts) == 0:
             return None
         return min(texts),len(texts)
-
+    
 
 class VerificationSMSCode(TimeStampedModel):
     """

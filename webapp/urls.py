@@ -38,6 +38,8 @@ urlpatterns = [
     url(r"^v1.0/", views.DeprecateAPI.as_view(), name="DeprecateAPI"),
     url(r'^o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
     url('', include('django.contrib.auth.urls')),
+    url(r"^social/", include('social.apps.django_app.urls', namespace='social')),
+    url(r"^auth/", include('rest_framework_social_oauth2.urls')),
     url(r"^$", views.index, name='index'),
     url(r"^privacy/$", views.privacy, name='privacy'),
     url(r"^terms/$", views.terms, name='terms'),
