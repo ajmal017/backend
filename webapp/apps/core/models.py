@@ -187,10 +187,20 @@ def get_next_allotment_date(fund_id, send_date):
     return next_month_date
 
 def get_next_allotment_date_or_start_date(fund_order_item):
+    investment_date = fund_order_item.portfolio_item.investment_date
+    if isinstance(investment_date, datetime.datetime):
+        investment_date = investment_date.year.date()
+    
     if fund_order_item.allotment_date:
-        days = (fund_order_item.allotment_date - fund_order_item.portfolio_item.investment_date).days
+        allotment_date = fund_order_item.allotment_date
+        if isinstance(allotment_date, datetime.datetime):
+            allotment_date = allotment_date.date()
+        days = (allotment_date - investment_date).days
     else:
-        days = (fund_order_item.created_at - fund_order_item.portfolio_item.investment_date).days
+        created_at_date = fund_order_item.created_at
+        if isinstance(created_at_date, datetime.datetime):
+            created_at_date = created_at_date.date()
+        days = (created_at_date - investment_date).days
     if (days > 25):
         if fund_order_item.allotment_date:
             next_allotment_date = get_next_allotment_date(fund_order_item.portfolio_item.fund.id, fund_order_item.allotment_date)
