@@ -10,6 +10,7 @@ import time
 import logging
 
 
+
 def generate_order_pipe_file(user, order_items):
     """
     This function generates a pipe separated file for bulk order entry.
@@ -67,23 +68,13 @@ def generate_order_pipe_file(user, order_items):
     return output_path + bulk_order_pipe_file_name
 
 
-def generate_order_post_pipe_file(user, order_items):
+def generate_order_post_pipe_file(user, item):
     """
-    This function generates a pipe separated file for bulk order entry.
-    :param order_items: list of order_items for that order_detail
+    This function generates a pipe Order file for bulk order posting.
+    :param item: order_item for that order_detail
     :param user: The user for which the file is being generated
-    :return: url of the generated pipe separated file of the bulk order entry
     """
-
-    base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps', '')
-    output_path = base_dir + '/webapp/static/'
-    timestamp = time.strftime("%Y%m%d-%H%M%S")
-    bulk_order_pipe_file_name = "bulk_order_pipe" + timestamp + ".txt"
-    outfile = open(output_path + bulk_order_pipe_file_name, "w")
-    
-    bulk_order_dicts = []
-
-    for i, item in enumerate(order_items):
+    if item is not None:
         neft_code = ''
         if item.portfolio_item.fund.bse_neft_scheme_code:
             neft_code = item.portfolio_item.fund.bse_neft_scheme_code
@@ -102,31 +93,41 @@ def generate_order_post_pipe_file(user, order_items):
             except models.FolioNumber.DoesNotExist:
                 folio_number = ""
 
-        if int(order_items[i].agreed_lumpsum) < 10:
-            bulk_order_dict = OrderedDict([('SCHEME CODE', neft_code if item.order_amount < 200000 else rgts_code),
-                                           ('Purchase / Redeem', cons.Order_Purchase),
-                                           ('Buy Sell Type', cons.Order_Buy_Type),
-                                           ('Client Code', str(user.finaskus_id)),
-                                           ('Demat / Physical', cons.Order_Demat),
-                                           ('Order Val AMOUNT', str(order_items[i].agreed_lumpsum)),
-                                           ('Folio No (10 digits)', str(folio_number)),
-                                           ('Remarks', cons.Order_Remarks),
-                                           ('KYC Flag Char', cons.Order_KYC_Flag),
-                                           ('Sub Broker ARN Code', ''),
-                                           ('EUIN Number', cons.Order_EUIN_Number),
-                                           ('EUIN Declaration', cons.Order_EUIN_declaration),
-                                           ('MIN redemption flag', cons.Order_MIN_redemption_Flag),
-                                           ('DPC Flag', cons.Order_DPC_Flag),  # TODO:
-                                           ('All Units', cons.Order_All_Units),  # TODO:
-                                           ('Redemption Units', '')])  # TODO:
-                
-            outfile.write("|".join(bulk_order_dict.values()))
-            if i < len(order_items) - 1:
-                outfile.write("\r")
-            bulk_order_dicts.append(bulk_order_dict)    
-            #bulk_order_dict.clear()
-    outfile.close()
-    return output_path + bulk_order_pipe_file_name,bulk_order_dicts
+        if int(item.agreed_lumpsum) > 0:
+
+            bulk_order_dict = {'TransCode':cons.Order_Transaction_Code,
+                               'TransNo':'',
+                               'OrderId':'',
+                               'UserID':cons.Order_USER_ID,
+                               'MemberId':cons.Order_MEMBER_ID,
+                               'Password':cons.Order_PASSWORD,
+                               'PassKey':cons.Order_PASSKEY,
+                               'REF_NO':str(item.internal_ref_no),
+                               'Qty':'',
+                               'SCHEME_CODE':neft_code if item.order_amount < 200000 else rgts_code,
+                               'Purchase_Redeem': cons.Order_Purchase,
+                               'Buy_Sell_Type':cons.Order_Buy_Type,
+                               'Client_Code':str(user.finaskus_id),
+                               'Folio_No':str(folio_number),
+                               'DPTxn':cons.Order_Demat,
+                               'Order_Val_AMOUNT':str(item.agreed_lumpsum),
+                               'Remarks':cons.Order_Remarks,
+                               'KYC_Flag_Char':cons.Order_KYC_Flag,
+                               'Sub_Broker_ARN_Code':'',
+                               'EUIN_Number':cons.Order_EUIN_Number,
+                               'EUIN_Declaration':cons.Order_EUIN_declaration,
+                               'MIN_redemption_flag':cons.Order_MIN_redemption_Flag,
+                               'DPC_Flag':cons.Order_DPC_Flag,
+                               'AllRedeem':cons.Order_AllRedeem,
+                               'IPAdd':'',
+                               'Parma1':'',
+                               'Parma2':'',
+                               'Parma3':'',
+                               }
+            return bulk_order_dict
+        else:
+            return None        
+    
 
 
 

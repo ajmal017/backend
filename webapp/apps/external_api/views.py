@@ -16,7 +16,7 @@ from profiles import models as pr_models
 from payment import constants as payment_constant
 
 from external_api.bse import orders as bse_orders
-
+import logging
 import time
 
 
@@ -384,29 +384,44 @@ class GenerateBseOrderPost(View):
     """
 
     def get(self, request):
-        """
-        Only admin user is allowed to access the private Bse order pipe file.
-
-
-        :param request: the email_id of the pertinent user is received from this.
-        :return: send the generated pipe file
-        """
-
-        # makes sure that only superuser can access this file.
-
+        
         if request.user.is_superuser:
             order_detail = OrderDetail.objects.get(order_id=request.GET.get('order_id'))
-
-            order_items = order_detail.fund_order_items.all()
-            if is_investable(order_detail.user):
-                output_files,bulk_orders = bulk_order_entry.generate_order_post_pipe_file(order_detail.user, order_items)
-                for index,val in enumerate(bulk_orders):
-                    data = list(bulk_orders[index].values())
-                    order_post = bse_orders.Order(data)
-                    return HttpResponse(order_post)
+            if order_detail.is_lumpsum:
+                status_list = []
+                order_posts = []
+                order_items = order_detail.fund_order_items.all()
+                if is_investable(order_detail.user):
+                    for order_item in order_items:
+                        bulk_orders = bulk_order_entry.generate_order_post_pipe_file(order_detail.user, order_item)
+                        if bulk_orders is not None:
+                            order_post = bse_orders.getPassword(bulk_orders)
+                            print(order_post)
+                            if order_post is not None:
+                                order = order_post.split("|")
+                                if order[2] != '0' and order[7] == '0':
+                                    order_item.bse_transaction_id = order[2]
+                                    order_item.save()     
+                                    status = "S"
+                                    status_list.extend(status)
+                                    
+                                else:
+                                    status =  "F"
+                                    status_list.extend(status)
+                       
+                            order_posts.append(order_post)
+                    if all(v == "S" for v in status_list):
+                        order_detail.order_status =  1
+                        order_detail.save()
+                    if not order_posts:
+                        order_posts = "No Lumpsum Data"                   
+                    return HttpResponse(order_posts)
+                else:
+                    # file doesn't exist because investor vault is incomplete.
+                    return HttpResponse(payment_constant.CANNOT_GENERATE_FILE, status=404)
+                
             else:
-                # file doesn't exist because investor vault is incomplete.
-                return HttpResponse(payment_constant.CANNOT_GENERATE_FILE, status=404)
+                return HttpResponse("Order can post only for first order", status=404)
         else:
             # non-admin is trying to access the file. Prevent access.
             return HttpResponse(constants.FORBIDDEN_ERROR, status=403)

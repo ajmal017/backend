@@ -696,3 +696,12 @@ GET_PASSWORD_URL = 'http://tempuri.org/IMFUploadService/getPassword'
 BSE_ORDER_WSDL = 'http://bsestarmfdemo.bseindia.com/MFOrderEntry/MFOrder.svc?singleWsdl'
 BSE_ORDER_GET_PASSWORD_URL = 'http://bsestarmf.in/MFOrderEntry/getPassword'
 EXCHNAME_BSE = "B"
+
+BSE_WSDL = "http://bsestarmf.in/MFOrderEntry/MFOrder.svc?wsdl"
+
+Order_Transaction_Code = "NEW"
+Order_USER_ID = 456801
+Order_MEMBER_ID = 4568
+Order_PASSWORD = '123456#'
+Order_PASSKEY = 'cat123'
+Order_AllRedeem = "N"
