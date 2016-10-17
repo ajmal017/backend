@@ -51,16 +51,16 @@ class BSEBackend(ExchangeBackend):
         filePath = bse_investor_info_generation.bse_investor_info_generator(user_id)
         return filePath
 
-    def generate_bank_mandate(self, user_id, mandate_amount):
-        return bank_mandate.generate_bank_mandate_pdf(user_id, mandate_amount)
+    def generate_bank_mandate(self, user_id, bank_mandate_instance):
+        return bank_mandate.generate_bank_mandate_pdf(user_id, bank_mandate_instance)
 
     def upload_bank_mandate(self, user_id):
         return constants.RETURN_CODE_FAILURE
     
-    def generate_bank_mandate_registration(self, user_id, mandate_amount):
-        file_path = bank_mandate.generate_bank_mandate_file(user_id, mandate_amount)
-        if file_path:
-            self.update_mandate_registered(user_id)
+    def generate_bank_mandate_registration(self, user_id, bank_mandate_instance):
+        file_path = bank_mandate.generate_bank_mandate_file(user_id, bank_mandate_instance)
+        if file_path and bank_mandate_instance.mandate_registered == False:
+            self.update_mandate_registered(bank_mandate_instance)
         return constants.RETURN_CODE_SUCCESS, file_path
 
     def create_order(self, user_id, order_detail):
