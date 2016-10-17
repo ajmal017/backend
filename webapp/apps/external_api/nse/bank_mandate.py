@@ -23,26 +23,25 @@ def generate_bank_mandate_tiff(user_id, **kwargs):
     exch_backend = kwargs.get('exchange_backend')
     user_vendor = models.UserVendor.objects.get(user=user, vendor__name=exch_backend.vendor_name)
     contact = models.ContactInfo.objects.get(user=user)
-    investor_bank = models.InvestorBankDetails.objects.get(user=user)
     curr_date = datetime.now()
 
-    mandate_amount = kwargs.get('mandate_amount')
+    bank_mandate = kwargs.get('bank_mandate')
 
     mandate_dict = {
-        'MandateAccountHolderName': investor_bank.account_holder_name,
-        'MandateAmountNumber': mandate_amount,
-        'MandateAmountWords': str(num2words(mandate_amount, lang="en_IN")) + " ONLY",
-        'MandateBank': investor_bank.ifsc_code.name,
-        'MandateBankACNumber': investor_bank.account_number,
-        'MandateBankACType': investor_bank.account_type,
+        'MandateAccountHolderName': bank_mandate.bank_details.account_holder_name,
+        'MandateAmountNumber': bank_mandate.mandate_amount,
+        'MandateAmountWords': str(num2words(bank_mandate.mandate_amount, lang="en_IN")) + " ONLY",
+        'MandateBank': bank_mandate.bank_details.ifsc_code.name,
+        'MandateBankACNumber': bank_mandate.bank_details.account_number,
+        'MandateBankACType': bank_mandate.bank_details.account_type,
         'MandateDate-dd': curr_date.strftime("%d"),
         'MandateDate-mm': curr_date.strftime("%m"),
         'MandateDate-yyyy': curr_date.strftime("%Y"),
         'MandateEmailID': contact.email,
-        'MandateIFSC': investor_bank.ifsc_code.ifsc_code,
-        'MandatePeriodFrom-dd': curr_date.strftime("%d"),
-        'MandatePeriodFrom-mm': curr_date.strftime("%m"),
-        'MandatePeriodFrom-yyyy': curr_date.strftime("%Y"),
+        'MandateIFSC': bank_mandate.bank_details.ifsc_code.ifsc_code,
+        'MandatePeriodFrom-dd': bank_mandate.mandate_start_date.strftime("%d"),
+        'MandatePeriodFrom-mm': bank_mandate.mandate_start_date.strftime("%m"),
+        'MandatePeriodFrom-yyyy': bank_mandate.mandate_start_date.strftime("%Y"),
         'MandatePhoneNo': contact.phone_number,
         'MandateUCC': user_vendor.ucc
     }

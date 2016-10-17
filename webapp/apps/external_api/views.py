@@ -11,6 +11,7 @@ from external_api.nse.nsebackend import NSEBackend
 from payment.models import Transaction
 from external_api.nse import constants as nse_contants
 from external_api import helpers
+from external_api import bank_mandate_helper
 from . import investor_info_generation, bse_investor_info_generation, bulk_order_entry, kyc_pdf_generator, \
     xsip_registration, bank_mandate
 from core.models import OrderDetail, RedeemDetail, GroupedRedeemDetail
@@ -23,6 +24,7 @@ from profiles import models as pr_models
 from payment import constants as payment_constant
 
 import time
+from webapp.apps.profiles.models import UserBankMandate
 
 class VerifiablePincode(APIView):
     """
@@ -287,8 +289,8 @@ class GenerateBankMandateRegistration(View):
                 if order_vendor:
                     exch_backend = helpers.get_exchange_vendor_helper().get_backend_instance(order_vendor.name) 
                 if exch_backend:
-                    mandate_amount = pr_utils.get_investor_mandate_amount(order_detail.user, order_detail, exch_backend.get_vendor())
-                    status, output_file = exch_backend.generate_bank_mandate_registration(order_detail.user.id, mandate_amount)
+                    is_mandate_required, bank_mandate = bank_mandate_helper.is_new_mandate_required(order_detail.user, order_detail, True)
+                    status, output_file = exch_backend.generate_bank_mandate_registration(order_detail.user.id, bank_mandate)
                     if status == constants.RETURN_CODE_SUCCESS:
                         if output_file:
                             output_file = output_file.split('/')[-1]
@@ -473,10 +475,10 @@ class GenerateMandatePdf(View):
         if request.user.is_superuser:
             exch_backend = helpers.get_exchange_vendor_helper().get_backend_instance()
             if exch_backend:
-                user = pr_models.User.objects.get(email=request.GET.get('email'))
+                bank_mandate = UserBankMandate.objects.get(id=request.GET.get('mandate_id'))
+                user = bank_mandate.user    
                 if is_investable(user) and user.signature != "":
-                    mandate_amount = pr_utils.get_investor_mandate_amount(user, None, exch_backend.get_vendor())
-                    output_file, error = exch_backend.generate_bank_mandate(user.id, mandate_amount)
+                    output_file, error = exch_backend.generate_bank_mandate(user.id, bank_mandate)
                     if output_file is None:
                         return HttpResponse(error, status=404)
                     output_file = output_file.split('/')[-1]

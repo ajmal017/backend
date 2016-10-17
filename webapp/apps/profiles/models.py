@@ -254,22 +254,6 @@ class UserVendor(TimeStampedModel):
     class Meta:
         unique_together = (('user', 'vendor'),)
 
-class UserBankMandate(TimeStampedModel):
-    MANDATE_STATUS = (
-        (constants.LEVEL_0, 'Pending'),
-        (constants.LEVEL_1, 'Ongoing'),
-        (constants.LEVEL_2, 'Completed'),
-    )
-
-    user = models.ForeignKey(User)
-    vendor = models.ForeignKey(Vendor, related_name="user_vendor", blank=False, null=False)
-    mandate_registered = models.BooleanField(default=False)
-    mandate_reg_no = models.CharField(_('Mandate Registration Number'), max_length=100, default=None, blank=True,
-                                      null=True)
-    mandate_amount = models.FloatField(null=True, blank=True, default=0.00)
-    mandate_start_date = models.DateField()
-    mandate_ifsc_code = models.ForeignKey(BankDetails, blank=True, null=True)
-    mandate_status = models.CharField(max_length=1, choices=MANDATE_STATUS, blank=True, default=constants.LEVEL_0)
 
 class VerificationSMSCode(TimeStampedModel):
     """
@@ -458,6 +442,22 @@ class InvestorBankDetails(TimeStampedModel):
     def __str__(self):
         return str(self.user) + " " + str(self.ifsc_code) + " " + str(self.account_holder_name)
 
+class UserBankMandate(TimeStampedModel):
+    MANDATE_STATUS = (
+        (constants.LEVEL_0, 'Pending'),
+        (constants.LEVEL_1, 'Ongoing'),
+        (constants.LEVEL_2, 'Completed'),
+    )
+
+    user = models.ForeignKey(User)
+    vendor = models.ForeignKey(Vendor, related_name="user_vendor", blank=False, null=False)
+    mandate_registered = models.BooleanField(default=False)
+    mandate_reg_no = models.CharField(_('Mandate Registration Number'), max_length=100, default=None, blank=True,
+                                      null=True)
+    mandate_amount = models.FloatField(null=True, blank=True, default=0.00)
+    mandate_start_date = models.DateField()
+    mandate_bank_details = models.ForeignKey(InvestorBankDetails, blank=True, null=True)
+    mandate_status = models.CharField(max_length=1, choices=MANDATE_STATUS, blank=True, default=constants.LEVEL_0)
 
 class NomineeInfo(models.Model):
     """

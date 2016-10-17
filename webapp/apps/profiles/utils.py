@@ -457,42 +457,22 @@ def update_kyc_status():
             investor.kra_verified = True
             investor.save()
 
-def get_total_sip_amount(user, order_detail, exchange_vendor):
+def get_order_sip_amount(user, order_detail):
+    sip_amount = 0;
+    if order_detail is not None:
+        if order_detail.order_status != core_models.OrderDetail.OrderStatus.Cancelled:
+            sip_amount = order_detail.fund_order_items.aggregate(total=Sum(F('agreed_sip')))['total']
+    return sip_amount
+
+def get_mandate_total_sip_amount(user, mandate):
         sip_amount = 0;
         try:
-            order_details = core_models.OrderDetail.objects.filter(user=user, is_lumpsum=True, bank_mandate__isnull=False).exclude(order_status=core_models.OrderDetail.OrderStatus.Cancelled)
-            for o in order_details:
-                sip_amount += o.fund_order_items.aggregate(total=Sum(F('agreed_sip')))['total']
+            if mandate:
+                order_details = core_models.OrderDetail.objects.filter(user=user, is_lumpsum=True, bank_mandate=mandate).exclude(order_status=core_models.OrderDetail.OrderStatus.Cancelled)
+                for o in order_details:
+                    sip_amount += o.fund_order_items.aggregate(total=Sum(F('agreed_sip')))['total']
                 
-            if order_detail is not None:
-                if order_detail.order_status != core_models.OrderDetail.OrderStatus.Cancelled and order_detail.bank_mandate is None:
-                    sip_amount += order_detail.fund_order_items.aggregate(total=Sum(F('agreed_sip')))['total']
-            else:
-                if len(order_details) == 0:
-                    latest_order_detail = core_models.OrderDetail.objects.filter(user=user, is_lumpsum=True).exclude(order_status=core_models.OrderDetail.OrderStatus.Cancelled).latest('created_at')
-                    if latest_order_detail:
-                        sip_amount += latest_order_detail.fund_order_items.aggregate(total=Sum(F('agreed_sip')))['total']
-                    
         except core_models.OrderDetail.DoesNotExist:
             pass
         return sip_amount
 
-def get_investor_mandate_amount(user, order_detail, exchange_vendor):
-        """
-        order_detail: optional, when provided used to calculate SIP amount in addition to completed orders.
-        :return: The total amount to be used to fill investor pdf which is calculated by summing all the sip of the
-        order details where is_lumpsum = True. If no such 
-        """
-        sip_amount = get_total_sip_amount(user, order_detail, exchange_vendor)
-        
-        mandate_amount = max(sip_amount*2, cons.DEFAULT_BANK_MANDATE_AMOUNT)
-        
-        if mandate_amount > cons.DEFAULT_BANK_MANDATE_AMOUNT:
-            if mandate_amount <= cons.DEFAULT_BANK_MANDATE_AMOUNT_NEXT:
-                mandate_amount = cons.DEFAULT_BANK_MANDATE_AMOUNT_NEXT
-            else:
-                amount_remainder = mandate_amount%10000
-                if amount_remainder > 0:
-                    mandate_amount = (mandate_amount - amount_remainder) + 10000
-            
-        return mandate_amount
