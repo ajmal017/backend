@@ -500,7 +500,7 @@ def check_existing_user_email(**kwargs):
 
     try:
         ## Check the user in the profile user table
-        user = profile_models.User.objects.get(email=email)
+        user = profile_models.User.objects.get(email__iexact=email)
         try:
             ## If user in profile user table , check user in social auth user table
             social_user = social_model.UserSocialAuth.objects.filter(user=user).exists()
@@ -521,7 +521,7 @@ def check_existing_user_email(**kwargs):
 
 def get_social_user(email):
     try:
-        user = profile_models.User.objects.get(email=email)
+        user = profile_models.User.objects.get(email__iexact=email)
     except profile_models.User.DoesNotExist:
         user = None
     return user
