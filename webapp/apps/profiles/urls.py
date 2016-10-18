@@ -55,6 +55,11 @@ urlpatterns = [
     url(r"^appointment/get/$", views.AppointmentSchedule.as_view(), name='appointment-get'),
     url(r"^appointment/add/$", views.AppointmentSchedule.as_view(), name='appointment-add'),
     url(r'^lock/vault/$', views.LockVault.as_view(), name='lock-vault'),
-
+    
+    url(r"^google/login/$", views.GoogleLogin.as_view(), name='login-social-user'),
+    url(r"^google/register/$", views.GoogleRegister.as_view(), name='register-social-user'),
+    url(r"^google/register/first/$", views.GoogleRegisterExistingUser.as_view(), name='register-social-user'),
+   
+    
 
 ]

@@ -54,7 +54,8 @@ def get_access_token(user, password):
     return responseJSON
 
 
-def convert_social_access_token(user,access_token):
+
+def convert_social_access_token(access_token):
     """
      Return : Converted access token to application
     """
@@ -62,11 +63,20 @@ def convert_social_access_token(user,access_token):
     print(access_token)
     response = requests.post(settings.BASE_URL + '/auth/convert-token/', data=data)
     responseJSON = response.json()
-    if not responseJSON.get('convert_token'):
+    if not responseJSON.get('access_token'):
         logger = logging.getLogger('django.error')
-        logger.error("Profiles: access_token: Access token failed for user with id: " + user.id)      
+        logger.error("Profiles: access_token: Access token failed for user with id: ")      
     return responseJSON
 
+
+def convert_auth_to_access_token(auth_code):
+    data = {'grant_type':'authorization_code','code':auth_code,'client_id':settings.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY,'client_secret':settings.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET}
+    response = requests.post(settings.GOOGLE_PLUS_AUTH_URL, data=data)
+    responseJSON = response.json()
+    if responseJSON.get('access_token'):     
+        return responseJSON['access_token']
+    else:
+        return None
 
 def send_mail(subject_template_name, email_template_name, context, from_email, to_email, html_email_template_name=None):
     """
