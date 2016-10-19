@@ -23,6 +23,8 @@ def unique_identity_image(instance, filename):
 
 def unique_profile_image(instance, filename):
     return "user/" + instance.id + "/profile/image/" + filename
+def unique_profile_image_thumbnail(instance, filename):
+    return "user/" + instance.id + "/profile/image/thumbnail" + filename
 
 def unique_signature_image(instance, filename):
     return "user/" + instance.id + "/signature/image/" + filename
@@ -109,8 +111,10 @@ class User(AbstractBaseUser, TimeStampedModel):
     vault_locked = models.BooleanField(help_text=_('Is vault locked?'), default=False)
     if settings.USING_S3 is True:
         image = S3PrivateImageField(upload_to=unique_profile_image, max_length=700, blank=True, null=True)
+        image_thumbanil = S3PrivateImageField(upload_to=unique_profile_image_thumbnail, max_length=700, blank=True, null=True)
     else:
         image = models.ImageField(upload_to="profile/image/", max_length=700, blank=True, null=True)
+        image_thumbnail = models.ImageField(upload_to="profile/image/thumbnail", max_length=700, blank=True, null=True)
     country_of_birth = models.CharField(_('country of birth'), max_length=254, blank=True, default="")
     nationality = models.CharField(_('nationality'), max_length=254, blank=True, default="")
     tax_status = models.CharField(_('tax status'), max_length=254, blank=True, default="",
