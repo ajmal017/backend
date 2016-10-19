@@ -17,12 +17,17 @@ from . import manager, constants, helpers
 from enum import Enum
 from enum import IntEnum
 from datetime import date
+import os
 
 def unique_identity_image(instance, filename):
     return "user/" + instance.id + "/identity/image/" + filename
 
+def unique_identity_image_thumbnail(instance, filename):
+    return "user/" + instance.id + "/identity/image/thumbnail" + filename
+
 def unique_profile_image(instance, filename):
     return "user/" + instance.id + "/profile/image/" + filename
+
 def unique_profile_image_thumbnail(instance, filename):
     return "user/" + instance.id + "/profile/image/thumbnail" + filename
 
@@ -38,23 +43,41 @@ def unique_kycvideo_image(instance, filename):
 def unique_pan_image(instance, filename):
     return "user/" + instance.user.id + "/pan/image/" + filename
 
+def unique_pan_image_thumbnail(instance, filename):
+    return "user/" + instance.user.id + "/pan/image/thumbnail" + filename
+
 def unique_permanentaddress_front_image(instance, filename):
     return "user/" + instance.user.id + "/permanentaddressfront/image/" + filename
+
+def unique_permanentaddress_front_image_thumbnail(instance, filename):
+    return "user/" + instance.user.id + "/permanentaddressfront/image/thumbnail" + filename
     
 def unique_permanentaddress_back_image(instance, filename):
     return "user/" + instance.user.id + "/permanentaddressback/image/" + filename
 
+def unique_permanentaddress_back_image_thumbnail(instance, filename):
+    return "user/" + instance.user.id + "/permanentaddressback/image/thumbnail" + filename
+
 def unique_addressfront_image(instance, filename):
     return "user/" + instance.user.id + "/addressfront/image/" + filename
 
+def unique_addressfront_image_thumbnail(instance, filename):
+    return "user/" + instance.user.id + "/addressfront/image/thumbnail" + filename
+
 def unique_addressback_image(instance, filename):
     return "user/" + instance.user.id + "/addressback/image/" + filename
+
+def unique_addressback_image_thumbnail(instance, filename):
+    return "user/" + instance.user.id + "/addressback/image/thumbnail" + filename
 
 def unique_nomineesignature_image(instance, filename):
     return "user/" + instance.user.id + "/nomineesignature/image/" + filename
 
 def unique_cheque_image(instance, filename):
     return "user/" + instance.user.id + "/cheque/image/" + filename
+
+def unique_cheque_image_thumbnail(instance, filename):
+    return "user/" + instance.user.id + "/cheque/image/thumbnail" + filename
     
 class S3PrivateFileField(models.FileField):
 
@@ -125,8 +148,10 @@ class User(AbstractBaseUser, TimeStampedModel):
     age = models.IntegerField(_('age'), blank=True, null=True)
     if settings.USING_S3 is True:
         identity_info_image = S3PrivateImageField(upload_to=unique_identity_image, max_length=700, blank=True, null=True)
+        identity_info_image_thumbnail = S3PrivateImageField(upload_to=unique_identity_image_thumbnail, max_length=700, blank=True, null=True)
     else:
         identity_info_image = models.FileField(upload_to="identity/image/", max_length=700, blank=True, null=True)
+        identity_info_image_thumbnail = models.FileField(upload_to="identity/image/thumbnail", max_length=700, blank=True, null=True)
     marital_status = models.CharField(choices=MARITAL_STATUS_CHOICES, max_length=1, default="")
     is_investor_info = models.BooleanField(_('is investor info complete'), default=False)
     is_contact_info = models.BooleanField(_('is contact info complete'), default=False)
@@ -183,6 +208,12 @@ class User(AbstractBaseUser, TimeStampedModel):
                 orig = User.objects.get(pk=self.pk)
                 if not orig.user_video:
                     helpers.send_user_video_upload_email(self,use_https=settings.USE_HTTPS)
+            if self.image:
+                orig = User.objects.get(pk=self.pk)
+                if self.image != orig.image:
+                    print(os.path.abspath(self.image.url))
+                    
+                   
         if not self.id:
             self.id = api_utils.gen_hash(api_utils.expires())
         if self.vault_locked==False:
@@ -340,8 +371,10 @@ class InvestorInfo(TimeStampedModel):
     other_tax_payer = models.BooleanField(default=False,help_text=_(u'Do you pay tax in country other than India'))
     if settings.USING_S3 is True:
         pan_image = S3PrivateImageField(upload_to=unique_pan_image, max_length=700, blank=True, null=True)
+        pan_image_thumbnail = S3PrivateImageField(upload_to=unique_pan_image_thumbnail, max_length=700, blank=True, null=True)
     else:
         pan_image = models.FileField(upload_to="investor_info/pan/image", max_length=700, blank=True, null=True)
+        pan_image_thumbnail = models.FileField(upload_to="investor_info/pan/image/thumbnail", max_length=700, blank=True, null=True)
     kra_verified = models.BooleanField(default=False)
 
     def __str__(self):
@@ -412,21 +445,29 @@ class ContactInfo(TimeStampedModel):
     if settings.USING_S3 is True:
         # front image of the address proof.
         front_image = S3PrivateImageField(upload_to=unique_addressfront_image, max_length=1023, blank=True, null=True)
+        front_image_thumbnail = S3PrivateImageField(upload_to=unique_addressfront_image_thumbnail, max_length=1023, blank=True, null=True)
         # back image of the address proof.
         back_image = S3PrivateImageField(upload_to=unique_addressback_image, max_length=1023, blank=True, null=True)
+        back_image_thumbnail = S3PrivateImageField(upload_to=unique_addressback_image_thumbnail, max_length=1023, blank=True, null=True)
         # front image of the permanent address proof.
         permanent_front_image = S3PrivateImageField(upload_to=unique_permanentaddress_front_image, max_length=1023, blank=True, null=True)
+        permanent_front_image_thumbnail = S3PrivateImageField(upload_to=unique_permanentaddress_front_image_thumbnail, max_length=1023, blank=True, null=True)
         # back image of the permanent address proof.
         permanent_back_image = S3PrivateImageField(upload_to=unique_permanentaddress_front_image, max_length=1023, blank=True, null=True)
+        permanent_back_image_thumbnail = S3PrivateImageField(upload_to=unique_permanentaddress_front_image_thumbnail, max_length=1023, blank=True, null=True)
     else:
         # front image of the address proof.
         front_image = models.FileField(upload_to="contact/address_proof/", max_length=1023, blank=True, null=True)
+        front_image_thumbnail = models.FileField(upload_to="contact/address_proof/thumbnail", max_length=1023, blank=True, null=True)
         # back image of the address proof.
         back_image = models.FileField(upload_to="contact/address_proof/", max_length=1023, blank=True, null=True)
+        back_image_thumbnail = models.FileField(upload_to="contact/address_proof/thumbnail", max_length=1023, blank=True, null=True)
         # front image of the permanent address proof.
         permanent_front_image = models.FileField(upload_to="contact/permanent_address_proof/", max_length=1023, blank=True, null=True)
+        permanent_front_image_thumbnail = models.FileField(upload_to="contact/permanent_address_proof/thumbnail", max_length=1023, blank=True, null=True)
         # back image of the permanent address proof.
         permanent_back_image = models.FileField(upload_to="contact/permanent_address_proof/", max_length=1023, blank=True, null=True)
+        permanent_back_image_thumbnail = models.FileField(upload_to="contact/permanent_address_proof/thumbnail", max_length=1023, blank=True, null=True)
 
     def __str__(self):
         return str(self.user) + " " + str(self.communication_address)
@@ -448,8 +489,10 @@ class InvestorBankDetails(TimeStampedModel):
     sip_check = models.BooleanField(default=False)
     if settings.USING_S3 is True:
         bank_cheque_image = S3PrivateImageField(upload_to=unique_cheque_image, max_length=1023, blank=True, null=True)
+        bank_cheque_image_thumbnail = S3PrivateImageField(upload_to=unique_cheque_image_thumbnail, max_length=1023, blank=True, null=True)
     else:
         bank_cheque_image = models.FileField(upload_to="cheque/image/", max_length=1023, blank=True, null=True)
+        bank_cheque_image_thumbnail = models.FileField(upload_to="cheque/image/thumbnail", max_length=1023, blank=True, null=True)
     def __str__(self):
         return str(self.user) + " " + str(self.ifsc_code) + " " + str(self.account_holder_name)
 

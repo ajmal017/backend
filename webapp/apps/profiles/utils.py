@@ -14,6 +14,13 @@ import social.apps.django_app.default.models as social_model
 from datetime import datetime
 from numpy.ma.core import remainder
 
+import io
+from io import StringIO
+import os
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage as storage
+from PIL import Image
+
 def get_answers(user_id):
     """
     Gets a list of answers by user(user_id) according to category(question_for) and returns them in a format -
@@ -519,5 +526,56 @@ def phone_number_check(phone):
         user = None
     return user
 
-  
+
+def create_thumbnail(images,thumbanail,type=0):
+    """
+    It creates thumbanail for the uploaded images
+    param: image - original uploaded image
+    """
+    if images != "" and images is not None:
+        THUMB_SIZE = (100,100)
+        
+        if type == 0:
+            fh = storage.open(images.name, 'rb')
+        else:
+            fh = storage.open(images.url, 'rb')
+        try:
+            image = Image.open(fh)
+        except:
+            return False
+    
+        image.thumbnail(THUMB_SIZE, Image.ANTIALIAS)
+        #image = image.resize(THUMB_SIZE, Image.ANTIALIAS)  # resize the image
+        fh.close()
+        
+        # Path to save to, name, and extension
+        thumb_name, thumb_extension = os.path.splitext(images.name)
+        thumb_extension = thumb_extension.lower()
+    
+        thumb_filename = thumb_name + '_thumb' + thumb_extension
+    
+        if thumb_extension in ['.jpg', '.jpeg']:
+            FTYPE = 'JPEG'
+        elif thumb_extension == '.gif':
+            FTYPE = 'GIF'
+        elif thumb_extension == '.png':
+            FTYPE = 'PNG'
+        else:
+            return False    # Unrecognized file type
+    
+        # Save thumbnail to in-memory file as StringIO
+        temp_thumb = io.BytesIO()
+        image.save(temp_thumb, FTYPE)
+        temp_thumb.seek(0)
+    
+            # Load a ContentFile into the thumbnail field so it gets saved
+        try:
+            thumbanail.save(thumb_filename, ContentFile(temp_thumb.read()), save=True)
+        except:
+            return False
+        temp_thumb.close()
+    
+        return True
+    else:
+        return False
 

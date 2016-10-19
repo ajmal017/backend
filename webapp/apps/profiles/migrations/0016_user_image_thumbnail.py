@@ -16,5 +16,5 @@ class Migration(migrations.Migration):
             model_name='user',
             name='image_thumbnail',
             field=models.ImageField(blank=True, max_length=700, null=True, upload_to='profile/image/thumbnail'),
-        ),
+         ),
     ]
