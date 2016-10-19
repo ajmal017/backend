@@ -60,7 +60,6 @@ def convert_social_access_token(access_token):
      Return : Converted access token to application
     """
     data = {'grant_type':'convert_token','backend':'google-oauth2','token':access_token,'client_id':settings.CLIENT_ID,'client_secret':settings.CLIENT_SECRET}
-    print(access_token)
     response = requests.post(settings.BASE_URL + '/auth/convert-token/', data=data)
     responseJSON = response.json()
     if not responseJSON.get('access_token'):
