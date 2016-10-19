@@ -224,6 +224,31 @@ class NSEBackend(ExchangeBackend):
                 error_logger.error(error_msg)
             return constants.RETURN_CODE_FAILURE
 
+    def sip_trxn(self, user_id, order_detail):
+        """
+
+        :param:
+        :return:
+        """
+        error_logger = logging.getLogger('django.error')
+        kwargs = {'exchange_backend': self, "order" : order_detail}
+        xml_request_body = self._get_request_body(nse_constants.METHOD_PURCHASETXN, user_id, **kwargs)
+        root = self._get_data(nse_constants.METHOD_PURCHASETXN, xml_request_body=xml_request_body)
+        return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
+        if return_code == nse_constants.RETURN_CODE_SUCCESS:
+            payment_link = root.find(nse_constants.RESPONSE_PAYMENT_LINK_PATH).text
+            current_transaction = payment_models.Transaction.get(user_id=user_id, txn_status=0)
+            # 0 for pending transactions assuming there is only one pending transaction
+            current_transaction.payment_link= payment_link
+            current_transaction.save()
+            return constants.RETURN_CODE_SUCCESS
+        else:
+            error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
+            for error in error_responses:
+                error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text
+                error_logger.error(error_msg)
+            return constants.RETURN_CODE_FAILURE
+
     def generate_bank_mandate_registration(self, user_id, bank_mandate):
         """
 

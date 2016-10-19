@@ -73,6 +73,7 @@ ACC_NO_XPATH = SERVICE_REQUEST_PATH + '/acc_no'
 ACC_TYPE_XPATH = SERVICE_REQUEST_PATH + '/acc_type'
 IFSC_CODE_XPATH = SERVICE_REQUEST_PATH + '/ifsc_code'
 BRANCH_NAME_XPATH = SERVICE_REQUEST_PATH + '/branch_name'
+BRANCH_XPATH = SERVICE_REQUEST_PATH + '/branch'
 BRANCH_ADDR1_XPATH = SERVICE_REQUEST_PATH + '/branch_addr1'
 BRANCH_ADDR2_XPATH = SERVICE_REQUEST_PATH + '/branch_addr2'
 BRANCH_ADDR3_XPATH = SERVICE_REQUEST_PATH + '/branch_addr3'
@@ -139,8 +140,13 @@ CHILD_TRANS_XPATH = './childtrans'
 AMC_XPATH = CHILD_TRANS_XPATH + '/amc'
 FOLIO_XPATH = CHILD_TRANS_XPATH + '/folio'
 PRODUCT_CODE_XPATH = CHILD_TRANS_XPATH + '/product_code'
+TARGET_PRODUCT_XPATH = CHILD_TRANS_XPATH + '/target_product'
 REINVEST_XPATH = CHILD_TRANS_XPATH + '/reinvest'
 AMOUNT_XPATH = CHILD_TRANS_XPATH + '/amount'
+FROM_DATE_XPATH = CHILD_TRANS_XPATH + '/from_date'
+TO_DATE_XPATH = CHILD_TRANS_XPATH + '/to_date'
+PERIODICITY_XPATH = CHILD_TRANS_XPATH + '/periodicity'
+PERIOD_DAY_XPATH = CHILD_TRANS_XPATH + '/period_day'
 SIP_FROM_DATE_XPATH = CHILD_TRANS_XPATH + '/sip_from_date'
 SIP_END_DATE_XPATH = CHILD_TRANS_XPATH + '/sip_end_date'
 SIP_FREQ_XPATH = CHILD_TRANS_XPATH + '/sip_freq'
@@ -153,6 +159,7 @@ BANK_XPATH = SERVICE_REQUEST_PATH + '/bank'
 AC_NO_XPATH = SERVICE_REQUEST_PATH + '/ac_no'
 SUB_BROKER_ARN_CODE_XPATH = SERVICE_REQUEST_PATH + '/sub_broker_arn_code'
 SUB_BROKER_CODE_XPATH = SERVICE_REQUEST_PATH + '/sub_broker_code'
+SUB_BROK_ARN_XPATH = SERVICE_REQUEST_PATH + '/sub_brok_arn'
 EUIN_OPTED_XPATH = SERVICE_REQUEST_PATH + '/euin_opted'
 EUIN_XPATH = SERVICE_REQUEST_PATH + '/euin'
 TRXN_EXECUTION_XPATH = SERVICE_REQUEST_PATH + '/trxn_execution'
@@ -174,6 +181,7 @@ ADVISIORY_CHARGE_XPATH = SERVICE_REQUEST_PATH + '/advisory_charge'
 DD_CHARGE_XPATH = SERVICE_REQUEST_PATH + '/dd_charge'
 CHEQUE_DEPOSIT_MODE_XPATH = SERVICE_REQUEST_PATH + '/cheque_deposit_mode'
 DEBIT_AMOUNT_TYPE_XPATH = SERVICE_REQUEST_PATH + '/debit_amount_type'
+DEBIT_AMT_TYPE_XPATH = SERVICE_REQUEST_PATH + '/debit_amt_type'
 NOMINEE_FLAG_XPATH = SERVICE_REQUEST_PATH + '/nominee_flag'
 SIP_MICR_NO_XPATH = SERVICE_REQUEST_PATH + '/sip_micr_no'
 SIP_BANK_XPATH = SERVICE_REQUEST_PATH + '/sip_bank'
@@ -201,6 +209,7 @@ NIGO_REMARKS_XPATH = SERVICE_REQUEST_PATH + '/nigo_remarks'
 AMOUNT_UNIT_TYPE_XPATH = SERVICE_REQUEST_PATH + '/amt_unit_type'
 AMOUNT_UNIT_XPATH = SERVICE_REQUEST_PATH + '/amt_unit'
 ALL_UNITS_XPATH = SERVICE_REQUEST_PATH + '/all_units'
+ALL_UNIT_XPATH = SERVICE_REQUEST_PATH + '/all_unit'
 
 # NSE VARIABLES
 
@@ -220,6 +229,7 @@ NSE_NMF_BROKER_CODE = "ARN-108537"
 METHOD_CREATECUSTOMER = "CREATECUSTOMER"
 METHOD_PURCHASETXN = "PURCHASETRXN"
 METHOD_REDEEMTXN = "REDEEMTRXN"
+METHOD_SYSTRXNREG = "SYSTRXNREG"
 METHOD_UPLOADIMG = "UPLOADIMG"
 METHOD_GETIIN = "GETIIN"
 METHOD_ACHMANDATEREGISTRATIONS = "ACHMANDATEREGISTRATIONS"
@@ -440,6 +450,50 @@ REQUEST_PURCHASETXN = '''<NMFIIService>
                             <until_cancelled></until_cancelled>
                             <Return_paymnt_flag></Return_paymnt_flag>
                             <Client_callback_url></Client_callback_url>
+                            <trans_count></trans_count>
+                            </service_request>
+                        </NMFIIService>'''
+
+REQUEST_SYSTRXNREG_CHILDTXN = '''<NMFIIService>
+                                <childtrans>
+                                    <amc></amc>
+                                    <folio></folio>
+                                    <product_code></product_code>
+                                    <target_product></target_product>
+                                    <reinvest></reinvest>
+                                    <amt_unit_type></amt_unit_type>
+                                    <amt_unit></amt_unit>
+                                    <all_unit></all_unit>
+                                    <from_date></from_date>
+                                    <to_date></to_date>
+                                    <periodicity></periodicity>
+                                </childtrans>
+                            </NMFIIService>'''
+
+REQUEST_SYSTRXNREG = '''<NMFIIService>
+                            <service_request>
+                            <appln_id>''' + NSE_NMF_APPL_ID + '''</appln_id>
+                            <password>''' + NSE_NMF_PASSWORD + '''</password>
+                            <broker_code>''' + NSE_NMF_BROKER_CODE + '''</broker_code>
+                            <iin></iin>
+                            <trxn_type></trxn_type>
+                            <dp_id></dp_id>
+                            <euin_opted></euin_opted>
+                            <euin></euin>
+                            <sub_brok_arn></sub_brok_arn>
+                            <trxn_acceptance></trxn_acceptance>
+                            <acc_no></acc_no>
+                            <bank></bank>
+                            <branch></branch>
+                            <acc_type></acc_type>
+                            <micr_no></micr_no>
+                            <ifsc_code></ifsc_code>
+                            <debit_amt_type></debit_amt_type>
+                            <umrn> </umrn>
+                            <ach_amt></ach_amt>
+                            <ach_fromdate></ach_fromdate>
+                            <ach_enddate></ach_enddate>
+                            <until_cancelled></until_cancelled>
                             <trans_count></trans_count>
                             </service_request>
                         </NMFIIService>'''
