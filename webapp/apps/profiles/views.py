@@ -235,6 +235,7 @@ class Register(APIView):
             user.image = request.FILES.get("image", None)
             user.identity_info_image = request.FILES.get("image", None)
             user.save()
+            
             user_response = dict(serializer.data)
             user_response['risk_score'], user_response['name'] = None, ""
             sms_code = utils.get_sms_verification_code(user)
@@ -1735,6 +1736,7 @@ class GoogleLogin(APIView):
         email = serializer.initial_data.get("email")
         
         auth_code = request.data['auth_code']
+        
 
         kwargs = {'email': email, 'access_token': ''}
         user,user_detail = utils.check_existing_user_email(**kwargs)
@@ -1791,7 +1793,7 @@ class GoogleLogin(APIView):
                                                    })
                     else:
                         return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": "login_error"},
-                                                    status.HTTP_404_NOT_FOUND,
+                                                    status.HTTP_401_UNAUTHORIZED,
                                                     constants.GOOGLE_LOGIN_ERROR)  
             else:
                 login_error = constants.LOGIN_ERROR_6
@@ -1822,7 +1824,7 @@ class GoogleRegister(APIView):
         
         if phone_exist is None:     
             auth_code = request.POST.get('auth_code', False)
-            
+
             access_token = helpers.convert_auth_to_access_token(auth_code)
              
             if access_token is not None:
@@ -1871,13 +1873,13 @@ class GoogleRegister(APIView):
                     else:
                         return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(serializer.errors))
                 else:
-                    return api_utils.response({}, status.HTTP_404_NOT_FOUND,
+                    return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": "login_error"}, status.HTTP_401_UNAUTHORIZED,
                                                   constants.GOOGLE_LOGIN_ERROR) 
             else:
-                return api_utils.response({}, status.HTTP_404_NOT_FOUND,     
+                return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": "login_error"}, status.HTTP_401_UNAUTHORIZED,     
                                                   constants.GOOGLE_LOGIN_ERROR) 
         else:
-                return api_utils.response({}, status.HTTP_404_NOT_FOUND,
+                return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": "login_error"}, status.HTTP_404_NOT_FOUND,
                                                constants.PHONE_EXISTS)
 
 
@@ -1892,6 +1894,7 @@ class GoogleRegisterExistingUser(APIView):
         email = request.data['email']
         password = request.data['password']
         auth_code = request.POST.get('auth_code', False)
+        
         user = utils.get_social_user(email)
         if user.check_password(password):
             access_token = helpers.convert_auth_to_access_token(auth_code)
@@ -1967,7 +1970,7 @@ class GoogleRegisterExistingUser(APIView):
             else:
                 login_error = constants.LOGIN_ERROR_5
                 return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": login_error},
-                                                  status.HTTP_404_NOT_FOUND,
+                                                  status.HTTP_401_UNAUTHORIZED,
                                                   constants.GOOGLE_LOGIN_ERROR) 
         else:
             login_error = constants.LOGIN_ERROR_5
