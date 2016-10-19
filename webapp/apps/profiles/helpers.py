@@ -301,14 +301,18 @@ def send_transaction_change_email(first_order,order_detail,applicant_name,user,e
         if user.mandate_status == "0":   
             if all(sips < 1 for sips in order_detail.all_sips) & any(lumpsums > 0 for lumpsums in order_detail.all_lumpsums):
                 html_email_template_name='transaction/user-confirm-status-change.html'
+                subject_name = 'transaction/user-status-change-subject.txt'
                 email_attachment = None
                 attachment_error = None
             else:
                 html_email_template_name='transaction/user-confirm-status-change-sip.html'
+                subject_name = 'transaction/user-mandate-subject.txt'
         else:
             html_email_template_name='transaction/user-confirm-status-change-ongoing.html'
+            subject_name = 'transaction/user-status-change-subject.txt'
     else:
         html_email_template_name='transaction/user-confirm-following-sip.html'
+        subject_name = 'transaction/user-status-change-subject.txt'
     
     list1 = zip(order_detail.fund_order_list,order_detail.nav_list)
     
@@ -335,7 +339,7 @@ def send_transaction_change_email(first_order,order_detail,applicant_name,user,e
     Sends a django.core.mail.EmailMultiAlternatives to `to_email`.
     """
     if order_detail.unit_alloted == True and attachment_error == None:
-        subject = loader.render_to_string('transaction/user-status-change-subject.txt', context)
+        subject = loader.render_to_string(subject_name, context)
         subject = ''.join(subject.splitlines())
         body = loader.render_to_string(html_email_template_name, context)
         email_message = EmailMultiAlternatives(subject, body, from_email, [user.email], bcc=[settings.DEFAULT_TO_EMAIL,settings.DEFAULT_FROM_EMAIL])
