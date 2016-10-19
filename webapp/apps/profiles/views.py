@@ -1794,7 +1794,7 @@ class GoogleLogin(APIView):
                                                    })
                     else:
                         return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": "login_error"},
-                                                    status.HTTP_404_NOT_FOUND,
+                                                    status.HTTP_401_UNAUTHORIZED,
                                                     constants.GOOGLE_LOGIN_ERROR)  
             else:
                 login_error = constants.LOGIN_ERROR_6
@@ -1878,10 +1878,10 @@ class GoogleRegister(APIView):
                     else:
                         return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(serializer.errors))
                 else:
-                    return api_utils.response({}, status.HTTP_404_NOT_FOUND,
+                    return api_utils.response({}, status.HTTP_401_UNAUTHORIZED,
                                                   constants.GOOGLE_LOGIN_ERROR) 
             else:
-                return api_utils.response({}, status.HTTP_404_NOT_FOUND,     
+                return api_utils.response({}, status.HTTP_401_UNAUTHORIZED,     
                                                   constants.GOOGLE_LOGIN_ERROR) 
         else:
                 return api_utils.response({}, status.HTTP_404_NOT_FOUND,
@@ -1978,7 +1978,7 @@ class GoogleRegisterExistingUser(APIView):
             else:
                 login_error = constants.LOGIN_ERROR_5
                 return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": login_error},
-                                                  status.HTTP_404_NOT_FOUND,
+                                                  status.HTTP_401_UNAUTHORIZED,
                                                   constants.GOOGLE_LOGIN_ERROR) 
         else:
             login_error = constants.LOGIN_ERROR_5
