@@ -70,6 +70,10 @@ class NSEBackend(ExchangeBackend):
             root = ET.fromstring(nse_constants.REQUEST_PURCHASETXN)
             child_root = ET.fromstring(nse_constants.REQUEST_PURCHASE_CHILDTXN)
             return create_validate_nserequests.purchasetxnrequest(root, child_root, user_id, **kwargs)
+        elif method_name == nse_constants.METHOD_SYSTRXNREG:
+            root = ET.fromstring(nse_constants.REQUEST_SYSTRXNREG)
+            child_root = ET.fromstring(nse_constants.REQUEST_SYSTRXNREG_CHILDTXN)
+            return create_validate_nserequests.purchasetxnrequest(root, child_root, user_id, **kwargs)
         elif method_name == nse_constants.METHOD_REDEEMTXN:
             root = ET.fromstring(nse_constants.REQUEST_REDEEMTXN)
             child_root = ET.fromstring(nse_constants.REQUEST_REDEEM_CHILDTXN)
@@ -173,14 +177,14 @@ class NSEBackend(ExchangeBackend):
             self.update_aof_sent(user_id)
         return status
 
-    def purchase_trxn(self, user_id, order_detail):
+    def purchase_trxn(self, user_id, order_detail, is_sip=False):
         """
 
         :param:
         :return:
         """
         error_logger = logging.getLogger('django.error')
-        kwargs = {'exchange_backend': self, "order" : order_detail}
+        kwargs = {'exchange_backend': self, "order" : order_detail, "is_sip":is_sip}
         xml_request_body = self._get_request_body(nse_constants.METHOD_PURCHASETXN, user_id, **kwargs)
         root = self._get_data(nse_constants.METHOD_PURCHASETXN, xml_request_body=xml_request_body)
         return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
@@ -210,31 +214,6 @@ class NSEBackend(ExchangeBackend):
         root = self._get_data(nse_constants.METHOD_REDEEMTXN, xml_request_body=xml_request_body)
         return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
         if return_code == nse_constants.RETURN_CODE_SUCCESS:
-            return constants.RETURN_CODE_SUCCESS
-        else:
-            error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
-            for error in error_responses:
-                error_msg = error.find(nse_constants.SERVICE_RETURN_ERROR_MSG_PATH).text
-                error_logger.error(error_msg)
-            return constants.RETURN_CODE_FAILURE
-
-    def sip_trxn(self, user_id, order_detail):
-        """
-
-        :param:
-        :return:
-        """
-        error_logger = logging.getLogger('django.error')
-        kwargs = {'exchange_backend': self, "order" : order_detail}
-        xml_request_body = self._get_request_body(nse_constants.METHOD_PURCHASETXN, user_id, **kwargs)
-        root = self._get_data(nse_constants.METHOD_PURCHASETXN, xml_request_body=xml_request_body)
-        return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
-        if return_code == nse_constants.RETURN_CODE_SUCCESS:
-            payment_link = root.find(nse_constants.RESPONSE_PAYMENT_LINK_PATH).text
-            current_transaction = payment_models.Transaction.get(user_id=user_id, txn_status=0)
-            # 0 for pending transactions assuming there is only one pending transaction
-            current_transaction.payment_link= payment_link
-            current_transaction.save()
             return constants.RETURN_CODE_SUCCESS
         else:
             error_responses = root.findall(nse_constants.SERVICE_RESPONSE_VALUE_PATH)
@@ -360,4 +339,7 @@ class NSEBackend(ExchangeBackend):
     def create_redeem(self, user_id, grouped_redeem):
         return self.redeem_trxn(user_id, grouped_redeem), None
     
+    def create_xsip_order(self, user_id, order_detail):
+        return self.purchase_trxn(user_id, order_detail, is_sip=True), None
+
         

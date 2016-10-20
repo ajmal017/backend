@@ -410,11 +410,15 @@ def purchasetxnrequest(root, child_root, user_id, **kwargs):
         billdeskbank = product_id_array[0] 
     order_detail = kwargs.get("order")
     order_items = order_detail.fund_order_items.all()
+    is_sip = kwargs.get("is_sip", False)
+    if is_sip == True:
+        bank_mandate = order_detail.bank_mandate
+        if not bank_mandate:
+            return None
 
     child_items = []
     total_amount = 0
     for item in order_items:
-        total_amount += item.order_amount
         item_fund = item.portfolio_item.fund
         neft_code = ''
         fund_vendor = core_models.FundVendorInfo.objects.get(fund=item_fund, vendor=user_vendor.vendor)
@@ -433,24 +437,38 @@ def purchasetxnrequest(root, child_root, user_id, **kwargs):
             except core_models.FolioNumber.DoesNotExist:
                 folio_number = None
 
+        sip_tenure, tenure_len = user.get_sip_tenure(item.portfolio_item.portfolio)
+        installment_no = 0 if sip_tenure is None else (sip_tenure * 12)
+        agreed_sip = 0
+        if is_sip == True:
+            if item.agreed_sip:
+                agreed_sip = item.agreed_sip
+            start_date = models.get_valid_start_date(item_fund.id).strftime("%d-%b-%Y")
+            end_date = start_date + datetime.relativedelta(months=+installment_no)
+            trxn_amount = agreed_sip
+        else:
+            trxn_amount = item.order_amount
+        
+        total_amount += trxn_amount
+        
         child_dict = {
             constants.AMC_XPATH: get_amc_code(fund_house.name.upper()) if fund_house is not None else None,
             constants.FOLIO_XPATH: folio_number,
-            constants.PRODUCT_CODE_XPATH: neft_code if item.order_amount < 200000 else rtgs_code,
+            constants.PRODUCT_CODE_XPATH: neft_code if trxn_amount < 200000 else rtgs_code,
             constants.REINVEST_XPATH: 'N',
-            constants.AMOUNT_XPATH: item.order_amount,
-            constants.SIP_FROM_DATE_XPATH: None,
-            constants.SIP_END_DATE_XPATH: None,
-            constants.SIP_FREQ_XPATH: None,
-            constants.SIP_AMOUNT_XPATH: None,
-            constants.SIP_PERIOD_DAY_XPATH: None
+            constants.AMOUNT_XPATH: trxn_amount,
+            constants.SIP_FROM_DATE_XPATH: None if is_sip == False else start_date.strftime("%d-%b-%Y"),
+            constants.SIP_END_DATE_XPATH: None if is_sip == False else end_date.strftime("%d-%b-%Y"),
+            constants.SIP_FREQ_XPATH: None if is_sip == False else 'OM',
+            constants.SIP_AMOUNT_XPATH: None if is_sip == False else trxn_amount,
+            constants.SIP_PERIOD_DAY_XPATH: None if is_sip == False else '{:02d}'.format(start_date.day)
         }
         
         child_items.append(child_dict)
 
     investor_dict = {
         constants.IIN_XPATH: user_vendor.ucc,
-        constants.SUB_TRXN_TYPE_XPATH: 'N', # TODO: 'N' for normal and 'S' for systematic
+        constants.SUB_TRXN_TYPE_XPATH: 'N' if is_sip == False else 'S', # TODO: 'N' for normal and 'S' for systematic
         constants.POA_XPATH: 'N', # Executed by POA , values 'Y' or 'N'
         constants.TRXN_ACCEPTANCE_XPATH: 'ALL', # By Phone , online or both
         constants.DEMAT_USER_XPATH: 'N', #TODO: Is demat user or not
@@ -505,16 +523,17 @@ def purchasetxnrequest(root, child_root, user_id, **kwargs):
         constants.NOMINEE3_PERCENT_XPATH: None,
         constants.NOMINEE3_GUARD_NAME_XPATH: None,
         constants.NOMINEE3_GUARD_PAN_XPATH: None,
+        constants.SIP_PAYMECH_XPATH: None if is_sip == False else 'M',
         constants.SIP_MICR_NO_XPATH: None,
-        constants.SIP_BANK_XPATH: None,
-        constants.SIP_ACC_NO_XPATH: None,
-        constants.SIP_AC_TYPE_XPATH: None,
-        constants.SIP_IFSC_CODE_XPATH: None,
+        constants.SIP_BANK_XPATH: None if is_sip == False else bankcodes.bank_code_map.get(bank_mandate.mandate_bank_details.ifsc_code.name),
+        constants.SIP_ACC_NO_XPATH: None if is_sip == False else bank_mandate.mandate_bank_details.account_number,
+        constants.SIP_AC_TYPE_XPATH: None if is_sip == False else 'SB',
+        constants.SIP_IFSC_CODE_XPATH: None if is_sip == False else bank_mandate.mandate_bank_details.ifsc_code.ifsc_code,
         constants.UMRN_XPATH: None,      #TODO: Provided by ACH Mandate Report , no need to give ach details here
-        constants.ACH_AMT_XPATH: None,
-        constants.ACH_FROM_DATE_XPATH: None,
-        constants.ACH_END_DATE_XPATH: None,
-        constants.UNTIL_CANCELLED_XPATH: None,
+        constants.ACH_AMT_XPATH: None if is_sip == False else bank_mandate.mandate_amount,
+        constants.ACH_FROM_DATE_XPATH: None if is_sip == False else bank_mandate.mandate_start_date.strftime('%d-%b-%Y'),
+        constants.ACH_END_DATE_XPATH: None if is_sip == False else '31-Dec-2999',
+        constants.UNTIL_CANCELLED_XPATH: None if is_sip == False else 'Y',
         constants.RETURN_PAYMENT_FLAG_XPATH: 'Y',
         constants.CLIENT_CALLBACK_URL_XPATH: constants.PAYMENT_RU, #TODO
         constants.TRANS_COUNT_XPATH: len(child_items)

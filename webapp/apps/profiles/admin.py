@@ -12,7 +12,6 @@ from import_export.fields import Field
 
 from . import models
 from external_api import views 
-from external_api.bulk_order_entry import generate_client_pipe
 from external_api.bulk_order_entry import generate_client_fatca_pipe
 from django.http import HttpResponse
 import os
