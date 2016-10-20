@@ -183,6 +183,7 @@ CHEQUE_DEPOSIT_MODE_XPATH = SERVICE_REQUEST_PATH + '/cheque_deposit_mode'
 DEBIT_AMOUNT_TYPE_XPATH = SERVICE_REQUEST_PATH + '/debit_amount_type'
 DEBIT_AMT_TYPE_XPATH = SERVICE_REQUEST_PATH + '/debit_amt_type'
 NOMINEE_FLAG_XPATH = SERVICE_REQUEST_PATH + '/nominee_flag'
+SIP_PAYMECH_XPATH = SERVICE_REQUEST_PATH + '/sip_paymech'
 SIP_MICR_NO_XPATH = SERVICE_REQUEST_PATH + '/sip_micr_no'
 SIP_BANK_XPATH = SERVICE_REQUEST_PATH + '/sip_bank'
 SIP_BRANCH_XPATH = SERVICE_REQUEST_PATH + '/sip_branch'
@@ -437,6 +438,7 @@ REQUEST_PURCHASETXN = '''<NMFIIService>
                             <nominee3_percent></nominee3_percent>
                             <nominee3_guard_name></nominee3_guard_name>
                             <nominee3_guard_pan></nominee3_guard_pan>
+                            <sip_paymech></sip_paymech>
                             <sip_micr_no></sip_micr_no>
                             <sip_bank></sip_bank>
                             <sip_branch></sip_branch>

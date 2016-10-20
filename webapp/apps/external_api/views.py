@@ -12,8 +12,7 @@ from payment.models import Transaction
 from external_api.nse import constants as nse_contants
 from external_api import helpers
 from external_api import bank_mandate_helper
-from . import investor_info_generation, bse_investor_info_generation, bulk_order_entry, kyc_pdf_generator, \
-    xsip_registration, bank_mandate
+from . import investor_info_generation, kyc_pdf_generator
 from core.models import OrderDetail, RedeemDetail, GroupedRedeemDetail
 from . import models, constants, serializers, cvl
 from api import utils as api_utils
@@ -25,6 +24,7 @@ from payment import constants as payment_constant
 
 import time
 from webapp.apps.profiles.models import UserBankMandate
+from webapp.apps.core.models import FundOrderItem
 
 class VerifiablePincode(APIView):
     """
@@ -203,6 +203,9 @@ class GenerateBseOrderPipe(View):
 
         if request.user.is_superuser:
             order_detail = OrderDetail.objects.get(order_id=request.GET.get('order_id'))
+            if order_detail.is_lumpsum == False:
+                if len(order_detail.fund_order_items) > 0:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
+                    order_detail = OrderDetail.objects.filter(is_lumpsum=True, fund_order_items__portfolio_item=order_detail.fund_order_items[0].portfolio_item).first()
             if is_investable(order_detail.user):
                 exch_backend = helpers.get_exchange_vendor_helper().get_backend_instance()
                 order_vendor = order_detail.vendor
@@ -247,20 +250,31 @@ class GenerateXsipRegistration(View):
 
         if request.user.is_superuser:
             order_detail = OrderDetail.objects.get(order_id=request.GET.get('order_id'))
-            order_items = order_detail.fund_order_items.all()
-            if is_investable(order_detail.user):
-                output_file = xsip_registration.generate_user_pipe_file(order_detail.user, order_items).split('/')[-1]
-                prefix = 'webapp'
-                my_file_path = prefix + constants.STATIC + output_file
-                my_file = open(my_file_path, "rb")
-                content_type = 'text/plain'
-                response = HttpResponse(my_file, content_type=content_type, status=200)
-                response['Content-Disposition'] = 'attachment;filename=%s' % str(order_detail.id) + '_xip_order.txt'
-                my_file.close()
-                return response  # contains the pdf of the pertinent user
-            else:
-                # file doesn't exist because investor vault is incomplete.
-                return HttpResponse(payment_constant.CANNOT_GENERATE_FILE, status=404)
+            if order_detail.is_lumpsum == False:
+                if len(order_detail.fund_order_items) > 0:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
+                    order_detail = OrderDetail.objects.filter(is_lumpsum=True, fund_order_items__portfolio_item=order_detail.fund_order_items[0].portfolio_item).first()
+            if is_investable(order_detail.user) and order_detail.bank_mandate:
+                exch_backend = helpers.get_exchange_vendor_helper().get_backend_instance()
+                order_vendor = order_detail.vendor
+                if order_vendor:
+                    exch_backend = helpers.get_exchange_vendor_helper().get_backend_instance(order_vendor.name) 
+                if exch_backend:
+                    error_status, output_file = exch_backend.create_xsip_order(order_detail.user.id, order_detail)
+                    if error_status == constants.RETURN_CODE_SUCCESS:
+                        if output_file:
+                            output_file = output_file.split('/')[-1]
+                            prefix = 'webapp'
+                            my_file_path = prefix + constants.STATIC + output_file
+                            my_file = open(my_file_path, "rb")
+                            content_type = 'text/plain'
+                            response = HttpResponse(my_file, content_type=content_type, status=200)
+                            response['Content-Disposition'] = 'attachment;filename=%s' % str(order_detail.id) + '_xip_order.txt'
+                            my_file.close()
+                            return response  # contains the pdf of the pertinent user
+                        else:
+                            return HttpResponse(constants.SUCCESS, status=200)
+            # file doesn't exist because investor vault is incomplete.
+            return HttpResponse(payment_constant.CANNOT_GENERATE_FILE, status=404)
         else:
             # non-admin is trying to access the file. Prevent access.
             return HttpResponse(constants.FORBIDDEN_ERROR, status=403)

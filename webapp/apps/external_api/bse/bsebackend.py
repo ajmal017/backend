@@ -8,6 +8,7 @@ from profiles import constants as profile_constants
 from external_api.bse import bank_mandate
 from external_api.bse import bse_investor_info_generation
 from external_api.bse import bulk_upload
+from external_api.bse import xsip_registration
 
 import os
 import re
@@ -71,3 +72,6 @@ class BSEBackend(ExchangeBackend):
     
     def create_redeem(self, user_id, grouped_redeem):
         return constants.RETURN_CODE_SUCCESS, bulk_upload.generate_redeem_pipe_file(user_id, grouped_redeem)
+
+    def create_xsip_order(self, user_id, order_detail):
+        return constants.RETURN_CODE_SUCCESS, xsip_registration.generate_order_pipe_file(user_id, order_detail)
