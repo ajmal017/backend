@@ -23,8 +23,6 @@ from profiles import models as pr_models
 from payment import constants as payment_constant
 
 import time
-from webapp.apps.profiles.models import UserBankMandate
-from webapp.apps.core.models import FundOrderItem
 
 class VerifiablePincode(APIView):
     """
@@ -489,7 +487,7 @@ class GenerateMandatePdf(View):
         if request.user.is_superuser:
             exch_backend = helpers.get_exchange_vendor_helper().get_backend_instance()
             if exch_backend:
-                bank_mandate = UserBankMandate.objects.get(id=request.GET.get('mandate_id'))
+                bank_mandate = pr_models.UserBankMandate.objects.get(id=request.GET.get('mandate_id'))
                 user = bank_mandate.user    
                 if is_investable(user) and user.signature != "":
                     output_file, error = exch_backend.generate_bank_mandate(user.id, bank_mandate)

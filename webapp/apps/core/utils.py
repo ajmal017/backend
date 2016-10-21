@@ -10,8 +10,6 @@ from profiles import helpers as profiles_helpers
 from webapp.apps import random_with_N_digits
 from payment import models as payment_models
 
-from external_api import bank_mandate as bank_mandate
-
 from collections import OrderedDict, defaultdict
 from datetime import date, datetime, timedelta
 import math
