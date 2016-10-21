@@ -301,7 +301,8 @@ class GenerateBankMandateRegistration(View):
                 if order_vendor:
                     exch_backend = helpers.get_exchange_vendor_helper().get_backend_instance(order_vendor.name) 
                 if exch_backend:
-                    is_mandate_required, bank_mandate = bank_mandate_helper.is_new_mandate_required(order_detail.user, order_detail, True)
+                    mandate_helper_instance = bank_mandate_helper.BankMandateHelper()
+                    is_mandate_required, bank_mandate = mandate_helper_instance.is_new_mandate_required(order_detail.user, order_detail, True)
                     status, output_file = exch_backend.generate_bank_mandate_registration(order_detail.user.id, bank_mandate)
                     if status == constants.RETURN_CODE_SUCCESS:
                         if output_file:
