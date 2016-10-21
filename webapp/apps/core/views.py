@@ -27,9 +27,8 @@ from django.views.generic import View
 from django.http import HttpResponse
 from external_api import constants as external_constants
 
-import datetime
-from dateutil.relativedelta import relativedelta
 from django.db.models import Count
+
 
 
 
@@ -974,10 +973,10 @@ class LeaderBoard(APIView):
         """ 
         if date_choice != constants.FILTER_DATE_NOT_SELECTED  and date_choice is not None:
         
-            hdate = datetime.datetime.now()
+            hdate = datetime.now()
 
             if date_choice == constants.FILTER_DATE_ONE_WEEK:
-                ldate = hdate - datetime.timedelta(days=7)
+                ldate = hdate - timedelta(days=7)
             
             elif date_choice == constants.FILTER_DATE_ONE_MONTH:
                 ldate = hdate - relativedelta(months=1)
@@ -1001,7 +1000,6 @@ class LeaderBoard(APIView):
                 occupation = occupation_choices[occupation_choice]
             query["user__investorinfo__occupation_type__in"] = occupation
             
-        print(query)
 
         leader_list = profile_models.AggregatePortfolio.objects.filter(**query).order_by('-total_xirr')
 
