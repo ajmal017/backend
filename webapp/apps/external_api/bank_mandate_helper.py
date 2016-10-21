@@ -46,7 +46,7 @@ class BankMandateHelper(object):
         return bank_mandate
         
     def is_new_mandate_required(self, user, order_detail, create_new=False):
-        if not order_detail or order_detail.bank_mandate:
+        if not order_detail:
             return False, None
 
         if order_detail.bank_mandate:
@@ -73,7 +73,12 @@ class BankMandateHelper(object):
         if need_mandate:
             mandate_amount = self.get_investor_mandate_amount(order_sip_amount)
             mandate = self.create_new_mandate(user, order_detail, mandate_vendor, mandate_amount)
-            return True, mandate        
+            return True, mandate
+        else:
+            order_detail.bank_mandate = latest_mandate
+            order_detail.save()      
+        
+        return False, latest_mandate  
     
     def get_current_mandate(self, user):
         mandate_vendor = helpers.get_exchange_vendor_helper().get_active_vendor()
