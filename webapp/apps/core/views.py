@@ -985,7 +985,7 @@ class LeaderBoard(APIView):
                 ldate = hdate - relativedelta(months=3)
             
             if ldate is not None and hdate is not None:   
-                portfolios = models.Portfolio.objects.filter(created_at__lte = ldate).values('user').annotate(count = Count('user'))  
+                portfolios = models.Portfolio.objects.filter(investment_date__lte = ldate).values('user').annotate(count = Count('user'))  
                 users =[]
                 for portfolio in portfolios:
                     users.append(portfolio['user'])
