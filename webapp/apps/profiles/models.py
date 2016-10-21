@@ -211,9 +211,9 @@ class User(AbstractBaseUser, TimeStampedModel):
             if self.image:
                 orig = User.objects.get(pk=self.pk)
                 if self.image != orig.image:
-                    print(os.path.abspath(self.image.url))
+                    from profiles import utils
+                    utils.create_thumbnail(self.image,self.image_thumbnail,type=1)
                     
-                   
         if not self.id:
             self.id = api_utils.gen_hash(api_utils.expires())
         if self.vault_locked==False:

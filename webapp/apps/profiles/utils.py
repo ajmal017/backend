@@ -555,7 +555,7 @@ def create_thumbnail(images,thumbanail,type=0):
         if type == 0:
             fh = storage.open(images.name, 'rb')
         else:
-            fh = storage.open(images.url, 'rb')
+            fh = images
         try:
             image = Image.open(fh)
         except:
@@ -563,7 +563,7 @@ def create_thumbnail(images,thumbanail,type=0):
     
         image.thumbnail(THUMB_SIZE, Image.ANTIALIAS)
         #image = image.resize(THUMB_SIZE, Image.ANTIALIAS)  # resize the image
-        fh.close()
+        #fh.close()
         
         # Path to save to, name, and extension
         thumb_name, thumb_extension = os.path.splitext(images.name)
