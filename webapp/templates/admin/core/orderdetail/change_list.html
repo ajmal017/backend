@@ -18,7 +18,7 @@
             window.open("/v2.0/open/generate/xsip/registration/?order_id="+order_id);
         });
 
-        $('.bank_mandate').click(function() {
+        $('.bank_mandate_button').click(function() {
             var allElems = $(this).parent().parent().children();
             order_id = allElems[1].innerText;
             // this opens a new window for the download of the private resource.

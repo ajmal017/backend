@@ -500,7 +500,7 @@ class UserBankMandate(TimeStampedModel):
     )
 
     user = models.ForeignKey(User)
-    vendor = models.ForeignKey(Vendor, related_name="user_vendor", blank=False, null=False)
+    vendor = models.ForeignKey(Vendor, related_name="bank_mandate_vendor", blank=False, null=False)
     mandate_registered = models.BooleanField(default=False)
     mandate_reg_no = models.CharField(_('Mandate Registration Number'), max_length=100, default=None, blank=True,
                                       null=True)
