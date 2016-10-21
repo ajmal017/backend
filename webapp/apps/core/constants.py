@@ -348,3 +348,8 @@ FUND_CATEGORY_NAME_LARGE = "Large-Cap"
 FUND_CATEGORY_NAME_MID = "Small/Mid-Cap"
 MAX_NUMBER_EQUITY_FUNDS = 4
 MAX_NUMBER_EQUITY_FUNDS_LARGE = 3
+
+FILTER_DATE_NOT_SELECTED = 0   # date not selected for filter
+FILTER_DATE_ONE_WEEK = 1  # date selected for one week
+FILTER_DATE_ONE_MONTH  = 2  # date selected for one month
+FILTER_DATE_THREE_MONTH = 3  # date selected for 3 month

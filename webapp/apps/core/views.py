@@ -27,6 +27,12 @@ from django.views.generic import View
 from django.http import HttpResponse
 from external_api import constants as external_constants
 
+import datetime
+from dateutil.relativedelta import relativedelta
+from django.db.models import Count
+
+
+
 def index(request):
     """
     :param request:
@@ -929,15 +935,8 @@ class LeaderBoard(APIView):
         hscore = request.data.get('hscore', constants.DEFAULT_HIGH_SCORE)
         gender = request.data.get('gender', constants.DEFAULT_GENDER)
         occupation_choice = request.data.get('occupation_choice', constants.DEFAULT_OCCUPATION)
-        
-        """
-        get the from and to filter date
-        pass None if date has not from front end
-        
-        ldate = request.data.get('ldate', None)
-        hdate = request.data.get('hdate', None)
-        """
-        
+        date_choice = request.data.get('date_choice',None)  # date params
+
         try:
             investor_portfolio = profile_models.AggregatePortfolio.objects.get(user=request.user)
             print (request.user)
@@ -972,14 +971,27 @@ class LeaderBoard(APIView):
             query["user__investorinfo__income"] = sal
         """  
         Adding date filter to the leader board filter
-        
-        if ldate is not None:
-            query["user__portfolio__created_at__gte"] = ldate
-            
-        if hdate is not None:
-            query["user__portfolio__created_at__lte"] = hdate
         """ 
+        if date_choice != constants.FILTER_DATE_NOT_SELECTED  and date_choice is not None:
+        
+            hdate = datetime.datetime.now()
+
+            if date_choice == constants.FILTER_DATE_ONE_WEEK:
+                ldate = hdate - datetime.timedelta(days=7)
             
+            elif date_choice == constants.FILTER_DATE_ONE_MONTH:
+                ldate = hdate - relativedelta(months=1)
+            
+            elif date_choice == constants.FILTER_DATE_THREE_MONTH:
+                ldate = hdate - relativedelta(months=3)
+            
+            if ldate is not None and hdate is not None:   
+                portfolios = models.Portfolio.objects.filter(created_at__lte = ldate).values('user').annotate(count = Count('user'))  
+                users =[]
+                for portfolio in portfolios:
+                    users.append(portfolio['user'])
+                query["user_id__in"] = users
+
         if occupation_choice != constants.DEFAULT_OCCUPATION:
             if type(occupation_choice) == list:
                 occupation = []
@@ -988,6 +1000,8 @@ class LeaderBoard(APIView):
             else:
                 occupation = occupation_choices[occupation_choice]
             query["user__investorinfo__occupation_type__in"] = occupation
+            
+        print(query)
 
         leader_list = profile_models.AggregatePortfolio.objects.filter(**query).order_by('-total_xirr')
 
