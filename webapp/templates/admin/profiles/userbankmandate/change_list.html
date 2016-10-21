@@ -10,8 +10,8 @@
     <script>
         window.onload=function(){
             $('.generate_mandate').click(function(){
-                var allElems = $(this).parent().parent().children().children();
-                id = allElems[1].value;
+                var allElems = $(this).parent().parent().children();
+                id = allElems[0].innerText;
                 window.open("/v2.0/open/generate/bank/mandate/pdf?mandate_id="+id);
             });
         }
