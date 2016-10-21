@@ -28,17 +28,17 @@ def generate_bank_mandate_tiff(user_id, **kwargs):
     bank_mandate = kwargs.get('bank_mandate')
 
     mandate_dict = {
-        'MandateAccountHolderName': bank_mandate.bank_details.account_holder_name,
+        'MandateAccountHolderName': bank_mandate.mandate_bank_details.account_holder_name,
         'MandateAmountNumber': bank_mandate.mandate_amount,
         'MandateAmountWords': str(num2words(bank_mandate.mandate_amount, lang="en_IN")) + " ONLY",
-        'MandateBank': bank_mandate.bank_details.ifsc_code.name,
-        'MandateBankACNumber': bank_mandate.bank_details.account_number,
-        'MandateBankACType': bank_mandate.bank_details.account_type,
+        'MandateBank': bank_mandate.mandate_bank_details.ifsc_code.name,
+        'MandateBankACNumber': bank_mandate.mandate_bank_details.account_number,
+        'MandateBankACType': bank_mandate.mandate_bank_details.account_type,
         'MandateDate-dd': curr_date.strftime("%d"),
         'MandateDate-mm': curr_date.strftime("%m"),
         'MandateDate-yyyy': curr_date.strftime("%Y"),
         'MandateEmailID': contact.email,
-        'MandateIFSC': bank_mandate.bank_details.ifsc_code.ifsc_code,
+        'MandateIFSC': bank_mandate.mandate_bank_details.ifsc_code.ifsc_code,
         'MandatePeriodFrom-dd': bank_mandate.mandate_start_date.strftime("%d"),
         'MandatePeriodFrom-mm': bank_mandate.mandate_start_date.strftime("%m"),
         'MandatePeriodFrom-yyyy': bank_mandate.mandate_start_date.strftime("%Y"),

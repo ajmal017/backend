@@ -24,10 +24,12 @@ def generate_bank_mandate_file(user_id, bank_mandate):
     bank_mandate_pipe_file_name = "bank_mandate_pipe" + timestamp + ".txt"
     outfile = open(output_path + bank_mandate_pipe_file_name, "w")
     user = models.User.objects.get(id=user_id)
+    user_vendor = models.UserVendor.objects.get(user=user, vendor__name=bank_mandate.vendor.name)
+
     bank_mandate_dict = OrderedDict([('Member Code', cons.MEMBER_CODE),
-                                     ('UCC', str(user.finaskus_id)),
+                                     ('UCC', str(user_vendor.ucc)),
                                      ('Amount', str(bank_mandate.mandate_amount)),
-                                     ('IFSC Code', bank_mandate.mandate_bank_details.ifsc_code),
+                                     ('IFSC Code', bank_mandate.mandate_bank_details.ifsc_code.ifsc_code),
                                      ('Account Number', bank_mandate.mandate_bank_details.account_number), ])
     outfile.write("|".join(bank_mandate_dict.values()))
     outfile.write("\r")
@@ -43,31 +45,32 @@ def generate_bank_mandate_pdf(user_id, bank_mandate):
     """
 
     user = models.User.objects.get(id=user_id)
-    investor = models.InvestorInfo.objects.get(user=user)
     contact = models.ContactInfo.objects.get(user=user)
+    user_vendor = models.UserVendor.objects.get(user=user, vendor__name=bank_mandate.vendor.name)
+
     curr_date = datetime.now()
 
     if not user.mandate_reg_no:
         return None, "Mandate Registration Number Missing"
     
     mandate_dict = {
-        'MandateAccountHolderName': bank_mandate.bank_details.account_holder_name,
+        'MandateAccountHolderName': bank_mandate.mandate_bank_details.account_holder_name,
         'MandateAmountNumber': bank_mandate.mandate_amount,
         'MandateAmountWords': str(num2words(bank_mandate.mandate_amount, lang="en_IN")) + " ONLY",
-        'MandateBank': bank_mandate.bank_details.ifsc_code.name,
-        'MandateBankACNumber': bank_mandate.bank_details.account_number,
+        'MandateBank': bank_mandate.mandate_bank_details.ifsc_code.name,
+        'MandateBankACNumber': bank_mandate.mandate_bank_details.account_number,
         'MandateCreate': True,
         'MandateDate-dd': curr_date.strftime("%d"),
         'MandateDate-mm': curr_date.strftime("%m"),
         'MandateDate-yyyy': curr_date.strftime("%Y"),
         'MandateEmailID': contact.email,
-        'MandateIFSC': bank_mandate.bank_details.ifsc_code.ifsc_code,
-        'MandatePeriodFrom-dd': bank_mandate.bank_details.strftime("%d"),
-        'MandatePeriodFrom-mm': bank_mandate.bank_details.strftime("%m"),
-        'MandatePeriodFrom-yyyy': bank_mandate.bank_details.strftime("%Y"),
+        'MandateIFSC': bank_mandate.mandate_bank_details.ifsc_code.ifsc_code,
+        'MandatePeriodFrom-dd': bank_mandate.mandate_start_date.strftime("%d"),
+        'MandatePeriodFrom-mm': bank_mandate.mandate_start_date.strftime("%m"),
+        'MandatePeriodFrom-yyyy': bank_mandate.mandate_start_date.strftime("%Y"),
         'MandatePhoneNo': contact.phone_number,
-        'MandateReferenceNo': user.mandate_reg_no,
-        'MandateUCC': investor.user.finaskus_id,
+        'MandateReferenceNo': bank_mandate.mandate_reg_no,
+        'MandateUCC': user_vendor.ucc,
     }
 
     for key, value in mandate_dict.items():

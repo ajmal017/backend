@@ -26,7 +26,10 @@ class BankMandateHelper(object):
         return mandate_amount
 
     def get_latest_mandate(self, user, mandate_vendor):
-        latest_mandate = models.UserBankMandate.objects.filter(user=user, vendor=mandate_vendor).latest('mandate_start_date')
+        try:
+            latest_mandate = models.UserBankMandate.objects.filter(user=user, vendor=mandate_vendor).latest('mandate_start_date')
+        except:
+            latest_mandate = None
         return latest_mandate
                 
     def create_new_mandate(self, user, order_detail, vendor, mandate_amount):
@@ -69,7 +72,7 @@ class BankMandateHelper(object):
 
         if need_mandate:
             mandate_amount = self.get_investor_mandate_amount(order_sip_amount)
-            mandate = self.create_new_mandate(self, user, order_detail, mandate_vendor, mandate_amount)
+            mandate = self.create_new_mandate(user, order_detail, mandate_vendor, mandate_amount)
             return True, mandate        
     
     def get_current_mandate(self, user):
