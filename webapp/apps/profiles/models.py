@@ -204,15 +204,17 @@ class User(AbstractBaseUser, TimeStampedModel):
 
     def save(self, *args, **kwargs):
         if self.pk is not None:
+            orig = User.objects.get(pk=self.pk)
+            from profiles import utils
             if self.user_video:
-                orig = User.objects.get(pk=self.pk)
                 if not orig.user_video:
                     helpers.send_user_video_upload_email(self,use_https=settings.USE_HTTPS)
-            if self.image:
-                orig = User.objects.get(pk=self.pk)
+            if self.image and self.image is not None:
                 if self.image != orig.image:
-                    from profiles import utils
                     utils.create_thumbnail(self.image,self.image_thumbnail,type=1)
+            if self.identity_info_image and self.identity_info_image is not None:
+                if self.identity_info_image != orig.identity_info_image:
+                    utils.create_thumbnail(self.identity_info_image,self.identity_info_image_thumbnail,type=1)
                     
         if not self.id:
             self.id = api_utils.gen_hash(api_utils.expires())
@@ -220,8 +222,6 @@ class User(AbstractBaseUser, TimeStampedModel):
             self.is_terms = False
             self.is_declaration = False
         
-        
-
         self.clean()
 
         super(User, self).save(*args, **kwargs)
@@ -382,10 +382,15 @@ class InvestorInfo(TimeStampedModel):
 
     def save(self, *args, **kwargs):
         if self.pk is not None:
+            orig = InvestorInfo.objects.get(pk=self.pk)
+            from profiles import utils
             if self.kra_verified is True:
-                orig = InvestorInfo.objects.get(pk=self.pk)
                 if orig.kra_verified is False:
                     helpers.send_kra_verified_email(orig.user, self.applicant_name, use_https=settings.USE_HTTPS)
+            if self.pan_image and self.pan_image is not None:
+                if self.pan_image != orig.pan_image:
+                    utils.create_thumbnail(self.pan_image,self.pan_image_thumbnail,type=1)
+        
         super(InvestorInfo, self).save(*args, **kwargs)
 
     def get_dob(self):
