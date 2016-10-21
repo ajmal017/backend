@@ -509,6 +509,9 @@ class UserBankMandate(TimeStampedModel):
     mandate_bank_details = models.ForeignKey(InvestorBankDetails, blank=True, null=True)
     mandate_status = models.CharField(max_length=1, choices=MANDATE_STATUS, blank=True, default=constants.LEVEL_0)
 
+    def __str__(self):
+        return str(self.id)
+
 class NomineeInfo(models.Model):
     """
     Details of the nominee.

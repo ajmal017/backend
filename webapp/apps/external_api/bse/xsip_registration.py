@@ -20,7 +20,7 @@ def generate_order_pipe_file(user_id, order_detail):
     if not bank_mandate:
         return None
 
-    base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps', '')
+    base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps/external_api', '')
     output_path = base_dir + '/webapp/static/'
     timestamp = time.strftime("%Y%m%d-%H%M%S")
     bulk_user_pipe_file_name = "bulk_user_pipe" + timestamp + ".txt"
