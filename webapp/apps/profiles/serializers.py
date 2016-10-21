@@ -16,7 +16,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.User
-        fields = ('email', 'phone_number', 'gender', 'name', 'first_name', 'last_name', 'image')
+        fields = ('email', 'phone_number', 'gender', 'name', 'first_name', 'last_name', 'image','image_thumbnail')
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
@@ -222,7 +222,7 @@ class IdentityInfoGetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.User
-        fields = ('marital_status', 'gender', 'nationality', 'identity_info_image')
+        fields = ('marital_status', 'gender', 'nationality', 'identity_info_image','identity_info_image_thumbnail')
 
 
 class IdentityInfoSkipSerializer(serializers.ModelSerializer):
