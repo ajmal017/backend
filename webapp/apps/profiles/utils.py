@@ -544,32 +544,39 @@ def phone_number_check(phone):
     return user
 
 
-def create_thumbnail(images,thumbanail,type=0):
+def create_thumbnail(img,thumbnail,upload_type=0):
     """
-    It creates thumbanail for the uploaded images
+    It creates thumbnail for the uploaded images
     param: image - original uploaded image
            thumbnail - thumbnail field for the images
            type - 0 for image uploaded through finaskus app , 1 for image uploaded through admin panel
     """
-    if images != "" and images is not None:
+    
+    print(img)
+    
+    if img != "" and img is not None:
         THUMB_SIZE = (100,100)
         
-        if type == 0:
-            fh = storage.open(images.name, 'rb')
+        if upload_type == 0:
+            fh = storage.open(img.name, 'rb')
         else:
-            fh = images
+            fh = img
         try:
             image = Image.open(fh)
         except:
             return False
-    
+        
+        print(image)
+        
         image.thumbnail(THUMB_SIZE, Image.ANTIALIAS)
         #image = image.resize(THUMB_SIZE, Image.ANTIALIAS)  # resize the image
-        #fh.close()
         
         # Path to save to, name, and extension
-        thumb_name, thumb_extension = os.path.splitext(images.name)
+        thumb_name, thumb_extension = os.path.splitext(img.name)
         thumb_extension = thumb_extension.lower()
+        
+        if thumb_extension.endswith('"'):
+            thumb_extension = thumb_extension[:-1]
     
         thumb_filename = thumb_name + '_thumb' + thumb_extension
     
@@ -585,15 +592,17 @@ def create_thumbnail(images,thumbanail,type=0):
         # Save thumbnail to in-memory file as StringIO
         temp_thumb = io.BytesIO()
         image.save(temp_thumb, FTYPE)
-        temp_thumb.seek(0)
-    
+        temp_thumb.seek(2)
+        fh.close()
             # Load a ContentFile into the thumbnail field so it gets saved
         try:
-            thumbanail.save(thumb_filename, ContentFile(temp_thumb.read()), save=True)
+            thumbnail.save(thumb_filename, ContentFile(temp_thumb.read()), save=True)
+            print("Done")
         except:
+            temp_thumb.close()
             return False
         temp_thumb.close()
-    
+        print("Ufff")
         return True
     else:
         return False
