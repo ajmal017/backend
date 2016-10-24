@@ -683,8 +683,10 @@ class SaveImage(APIView):
                 if user.image == "":
                     user.image = request.FILES.get("identity_info_image", None)
                 user.save()
+                """
                 utils.create_thumbnail(user.image,user.image_thumbnail)  # creates the thumbnail for user identity_info_image
                 utils.create_thumbnail(user.identity_info_image,user.identity_info_image_thumbnail)  # creates the thumbnail for user identity_info_image
+                """
                 return api_utils.response({"message": constants.IDENTITY_IMAGE_SAVED,
                                            "identity_info_image": user.identity_info_image.url,"identity_info_image_thumbnail": user.identity_info_image_thumbnail.url},
                                            status.HTTP_200_OK)

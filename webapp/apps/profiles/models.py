@@ -211,10 +211,11 @@ class User(AbstractBaseUser, TimeStampedModel):
                     helpers.send_user_video_upload_email(self,use_https=settings.USE_HTTPS)
             if self.image and self.image is not None:
                 if self.image != orig.image:
-                    utils.create_thumbnail(self.image,self.image_thumbnail,type=1)
+                    utils.create_thumbnail(self.image,self.image_thumbnail,upload_type=1)
             if self.identity_info_image and self.identity_info_image is not None:
                 if self.identity_info_image != orig.identity_info_image:
-                    utils.create_thumbnail(self.identity_info_image,self.identity_info_image_thumbnail,type=1)
+                    utils.create_thumbnail(self.identity_info_image,self.identity_info_image_thumbnail,upload_type=1)
+
                     
         if not self.id:
             self.id = api_utils.gen_hash(api_utils.expires())
@@ -389,7 +390,7 @@ class InvestorInfo(TimeStampedModel):
                     helpers.send_kra_verified_email(orig.user, self.applicant_name, use_https=settings.USE_HTTPS)
             if self.pan_image and self.pan_image is not None:
                 if self.pan_image != orig.pan_image:
-                    utils.create_thumbnail(self.pan_image,self.pan_image_thumbnail,type=1)
+                    utils.create_thumbnail(self.pan_image,self.pan_image_thumbnail,upload_type=1)
         
         super(InvestorInfo, self).save(*args, **kwargs)
 
@@ -458,8 +459,8 @@ class ContactInfo(TimeStampedModel):
         permanent_front_image = S3PrivateImageField(upload_to=unique_permanentaddress_front_image, max_length=1023, blank=True, null=True)
         permanent_front_image_thumbnail = S3PrivateImageField(upload_to=unique_permanentaddress_front_image_thumbnail, max_length=1023, blank=True, null=True)
         # back image of the permanent address proof.
-        permanent_back_image = S3PrivateImageField(upload_to=unique_permanentaddress_front_image, max_length=1023, blank=True, null=True)
-        permanent_back_image_thumbnail = S3PrivateImageField(upload_to=unique_permanentaddress_front_image_thumbnail, max_length=1023, blank=True, null=True)
+        permanent_back_image = S3PrivateImageField(upload_to=unique_permanentaddress_back_image, max_length=1023, blank=True, null=True)
+        permanent_back_image_thumbnail = S3PrivateImageField(upload_to=unique_permanentaddress_back_image_thumbnail, max_length=1023, blank=True, null=True)
     else:
         # front image of the address proof.
         front_image = models.FileField(upload_to="contact/address_proof/", max_length=1023, blank=True, null=True)
@@ -484,16 +485,16 @@ class ContactInfo(TimeStampedModel):
             from profiles import utils
             if self.front_image and self.front_image is not None:
                 if self.front_image != orig.front_image:
-                    utils.create_thumbnail(self.front_image,self.front_image_thumbnail,type=1)
+                    utils.create_thumbnail(self.front_image,self.front_image_thumbnail,upload_type=1)
             if self.back_image and self.back_image is not None:
                 if self.back_image != orig.back_image:
-                    utils.create_thumbnail(self.back_image,self.back_image_thumbnail,type=1)
+                    utils.create_thumbnail(self.back_image,self.back_image_thumbnail,upload_type=1)
             if self.permanent_front_image and self.permanent_front_image is not None:
                 if self.permanent_front_image != orig.permanent_front_image:
-                    utils.create_thumbnail(self.permanent_front_image,self.permanent_front_image_thumbnail,type=1)
+                    utils.create_thumbnail(self.permanent_front_image,self.permanent_front_image_thumbnail,upload_type=1)
             if self.permanent_back_image and self.permanent_back_image is not None:
                 if self.permanent_back_image != orig.permanent_back_image:
-                    utils.create_thumbnail(self.permanent_back_image,self.permanent_back_image_thumbnail,type=1)
+                    utils.create_thumbnail(self.permanent_back_image,self.permanent_back_image_thumbnail,upload_type=1)
         super(ContactInfo, self).save(*args, **kwargs)
     
     
@@ -527,7 +528,7 @@ class InvestorBankDetails(TimeStampedModel):
             from profiles import utils
             if self.bank_cheque_image and self.bank_cheque_image is not None:
                 if self.bank_cheque_image != orig.bank_cheque_image:
-                    utils.create_thumbnail(self.bank_cheque_image,self.bank_cheque_image_thumbnail,type=1)
+                    utils.create_thumbnail(self.bank_cheque_image,self.bank_cheque_image_thumbnail,upload_type=1)
         super(InvestorBankDetails, self).save(*args, **kwargs)
 
 class UserBankMandate(TimeStampedModel):
