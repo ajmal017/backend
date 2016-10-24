@@ -548,6 +548,8 @@ def create_thumbnail(images,thumbanail,type=0):
     """
     It creates thumbanail for the uploaded images
     param: image - original uploaded image
+           thumbnail - thumbnail field for the images
+           type - 0 for image uploaded through finaskus app , 1 for image uploaded through admin panel
     """
     if images != "" and images is not None:
         THUMB_SIZE = (100,100)

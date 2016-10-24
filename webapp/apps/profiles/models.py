@@ -464,7 +464,27 @@ class ContactInfo(TimeStampedModel):
     def __str__(self):
         return str(self.user) + " " + str(self.communication_address)
 
-
+    
+    def save(self, *args, **kwargs):
+        if self.pk is not None:
+            orig = ContactInfo.objects.get(pk=self.pk)
+            from profiles import utils
+            if self.front_image and self.front_image is not None:
+                if self.front_image != orig.front_image:
+                    utils.create_thumbnail(self.front_image,self.front_image_thumbnail,type=1)
+            if self.back_image and self.back_image is not None:
+                if self.back_image != orig.back_image:
+                    utils.create_thumbnail(self.back_image,self.back_image_thumbnail,type=1)
+            if self.permanent_front_image and self.permanent_front_image is not None:
+                if self.permanent_front_image != orig.permanent_front_image:
+                    utils.create_thumbnail(self.permanent_front_image,self.permanent_front_image_thumbnail,type=1)
+            if self.permanent_back_image and self.permanent_back_image is not None:
+                if self.permanent_back_image != orig.permanent_back_image:
+                    utils.create_thumbnail(self.permanent_back_image,self.permanent_back_image_thumbnail,type=1)
+        super(ContactInfo, self).save(*args, **kwargs)
+    
+    
+    
 class InvestorBankDetails(TimeStampedModel):
     """
     Model to save investor bank details
@@ -488,7 +508,18 @@ class InvestorBankDetails(TimeStampedModel):
     def __str__(self):
         return str(self.user) + " " + str(self.ifsc_code) + " " + str(self.account_holder_name)
 
-
+    
+    def save(self, *args, **kwargs):
+        if self.pk is not None:
+            orig = InvestorBankDetails.objects.get(pk=self.pk)
+            from profiles import utils
+            if self.bank_cheque_image and self.bank_cheque_image is not None:
+                if self.bank_cheque_image != orig.bank_cheque_image:
+                    utils.create_thumbnail(self.bank_cheque_image,self.bank_cheque_image_thumbnail,type=1)
+        super(InvestorBankDetails, self).save(*args, **kwargs)
+    
+    
+    
 class NomineeInfo(models.Model):
     """
     Details of the nominee.
