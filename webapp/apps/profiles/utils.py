@@ -544,32 +544,22 @@ def phone_number_check(phone):
     return user
 
 
-def create_thumbnail(img,thumbnail,upload_type=0):
+def create_thumbnail(img,thumbnail):
     """
     It creates thumbnail for the uploaded images
-    param: image - original uploaded image
+    param: image - original uploaded image field
            thumbnail - thumbnail field for the images
-           type - 0 for image uploaded through finaskus app , 1 for image uploaded through admin panel
     """
-    
-    print(img)
     
     if img != "" and img is not None:
         THUMB_SIZE = (100,100)
-        
-        if upload_type == 0:
-            fh = storage.open(img.name, 'rb')
-        else:
-            fh = img
+
         try:
-            image = Image.open(fh)
+            image = Image.open(img)
         except:
             return False
-        
-        print(image)
-        
+ 
         image.thumbnail(THUMB_SIZE, Image.ANTIALIAS)
-        #image = image.resize(THUMB_SIZE, Image.ANTIALIAS)  # resize the image
         
         # Path to save to, name, and extension
         thumb_name, thumb_extension = os.path.splitext(img.name)
@@ -577,7 +567,7 @@ def create_thumbnail(img,thumbnail,upload_type=0):
         
         if thumb_extension.endswith('"'):
             thumb_extension = thumb_extension[:-1]
-    
+        
         thumb_filename = thumb_name + '_thumb' + thumb_extension
     
         if thumb_extension in ['.jpg', '.jpeg']:
@@ -592,17 +582,14 @@ def create_thumbnail(img,thumbnail,upload_type=0):
         # Save thumbnail to in-memory file as StringIO
         temp_thumb = io.BytesIO()
         image.save(temp_thumb, FTYPE)
-        temp_thumb.seek(2)
-        fh.close()
+        temp_thumb.seek(0)
             # Load a ContentFile into the thumbnail field so it gets saved
         try:
-            thumbnail.save(thumb_filename, ContentFile(temp_thumb.read()), save=True)
-            print("Done")
+            thumbnail.save(thumb_filename, ContentFile(temp_thumb.read()), save=False)
         except:
             temp_thumb.close()
             return False
         temp_thumb.close()
-        print("Ufff")
         return True
     else:
         return False
