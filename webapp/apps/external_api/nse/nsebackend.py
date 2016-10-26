@@ -308,8 +308,8 @@ class NSEBackend(ExchangeBackend):
         filePath = nse_iinform_generation.nse_investor_info_generator(user_id, self)
         return filePath
 
-    def generate_bank_mandate(self, user_id, bank_mandate):
-        kwargs = {'bank_mandate': bank_mandate, 'exchange_backend': self}
+    def generate_bank_mandate(self, user_id, bank_mandate_instance):
+        kwargs = {'bank_mandate': bank_mandate_instance, 'exchange_backend': self}
         filePath = bank_mandate.generate_bank_mandate_tiff(user_id, **kwargs)
         return filePath
     
