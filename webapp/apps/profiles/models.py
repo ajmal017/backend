@@ -305,6 +305,19 @@ class UserVendor(TimeStampedModel):
         unique_together = (('user', 'vendor'),)
 
 
+class UserVendor(TimeStampedModel):
+    user = models.ForeignKey(User)
+    vendor = models.ForeignKey(Vendor, related_name="user_vendor", blank=False, null=False)
+    ucc = models.CharField(max_length=40, default=None, blank=True, null=True)
+    ucc_registered = models.BooleanField(default=False)
+    fatca_filed = models.BooleanField(default=False)
+    tiff_mailed = models.BooleanField(default=False)
+    tiff_accepted = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = (('user', 'vendor'),)
+
+
 class VerificationSMSCode(TimeStampedModel):
     """
     Stores a short 5 digit activation code for verification

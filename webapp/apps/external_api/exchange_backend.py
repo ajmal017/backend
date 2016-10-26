@@ -96,4 +96,3 @@ class ExchangeBackend(ABC):
 
     def create_xsip_order(self, user_id, order_detail):
         return NotImplementedError
-    

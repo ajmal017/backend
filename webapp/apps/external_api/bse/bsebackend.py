@@ -10,6 +10,7 @@ from external_api.bse import bse_investor_info_generation
 from external_api.bse import bulk_upload
 from external_api.bse import xsip_registration
 
+<<<<<<< HEAD
 import os
 import re
 import pdb
@@ -17,6 +18,8 @@ from api import utils as api_utils
 import xml.etree.ElementTree as ET
 import requests
 import logging
+=======
+>>>>>>> a05c679fdfcac4f6b7ce3ad90b99b0104dd82fbb
 
 class BSEBackend(ExchangeBackend):
     """
