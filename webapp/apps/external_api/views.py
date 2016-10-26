@@ -249,8 +249,9 @@ class GenerateXsipRegistration(View):
         if request.user.is_superuser:
             order_detail = OrderDetail.objects.get(order_id=request.GET.get('order_id'))
             if order_detail.is_lumpsum == False:
-                if len(order_detail.fund_order_items) > 0:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
-                    order_detail = OrderDetail.objects.filter(is_lumpsum=True, fund_order_items__portfolio_item=order_detail.fund_order_items[0].portfolio_item).first()
+                fund_order_item = order_detail.fund_order_items.first()
+                if fund_order_item:
+                    order_detail = OrderDetail.objects.filter(is_lumpsum=True, fund_order_items__portfolio_item=fund_order_item.portfolio_item).first()
             if is_investable(order_detail.user) and order_detail.bank_mandate:
                 exch_backend = helpers.get_exchange_vendor_helper().get_backend_instance()
                 order_vendor = order_detail.vendor
@@ -486,9 +487,13 @@ class GenerateMandatePdf(View):
         # makes sure that only superuser can access this file.
 
         if request.user.is_superuser:
+            bank_mandate = pr_models.UserBankMandate.objects.get(id=request.GET.get('mandate_id'))
             exch_backend = helpers.get_exchange_vendor_helper().get_backend_instance()
+            mandate_vendor = bank_mandate.vendor
+            if mandate_vendor:
+                exch_backend = helpers.get_exchange_vendor_helper().get_backend_instance(mandate_vendor.name) 
+
             if exch_backend:
-                bank_mandate = pr_models.UserBankMandate.objects.get(id=request.GET.get('mandate_id'))
                 user = bank_mandate.user    
                 if is_investable(user) and user.signature != "":
                     output_file, error = exch_backend.generate_bank_mandate(user.id, bank_mandate)

@@ -9,7 +9,7 @@ from external_api import constants as api_constants
 from external_api.nse import bankcodes
 from payment import constants as payment_constants
 from datetime import datetime
-
+from dateutil.relativedelta import relativedelta
 
 def getValidRequest(investor_dict, root):
     for key, value in investor_dict.items():
@@ -437,14 +437,14 @@ def purchasetxnrequest(root, child_root, user_id, **kwargs):
             except core_models.FolioNumber.DoesNotExist:
                 folio_number = None
 
-        sip_tenure, tenure_len = user.get_sip_tenure(item.portfolio_item.portfolio)
-        installment_no = 0 if sip_tenure is None else (sip_tenure * 12)
         agreed_sip = 0
         if is_sip == True:
             if item.agreed_sip:
                 agreed_sip = item.agreed_sip
-            start_date = models.get_valid_start_date(item_fund.id).strftime("%d-%b-%Y")
-            end_date = start_date + datetime.relativedelta(months=+installment_no)
+            sip_tenure, tenure_len = user.get_sip_tenure(item.portfolio_item.portfolio)
+            installment_no = 0 if sip_tenure is None else (sip_tenure * 12)
+            start_date = core_models.get_valid_start_date(item_fund.id)
+            end_date = start_date + relativedelta(months=+installment_no)
             trxn_amount = agreed_sip
         else:
             trxn_amount = item.order_amount
@@ -497,7 +497,7 @@ def purchasetxnrequest(root, child_root, user_id, **kwargs):
         constants.ADVISIORY_CHARGE_XPATH: None,
         constants.CHEQUE_DEPOSIT_MODE_XPATH: None,
         constants.DD_CHARGE_XPATH: None,
-        constants.DEBIT_AMOUNT_TYPE_XPATH: None,
+        constants.DEBIT_AMOUNT_TYPE_XPATH: None if is_sip == False else 'M',
         constants.NOMINEE_FLAG_XPATH: 'C',
         constants.NO_OF_NOMINEE_XPATH: None,
         constants.NOMINEE1_NAME_XPATH: None,
@@ -526,6 +526,7 @@ def purchasetxnrequest(root, child_root, user_id, **kwargs):
         constants.SIP_PAYMECH_XPATH: None if is_sip == False else 'M',
         constants.SIP_MICR_NO_XPATH: None,
         constants.SIP_BANK_XPATH: None if is_sip == False else bankcodes.bank_code_map.get(bank_mandate.mandate_bank_details.ifsc_code.name),
+        constants.SIP_BRANCH_XPATH: None if is_sip == False else bank_mandate.mandate_bank_details.ifsc_code.bank_branch,
         constants.SIP_ACC_NO_XPATH: None if is_sip == False else bank_mandate.mandate_bank_details.account_number,
         constants.SIP_AC_TYPE_XPATH: None if is_sip == False else 'SB',
         constants.SIP_IFSC_CODE_XPATH: None if is_sip == False else bank_mandate.mandate_bank_details.ifsc_code.ifsc_code,
