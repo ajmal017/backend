@@ -299,7 +299,7 @@ def send_transaction_change_email(first_order,order_detail,applicant_name,user,e
     Template changes according to mandate status of the user 
     """ 
     if first_order == True:      
-        if user.mandate_status == "0":   
+        if order_detail.bank_mandate and order_detail.bank_mandate.mandate_status == "0":   
             if all(sips < 1 for sips in order_detail.all_sips) & any(lumpsums > 0 for lumpsums in order_detail.all_lumpsums):
                 html_email_template_name='transaction/user-confirm-status-change.html'
                 subject_name = 'transaction/user-status-change-subject.txt'
@@ -344,11 +344,11 @@ def send_transaction_change_email(first_order,order_detail,applicant_name,user,e
         subject = ''.join(subject.splitlines())
         body = loader.render_to_string(html_email_template_name, context)
         email_message = EmailMultiAlternatives(subject, body, from_email, [user.email], bcc=[settings.DEFAULT_TO_EMAIL,settings.DEFAULT_FROM_EMAIL])
-        if user.mandate_status == "0" and email_attachment is not None:
+        if order_detail.bank_mandate and order_detail.bank_mandate.mandate_status == "0" and email_attachment is not None:
             attachment = open(email_attachment, 'rb')
             email_message.attach('bank_mandate.pdf', attachment.read(),'application/pdf')
-            user.mandate_status = 1
-            user.save()
+            order_detail.bank_mandate.mandate_status = 1
+            order_detail.bank_mandate.save()
         email_message.attach_alternative(body, 'text/html')
         email_message.send()
         return "success"

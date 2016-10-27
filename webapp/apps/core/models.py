@@ -53,7 +53,7 @@ def order_detail_info_function(order_detail,portfolio):
         sip_tenure = 0
         goal_tenure_len = 0
             
-    if order_detail.user.mandate_status == "0":
+    if order_detail.bank_mandate and order_detail.bank_mandate.mandate_status == "0":
         mandate_helper_instance = bank_mandate_helper.BankMandateHelper() 
         email_attachment,attachment_error = mandate_helper_instance.generate_mandate_pdf(order_detail.bank_mandate)
     else:
