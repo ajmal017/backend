@@ -11,7 +11,6 @@ from profiles import constants as profile_constants
 from webapp.apps import random_with_N_digits
 from payment import models as payment_models
 
-from external_api import bank_mandate as bank_mandate
 
 from external_api import api
 from collections import OrderedDict, defaultdict

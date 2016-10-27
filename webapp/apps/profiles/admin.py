@@ -540,7 +540,7 @@ class UserBankMandateAdmin(admin.ModelAdmin):
     disable the option of deleting
     """
     search_fields = ['user__email', 'vendor__name']
-    list_display = ['id', 'user', 'vendor', 'mandate_registered', 'mandate_reg_no', 'mandate_start_date', 'mandate_status', 'button']
+    list_display = ['id', 'user', 'vendor', 'mandate_registered', 'mandate_reg_no', 'mandate_amount', 'mandate_start_date', 'mandate_status', 'button']
     actions = None
 
     def has_delete_permission(self, request, obj=None):
