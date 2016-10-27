@@ -492,26 +492,20 @@ class GenerateMandatePdf(View):
 
         if request.user.is_superuser:
             bank_mandate = pr_models.UserBankMandate.objects.get(id=request.GET.get('mandate_id'))
-            exch_backend = helpers.get_exchange_vendor_helper().get_backend_instance()
-            mandate_vendor = bank_mandate.vendor
-            if mandate_vendor:
-                exch_backend = helpers.get_exchange_vendor_helper().get_backend_instance(mandate_vendor.name) 
-
-            if exch_backend:
-                user = bank_mandate.user    
-                if is_investable(user) and user.signature != "":
-                    output_file, error = exch_backend.generate_bank_mandate(user.id, bank_mandate)
-                    if output_file is None:
-                        return HttpResponse(error, status=404)
-                    output_file = output_file.split('/')[-1]
-                    prefix = 'webapp'
-                    my_file_path = prefix + constants.STATIC + output_file
-                    my_file = open(my_file_path, "rb")
-                    content_type = 'application/pdf'
-                    response = HttpResponse(my_file, content_type=content_type, status=200)
-                    response['Content-Disposition'] = 'attachment;filename=%s' % str(user.id) + '_mandate.pdf'
-                    my_file.close()
-                    return response  # contains the pdf of the pertinent user
+            if bank_mandate:
+                mandate_helper_instance = bank_mandate_helper.BankMandateHelper()
+                output_file, error = mandate_helper_instance.generate_mandate_pdf(bank_mandate)
+                if output_file is None:
+                    return HttpResponse(error, status=404)
+                output_file = output_file.split('/')[-1]
+                prefix = 'webapp'
+                my_file_path = prefix + constants.STATIC + output_file
+                my_file = open(my_file_path, "rb")
+                content_type = 'application/pdf'
+                response = HttpResponse(my_file, content_type=content_type, status=200)
+                response['Content-Disposition'] = 'attachment;filename=%s' % str(bank_mandate.user.id) + '_mandate.pdf'
+                my_file.close()
+                return response  # contains the pdf of the pertinent user
 
             # file doesn't exist because investor vault is incomplete.
             return HttpResponse(payment_constant.CANNOT_GENERATE_FILE, status=404)

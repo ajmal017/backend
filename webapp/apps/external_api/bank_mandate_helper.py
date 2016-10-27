@@ -89,3 +89,18 @@ class BankMandateHelper(object):
             latest_mandate = self.create_new_mandate(self, user, None, mandate_vendor, mandate_amount)
 
         return latest_mandate
+    
+    def generate_mandate_pdf(self, bank_mandate_instance):
+        if not bank_mandate_instance:
+            return None, "Invalid Mandate"
+
+        output_file = None
+        error_str = None        
+        mandate_vendor = bank_mandate_instance.vendor
+        exch_backend = helpers.get_exchange_vendor_helper().get_backend_instance(mandate_vendor.name) 
+        if exch_backend:
+            user = bank_mandate_instance.user    
+            if utils.is_investable(user) and user.signature != "":
+                output_file, error_str = exch_backend.generate_bank_mandate(user.id, bank_mandate_instance)
+        
+        return output_file, error_str
