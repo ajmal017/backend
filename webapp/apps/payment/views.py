@@ -28,7 +28,7 @@ class TransactionString(APIView):
         :param request:
         :return:
         """
-        active_exchange_vendor = external_api_helpers.get_exchange_vendor_helper().get_active_vendor()
+        active_exchange_backend = external_api_helpers.get_exchange_vendor_helper().get_backend_instance()
         # if profile_utils.check_if_all_set(request.user) and request.user.investorinfo.kra_verified:
         bank_name = request.user.investorbankdetails.ifsc_code.name
         product_id_array = constants.bank_product_id_map.get(bank_name, None)
@@ -53,7 +53,7 @@ class TransactionString(APIView):
                       "user_id": request.user.id,}
             billdesk = models.Transaction.objects.create(**kwargs)
             logger = logging.getLogger('django.info')
-            payment_link, error_status = active_exchange_vendor.generate_payment_link(billdesk)
+            payment_link, error_status = active_exchange_backend.generate_payment_link(billdesk)
             if payment_link:
                 logger.info(payment_link)
                 return api_utils.response(payment_link)

@@ -40,6 +40,7 @@ def investor_info_check(user):
 def order_detail_info_function(order_detail,portfolio):
     from external_api import bank_mandate_helper
     
+    error_logger = logging.getLogger('django.error')
     try:
         applicant_name = investor_info_check(order_detail.user)
     except investor_info_check.DoesNotExist:
@@ -86,6 +87,7 @@ def order_detail_info_function(order_detail,portfolio):
                     try:
                         nav = HistoricalFundData.objects.get(fund_id=fund_order_item.portfolio_item.fund.id, date=fund_order_item.allotment_date).nav
                     except HistoricalFundData.DoesNotExist:
+                        error_logger.error("Order fund nav missing: " + str(fund_order_item.portfolio_item.fund_id))
                         nav = None
                         order_info.unit_alloted = False
                     order_info.fund_order_list.append(fund_order_item)
@@ -94,7 +96,7 @@ def order_detail_info_function(order_detail,portfolio):
                     order_info.all_lumpsums.append(fund_order_item.agreed_lumpsum)
                 else:
                     order_info.unit_alloted = False
-                    print("Unit has not alloted for the order detail")
+                    error_logger.error("Unit has not been alloted for the order detail")
                     break
          
     return order_info,applicant_name,order_detail.user,email_attachment,attachment_error,sip_tenure,goal_tenure_len      
