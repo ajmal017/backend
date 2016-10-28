@@ -11,6 +11,8 @@ from webapp.apps import code_generator
 from profiles import utils as profile_utils
 from core import utils as core_utils
 from django.http import HttpResponse
+from external_api import helpers as external_api_helpers
+
 
 import logging
 
@@ -28,8 +30,8 @@ class TransactionString(APIView):
         :param request:
         :return:
         """
-        
-        print("Yes here I m ")
+
+        active_exchange_vendor = external_api_helpers.get_exchange_vendor_helper().get_active_vendor()
         # if profile_utils.check_if_all_set(request.user) and request.user.investorinfo.kra_verified:
         bank_name = request.user.investorbankdetails.ifsc_code.name
         product_id_array = constants.bank_product_id_map.get(bank_name, None)
@@ -54,8 +56,11 @@ class TransactionString(APIView):
                       "user_id": request.user.id,}
             billdesk = models.Transaction.objects.create(**kwargs)
             logger = logging.getLogger('django.info')
-            logger.info(billdesk.url_hashed())
-            return api_utils.response(billdesk.url_hashed())
+            payment_link, error_status = active_exchange_vendor.generate_payment_link(billdesk)
+            if payment_link:
+                logger.info(payment_link)
+                return api_utils.response(payment_link)
+            return api_utils.response({"message":error_status}, status.HTTP_428_PRECONDITION_REQUIRED, error_status)
         return api_utils.response(serializer.errors, status.HTTP_404_NOT_FOUND, constants.MALFORMED_REQUEST)
         # else:
         #     return api_utils.response({"message": constants.USER_CANNOT_INVEST}, status.HTTP_404_NOT_FOUND,
@@ -76,6 +81,7 @@ class Pay(APIView):
         Bypass view to make order details before payment is made
 
         """
+        active_exchange_vendor = external_api_helpers.get_exchange_vendor_helper().get_active_vendor()
         bank_name = request.user.investorbankdetails.ifsc_code.name
         txt_bank_id = 'XXX'
         product_id = bank_name 
@@ -87,18 +93,17 @@ class Pay(APIView):
         if serializer.is_valid():
             logger = logging.getLogger('django.info')
             try:
-                with transaction.atomic():
-                    kwargs = {"txn_amount":  request.query_params.get('txn_amount'),
-                              "txt_bank_id": txt_bank_id,
-                              "product_id": product_id,
-                              "additional_info_1": code_generator(40),
-                              "additional_info_3": request.user.finaskus_id,
-                              "customer_id": code_generator(7),
-                              "user_id": request.user.id,}
-                    
-                    billdesk = models.Transaction.objects.create(**kwargs)
-                    core_utils.convert_to_investor(billdesk)
-                    return api_utils.response({"message":"success"})
+                kwargs = {"txn_amount":  request.query_params.get('txn_amount'),
+                          "txt_bank_id": txt_bank_id,
+                          "product_id": product_id,
+                          "additional_info_1": code_generator(40),
+                          "additional_info_3": request.user.finaskus_id,
+                          "customer_id": code_generator(7),
+                          "user_id": request.user.id,}
+                
+                billdesk = models.Transaction.objects.create(**kwargs)
+                core_utils.convert_to_investor(billdesk, active_exchange_vendor)
+                return api_utils.response({"message":"success"})
             except IntegrityError as e:
                 logger.info("Integrity Error creating order: " + str(e))
                 return api_utils.response({"message": "failure"}, status.HTTP_404_NOT_FOUND,

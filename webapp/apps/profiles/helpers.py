@@ -254,7 +254,8 @@ def send_vault_completion_email(user, user_email, domain_override=None,
               html_email_template_name=html_email_template_name)
     
 
-def send_transaction_completed_email(order_detail_lumpsum,order_detail_sip,applicant_name,user_email,sip_tenure,goal_len, payment_completed, domain_override=None, subject_template_name='transaction/subject.txt',
+def send_transaction_completed_email(order_detail_lumpsum,order_detail_sip,applicant_name,user_email,sip_tenure,goal_len, payment_completed, inlinePayment, 
+                                     domain_override=None, subject_template_name='transaction/subject.txt',
                                      email_template_name='transaction/transaction_completed.html', use_https=False,
                                      token_generator=default_token_generator, from_email=None,
                                      request=None,html_email_template_name='transaction/user-confirm-pay.html', extra_email_context=None):
@@ -298,7 +299,7 @@ def send_transaction_change_email(first_order,order_detail,applicant_name,user,e
     Template changes according to mandate status of the user 
     """ 
     if first_order == True:      
-        if user.mandate_status == "0":   
+        if order_detail.bank_mandate and order_detail.bank_mandate.mandate_status == "0":   
             if all(sips < 1 for sips in order_detail.all_sips) & any(lumpsums > 0 for lumpsums in order_detail.all_lumpsums):
                 html_email_template_name='transaction/user-confirm-status-change.html'
                 subject_name = 'transaction/user-status-change-subject.txt'
@@ -343,11 +344,11 @@ def send_transaction_change_email(first_order,order_detail,applicant_name,user,e
         subject = ''.join(subject.splitlines())
         body = loader.render_to_string(html_email_template_name, context)
         email_message = EmailMultiAlternatives(subject, body, from_email, [user.email], bcc=[settings.DEFAULT_TO_EMAIL,settings.DEFAULT_FROM_EMAIL])
-        if user.mandate_status == "0" and email_attachment is not None:
+        if order_detail.bank_mandate and order_detail.bank_mandate.mandate_status == "0" and email_attachment is not None:
             attachment = open(email_attachment, 'rb')
             email_message.attach('bank_mandate.pdf', attachment.read(),'application/pdf')
-            user.mandate_status = 1
-            user.save()
+            order_detail.bank_mandate.mandate_status = 1
+            order_detail.bank_mandate.save()
         email_message.attach_alternative(body, 'text/html')
         email_message.send()
         return "success"

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from django.db import models
+from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from django.core.validators import RegexValidator
 
@@ -9,7 +10,6 @@ from djutil.models import TimeStampedModel
 from . import constants
 from payment import constants as payment_constants
 
-from enum import IntEnum
 
 
 class SMS(TimeStampedModel):
@@ -90,6 +90,14 @@ class BankDetails(models.Model):
             return False
         else:
             return True
+
+
+class Vendor(TimeStampedModel):
+    name = models.CharField(max_length=100, blank=False, null=False, unique=True)
+    active = models.BooleanField(default=False)
+
+    def __str__(self):
+        return str(self.name)
 
 # class OrderEntryParam(models.Model):
 #     """

@@ -1,6 +1,6 @@
 from django.utils.translation import ugettext_lazy as _
 
-from webapp.conf import settings
+from webapp.conf import local_settings as settings
 
 OPERATOR_UNKNOWN = 0
 OPERATOR_MGAGE = 1
@@ -47,6 +47,7 @@ CATEGORY_NAV_API = 'http://api.morningstar.com/v2/service/mf/mk2ipzwesb5qricc/un
 HISTORICAL_NAV_CATEGORY_API = 'http://api.morningstar.com/service/mf/CategoryTotalReturnIndex?accesscode='
 
 EXCHANGE_RATE_API = 'http://www.morningstar.in/exchangerate/'
+
 
 CATEGORY_ID = '&categoryId='
 UNIVERSE = '&universe=FO'
@@ -227,6 +228,7 @@ HOLDINGS = "holdings"
 SUCCESS = "success"
 FAIL = 'fail'
 CONNECTION_ERROR = 'Connection Error'
+HTTP_ERROR = 'HTTP Error'
 NO_DATA_RECEIVED = 'No data received'
 ID = '_id'
 API = 'api'
@@ -238,6 +240,12 @@ HISTORICAL_DATA_MAP = {
     NAV: 'v'
 }
 FUND_DOES_NOT_EXIST = 'fund with the mstar id does not exist'
+
+USER_NOT_FOUND = 'User does not exist'
+
+PURCHASE_TXN_FAILED = 'Purchase transaction failed'
+
+VAULT_NOT_CLOSED = 'Vault not closed'
 
 HISTORICAL_DATA_TIME_INTERVAL = 30
 
@@ -696,3 +704,14 @@ GET_PASSWORD_URL = 'http://tempuri.org/IMFUploadService/getPassword'
 BSE_ORDER_WSDL = 'http://bsestarmfdemo.bseindia.com/MFOrderEntry/MFOrder.svc?singleWsdl'
 BSE_ORDER_GET_PASSWORD_URL = 'http://bsestarmf.in/MFOrderEntry/getPassword'
 EXCHNAME_BSE = "B"
+
+RETURN_CODE_FAILURE = '1'
+
+RETURN_CODE_SUCCESS = '0'
+
+USER_NOT_REGISTERED = "USER_NOT_REGISTERED"
+ORDERS_DONT_EXIST = "ORDERS_DONT_EXIST"
+FAILED_TO_PUNCH_TRANSACTION = "FAILED_TO_PUNCH_TRANSACTION"
+ 
+DEFAULT_BANK_MANDATE_AMOUNT = 50000
+DEFAULT_BANK_MANDATE_AMOUNT_NEXT = 100000

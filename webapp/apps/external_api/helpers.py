@@ -1,3 +1,9 @@
+from external_api import models
+import logging
+from external_api.nse.nsebackend import NSEBackend
+from external_api.bse.bsebackend import BSEBackend
+ 
+
 def generate_logger_message(field, fund):
     """
     Generates string for debug logger
@@ -30,3 +36,34 @@ def calculate_beta(nav_funds, nav_benchmarks):
     covariance = product_of_diff / (len(nav_funds) - 1)
     variance_benchmarks = squared_nav_benchmark_difference / (len(nav_benchmarks) - 1)
     return round(covariance / variance_benchmarks, 2)
+
+class VendorHelper():
+    activeVendor = None
+    logger = logging.getLogger("django.error")
+    
+    def get_active_vendor(self):
+        if not self.activeVendor:
+            try:
+                activeVendors = models.Vendor.objects.filter(active=True)
+                if activeVendors and len(activeVendors) > 0:
+                    self.activeVendor = activeVendors[0]
+            except Exception as e:
+                self.logger.error("Error getting active vendor:" + str(e))
+                
+        return self.activeVendor
+    
+    def get_backend_instance(self, vendor_name=None):
+        if not vendor_name:
+            active_vendor = self.get_active_vendor()
+            if active_vendor:
+                vendor_name = active_vendor.name
+                
+        if vendor_name == "NSE":
+            return NSEBackend(vendor_name)
+        
+        if vendor_name == "BSE":
+            return BSEBackend(vendor_name)
+
+vendor_helper = VendorHelper()
+def get_exchange_vendor_helper():
+    return vendor_helper

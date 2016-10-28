@@ -1,3 +1,4 @@
+from profiles import models as profile_models
 from core import utils, models
 from . import constants as cons
 
@@ -6,14 +7,20 @@ from datetime import datetime
 import os, time
 
 
-def generate_user_pipe_file(user, order_items):
+def generate_order_pipe_file(user_id, order_detail):
     """
     This function generates a pipe separated file for bulk order entry.
     :param order_items: list of order_items for that order_detail
     :param user: The user for which the file is being generated
     :return: url of the generated pipe separated file of the bulk order entry
     """
-    base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps', '')
+    user = profile_models.User.objects.get(id=user_id)
+    order_items = order_detail.fund_order_items.all()
+    bank_mandate = order_detail.bank_mandate
+    if not bank_mandate:
+        return None
+
+    base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps/external_api', '')
     output_path = base_dir + '/webapp/static/'
     timestamp = time.strftime("%Y%m%d-%H%M%S")
     bulk_user_pipe_file_name = "bulk_user_pipe" + timestamp + ".txt"
@@ -34,8 +41,8 @@ def generate_user_pipe_file(user, order_items):
         if item.internal_ref_no:
             internal_ref_no = item.internal_ref_no
         mandate_id = ""
-        if user.mandate_reg_no:
-            mandate_id = user.mandate_reg_no
+        if bank_mandate.mandate_reg_no:
+            mandate_id = bank_mandate.mandate_reg_no
         amc_code = ""
         if item.portfolio_item.fund.amc_code:
             amc_code = item.portfolio_item.fund.amc_code

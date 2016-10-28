@@ -9,6 +9,8 @@ from .models import Pincode
 from .utils import embed_images
 from external_api import constants as cons
 from .kyc_pdf_generator import generate_kyc_pdf
+from external_api import helpers
+from external_api import bank_mandate_helper
 
 from datetime import datetime
 import time
@@ -27,21 +29,21 @@ def investor_info_generator(user_id):
     contact = models.ContactInfo.objects.get(user=user)
     investor_bank = models.InvestorBankDetails.objects.get(user=user)
     curr_date = datetime.now()
-
+    bank_mandate = bank_mandate_helper.get_current_mandate(user)
+    user_vendor = models.UserVendor.objects.get(user=user, vendor__name=bank_mandate.vendor.name)
+    
     if nominee.nominee_address == None:
         blank_pincode = Pincode(None, None, None)
         blank_address = models.Address(None, None, None, None)
         blank_address.pincode = blank_pincode
         nominee.nominee_address = blank_address
 
-    mandate_amount_no = utils.get_investor_mandate_amount(user, None)
-
     investor_dict = {
         # 'MandateDebitTypeMaxAmount': True,
         # 'MandateFreqAsWhenPresented': True,
         # 'MandateUntilCancelled': True,  # TODO: verify with rashmi
         'DebitSB': True,  # TODO: Check with rashmi
-        'AccountNumber': investor_bank.account_number,
+        'AccountNumber': bank_mandate.account_number,
         'AccountType': investor_bank.get_account_type_display(),
         'ApplicantName': investor.applicant_name,
         'BankName': investor_bank.ifsc_code.name,
@@ -66,22 +68,22 @@ def investor_info_generator(user_id):
         'IFSCCode': investor_bank.ifsc_code.ifsc_code,
         'InvestorsRelationwithNominee': nominee.get_relationship_with_investor_display() if nominee else None,
         'MandateAccountHolderName': investor_bank.account_holder_name,
-        'MandateAmountNumber': mandate_amount_no,
-        'MandateAmountWords': str(num2words(mandate_amount_no, lang="en_IN")) + " ONLY",
-        'MandateBank': investor_bank.ifsc_code.name,
-        'MandateBankACNumber': investor_bank.account_number,
+        'MandateAmountNumber': bank_mandate.mandate_amount,
+        'MandateAmountWords': str(num2words(bank_mandate.mandate_amount, lang="en_IN")) + " ONLY",
+        'MandateBank': bank_mandate.bank_details.ifsc_code.name,
+        'MandateBankACNumber': bank_mandate.bank_details.account_number,
         'MandateCreate': True,
-        'MandateDate-dd': curr_date.strftime("%d"),
-        'MandateDate-mm': curr_date.strftime("%m"),
-        'MandateDate-yyyy': curr_date.strftime("%Y"),
+        'MandateDate-dd': bank_mandate.created_at.strftime("%d"),
+        'MandateDate-mm': bank_mandate.created_at.strftime("%m"),
+        'MandateDate-yyyy': bank_mandate.created_at.strftime("%Y"),
         'MandateEmailID': contact.email,
         'MandateIFSC': investor_bank.ifsc_code.ifsc_code,
-        'MandatePeriodFrom-dd': curr_date.strftime("%d"),
-        'MandatePeriodFrom-mm': curr_date.strftime("%m"),
-        'MandatePeriodFrom-yyyy': curr_date.strftime("%Y"),
+        'MandatePeriodFrom-dd': bank_mandate.mandate_start_date.strftime("%d"),
+        'MandatePeriodFrom-mm': bank_mandate.mandate_start_date.strftime("%m"),
+        'MandatePeriodFrom-yyyy': bank_mandate.mandate_start_date.strftime("%Y"),
         'MandatePhoneNo': contact.phone_number,
-        'MandateReferenceNo': user.mandate_reg_no,
-        'MandateUCC': investor.user.finaskus_id,
+        'MandateReferenceNo': bank_mandate.mandate_reg_no,
+        'MandateUCC': user_vendor.ucc,
         'Mobile': contact.phone_number,
         'NameofGuardian': nominee.guardian_name if nominee else None,
         'NominationNotRequired': nominee.nominee_absent,

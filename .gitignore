@@ -1,8 +1,16 @@
 .settings
+.idea
 **/__pycache__
 error_log
 webapp/media
-*.swp
+webapp/statics
+*.pyc
 **/.DS_Store
+*/**/.DS_Store
+*.swp**/.DS_Store
 webapp/static
+<<<<<<< HEAD
 webapp/conf/local_settings.py
+=======
+*.swp
+>>>>>>> a05c679fdfcac4f6b7ce3ad90b99b0104dd82fbb

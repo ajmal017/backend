@@ -38,7 +38,7 @@ def investor_info_check(user):
 
 
 def order_detail_info_function(order_detail,portfolio):
-    from external_api import bank_mandate
+    from external_api import bank_mandate_helper
     
     try:
         applicant_name = investor_info_check(order_detail.user)
@@ -53,8 +53,9 @@ def order_detail_info_function(order_detail,portfolio):
         sip_tenure = 0
         goal_tenure_len = 0
             
-    if order_detail.user.mandate_status == "0": 
-        email_attachment,attachment_error = bank_mandate.generate_bank_mandate_pdf(order_detail.user.id)
+    if order_detail.bank_mandate and order_detail.bank_mandate.mandate_status == "0":
+        mandate_helper_instance = bank_mandate_helper.BankMandateHelper() 
+        email_attachment,attachment_error = mandate_helper_instance.generate_mandate_pdf(order_detail.bank_mandate)
     else:
         email_attachment = None
         attachment_error = None
@@ -389,6 +390,17 @@ class Fund(TimeStampedModel):
     class Meta:
         ordering = ['type_of_fund', 'fund_rank']
 
+class FundVendorInfo(TimeStampedModel):
+    fund = models.ForeignKey(Fund, null=False)
+    vendor = models.ForeignKey(profile_models.Vendor, null=False)
+    sip_dates = ArrayField(models.IntegerField(), null=True)
+    neft_scheme_code = models.CharField(_('Scheme Code when investment amount is below Rs. 2 lakhs '),
+                                            max_length=50, null=True, blank=True)
+    rtgs_scheme_code = models.CharField(_('Scheme Code when investment amount is above Rs. 2 lakhs '),
+                                            max_length=50, null=True, blank=True)
+
+    class Meta:
+        unique_together = (('fund', 'vendor'),)
 
 class Portfolio(TimeStampedModel):
     """
@@ -1104,6 +1116,8 @@ class OrderDetail(TimeStampedModel):
     order_status = models.IntegerField(choices=[(x.value, x.name) for x in OrderStatus],
                                         default=OrderStatus.Pending.value)
     transaction = models.ForeignKey(payment_models.Transaction, null=True, blank=True)
+    vendor = models.ForeignKey(profile_models.Vendor, related_name="vendor", blank=True, null=True)
+    bank_mandate = models.ForeignKey(profile_models.UserBankMandate, related_name="bank_mandate", blank=True, null=True)
 
     def save(self, *args, **kwargs):
         # If order_id is zero set to a OO+random 8 digit number

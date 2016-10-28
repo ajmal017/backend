@@ -11,7 +11,7 @@ from import_export.widgets import ForeignKeyWidget
 from import_export.fields import Field
 
 from . import models
-from external_api.bulk_order_entry import generate_client_pipe
+from external_api import views 
 from external_api.bulk_order_entry import generate_client_fatca_pipe
 from django.http import HttpResponse
 import os
@@ -110,8 +110,8 @@ class UserAdmin(admin.ModelAdmin):
     search_fields = ['phone_number', 'email', 'finaskus_id']
     list_display = ['id', 'email', 'phone_number', 'get_vault_complete', 'get_kra_verification', 'bse_registered',
                     'tiff_mailed', 'tiff_accepted', 'kyc_mailed', 'kyc_accepted', 'mandate_status', 'xsip_status',
-                    'finaskus_id', 'mandate_reg_no', 'remarks', 'button', 'button1', 'button2', 'button3', 'button4']
-    list_editable = ['email', 'phone_number', 'remarks', 'finaskus_id', 'mandate_reg_no']
+                    'finaskus_id', 'mandate_reg_no', 'remarks', 'button', 'button1', 'button2', 'button3', 'button4', 'button5']
+    list_editable = ['email', 'phone_number', 'remarks', 'finaskus_id']
     list_filter = ['phone_number_verified', 'email_verified', 'mandate_status', BseOrKra, VaultComplete, KraVerified]
     exclude = ('password', 'id', 'username', 'last_login', )
     empty_value_display = 'unknown'
@@ -149,7 +149,7 @@ class UserAdmin(admin.ModelAdmin):
         user_id_list = []
         for item in queryset:
             user_id_list.append(item.id)
-        response = generate_client_pipe(user_id_list)
+        response = views.BulkRegisterUCC().get(user_id_list)
 
         if isinstance(response, list):
             self.message_user(request, "Error encountered.", level="error")
@@ -241,6 +241,15 @@ class UserAdmin(admin.ModelAdmin):
         return mark_safe('<input type="button" class="mandate" value="Generate Bank Mandate">')
     button4.short_description = 'Generate Bank Mandate'
     button4.allow_tags = True
+
+    def button5(self, obj):
+        """
+        :param obj: an obj of user Admin
+        :return: a button to generate the AOF tiff
+        """
+        return mark_safe('<input type="button" class="upload_tiff" value="Upload AOF Tiff">')
+    button5.short_description = 'Upload AOF Tiff'
+    button5.allow_tags = True
 
     def get_kra_verification(self, obj):
         """
@@ -515,6 +524,37 @@ class AggregatePortfolioAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
+class UserVendorAdmin(admin.ModelAdmin):
+    """
+    disbale the option of deleting
+    """
+    search_fields = ['user__email', 'vendor__name']
+    list_display = ['user', 'vendor', 'ucc', 'ucc_registered', 'fatca_filed', 'tiff_mailed', 'tiff_accepted']
+    actions = None
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+class UserBankMandateAdmin(admin.ModelAdmin):
+    """
+    disable the option of deleting
+    """
+    search_fields = ['user__email', 'vendor__name']
+    list_display = ['id', 'user', 'vendor', 'mandate_registered', 'mandate_reg_no', 'mandate_amount', 'mandate_start_date', 'mandate_status', 'button']
+    actions = None
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def button(self, obj):
+        """
+        :param obj: an obj of User admin
+        :return: a button
+        """
+        return mark_safe('<input type="button" class="generate_mandate" value="Generate Mandate">')
+    button.short_description = 'Generate Mandate'
+    button.allow_tags = True
+
 admin.site.register(models.User, UserAdmin)
 admin.site.register(models.VerificationSMSCode,VerificationSMSCodeAdmin)
 admin.site.register(models.EmailCode,EmailCodeAdmin)
@@ -526,3 +566,5 @@ admin.site.register(models.AggregatePortfolio, AggregatePortfolioAdmin)
 admin.site.register(models.InvestorBankDetails, InvestorBankDetails)
 admin.site.register(models.AppointmentDetails, AppointmentDetailsAdmin)
 admin.site.register(models.UserChangedPhoneNumber, UserChangedPhoneNumberAdmin)
+admin.site.register(models.UserVendor, UserVendorAdmin)
+admin.site.register(models.UserBankMandate, UserBankMandateAdmin)

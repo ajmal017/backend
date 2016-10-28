@@ -11,7 +11,6 @@ from profiles import constants as profile_constants
 from webapp.apps import random_with_N_digits
 from payment import models as payment_models
 
-from external_api import bank_mandate as bank_mandate
 
 from external_api import api
 from collections import OrderedDict, defaultdict
@@ -2545,7 +2544,7 @@ def get_finaskus_id(user):
             result_id += last_six_digits
     return result_id
 
-def send_transaction_complete_email(txn, user, portfolio, order_detail_lumpsum,order_detail_sip):
+def send_transaction_complete_email(txn, user, portfolio, order_detail_lumpsum,order_detail_sip, inlinePayment):
     sip_tenure = 0
     goal_len = 0
     if order_detail_sip is not None:
@@ -2554,39 +2553,40 @@ def send_transaction_complete_email(txn, user, portfolio, order_detail_lumpsum,o
     applicant_name = investor_info_check(user)
 
     payment_completed = True if txn.txn_status == payment_models.Transaction.Status.Success else False
-    profiles_helpers.send_transaction_completed_email(order_detail_lumpsum,order_detail_sip,applicant_name,user.email,sip_tenure,goal_len,payment_completed, use_https=settings.USE_HTTPS)
+    profiles_helpers.send_transaction_completed_email(order_detail_lumpsum,order_detail_sip,applicant_name,user.email,sip_tenure,goal_len,payment_completed, inlinePayment, use_https=settings.USE_HTTPS)
 
-def convert_to_investor(txn):
+def convert_to_investor(txn, exchange_vendor, inlinePayment=False):
     """
     :param txn: a transaction object
     Run only after investment is successful
     :return:
     """
     #TODO intil amount fixing
-    user = txn.user
-    portfolio = models.Portfolio.objects.get(user=user, has_invested=False)
-    order_detail_lumpsum, order_detail_sip = save_portfolio_snapshot(txn)
+    with transaction.atomic():
+        user = txn.user
+        portfolio = models.Portfolio.objects.get(user=user, has_invested=False)
+        order_detail_lumpsum, order_detail_sip = save_portfolio_snapshot(txn, exchange_vendor)
+        
+        portfolio.has_invested = True
+        portfolio.investment_date = date.today()
+        portfolio.save()
+        
+        portfolio.portfolioitem_set.all().update(investment_date = date.today())
     
-    portfolio.has_invested = True
-    portfolio.investment_date = date.today()
-    portfolio.save()
+        models.Answer.objects.filter(user=user, portfolio=None).exclude(
+                question__question_for__in=[constants.ASSESS, constants.PLAN]).update(portfolio=portfolio)
     
-    portfolio.portfolioitem_set.all().update(investment_date = date.today())
-
-    models.Answer.objects.filter(user=user, portfolio=None).exclude(
-            question__question_for__in=[constants.ASSESS, constants.PLAN]).update(portfolio=portfolio)
-
-    allocation_asset = models.PlanAssestAllocation.objects.get(user=user, portfolio=None)
-    allocation_asset.portfolio = portfolio
-    allocation_asset.save()
-    profile_models.AggregatePortfolio.objects.update_or_create(
-        user=txn.user, defaults={"update_date":datetime.now().date()})
-
-    send_email_thread = threading.Thread(target=send_transaction_complete_email, args=(txn, user, portfolio, order_detail_lumpsum,order_detail_sip,))
+        allocation_asset = models.PlanAssestAllocation.objects.get(user=user, portfolio=None)
+        allocation_asset.portfolio = portfolio
+        allocation_asset.save()
+        profile_models.AggregatePortfolio.objects.update_or_create(
+            user=txn.user, defaults={"update_date":datetime.now().date()})
+    
+    send_email_thread = threading.Thread(target=send_transaction_complete_email, args=(txn, user, portfolio, order_detail_lumpsum,order_detail_sip,inlinePayment,))
     send_email_thread.start()
 
 
-def save_portfolio_snapshot(txn):
+def save_portfolio_snapshot(txn, exchange_vendor):
     """
     utility to save a snapshot of portfolio at the time of investment
     :param txn: the transaction object
@@ -2613,12 +2613,12 @@ def save_portfolio_snapshot(txn):
             
 
     order_detail_lump = models.OrderDetail.objects.create(user=txn.user, order_status=0, transaction=txn,
-                                                          is_lumpsum=True)
+                                                          is_lumpsum=True, vendor=exchange_vendor)
     order_detail_lump.fund_order_items.set(order_item_list_lumpsum)
 
     order_detail_sip = None
     if order_item_list_sip:
-        order_detail_sip = models.OrderDetail.objects.create(user=txn.user, order_status=0, transaction=txn)
+        order_detail_sip = models.OrderDetail.objects.create(user=txn.user, order_status=0, transaction=txn, vendor=exchange_vendor)
         order_detail_sip.fund_order_items.set(order_item_list_sip)
             
     
