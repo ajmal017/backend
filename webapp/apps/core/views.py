@@ -29,6 +29,7 @@ from external_api import constants as external_constants
 from external_api import helpers as external_helpers
 
 from django.db.models import Count
+from external_api import utils as external_utils
 
 
 
@@ -237,7 +238,8 @@ class VersionInfo(APIView):
             if version_id:
                 ver = float(version_id)
                 if ver >= 1.2:
-                    return api_utils.response({"status": "true"}, status.HTTP_200_OK)
+                    country_phone_code = external_utils.get_country_phone_code()
+                    return api_utils.response({"status": "true","country_phone_code":country_phone_code}, status.HTTP_200_OK)
                 else:
                     return api_utils.response({"status": "false"}, status.HTTP_200_OK)
         except Exception as e:

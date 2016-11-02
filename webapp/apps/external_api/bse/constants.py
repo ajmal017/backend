@@ -540,4 +540,5 @@ EXCHNAME_BSE = "B"
 
 PAYMENT_RU = "https://api.finaskus.com/v2.0/core/billdesk/complete/"
 
-
+BILLDESK_QUERY_URL = "https://www.billdesk.com/pgidsk/PGIQueryController"
+BILLDESK_QUERY_REQUEST_TYPE = "0122"

@@ -75,4 +75,16 @@ def parse_billdesk_response(string):
     return parsed_string[1], parsed_string[2], parsed_string[4], parsed_string[14], parsed_string[13]
 
 
-
+def parse_billdesk_query_response(response):
+    """
+    :param response : string to be parsed on basis of pipe
+    :return following
+    order_id: parsed_string[18] // addidtional_info_1
+    ref_no: parsed_string[3]
+    txn_amount: parsed_string[5]
+    auth_status: parsed_string[15] 
+    transaction time : parsed_string[14] 
+    """
+    
+    parsed_string = response.split('|')
+    return parsed_string[18], parsed_string[3], parsed_string[5], parsed_string[15], parsed_string[14]

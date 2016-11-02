@@ -16,6 +16,8 @@ from subprocess import call
 from io import BytesIO
 import time
 
+from external_api import constants as cons
+
 
 def read_csv_and_populate_pin_code_model():
     """
@@ -358,3 +360,14 @@ def attach_images(images_list, source_pdf, output_location):
     rm_cmd = "rm"+string_of_attachable_pdf
     call(rm_cmd.split())
     return None
+
+def get_country_phone_code():
+    
+    COUNTRY_PHONE_CODE = []
+    
+    
+    for country,code in cons.CM_FOR_COUNTRY.items():
+            COUNTRY_PHONE_CODE.append({country:code})
+    
+    
+    return COUNTRY_PHONE_CODE
