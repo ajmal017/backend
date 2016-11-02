@@ -29,7 +29,8 @@ def investor_info_generator(user_id):
     contact = models.ContactInfo.objects.get(user=user)
     investor_bank = models.InvestorBankDetails.objects.get(user=user)
     curr_date = datetime.now()
-    bank_mandate = bank_mandate_helper.get_current_mandate(user)
+    bank_mandate_helper_instance = bank_mandate_helper.BankMandateHelper()
+    bank_mandate = bank_mandate_helper_instance.get_current_mandate(user)
     user_vendor = models.UserVendor.objects.get(user=user, vendor__name=bank_mandate.vendor.name)
     
     if nominee.nominee_address == None:
@@ -43,7 +44,7 @@ def investor_info_generator(user_id):
         # 'MandateFreqAsWhenPresented': True,
         # 'MandateUntilCancelled': True,  # TODO: verify with rashmi
         'DebitSB': True,  # TODO: Check with rashmi
-        'AccountNumber': bank_mandate.account_number,
+        'AccountNumber': bank_mandate.mandate_bank_details.account_number,
         'AccountType': investor_bank.get_account_type_display(),
         'ApplicantName': investor.applicant_name,
         'BankName': investor_bank.ifsc_code.name,
@@ -70,8 +71,8 @@ def investor_info_generator(user_id):
         'MandateAccountHolderName': investor_bank.account_holder_name,
         'MandateAmountNumber': bank_mandate.mandate_amount,
         'MandateAmountWords': str(num2words(bank_mandate.mandate_amount, lang="en_IN")) + " ONLY",
-        'MandateBank': bank_mandate.bank_details.ifsc_code.name,
-        'MandateBankACNumber': bank_mandate.bank_details.account_number,
+        'MandateBank': bank_mandate.mandate_bank_details.ifsc_code.name,
+        'MandateBankACNumber': bank_mandate.mandate_bank_details.account_number,
         'MandateCreate': True,
         'MandateDate-dd': bank_mandate.created_at.strftime("%d"),
         'MandateDate-mm': bank_mandate.created_at.strftime("%m"),

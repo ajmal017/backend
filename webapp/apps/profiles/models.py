@@ -467,7 +467,7 @@ class UserBankMandate(TimeStampedModel):
     mandate_status = models.CharField(max_length=1, choices=MANDATE_STATUS, blank=True, default=constants.LEVEL_0)
 
     def __str__(self):
-        return str(self.id)
+        return str(self.user) + " " + str(self.id)
 
 class NomineeInfo(models.Model):
     """
