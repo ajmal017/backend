@@ -234,7 +234,6 @@ class Register(APIView):
             user.image = request.FILES.get("image", None)
             user.identity_info_image = request.FILES.get("image", None)
             user.save()
-            
             user_response = dict(serializer.data)
             user_response['risk_score'], user_response['name'] = None, ""
             sms_code = utils.get_sms_verification_code(user)
@@ -685,7 +684,8 @@ class SaveImage(APIView):
                     user.image = request.FILES.get("identity_info_image", None)
                 user.save()
                 return api_utils.response({"message": constants.IDENTITY_IMAGE_SAVED,
-                                           "identity_info_image": user.identity_info_image.url}, status.HTTP_200_OK)
+                                           "identity_info_image": user.identity_info_image.url,"identity_info_image_thumbnail": user.identity_info_image_thumbnail.url},
+                                           status.HTTP_200_OK)
             return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(serializer.errors))
 
         elif request.data.get('pan_image', None):
@@ -699,7 +699,8 @@ class SaveImage(APIView):
             if serializer.is_valid():
                 investor.pan_image = request.FILES.get('pan_image', None)
                 investor.save()
-                return api_utils.response({"message": constants.PAN_IMAGE_SAVED, "pan_image": investor.pan_image.url},
+                return api_utils.response({"message": constants.PAN_IMAGE_SAVED, "pan_image": investor.pan_image.url,
+                                           "pan_image_thumbnail": investor.pan_image_thumbnail.url},
                                           status.HTTP_200_OK)
             return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(serializer.errors))
 
@@ -718,7 +719,7 @@ class SaveImage(APIView):
             if serializer.is_valid():
                 addr_proof = serializer.initial_data.get('address_proof_type', 1)
                 serializer.save(front_image=request.FILES.get('front_image', None), address_proof_type=addr_proof)
-                return api_utils.response({"message": constants.SUCCESS, "front_image": contact.front_image.url}, status.HTTP_200_OK)
+                return api_utils.response({"message": constants.SUCCESS, "front_image": contact.front_image.url,"front_image_thumbnail": contact.front_image_thumbnail.url}, status.HTTP_200_OK)
             return api_utils.response({}, status.HTTP_400_BAD_REQUEST, generate_error_message(serializer.errors))
 
         elif request.data.get('back_image', None):
@@ -734,7 +735,7 @@ class SaveImage(APIView):
             serializer = serializers.ContactInfoContinueSerializer(contact, data=request.data)
             if serializer.is_valid():
                 serializer.save(back_image=request.FILES.get('back_image', None))
-                return api_utils.response({"message": constants.SUCCESS, "back_image": contact.back_image.url}, status.HTTP_200_OK)
+                return api_utils.response({"message": constants.SUCCESS, "back_image": contact.back_image.url,"back_image_thumbnail": contact.back_image_thumbnail.url}, status.HTTP_200_OK)
             return api_utils.response({}, status.HTTP_400_BAD_REQUEST, generate_error_message(serializer.errors))
 
         elif request.data.get('permanent_front_image', None):
@@ -752,7 +753,7 @@ class SaveImage(APIView):
                 addr_proof = serializer.initial_data.get('permanent_address_proof_type', 1)
                 serializer.save(permanent_front_image=request.FILES.get('permanent_front_image', None),
                                 permanent_address_proof_type=addr_proof)
-                return api_utils.response({"message": constants.SUCCESS, "permanent_front_image": contact.permanent_front_image.url}, status.HTTP_200_OK)
+                return api_utils.response({"message": constants.SUCCESS, "permanent_front_image": contact.permanent_front_image.url,"permanent_front_image_thumbnail": contact.permanent_front_image_thumbnail.url}, status.HTTP_200_OK)
             return api_utils.response({}, status.HTTP_400_BAD_REQUEST, generate_error_message(serializer.errors))
 
         elif request.data.get('permanent_back_image', None):
@@ -768,7 +769,7 @@ class SaveImage(APIView):
             serializer = serializers.ContactInfoContinueSerializer(contact, data=request.data)
             if serializer.is_valid():
                 serializer.save(permanent_back_image=request.FILES.get('permanent_back_image', None))
-                return api_utils.response({"message": constants.SUCCESS, "permanent_back_image": contact.permanent_back_image.url}, status.HTTP_200_OK)
+                return api_utils.response({"message": constants.SUCCESS, "permanent_back_image": contact.permanent_back_image.url,"permanent_back_image_thumbnail": contact.permanent_back_image_thumbnail.url}, status.HTTP_200_OK)
             return api_utils.response({}, status.HTTP_400_BAD_REQUEST, generate_error_message(serializer.errors))
 
         elif request.data.get('signature', None):
@@ -813,7 +814,7 @@ class SaveImage(APIView):
             if serializer.is_valid():
                 serializer.save(bank_cheque_image=request.FILES.get('bank_cheque_image', None))
                 return api_utils.response({"message": constants.BANK_CHEQUE_SAVED,
-                                           "bank_cheque_image": bank_info.bank_cheque_image.url}, status.HTTP_200_OK)
+                                           "bank_cheque_image": bank_info.bank_cheque_image.url,"bank_cheque_image_thumbnail": bank_info.bank_cheque_image_thumbnail.url}, status.HTTP_200_OK)
             return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(serializer.errors))
         else:
             return api_utils.response({"message": constants.MALFORMED}, status.HTTP_400_BAD_REQUEST)
@@ -894,7 +895,8 @@ class InvestorInfo(APIView):
                 "occupation_type": None,
                 "occupation_specific": "",
                 "other_tax_payer": False,
-                "pan_image": None
+                "pan_image": None,
+                "pan_image_thumbnail":None
             }
             return api_utils.response(response)
         serializer = serializers.InvestorInfoDateSerializer(investor)

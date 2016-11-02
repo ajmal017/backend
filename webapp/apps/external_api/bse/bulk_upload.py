@@ -76,7 +76,7 @@ def generate_redeem_pipe_file(user_id, grouped_redeem):
     :return: url of the generated pipe separated file of the redeem
     """
 
-    base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps', '')
+    base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps/external_api', '')
     output_path = base_dir + '/webapp/static/'
     timestamp = time.strftime("%Y%m%d-%H%M%S")
     redeem_pipe_file_name = "redeem_pipe" + timestamp + ".txt"

@@ -2562,25 +2562,24 @@ def convert_to_investor(txn, exchange_vendor, inlinePayment=False):
     :return:
     """
     #TODO intil amount fixing
-    with transaction.atomic():
-        user = txn.user
-        portfolio = models.Portfolio.objects.get(user=user, has_invested=False)
-        order_detail_lumpsum, order_detail_sip = save_portfolio_snapshot(txn, exchange_vendor)
-        
-        portfolio.has_invested = True
-        portfolio.investment_date = date.today()
-        portfolio.save()
-        
-        portfolio.portfolioitem_set.all().update(investment_date = date.today())
+    user = txn.user
+    portfolio = models.Portfolio.objects.get(user=user, has_invested=False)
+    order_detail_lumpsum, order_detail_sip = save_portfolio_snapshot(txn, exchange_vendor)
     
-        models.Answer.objects.filter(user=user, portfolio=None).exclude(
-                question__question_for__in=[constants.ASSESS, constants.PLAN]).update(portfolio=portfolio)
+    portfolio.has_invested = True
+    portfolio.investment_date = date.today()
+    portfolio.save()
     
-        allocation_asset = models.PlanAssestAllocation.objects.get(user=user, portfolio=None)
-        allocation_asset.portfolio = portfolio
-        allocation_asset.save()
-        profile_models.AggregatePortfolio.objects.update_or_create(
-            user=txn.user, defaults={"update_date":datetime.now().date()})
+    portfolio.portfolioitem_set.all().update(investment_date = date.today())
+
+    models.Answer.objects.filter(user=user, portfolio=None).exclude(
+            question__question_for__in=[constants.ASSESS, constants.PLAN]).update(portfolio=portfolio)
+
+    allocation_asset = models.PlanAssestAllocation.objects.get(user=user, portfolio=None)
+    allocation_asset.portfolio = portfolio
+    allocation_asset.save()
+    profile_models.AggregatePortfolio.objects.update_or_create(
+        user=txn.user, defaults={"update_date":datetime.now().date()})
     
     send_email_thread = threading.Thread(target=send_transaction_complete_email, args=(txn, user, portfolio, order_detail_lumpsum,order_detail_sip,inlinePayment,))
     send_email_thread.start()

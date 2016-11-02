@@ -16,7 +16,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.User
-        fields = ('email', 'phone_number', 'gender', 'name', 'first_name', 'last_name', 'image')
+        fields = ('email', 'phone_number', 'gender', 'name', 'first_name', 'last_name', 'image','image_thumbnail')
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
@@ -174,7 +174,7 @@ class ContactInfoSerializer(serializers.ModelSerializer):
         """
         model = models.ContactInfo
         fields = ('communication_address', 'permanent_address', 'address_are_equal', 'address_proof_type',
-                  'front_image', 'back_image', 'email', 'phone_number', 'communication_address_type' )
+                  'front_image', 'front_image_thumbnail', 'back_image', 'back_image_thumbnail', 'email', 'phone_number', 'communication_address_type' )
 
     def create(self, validated_data):
         """
@@ -222,7 +222,7 @@ class IdentityInfoGetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.User
-        fields = ('marital_status', 'gender', 'nationality', 'identity_info_image')
+        fields = ('marital_status', 'gender', 'nationality', 'identity_info_image','identity_info_image_thumbnail')
 
 
 class IdentityInfoSkipSerializer(serializers.ModelSerializer):
@@ -336,7 +336,7 @@ class InvestorBankInfoGetSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.InvestorBankDetails
         fields = ('account_number', 'account_holder_name', 'account_type', 'sip_check', 'ifsc_code',
-                  'bank_cheque_image', )
+                  'bank_cheque_image','bank_cheque_image_thumbnail',)
 
 
 class InvestorBankInfoPostSerializer(serializers.ModelSerializer):

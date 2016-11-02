@@ -113,7 +113,7 @@ class UserAdmin(admin.ModelAdmin):
                     'finaskus_id', 'mandate_reg_no', 'remarks', 'button', 'button1', 'button2', 'button3', 'button4', 'button5']
     list_editable = ['email', 'phone_number', 'remarks', 'finaskus_id']
     list_filter = ['phone_number_verified', 'email_verified', 'mandate_status', BseOrKra, VaultComplete, KraVerified]
-    exclude = ('password', 'id', 'username', 'last_login', )
+    exclude = ('password', 'id', 'username', 'last_login' )
     empty_value_display = 'unknown'
     actions = ['generate_client_ucc_pipe_file', 'generate_client_fatca_pipe_file']
 

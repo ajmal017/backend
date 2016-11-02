@@ -14,6 +14,13 @@ import social.apps.django_app.default.models as social_model
 from datetime import datetime
 from numpy.ma.core import remainder
 
+import io
+from io import StringIO
+import os
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage as storage
+from PIL import Image
+
 def get_answers(user_id):
     """
     Gets a list of answers by user(user_id) according to category(question_for) and returns them in a format -
@@ -519,5 +526,54 @@ def phone_number_check(phone):
         user = None
     return user
 
-  
+
+def create_thumbnail(img,thumbnail):
+    """
+    It creates thumbnail for the uploaded images
+    param: image - original uploaded image field
+           thumbnail - thumbnail field for the images
+    """
+    
+    if img != "" and img is not None:
+        THUMB_SIZE = (100,100)
+
+        try:
+            image = Image.open(img)
+        except:
+            return False
+ 
+        image.thumbnail(THUMB_SIZE, Image.ANTIALIAS)
+        
+        # Path to save to, name, and extension
+        thumb_name, thumb_extension = os.path.splitext(img.name)
+        thumb_extension = thumb_extension.lower()
+        
+        if thumb_extension.endswith('"'):
+            thumb_extension = thumb_extension[:-1]
+        
+        thumb_filename = thumb_name + thumb_extension
+    
+        if thumb_extension in ['.jpg', '.jpeg']:
+            FTYPE = 'JPEG'
+        elif thumb_extension == '.gif':
+            FTYPE = 'GIF'
+        elif thumb_extension == '.png':
+            FTYPE = 'PNG'
+        else:
+            return False    # Unrecognized file type
+    
+        # Save thumbnail to in-memory file as StringIO
+        temp_thumb = io.BytesIO()
+        image.save(temp_thumb, FTYPE)
+        temp_thumb.seek(0)
+            # Load a ContentFile into the thumbnail field so it gets saved
+        try:
+            thumbnail.save(thumb_filename, ContentFile(temp_thumb.read()), save=False)
+        except:
+            temp_thumb.close()
+            return False
+        temp_thumb.close()
+        return True
+    else:
+        return False
 
