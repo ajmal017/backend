@@ -551,7 +551,7 @@ def create_thumbnail(img,thumbnail):
         if thumb_extension.endswith('"'):
             thumb_extension = thumb_extension[:-1]
         
-        thumb_filename = thumb_name + '_thumb' + thumb_extension
+        thumb_filename = thumb_name + thumb_extension
     
         if thumb_extension in ['.jpg', '.jpeg']:
             FTYPE = 'JPEG'
