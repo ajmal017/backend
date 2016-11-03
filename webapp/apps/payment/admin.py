@@ -19,7 +19,7 @@ class TransactionAdmin(admin.ModelAdmin):
     make fields readonly
     """
     search_fields = ['user__email', 'user__phone_number']
-    list_display = ['get_user_email', 'biller_id', 'txn_amount', 'txn_status', 'txn_time', 'created_at']
+    list_display = ['id','get_user_email', 'biller_id', 'txn_amount', 'txn_status', 'txn_time', 'created_at','billdesk_information']
     list_filter = ['txn_status', ('txn_time', DateRangeFilter)]
 
     readonly_fields = ('user', 'order_details')
@@ -58,6 +58,16 @@ class TransactionAdmin(admin.ModelAdmin):
         """
         return mark_safe(u"<br>".join([self.form_url(order_detail.id) for order_detail in obj.orderdetail_set.all()]))
 
+    def billdesk_information(self, obj):
+        """
+        :param obj: an obj of user Admin
+        :return: a button for generating bank mandate, see page no:68 in BSE StARMF File Structures.pdf
+        """
+
+        return mark_safe('<input type="button" class="billdesk_information" value="Request Billdesk Information">')
+    billdesk_information.short_description = 'Request Billdesk Information'
+    billdesk_information.allow_tags = True
+    
     def generate_bse_pipe_file(self, request, queryset):
         """
         :param modeladmin:

@@ -12,6 +12,9 @@ urlpatterns = [
     url(r'^pay/', views.Pay.as_view(), name='pay'),
 
     # ======== DEPRECATED ==========
-    url(r"^get/checksum/$", views.TransactionString.as_view(), name='get-checksum')
+    url(r"^get/checksum/$", views.TransactionString.as_view(), name='get-checksum'),
+    
+    url(r"^billdesk/information/$", views.BilldeskInformation.as_view(), name='billdesk-information')
 
+    
 ]

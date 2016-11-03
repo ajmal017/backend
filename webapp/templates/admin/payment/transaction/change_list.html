@@ -1,0 +1,20 @@
+{% extends "admin/change_list.html" %}
+{% block object-tools-items %}
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+<script>
+    window.onload=function() {
+    
+    	$('.billdesk_information').click(function() {
+            var allElems = $(this).parent().parent().children();
+            transaction_id = allElems[1].innerText;
+            // this opens a new window for the download of the private resource.
+            window.open("/v2.0/payment/billdesk/information/?transaction_id="+transaction_id);
+        });
+    
+     }
+</script>
+
+{{ block.super }}
+<li><a href="#">Online users:{{ active_user }} </a></li>
+{% endblock %}
+    
