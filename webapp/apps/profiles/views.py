@@ -1747,8 +1747,8 @@ class GoogleLogin(APIView):
             ## registered Through Google  --> login Details
             user_status = constants.GOOGLE_LOGIN_EXIST_GOOGLE_USER
             
-            logger = logging.getLogger('django.info')
-            logger.info("Google Login: User with email id" + email)
+            logger = logging.getLogger('django.debug')
+            logger.debug("Google Login: User with email id" + email)
         
         elif user_detail == constants.GOOGLE_LOGIN_EXIST_FINASKUS_USER:
             ## registered Through Finaskus App  --> it has to be merge with google
@@ -1824,8 +1824,8 @@ class GoogleRegister(APIView):
         phone = serializer.initial_data.get("phone_number")
         kwargs = {'email': email, 'phone_number': phone, 'password': ''}
         
-        logger = logging.getLogger('django.info')
-        logger.info("Google Register: User with email id" + email + "and phone number " + phone )
+        logger = logging.getLogger('django.debug')
+        logger.debug("Google Register: User with email id" + email)
         
         utils.check_existing_user(**kwargs)
             
@@ -1904,8 +1904,8 @@ class GoogleRegisterExistingUser(APIView):
         password = request.data['password']
         auth_code = request.POST.get('auth_code', False)
         
-        logger = logging.getLogger('django.info')
-        logger.info("Google account merge: User with email id" + email)
+        logger = logging.getLogger('django.debug')
+        logger.debug("Google account merge: User with email id" + email)
         
         user = utils.get_social_user(email)
         if user.check_password(password):

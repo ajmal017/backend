@@ -81,7 +81,7 @@ def send_mail(subject_template_name, email_template_name, context, from_email, t
     """
     Sends a django.core.mail.EmailMultiAlternatives to `to_email`.
     """
-    logger = logging.getLogger('django.info')
+    logger = logging.getLogger('django.debug')
 
     subject = loader.render_to_string(subject_template_name, context)
     # Email subject *must not* contain newlines
@@ -97,7 +97,7 @@ def send_mail(subject_template_name, email_template_name, context, from_email, t
     if html_email_template_name is not None:
         html_email = loader.render_to_string(html_email_template_name, context)
         email_message.attach_alternative(html_email, 'text/html')
-        logger.info("send_email: to: " + to_email + " template: " + html_email_template_name)
+        logger.debug("send_email: to: " + to_email + " template: " + html_email_template_name)
 
 
     email_message.send()

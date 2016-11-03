@@ -204,16 +204,19 @@ class User(AbstractBaseUser, TimeStampedModel):
 
     def save(self, *args, **kwargs):
         if self.pk is not None:
-            orig = User.objects.get(pk=self.pk)
+            try:
+                orig = User.objects.get(pk=self.pk)
+            except:
+                orig = None
             from profiles import utils
             if self.user_video:
-                if not orig.user_video:
+                if not orig or not orig.user_video:
                     helpers.send_user_video_upload_email(self,use_https=settings.USE_HTTPS)
             if self.image and self.image is not None:
-                if self.image != orig.image:
+                if not orig or self.image != orig.image:
                     utils.create_thumbnail(self.image,self.image_thumbnail)
             if self.identity_info_image and self.identity_info_image is not None:
-                if self.identity_info_image != orig.identity_info_image:
+                if not orig or self.identity_info_image != orig.identity_info_image:
                     utils.create_thumbnail(self.identity_info_image,self.identity_info_image_thumbnail)
 
                     
@@ -383,13 +386,16 @@ class InvestorInfo(TimeStampedModel):
 
     def save(self, *args, **kwargs):
         if self.pk is not None:
-            orig = InvestorInfo.objects.get(pk=self.pk)
+            try:
+                orig = InvestorInfo.objects.get(pk=self.pk)
+            except:
+                orig = None
             from profiles import utils
             if self.kra_verified is True:
-                if orig.kra_verified is False:
+                if orig and orig.kra_verified is False:
                     helpers.send_kra_verified_email(orig.user, self.applicant_name, use_https=settings.USE_HTTPS)
             if self.pan_image and self.pan_image is not None:
-                if self.pan_image != orig.pan_image:
+                if not orig or self.pan_image != orig.pan_image:
                     utils.create_thumbnail(self.pan_image,self.pan_image_thumbnail)
         
         super(InvestorInfo, self).save(*args, **kwargs)
@@ -481,19 +487,23 @@ class ContactInfo(TimeStampedModel):
     
     def save(self, *args, **kwargs):
         if self.pk is not None:
-            orig = ContactInfo.objects.get(pk=self.pk)
+            
+            try:
+                orig = ContactInfo.objects.get(pk=self.pk)
+            except:
+                orig = None
             from profiles import utils
             if self.front_image and self.front_image is not None:
-                if self.front_image != orig.front_image:
+                if not orig or self.front_image != orig.front_image:
                     utils.create_thumbnail(self.front_image,self.front_image_thumbnail)
             if self.back_image and self.back_image is not None:
-                if self.back_image != orig.back_image:
+                if not orig or self.back_image != orig.back_image:
                     utils.create_thumbnail(self.back_image,self.back_image_thumbnail)
             if self.permanent_front_image and self.permanent_front_image is not None:
-                if self.permanent_front_image != orig.permanent_front_image:
+                if not orig or self.permanent_front_image != orig.permanent_front_image:
                     utils.create_thumbnail(self.permanent_front_image,self.permanent_front_image_thumbnail)
             if self.permanent_back_image and self.permanent_back_image is not None:
-                if self.permanent_back_image != orig.permanent_back_image:
+                if not orig or self.permanent_back_image != orig.permanent_back_image:
                     utils.create_thumbnail(self.permanent_back_image,self.permanent_back_image_thumbnail)
         super(ContactInfo, self).save(*args, **kwargs)
     
@@ -524,10 +534,13 @@ class InvestorBankDetails(TimeStampedModel):
 
     def save(self, *args, **kwargs):
         if self.pk is not None:
-            orig = InvestorBankDetails.objects.get(pk=self.pk)
+            try:
+                orig = InvestorBankDetails.objects.get(pk=self.pk)
+            except:
+                orig = None
             from profiles import utils
             if self.bank_cheque_image and self.bank_cheque_image is not None:
-                if self.bank_cheque_image != orig.bank_cheque_image:
+                if not orig or self.bank_cheque_image != orig.bank_cheque_image:
                     utils.create_thumbnail(self.bank_cheque_image,self.bank_cheque_image_thumbnail)
         super(InvestorBankDetails, self).save(*args, **kwargs)
 

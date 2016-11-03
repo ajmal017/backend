@@ -298,8 +298,8 @@ def check_existing_user(**kwargs):
     email = kwargs['email']
     phone = kwargs['phone_number']
 
-    logger = logging.getLogger('django.info')
-    logger.info("Profiles: check_existing_user")
+    logger = logging.getLogger('django.debug')
+    logger.debug("Profiles: check_existing_user")
 
     try:
         user1 = profile_models.User.objects.get(email=email)
@@ -316,25 +316,25 @@ def check_existing_user(**kwargs):
 
     if user1 == user2:
         if not user1.email_verified and not user1.phone_number_verified:
-            logger.info("Profiles: check_existing_user: Deleting user: " + user1.id)
+            logger.debug("Profiles: check_existing_user: Deleting user: " + user1.id)
             user1.delete()
             return
 
     if user1 is None:
         if not user2.email_verified and not user2.phone_number_verified:
-            logger.info("Profiles: check_existing_user: Deleting user2: " + user2.id)
+            logger.debug("Profiles: check_existing_user: Deleting user2: " + user2.id)
             user2.delete()
             return
 
     if user2 is None:
         if not user1.email_verified and not user1.phone_number_verified:
-            logger.info("Profiles: check_existing_user: Deleting user1: " + user1.id)
+            logger.debug("Profiles: check_existing_user: Deleting user1: " + user1.id)
             user1.delete()
             return
 
     if user1 != user2 and user1 is not None:
             if not user1.email_verified and not user1.phone_number_verified and not user2.email_verified and not user2.phone_number_verified:
-                logger.info("Profiles: check_existing_user: Deleting users: " + user1.id + " " + user2.id)
+                logger.debug("Profiles: check_existing_user: Deleting users: " + user1.id + " " + user2.id)
                 user1.delete()
                 user2.delete()
                 return
@@ -488,8 +488,8 @@ def get_mandate_total_sip_amount(user, mandate):
 def check_existing_user_email(**kwargs):
     email = kwargs['email']
 
-    logger = logging.getLogger('django.info')
-    logger.info("Profiles: check_existing_user_email")
+    logger = logging.getLogger('django.debug')
+    logger.debug("Profiles: check_existing_user_email")
 
     try:
         ## Check the user in the profile user table

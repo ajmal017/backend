@@ -4038,7 +4038,7 @@ def tracking_funds_bse_nse():
     :return: Iterates over latest values of funds and also returns data for BSE and NSE
     """
     logger_response = 'The latest values of Funds, BSE and NSE are - \n'
-    mail_logger = logging.getLogger('django.info')
+    mail_logger = logging.getLogger('django.debug')
 
     count = 0
     historical_fund_objects_by_max_date = models.Fund.objects.annotate(max_date=Max('historicalfunddata__date'))
@@ -4052,7 +4052,7 @@ def tracking_funds_bse_nse():
     BSE = models.Indices.objects.get(index_name=constants.DASHBOARD_BENCHMARKS[1])
     BSE_date = models.HistoricalIndexData.objects.filter(index=BSE).order_by('-date')[0].date
     logger_response += str(BSE.index_name) + " is updated till date " + str(BSE_date) + "\n"
-    mail_logger.info(logger_response)
+    mail_logger.debug(logger_response)
 
     return count + 2
 
