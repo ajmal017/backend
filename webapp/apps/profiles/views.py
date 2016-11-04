@@ -249,8 +249,11 @@ class Register(APIView):
             applicant_name = investor_info_check(request.user)
             
             helpers.send_verify_email(user, applicant_name, code, use_https=settings.USE_HTTPS)
-
-            return api_utils.response({"user": user_response, "tokens": helpers.get_access_token(user, password),
+            access_token = helpers.get_access_token(user, password)
+            bearer_token = access_token['access_token']
+            headers = {"Authorization":"Bearer "+bearer_token}
+            return api_utils.response({"user": user_response, 
+                                       "tokens": access_token,
                                        "assess": core_utils.get_assess_answer(user),
                                        "plan": core_utils.get_plan_answers(user),
                                        "retirement": core_utils.get_category_answers(user, "retirement"),
@@ -260,7 +263,7 @@ class Register(APIView):
                                        "wedding": core_utils.get_category_answers(user, "wedding"),
                                        "property": core_utils.get_category_answers(user, "property"),
                                        "event": core_utils.get_category_answers(user, "event"),
-                                       })
+                                       },headers=headers)
         else:
             return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(serializer.errors))
 
@@ -321,8 +324,11 @@ class Login(APIView):
         if serializer.is_valid:
             if user.is_active:
                 if user.check_password(password):
+                    access_token = helpers.get_access_token(user, password)
+                    bearer_token = access_token['access_token']
+                    headers = {"Authorization":"Bearer "+bearer_token}
                     return api_utils.response({"user": serializer.data,
-                                               "tokens": helpers.get_access_token(user, password),
+                                               "tokens": access_token,
                                                "assess": core_utils.get_assess_answer(user),
                                                "plan": core_utils.get_plan_answers(user),
                                                "retirement": core_utils.get_category_answers(user, "retirement"),
@@ -331,7 +337,8 @@ class Login(APIView):
                                                "education": core_utils.get_category_answers(user, "education"),
                                                "wedding": core_utils.get_category_answers(user, "wedding"),
                                                "property": core_utils.get_category_answers(user, "property"),
-                                               "event": core_utils.get_category_answers(user, "event")})
+                                               "event": core_utils.get_category_answers(user, "event")},
+                                                headers=headers)
                 else:
                     login_error = constants.LOGIN_ERROR_5
                     return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": login_error},
@@ -1782,7 +1789,8 @@ class GoogleLogin(APIView):
                     
                     if access_token is not None:
                         convert_token = helpers.convert_social_access_token(access_token)
-                        
+                        bearer_token = convert_token['access_token']
+                        headers = {"Authorization":"Bearer "+bearer_token}
                         return api_utils.response({"res":{"user": serializer.data,
                                                     "tokens":convert_token,
                                                     "assess": core_utils.get_assess_answer(user),
@@ -1795,7 +1803,7 @@ class GoogleLogin(APIView):
                                                     "property": core_utils.get_category_answers(user, "property"),
                                                     "event": core_utils.get_category_answers(user, "event")},
                                                     "user_status":user_status
-                                                   })
+                                                   },headers=headers)
                     else:
                         return api_utils.response({"message": constants.UNABLE_TO_LOGIN, "login_error": "login_error"},
                                                     status.HTTP_401_UNAUTHORIZED,
@@ -1866,7 +1874,10 @@ class GoogleRegister(APIView):
                             # TODO : add provisions to add country code?
                         send_sms_thread = threading.Thread(target=api.send_sms, args=(constants.OTP.format(sms_code), int(phone),))
                         send_sms_thread.start()           
-                            #sms_code_sent = api.send_sms(constants.OTP.format(sms_code), int(phone))            
+                            #sms_code_sent = api.send_sms(constants.OTP.format(sms_code), int(phone))
+                        
+                        bearer_token = convert_token['access_token']
+                        headers = {"Authorization":"Bearer "+bearer_token}            
                         return api_utils.response({"user": user_response, 
                                                        "tokens": convert_token,
                                                        "assess": core_utils.get_assess_answer(user),
@@ -1878,7 +1889,7 @@ class GoogleRegister(APIView):
                                                        "wedding": core_utils.get_category_answers(user, "wedding"),
                                                        "property": core_utils.get_category_answers(user, "property"),
                                                        "event": core_utils.get_category_answers(user, "event"),
-                                                       })
+                                                       },headers=headers)
                     else:
                         return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(serializer.errors))
                 else:
@@ -1951,6 +1962,8 @@ class GoogleRegisterExistingUser(APIView):
                         serializer = serializers.SocialUserRegisterSerializer(user)
                         if serializer.is_valid:
                             user_response = dict(serializer.data)
+                            bearer_token = convert_token['access_token']
+                            headers = {"Authorization":"Bearer "+bearer_token}  
                             return api_utils.response({"user": user_response, 
                                                            "tokens": convert_token,
                                                            "assess": core_utils.get_assess_answer(user),
@@ -1962,7 +1975,7 @@ class GoogleRegisterExistingUser(APIView):
                                                            "wedding": core_utils.get_category_answers(user, "wedding"),
                                                            "property": core_utils.get_category_answers(user, "property"),
                                                            "event": core_utils.get_category_answers(user, "event"),
-                                                           })
+                                                           },headers=headers)
                               
                         else:
                             login_error = constants.LOGIN_ERROR_5

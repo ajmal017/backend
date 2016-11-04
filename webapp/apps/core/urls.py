@@ -8,6 +8,7 @@ urlpatterns = [
     url(r'^recommended/portfolios/$', views.RecommendedPortfolios.as_view(), name='recommended-portfolios'),
     url(r'^(?P<fund_id>^[0-9]+)/schema/fact-sheet/$', views.SchemaFactSheet.as_view(), name='schema-fact-sheet'),
     url(r'^assess/new/response/add/$', views.AssessAnswer.as_view(), name='assess-new-answers-add'),
+    url(r'^assess/new/response/add/v3/$', views.AssessAnswer_v3.as_view(), name='assess-new-answers-add_v3'),
     url(r'^retirement/new/response/add/$', views.RetirementAnswer.as_view(), name='retirement-new-answers-add'),
     url(r'^invest/new/response/add/$', views.InvestAnswer.as_view(), name='invest-new-answers-add'),
     url(r'^tax/new/response/add/$', views.TaxAnswer.as_view(), name='tax-new-answers-add'),

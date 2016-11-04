@@ -8,6 +8,7 @@ from profiles.views import UserInfo, Register, Login, ResetPassword
 from profiles import models
 
 import json
+import requests
 
 
 class GetProfileTests(APISimpleTestCase):
@@ -58,4 +59,27 @@ class GetProfileTests(APISimpleTestCase):
 #
 #
 #
+
+class RegisterTest(APISimpleTestCase):
+    allow_database_queries = True
+    def test_register(self):
+        factory = APIRequestFactory()
+        view = Register.as_view()
+        data={"email":"test@email.com","username":"test@email.com","password":"password@1234","phone_number":"9000000000"}
+        request = factory.post('http://10.97.11.86/v2.0/user/register/',data=data)
+        #force_authenticate(request, user=self.user)
+        response = view(request)
+        self.assertEqual(response.status_code, 200)
+        
+class LoginTest(APISimpleTestCase):
+    allow_database_queries = True
+    def test_login(self):
+        factory = APIRequestFactory()
+        view = Login.as_view()
+        data={"username":"jp@gmail.com","password":"jinesh@1234"}
+        request = factory.post('http://10.97.11.86/v2.0/user/login/',data=data)
+        #force_authenticate(request, user=self.user)
+        response = view(request)
+        self.assertEqual(response.status_code, 200)
+
 

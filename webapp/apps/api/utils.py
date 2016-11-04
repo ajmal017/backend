@@ -6,7 +6,7 @@ import random
 import time
 
 
-def response(data, code=status.HTTP_200_OK, error=""):
+def response(data, code=status.HTTP_200_OK, error="",headers=None):
     """
     Overrides rest_framework response
 
@@ -16,7 +16,7 @@ def response(data, code=status.HTTP_200_OK, error=""):
 
     """
     res = {"status_code": code, "error": error, "response": data}
-    return Response(data=res, status=status.HTTP_200_OK)
+    return Response(data=res, status=status.HTTP_200_OK,headers=headers)
 
 
 def gen_hash(seed):

@@ -367,6 +367,25 @@ class AssessAnswer(APIView):
             return api_utils.response({"message": "success"}, status.HTTP_200_OK)
         return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
                                   generate_error_message(serializer.errors))
+        
+        
+class AssessAnswer_v3(APIView):
+    """
+    New API v2 to manage answers
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        API to save answer for a particular question
+        :param request:
+        :return:
+        """
+        serializer = serializers.AssessSerializer(data=request.data)
+        if serializer.is_valid() and utils.process_assess_answer(request):
+            return api_utils.response({"message": "success"}, status.HTTP_200_OK)
+        return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
+                                  generate_error_message(serializer.errors))
 
 
 class PlanAnswer(APIView):
