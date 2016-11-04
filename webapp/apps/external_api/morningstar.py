@@ -168,7 +168,7 @@ class MorningStarBackend(BaseFundBackend):
         :return:
         """
         logger_response = 'The funds for which daily data point change ran are - '
-        mail_logger = logging.getLogger('django.info')
+        mail_logger = logging.getLogger('django.debug')
         json_data = self._get_data(constants.MORNING_STAR_CHANGE_DAILY_API)
         fields = {}
         if json_data[constants.STATUS][constants.CODE] != 0:
@@ -203,7 +203,7 @@ class MorningStarBackend(BaseFundBackend):
                 core_models.FundDataPointsChangeDaily.objects.update_or_create(fund_id=fund_object.id, defaults=fields)
                 logger_response += self.get_historical_data_points(fund.get(constants.ID), True)
                 count += 1
-            mail_logger.info(logger_response)
+            mail_logger.debug(logger_response)
             return count
 
     # Note - deprecated
@@ -389,7 +389,7 @@ class MorningStarBackend(BaseFundBackend):
         :return:
         """
         logger_response = 'The indices for which daily data point change ran are - '
-        logger = logging.getLogger('django.info')
+        logger = logging.getLogger('django.debug')
         index_mstar_ids = core_models.Indices.objects.values_list(constants.MSTAR_ID, flat=True)
         count = 0
         for index_id in index_mstar_ids:
@@ -397,7 +397,7 @@ class MorningStarBackend(BaseFundBackend):
                                                   date.today() + timedelta(days=10))
             logger_response += str(index_id + " ")
             count += 1
-        logger.info(logger_response)
+        logger.debug(logger_response)
         return count
 
     def get_historical_index_data_points(self, index_mstar_id, start_date, last_date):
@@ -451,7 +451,7 @@ class MorningStarBackend(BaseFundBackend):
         to get nav for categories on basis of historical category function
         :return:
         """
-        logger = logging.getLogger('django.info')
+        logger = logging.getLogger('django.debug')
         logger_response = 'The categories for which daily data point change ran are - '
         category_codes = set(core_models.Fund.objects.all().values_list(constants.CATEGORY_CODE, flat=True))
         count= 0
@@ -460,7 +460,7 @@ class MorningStarBackend(BaseFundBackend):
                                               date.today() + timedelta(days=10))
             logger_response += str(category_code + " ")
             count += 1
-        logger.info(logger_response)
+        logger.debug(logger_response)
         return count
 
     def get_historical_category_data(self, category_id, start_date, last_date):
