@@ -147,11 +147,12 @@ class BilldeskInformation(View):
                                               constants.UNAVAILABE_BANK)
     
                 request_type=ext_api_bse_cons.BILLDESK_QUERY_REQUEST_TYPE
-                parts = [request_type,billdesk.merchant_id,billdesk.customer_id,billdesk.additional_info_8.strftime("%Y%m%d%H%M%S")]  
+                now = datetime.today() + timedelta(hours=5, minutes=30) #IST
+                parts = [request_type,billdesk.merchant_id,billdesk.additional_info_1,now.strftime("%Y%m%d%H%M%S")]  
                 msg = "|".join(parts)
                 checksum = utils.get_billdesk_checksum(msg, settings.BILLDESK_SECRET_KEY)
                 
-                query_data = [request_type,billdesk.merchant_id,billdesk.customer_id,billdesk.additional_info_8.strftime("%Y%m%d%H%M%S"),checksum]
+                query_data = [request_type,billdesk.merchant_id,billdesk.additional_info_1,billdesk.additional_info_8.strftime("%Y%m%d%H%M%S"),checksum]
                 query_data_pipe = "|".join(query_data)
                 msg_data = dict(msg=query_data_pipe)
                 resp = requests.post(ext_api_bse_cons.BILLDESK_QUERY_URL,data=msg_data)
