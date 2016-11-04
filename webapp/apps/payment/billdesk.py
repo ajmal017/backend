@@ -87,4 +87,4 @@ def parse_billdesk_query_response(response):
     """
     
     parsed_string = response.split('|')
-    return parsed_string[18], parsed_string[3], parsed_string[5], parsed_string[15], parsed_string[14]
+    return parsed_string[2], parsed_string[3], parsed_string[5], parsed_string[15], parsed_string[14]

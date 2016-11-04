@@ -135,25 +135,13 @@ class BilldeskInformation(View):
             except models.Transaction.DoesNotExist:
                 billdesk = None
             if billdesk.txn_status != 1:
-                bank_name = billdesk.user.investorbankdetails.ifsc_code.name
-                product_id_array = constants.bank_product_id_map.get(bank_name, None)
-                if product_id_array is not None:
-                    txt_bank_id, product_id = product_id_array[0], product_id_array[1]
-                    if txt_bank_id == "" or product_id == "":
-                        return HttpResponse({"message" : constants.UNAVAILABE_BANK}, status.HTTP_404_NOT_FOUND,
-                                                  constants.UNAVAILABE_BANK)
-                else:
-                    return HttpResponse({"message" : constants.UNAVAILABE_BANK}, status.HTTP_404_NOT_FOUND,
-                                              constants.UNAVAILABE_BANK)
-    
                 request_type=ext_api_bse_cons.BILLDESK_QUERY_REQUEST_TYPE
                 now = datetime.today() + timedelta(hours=5, minutes=30) #IST
                 parts = [request_type,billdesk.merchant_id,billdesk.additional_info_1,now.strftime("%Y%m%d%H%M%S")]  
                 msg = "|".join(parts)
                 checksum = utils.get_billdesk_checksum(msg, settings.BILLDESK_SECRET_KEY)
-                
-                query_data = [request_type,billdesk.merchant_id,billdesk.additional_info_1,billdesk.additional_info_8.strftime("%Y%m%d%H%M%S"),checksum]
-                query_data_pipe = "|".join(query_data)
+                parts.append(checksum)
+                query_data_pipe = "|".join(parts)
                 msg_data = dict(msg=query_data_pipe)
                 resp = requests.post(ext_api_bse_cons.BILLDESK_QUERY_URL,data=msg_data)
                 response = resp.text
@@ -166,16 +154,20 @@ class BilldeskInformation(View):
                             txn_time_dt = datetime.strptime(txn_time, '%d-%m-%Y %H:%M:%S')
                         except:
                             logger.info("Billdesk response: Error parsing transaction time: " + txn_time)
-                    
-                    if not payment_billdesk.verify_billdesk_checksum(response) or auth_status!= "0300":
-                        txn = payment_billdesk.update_transaction_failure(order_id, ref_no, float(txn_amount), auth_status, response, txn_time_dt)
-                        message = "failed to update transaction"
+                    if payment_billdesk.verify_billdesk_checksum(response):
+                        if auth_status == "0399":
+                            txn = payment_billdesk.update_transaction_failure(order_id, ref_no, float(txn_amount), auth_status, response, txn_time_dt)
+                            message = "failed to update transaction"
+                        elif auth_status == "0300":
+                            txn = payment_billdesk.update_transaction_success(order_id, ref_no, float(txn_amount), auth_status, response, txn_time_dt)
+                            active_exchange_vendor = external_api_helpers.get_exchange_vendor_helper().get_active_vendor()
+                            core_utils.convert_to_investor(txn, active_exchange_vendor)
+                            message = "successfully update the transaction"
+                        else:
+                            message = "Invalid Request"
+                        return HttpResponse(message)
                     else:
-                        txn = payment_billdesk.update_transaction_success(order_id, ref_no, float(txn_amount), auth_status, response, txn_time_dt)
-                        active_exchange_vendor = external_api_helpers.get_exchange_vendor_helper().get_active_vendor()
-                        core_utils.convert_to_investor(txn, active_exchange_vendor)
-                        message = "successfully update the transaction"
-                    return HttpResponse(message)
+                        return HttpResponse("Invalid Request")
                 else:
                     return HttpResponse("Invalid Request")
             else:
