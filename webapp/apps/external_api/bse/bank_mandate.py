@@ -50,7 +50,7 @@ def generate_bank_mandate_pdf(user_id, bank_mandate):
 
     curr_date = datetime.now()
 
-    if not user.mandate_reg_no:
+    if not bank_mandate or not bank_mandate.mandate_reg_no:
         return None, "Mandate Registration Number Missing"
     
     mandate_dict = {
