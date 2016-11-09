@@ -5,10 +5,10 @@ from rest_framework.test import APITestCase, APIRequestFactory, force_authentica
 
 from profiles.models import User
 from profiles.views import UserInfo, Register, Login, ResetPassword
+from core.views import AssessAnswer,AssessAnswer_v3, AssessAnswer_Unregistered_User_v3
 from profiles import models
+from django.conf import settings
 
-import json
-import requests
 
 
 class GetProfileTests(APISimpleTestCase):
@@ -66,7 +66,7 @@ class RegisterTest(APISimpleTestCase):
         factory = APIRequestFactory()
         view = Register.as_view()
         data={"email":"test@email.com","username":"test@email.com","password":"password@1234","phone_number":"9000000000"}
-        request = factory.post('http://10.97.11.86/v2.0/user/register/',data=data)
+        request = factory.post(settings.BASE_URL+reverse('api_urls:profiles_urls:register-user'),data=data)
         #force_authenticate(request, user=self.user)
         response = view(request)
         self.assertEqual(response.status_code, 200)
@@ -77,9 +77,37 @@ class LoginTest(APISimpleTestCase):
         factory = APIRequestFactory()
         view = Login.as_view()
         data={"username":"jp@gmail.com","password":"jinesh@1234"}
-        request = factory.post('http://10.97.11.86/v2.0/user/login/',data=data)
+        request = factory.post(settings.BASE_URL+reverse('api_urls:profiles_urls:login-user'),data=data)
         #force_authenticate(request, user=self.user)
         response = view(request)
         self.assertEqual(response.status_code, 200)
+        
+        
+class AssessAnswers(APISimpleTestCase):
+    allow_database_queries = True
+    def test_register(self):
+        factory = APIRequestFactory()
+        view = AssessAnswer.as_view()
+        data={'A2': 'op2', 'A6': 'op2', 'A5': 'op2', 'A3': 'op2', 'A4': 'op2', 'A1': '35'}
+        user = models.User.objects.get(email='jp@gmail.com')
+        request = factory.post(settings.BASE_URL+reverse('api_urls:core_urls:assess-new-answers-add'),data=data)
+        force_authenticate(request, user=user)
+        response = view(request)
+        self.assertEqual(response.status_code, 200)
+        
+class AssessAnswers_v3(APISimpleTestCase):
+    allow_database_queries = True
+    def test_register(self):
+        factory = APIRequestFactory()
+        view = AssessAnswer_v3.as_view()
+        data={'A4': 'op2', 'A1': '35','A7': 'op2', 'A8': 'op2', 'A9': 'op2', 'A17': 'op2','A18': 'op2','A19': 'op2'}
+        user = models.User.objects.get(email='jp@gmail.com')
+        request = factory.post(settings.BASE_URL+reverse('api_urls_v3:core_urls:assess-new-answers-add'),data=data)
+        force_authenticate(request, user=user)
+        response = view(request)
+        self.assertEqual(response.status_code, 200)
+        
+        
+        
 
 

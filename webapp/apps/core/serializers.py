@@ -127,7 +127,34 @@ class AssessSerializer(serializers.Serializer):
     A4 = serializers.CharField(max_length=3, required=True)
     A5 = serializers.CharField(max_length=3, required=True)
     A6 = serializers.CharField(max_length=3, required=True)
-
+    
+class AssessSerializer_v3(serializers.Serializer):
+    """
+    Serializer for assess post api
+    """
+    A1 = serializers.CharField(max_length=3, required=True)
+    A4 = serializers.CharField(max_length=3, required=True)
+    
+    
+    A7 = serializers.CharField(max_length=3, required=True) 
+    A8 = serializers.CharField(max_length=3, required=True)
+    A9 = serializers.CharField(max_length=3, required=True)
+    
+    A10= serializers.CharField(max_length=3, required=False)
+    A11= serializers.CharField(max_length=3, required=False)
+    A12= serializers.CharField(max_length=3, required=False)
+    A13= serializers.CharField(max_length=3, required=False)
+    A14= serializers.CharField(max_length=3, required=False)
+    A15= serializers.CharField(max_length=3, required=False)
+    A16= serializers.CharField(max_length=3, required=False)
+    
+    A17 = serializers.CharField(max_length=3, required=True)
+    A18 = serializers.CharField(max_length=3, required=True)
+    A19 = serializers.CharField(max_length=3, required=True)
+    
+    
+    
+    
 
 class PlanSerializer(serializers.Serializer):
     """

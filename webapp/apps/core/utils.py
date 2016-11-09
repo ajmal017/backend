@@ -296,6 +296,32 @@ def process_assess_answer(request):
     request.user.save()
     return True
 
+def process_assess_answer_unregistered_users(request):
+    """
+    :param request:
+    :return: risk score value
+    """
+    total_denominator = 0.0
+    score = 0.0
+    try:
+        for key, value in request.data.items():
+            if key != "A1":
+                question = models.Question.objects.get(question_id=key)
+                option_selected = models.Option.objects.get(option_id=value, question__question_id=key)
+                total_denominator += question.weight
+                score += (option_selected.weight * question.weight)
+            else:
+                value = helpers.find_right_option(int(value))
+                question = models.Question.objects.get(question_id=key)
+                option_selected = models.Option.objects.get(option_id=value, question__question_id=key)
+                total_denominator += question.weight
+                score += (option_selected.weight * question.weight)
+        risk_score = round((score / total_denominator), 1)
+    except:
+        risk_score = None
+    return risk_score
+
+
 
 def make_allocation_dict(sip, lumpsum, allocation):
     """
