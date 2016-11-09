@@ -25,6 +25,7 @@ import hashlib
 import threading
 
 from itertools import chain
+from core.utils import asset_allocation
 
 debug_logger = logging.getLogger('django.debug')
 
@@ -234,16 +235,6 @@ def save_risk_profile(request):
         request.user.save()
 
 
-def asset_allocation(user, allocation_dict):
-    """
-    Creates/updates PlanAssetAllocation object from request object
-    :param request:
-    :param question_for:the category of question
-    """
-    # make plan asset allocation object for all categories except plan and access
-    models.PlanAssestAllocation.objects.update_or_create(user=user, portfolio=None, defaults=allocation_dict)
-
-
 def process_plan_answer(request):
     """
     :param request:
@@ -306,34 +297,6 @@ def process_assess_answer(request):
     return True
 
 
-def process_retirement_answer(request):
-    """
-    post answer for retirement
-    """
-    allocation_dict = make_allocation_dict(float(request.data.get('monthly_investment')), 0,
-                                           request.data.get("allocation"))
-    equity_sip, equity_lumpsum, debt_sip, debt_lumpsum, elss_sip, elss_lumpsum, is_error, errors = \
-        get_number_of_funds(allocation_dict)
-
-    if is_error:
-        return is_error, errors
-    for key, value in request.data.items():
-        if key != "floating_sip" and key != "allocation":
-            question = models.Question.objects.get(question_id=key, question_for=constants.RETIREMENT)
-            models.Answer.objects.update_or_create(
-                question_id=question.id, user=request.user, portfolio=None, defaults={'text': str(value)})
-        elif key == "floating_sip":
-            question = models.Question.objects.get(question_id=key, question_for=constants.RETIREMENT)
-            option_id = "op1" if value else "op2"
-            option_selected = models.Option.objects.get(option_id=option_id, question__question_id=key,
-                                                        question__question_for=constants.RETIREMENT)
-            models.Answer.objects.update_or_create(
-                question_id=question.id, user=request.user, portfolio=None, defaults={'option': option_selected})
-        elif key == "allocation":
-            asset_allocation(request.user, {"retirement_allocation": value})
-    return is_error, errors
-
-
 def make_allocation_dict(sip, lumpsum, allocation):
     """
     makes an allocation dict that can be used by get_number_of_funds utility to check if sip, lumpsum is above min level
@@ -352,78 +315,6 @@ def make_allocation_dict(sip, lumpsum, allocation):
     }
     return allocation_dict
 
-
-def process_tax_answer(request):
-    """
-    post answer for tax
-    """
-    allocation_dict = make_allocation_dict(0, float(request.data.get('amount_invested')), constants.TAX_ALLOCATION)
-    equity_sip, equity_lumpsum, debt_sip, debt_lumpsum, elss_sip, elss_lumpsum, is_error, errors = \
-        get_number_of_funds(allocation_dict)
-    if is_error:
-        return is_error, errors
-
-    for key, value in request.data.items():
-        if key != "estimate_needed":
-            question = models.Question.objects.get(question_id=key, question_for=constants.TAX_SAVING)
-            models.Answer.objects.update_or_create(
-                question_id=question.id, user=request.user, portfolio=None, defaults={'text': str(value)})
-        elif key == "estimate_needed":
-            question = models.Question.objects.get(question_id=key, question_for=constants.TAX_SAVING)
-            option_id = "op1" if value else "op2"
-            option_selected = models.Option.objects.get(option_id=option_id, question__question_id=key)
-            models.Answer.objects.update_or_create(
-                question_id=question.id, user=request.user, portfolio=None, defaults={'option': option_selected})
-    asset_allocation(request.user, {"tax_allocation": constants.TAX_ALLOCATION})
-    return is_error, errors
-
-
-def process_generic_goal_answer(user, data, type):
-    """
-    post answer for generic goals
-    """
-    category_allocation = type + "_allocation"
-    allocation_dict = make_allocation_dict(data.get('sip'), data.get('lumpsum'), data.get('allocation'))
-    equity_sip, equity_lumpsum, debt_sip, debt_lumpsum, elss_sip, elss_lumpsum, is_error, errors = \
-        get_number_of_funds(allocation_dict)
-    if is_error:
-        return is_error, errors
-    
-    for key, value in data.items():
-        if key != 'allocation':
-            question = models.Question.objects.get(question_id=key, question_for=constants.MAP[type])
-            models.Answer.objects.update_or_create(
-                question_id=question.id, user=user, portfolio=None, defaults={'text': str(value)})
-        elif key == 'allocation':
-            asset_allocation(user, {category_allocation: value})
-    return is_error, errors
-
-
-def process_invest_answer(user, data):
-    """
-    post answer for invest
-    """
-    allocation_dict = make_allocation_dict(float(data.get('sip')), float(data.get('lumpsum')), data.get("allocation"))
-    equity_sip, equity_lumpsum, debt_sip, debt_lumpsum, elss_sip, elss_lumpsum, is_error, errors = \
-        get_number_of_funds(allocation_dict)
-    if is_error:
-        return is_error, errors
-
-    for key, value in data.items():
-        if key != "floating_sip" and key != "allocation":
-            question = models.Question.objects.get(question_id=key, question_for=constants.INVEST)
-            models.Answer.objects.update_or_create(question_id=question.id, user=user, portfolio=None,
-                                                   defaults={'text': str(value)})
-        elif key == "floating_sip":
-            question = models.Question.objects.get(question_id=key, question_for=constants.INVEST)
-            option_id = "op1" if value else "op2"
-            option_selected = models.Option.objects.get(option_id=option_id, question__question_id=key,
-                                                        question__question_for=constants.INVEST)
-            models.Answer.objects.update_or_create(
-                question_id=question.id, user=user, portfolio=None, defaults={'option': option_selected})
-        elif key == "allocation":
-            asset_allocation(user, {"invest_allocation": value})
-    return is_error, errors
 
 def roundTo100(amount1, amount2):
     amount1_remainder = amount1%100
@@ -555,6 +446,117 @@ def calculate_overall_allocation(user_id, investment_date=None):
     result = {"overall_allocation": overall_allocation, "total_sum": total_investment, "summary": summary}
     return result, overall_allocation_with_sip_lumpsum, status_summary
 
+def calculate_overall_allocation(user, investment_date=None):
+    """
+    :param user_id:
+    :param investment_date:the date for investing
+    :return: a dictionary of overall allocation for user with keys - equity, elss and debt and values as - a dictionary
+    with percentage and amount for respective ( elss, debt and equity )
+    """
+    from core import goals_helper #TODO
+    
+    goals = goals_helper.GoalBase.get_current_goals(user) 
+
+    summary, financial_goal_status, status_summary = [], [], []
+    total_equity, total_debt, total_elss = 0, 0, 0
+    elss_lumpsum, elss_sip, debt_lumpsum, debt_sip, equity_lumpsum, equity_sip = 0, 0, 0, 0, 0, 0
+
+    for goal in goals:
+        investment_till_date, actual_term, invest_date = 0, 0, investment_date
+        lumpsum_amount, sip_amount, term, growth = 0, 0, 0, 0
+        
+        goal_object = goals_helper.GoalBase.get_goal_instance(goal.category)
+
+    user_asset_allocation = models.PlanAssestAllocation.objects.get(user_id=user_id, portfolio=None)  # user's asset allocation
+    user_answers = models.Answer.objects.filter(user_id=user_id, portfolio=None).select_related('question')
+    # creating an answer map of user answers with key - question id and value - answer
+    answer_map = {}
+    for answer in user_answers:
+        answer_map[answer.question.question_for + answer.question.question_id] = answer
+
+    total_equity, total_debt, total_elss = 0, 0, 0
+    elss_lumpsum, elss_sip, debt_lumpsum, debt_sip, equity_lumpsum, equity_sip = 0, 0, 0, 0, 0, 0
+    for asset in constants.ALLOCATION_PROPERTY_LIST:
+        category_allocation = getattr(user_asset_allocation, asset + "_allocation")
+        if category_allocation is not None:
+            
+            investment_till_date, actual_term, invest_date = 0, 0, investment_date
+            lumpsum_amount, sip_amount, term, growth = 0, 0, 0, 0
+            category_questions = constants.ASSET_ALLOCATION_MAP[constants.MAP[asset]]
+            if category_questions[0] is not None:
+                lumpsum_amount = float(answer_map[constants.MAP[asset] + category_questions[0]].text)
+            if category_questions[1] is not None:
+                sip_amount = float(answer_map[constants.MAP[asset] + category_questions[1]].text)
+            if asset == 'tax':
+                term = constants.TAX_DEFAULT_TERM
+                actual_term = term
+            elif category_questions[3] is not None and len(category_questions[3]) == 2:
+                term = int(answer_map[constants.MAP[asset] + category_questions[3][1]].text) - int(
+                    answer_map[constants.MAP[asset] + category_questions[3][0]].text)
+                actual_term = term
+            elif category_questions[3] is not None and len(category_questions[3]) == 1:
+                term = float(answer_map[constants.MAP[asset] + category_questions[3][0]].text)
+                actual_term = term
+                if asset == 'invest':
+                    term = term if term > 0 else constants.INVEST_MINIMUM_TERM
+            if category_questions[4] is not None:
+                growth = float(answer_map[constants.MAP[asset] + category_questions[4]].text)
+            if asset == 'tax':
+                corpus = expected_corpus(term, sip_amount, lumpsum_amount,
+                                         float(category_allocation[constants.ELSS]) / 100,
+                                         float(category_allocation[constants.DEBT]) / 100, growth / 100)
+                if invest_date is not None:
+                    time_since_invest = relativedelta(date.today(), invest_date).months
+                    invest_date += relativedelta(months=time_since_invest)
+                    time_since_invest += relativedelta(date.today(), invest_date).years * 12
+                    investment_till_date = new_expected_corpus(
+                        'ti', sip_amount, lumpsum_amount, float(category_allocation[constants.DEBT]) / 100,
+                        float(category_allocation[constants.ELSS]) / 100, time_since_invest, growth / 100, 0, 0)
+            else:
+                corpus = new_expected_corpus(asset, sip_amount, lumpsum_amount,
+                                             float(category_allocation[constants.DEBT]) / 100,
+                                             float(category_allocation[constants.EQUITY]) / 100, actual_term,
+                                             growth / 100)
+                if investment_date is not None:
+                    time_since_invest = relativedelta(date.today(), invest_date).months
+                    invest_date += relativedelta(months=time_since_invest)
+                    time_since_invest += relativedelta(date.today(), invest_date).years * 12
+                    investment_till_date = new_expected_corpus(
+                        'ti', sip_amount, lumpsum_amount, float(category_allocation[constants.DEBT]) / 100,
+                        float(category_allocation[constants.EQUITY]) / 100, time_since_invest, growth / 100, 0, 0)
+            category_investment = lumpsum_amount + (sip_amount * 12)  # total investment for this category
+            if float(category_allocation[constants.ELSS]):
+                elss_lumpsum += round((lumpsum_amount * float(category_allocation[constants.ELSS])) / 100)
+                elss_sip += round((sip_amount * float(category_allocation[constants.ELSS])) / 100)
+                
+            equity_l, debt_l, equity_s, debt_s = calculate_asset_allocation(lumpsum_amount, sip_amount, float(category_allocation[constants.EQUITY]), float(category_allocation[constants.DEBT]))
+            debt_lumpsum += debt_l
+            debt_sip += debt_s
+            equity_lumpsum += equity_l
+            equity_sip += equity_s
+            
+            category_summary = {"goal": category_questions[2] + str(1), "corpus": round(corpus, 2), "sip": sip_amount,
+                                "lumpsum": lumpsum_amount, "term": term}
+            goal_status = copy.deepcopy(category_summary)
+            goal_status.update({'investment_till_date': investment_till_date})
+            summary.append(category_summary)
+            status_summary.append(goal_status)
+
+    total_equity += equity_lumpsum + equity_sip * 12
+    total_debt += debt_lumpsum + debt_sip * 12
+    total_elss += elss_lumpsum + elss_sip * 12
+    total_investment = total_equity + total_elss + total_debt  # total investment by user in all categories
+    overall_allocation = {constants.EQUITY: {"percentage": helpers.percentage(total_equity, total_investment),
+                                             "amount": total_equity},
+                          constants.DEBT: {"percentage": helpers.percentage(total_debt, total_investment),
+                                           "amount": total_debt},
+                          constants.ELSS: {"percentage": helpers.percentage(total_elss, total_investment),
+                                           "amount": total_elss}}
+    overall_allocation_with_sip_lumpsum = {constants.EQUITY: {"lumpsum": equity_lumpsum, "sip": equity_sip},
+                                           constants.DEBT: {"lumpsum": debt_lumpsum, "sip": debt_sip},
+                                           constants.ELSS: {"lumpsum": elss_lumpsum, "sip": elss_sip},}
+    result = {"overall_allocation": overall_allocation, "total_sum": total_investment, "summary": summary}
+    return result, overall_allocation_with_sip_lumpsum, status_summary
 
 def get_assess_answer(user):
     """

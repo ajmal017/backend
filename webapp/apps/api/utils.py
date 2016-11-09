@@ -51,6 +51,18 @@ def create_error_message(error_dict):
         error_string += error_dict[error] + ". "
     return error_string
 
+def age_calculator_goal(answers, goal):
+    """
+    returns the differenc between current age and retirement age
+    :params answers
+    :params portfolio
+    """
+    difference_in_age = None
+    type_of_age_name = ['current_age', 'retirement_age']
+    current_age = answers.filter(question__question_id__in=type_of_age_name, goal=goal)
+    if len(current_age) == 2:
+        difference_in_age = abs(int(current_age[0].text) - int(current_age[1].text))
+    return difference_in_age
 
 def age_calculator(answers, portfolio):
     """

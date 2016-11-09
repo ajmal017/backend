@@ -18,6 +18,7 @@ from payment import models as payment_models
 import logging
 from django.http import HttpResponse
 from external_api import constants as external_constants
+from api import utils as api_utils
 import datetime
 
 from datetime import timedelta, date
@@ -525,7 +526,7 @@ class PortfolioItem(TimeStampedModel):
         except ZeroDivisionError:
             self.returns_percentage = 0
 
-"""
+
 class Goal(TimeStampedModel):
     CATEGORY_CHOICE = (
         (constants.RETIREMENT, 'Retirement'),
@@ -537,11 +538,33 @@ class Goal(TimeStampedModel):
         (constants.INVEST, 'Invest')
     )
 
-    user = models.ForeignKey(profile_models.User, related_name="user")
+    user = models.ForeignKey(profile_models.User, related_name="goal_user")
     portfolio = models.ForeignKey(Portfolio, null=True, blank=True, default=None)
     category = models.CharField(_('Category'), max_length=254, choices=CATEGORY_CHOICE)
-"""     
-    
+    name = models.CharField(max_length=40, null=True, blank=True, default="")
+    duration = models.IntegerField(default=0)
+    asset_allocation = HStoreField(blank=True, null=True)
+     
+    def __str__(self):
+        return str(self.user) + " " + str(self.name) + " " + str(self.category)
+
+    class Meta:
+        unique_together = (("user", "category", "portfolio", "name"),)
+
+    def calculate_duration(self):
+        duration = None
+        try:
+            if self.category == constants.RETIREMENT:
+                duration = api_utils.age_calculator_goal(self.user.user, self)
+            else:
+                answer = Answer.objects.get(question__question_id='term', goal=self)
+                if answer:
+                    duration = int(answer.text) 
+        except:
+            pass
+        if duration is not None:
+            self.duration = int(duration)
+            
 class Answer(TimeStampedModel):
     """
     Model for selected choices from options
@@ -553,6 +576,8 @@ class Answer(TimeStampedModel):
     metadata = HStoreField(blank=True, null=True)  # For storing any extra requirement fields in future
     text = models.TextField(blank=True, null=True)
     portfolio = models.ForeignKey(Portfolio, null=True, blank=True, default=None)
+    goal = models.ForeignKey(Goal, null=True, blank=True, default=None)
+    
     objects = manager.AnswerManager()
 
     def __str__(self):

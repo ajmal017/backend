@@ -30,7 +30,7 @@ from external_api import helpers as external_helpers
 
 from django.db.models import Count
 from external_api import utils as external_utils
-
+from core import goals_helper
 
 
 
@@ -259,29 +259,6 @@ class DeprecateAPI(APIView):
     def get(self, request):
         return self.generateResponse()
         
-class AssessAnswerNew(APIView):
-    """
-    New API to manage answers
-    """
-    permission_classes = [permissions.IsAuthenticated]
-
-    def post(self, request, type):
-        """
-        API to save answer for a particular question
-        :param request:
-        :param type: param from url
-        :return:
-        """
-        is_error, error = utils.create_answers_new(request.data.get('fields'), request.user, type)
-        if is_error is False:
-            if not (type == "plan" or type == "assess"):
-                utils.asset_allocation(request, type)
-            if type == "assess":
-                utils.save_risk_profile(request)
-            return api_utils.response({"message": "success"}, status.HTTP_200_OK)
-        else:
-            return api_utils.response({"message": error}, status.HTTP_400_BAD_REQUEST, generate_error_message(error))
-
 
 class RiskProfile(APIView):
     """
@@ -420,11 +397,13 @@ class TaxAnswer(APIView):
         :return:
         """
         serializer = serializers.TaxSerializer(data=request.data)
-        is_error, errors = utils.process_tax_answer(request)
-        if is_error:
-            return api_utils.response({constants.MESSAGE: errors}, status.HTTP_400_BAD_REQUEST,
-                                      api_utils.create_error_message(errors))
         if serializer.is_valid():
+            goal_object = goals_helper.TaxGoal()
+            is_error, errors = goal_object.create_or_update_goal(request.user, serializer.data, None, request.data.get('goal_name')) 
+    
+            if is_error:
+                return api_utils.response({constants.MESSAGE: errors}, status.HTTP_400_BAD_REQUEST,
+                                          api_utils.create_error_message(errors))
             return api_utils.response({"message": "success"}, status.HTTP_200_OK)
         return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
                                   generate_error_message(serializer.errors))
@@ -443,11 +422,12 @@ class RetirementAnswer(APIView):
         :return:
         """
         serializer = serializers.RetirementSerializer(data=request.data)
-        is_error, errors = utils.process_retirement_answer(request)
-        if is_error:
-            return api_utils.response({constants.MESSAGE: errors}, status.HTTP_400_BAD_REQUEST,
-                                      api_utils.create_error_message(errors))
         if serializer.is_valid():
+            goal_object = goals_helper.RetirementGoal()
+            is_error, errors = goal_object.create_or_update_goal(request.user, serializer.data, None, request.data.get('goal_name')) 
+            if is_error:
+                return api_utils.response({constants.MESSAGE: errors}, status.HTTP_400_BAD_REQUEST,
+                                          api_utils.create_error_message(errors))
             return api_utils.response({"message": "success"}, status.HTTP_200_OK)
         return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
                                   generate_error_message(serializer.errors))
@@ -468,7 +448,8 @@ class GenericGoalAnswer(APIView):
         """
         serializer = serializers.GenericGoalSerializer(data=request.data)
         if serializer.is_valid():
-            is_error, errors = utils.process_generic_goal_answer(request.user, serializer.data, type)
+            goal_object = goals_helper.GenericGoal()
+            is_error, errors = goal_object.create_or_update_goal(request.user, serializer.data, type, request.data.get('goal_name')) 
             if is_error:
                 return api_utils.response({constants.MESSAGE: errors}, status.HTTP_400_BAD_REQUEST,
                                           api_utils.create_error_message(errors))
@@ -491,7 +472,8 @@ class InvestAnswer(APIView):
         """
         serializer = serializers.InvestSerializer(data=request.data)
         if serializer.is_valid():
-            is_error, errors = utils.process_invest_answer(request.user, serializer.data)
+            goal_object = goals_helper.QuickInvestGoal()
+            is_error, errors = goal_object.create_or_update_goal(request.user, serializer.data, None, request.data.get('goal_name')) 
             if is_error:
                 return api_utils.response({constants.MESSAGE: errors}, status.HTTP_400_BAD_REQUEST,
                                           api_utils.create_error_message(errors))
@@ -1275,29 +1257,20 @@ class AnswerDelete(APIView):
         :return:
         """
         is_last_goal = True
-        try:
-            asset_allocation = models.PlanAssestAllocation.objects.get(user=request.user, portfolio=None)
-        except models.PlanAssestAllocation.DoesNotExist:
-            return api_utils.response({constants.MESSAGE: constants.USER_ANSWERS_NOT_PRESENT},
-                                      status.HTTP_400_BAD_REQUEST, constants.USER_ANSWERS_NOT_PRESENT)
-        category_of_allocation = question_for + '_allocation'
-        setattr(asset_allocation, category_of_allocation, None)
-        asset_allocation.save()
-
-        # check if it as the only goal. If true delete plan asset allocation and portfolio if present
-        for category in constants.ALLOCATION_LIST:
-            if getattr(asset_allocation, category + '_allocation') is not None:
+        current_goal = goals_helper.GoalBase.get_current_goal(request.user, constants.MAP[question_for])
+        
+        if current_goal:
+            portfolio = current_goal.portfolio 
+            current_goal.delete()
+            current_goals = goals_helper.GoalBase.get_current_goals(request.user)
+            
+            if len(current_goals) > 0:
                 is_last_goal = False
-        if is_last_goal:
-            asset_allocation.delete()
-            try:
-                models.Portfolio.objects.get(user=request.user, has_invested=False).delete()
-            except models.Portfolio.DoesNotExist:
-                pass
-        request.user.rebuild_portfolio = True
-        request.user.save()
-        models.Answer.objects.filter(user=request.user, question__question_for=constants.MAP[question_for],
-                                     portfolio=None).delete()
+            if is_last_goal and portfolio:
+                portfolio.delete()
+
+            request.user.rebuild_portfolio = True
+            request.user.save()
         return api_utils.response({constants.MESSAGE: constants.SUCCESS}, status.HTTP_200_OK)
 
 
