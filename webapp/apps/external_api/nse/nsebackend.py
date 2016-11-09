@@ -196,7 +196,7 @@ class NSEBackend(ExchangeBackend):
         return_code = root.find(nse_constants.SERVICE_RETURN_CODE_PATH).text
         if return_code == nse_constants.RETURN_CODE_SUCCESS:
             payment_link = root.find(nse_constants.RESPONSE_PAYMENT_LINK_PATH).text
-            current_transaction = payment_models.Transaction.get(user_id=user_id, txn_status=0)
+            current_transaction = payment_models.Transaction.objects.get(user_id=user_id, txn_status=0)
             # 0 for pending transactions assuming there is only one pending transaction
             current_transaction.payment_link= payment_link
             current_transaction.save()
