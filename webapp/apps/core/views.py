@@ -371,7 +371,7 @@ class AssessAnswer(APIView):
         
 class AssessAnswer_v3(APIView):
     """
-    New API v2 to manage answers
+    New API v3 to manage answers
     """
     permission_classes = [permissions.IsAuthenticated]
 
@@ -381,9 +381,31 @@ class AssessAnswer_v3(APIView):
         :param request:
         :return:
         """
-        serializer = serializers.AssessSerializer(data=request.data)
+        serializer = serializers.AssessSerializer_v3(data=request.data)
         if serializer.is_valid() and utils.process_assess_answer(request):
             return api_utils.response({"message": "success"}, status.HTTP_200_OK)
+        return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
+                                  generate_error_message(serializer.errors))
+        
+
+class AssessAnswer_Unregistered_User_v3(APIView):
+    """
+    New API v3 to manage answers for non registered users
+    """
+    def post(self, request):
+        """
+        API to save answer for a particular question
+        :param request:
+        :return:
+        """
+        serializer = serializers.AssessSerializer_v3(data=request.data)
+        if serializer.is_valid():
+            risk_score = utils.process_assess_answer_unregistered_users(request)
+            if risk_score is not None:
+                return api_utils.response({"message": "success","risk_score":risk_score}, status.HTTP_200_OK)
+            else:
+                return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
+                                  "Unable to calculate risk score")
         return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
                                   generate_error_message(serializer.errors))
 
