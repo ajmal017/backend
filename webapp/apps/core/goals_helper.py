@@ -15,15 +15,19 @@ class GoalBase(ABC):
         self.goal_object = goal_object
 
     @staticmethod
-    def get_current_goal(self, user, goal_type):
+    def get_current_goal(user, goal_type):
         try:
-            return models.Goal.objects.get(user=user, category=goal_type, Q(portfolio=None) | Q(portfolio__has_invested=False))
+            return models.Goal.objects.get(user=user, category=goal_type, Q(portfolio=None) | (Q(portfolio__has_invested=False) & Q(portfolio__is_deleted=False))).prefetch_related('answer')
         except:
             return None
 
     @staticmethod
-    def get_current_goals(self, user):
-        return models.Goal.objects.filter(user=user, Q(portfolio=None) | Q(portfolio__has_invested=False))
+    def get_current_goals(user):
+        return models.Goal.objects.filter(user=user, Q(portfolio=None) | (Q(portfolio__has_invested=False) & Q(portfolio__is_deleted=False))).prefetch_related('answer')
+
+    @staticmethod
+    def get_portfolio_goals(user, portfolio):
+        return models.Goal.objects.filter(user=user, portfolio=portfolio).prefetch_related('answer')
     
     @staticmethod
     def get_goal_instance(goal_object):
@@ -42,21 +46,32 @@ class GoalBase(ABC):
         else:
             if self.goal_object:
                 try:
-                    answer = models.Answer.objects.get(goal=self.goal_object, question__id="sip")
+                    answer = self.goal_object.answer_set.get(question__id="sip")
                     if answer:
                         return float(answer.text)
-                except Exception as e:
-                    self.error_logger.error("Error retrieving sip amount: " + str(e))
+                except Exception:
+                    pass
               
         return 0
     
+    def get_sip_growth(self):
+        if self.goal_object:
+            try:
+                answer = self.goal_object.answer_set.get(question__id="grow_sip")
+                if answer:
+                    return float(answer.text)
+            except Exception as e:
+                pass
+              
+        return 0
+        
     def get_lumpsum_amount(self, data=None):
         if data:
             return data.get('lumpsum')
         else:
             if self.goal_object:
                 try:
-                    answer = models.Answer.objects.get(goal=self.goal_object, question__id="lumpsum")
+                    answer = self.goal_object.answer_set.get(question__id="lumpsum")
                     if answer:
                         return float(answer.text)
                 except Exception as e:
@@ -64,11 +79,19 @@ class GoalBase(ABC):
               
         return 0
         
+    def get_duration(self, data=None):
+        if data and data.get("term"):
+            return data.get("term")
+        else: 
+            if self.goal_object:
+                return self.goal_object.duration
+        return 0
+    
     def get_answer_value(self, key, value):
         return value, None
 
     def create_or_update_goal(self, user, data, goal_type, goal_name=""):
-        allocation_dict = utils.make_allocation_dict(data.get('sip'), data.get('lumpsum'), data.get('allocation'))
+        allocation_dict = utils.make_allocation_dict(self.get_sip_amount(data), self.get_lumpsum_amount(data), data.get('allocation'))
 
         equity_sip, equity_lumpsum, debt_sip, debt_lumpsum, elss_sip, elss_lumpsum, is_error, errors = \
             utils.get_number_of_funds(allocation_dict)
@@ -80,15 +103,18 @@ class GoalBase(ABC):
         if goal_serializer.is_valid():
             goal_name = goal_serializer.validated_data.get("name")
             allocation = goal_serializer.validated_data.get('allocation')
+            duration = self.get_duration(data)
+
             goal = self.get_current_goal(user, goal_type)
             
             if goal:
                 goal.name = goal_name
                 goal.asset_allocation = allocation
+                goal.duration = duration
                 goal.save()
             else:
-                goal = models.Goal.objects.create(user=user, category=goal_type, name=goal_name, asset_allocation=allocation)
-                
+                goal = models.Goal.objects.create(user=user, category=goal_type, name=goal_name, asset_allocation=allocation, duration=duration)
+                            
             for key, value in data.items():
                 value, option_id = self.get_answer_value(key, value)
                 if option_id:
@@ -106,6 +132,17 @@ class GoalBase(ABC):
             errors = {"Invalid goal data"}
         return is_error, errors
 
+    def get_expected_corpus(self, actual_term, term):
+        sip_amount = self.get_sip_amount()
+        lumpsum_amount = self.get_lumpsum_amount()
+        category_allocation = self.goal_object.asset_allocation
+        growth = self.get_sip_growth()
+        corpus = utils.new_expected_corpus(sip_amount, lumpsum_amount,
+                             float(category_allocation[constants.DEBT]) / 100,
+                             float(category_allocation[constants.EQUITY]) / 100, actual_term, term,
+                             growth / 100)
+        return corpus
+
 class GenericGoal(GoalBase):
     def __init__(self, goal_object):
         super(GenericGoal, self).__init__(goal_object)
@@ -117,9 +154,6 @@ class TaxGoal(GoalBase):
     def __init__(self, goal_object):
         super(TaxGoal, self).__init__(goal_object)
 
-    def get_sip_amount(self, data=None):
-        return 0
-    
     def get_lumpsum_amount(self, data=None):
         if data:
             return data.get('amount_invested')
@@ -143,6 +177,17 @@ class TaxGoal(GoalBase):
             option_id = "op1" if value else "op2"
 
         return value, option_id
+
+    def get_expected_corpus(self, actual_term, term):
+        sip_amount = self.get_sip_amount()
+        lumpsum_amount = self.get_lumpsum_amount()
+        category_allocation = self.goal_object.asset_allocation
+        growth = self.get_sip_growth()
+        corpus = utils.new_expected_corpus(sip_amount, lumpsum_amount,
+                             float(category_allocation[constants.DEBT]) / 100,
+                             float(category_allocation[constants.ELSS]) / 100, actual_term, term,
+                             growth / 100)
+        return corpus
 
 class QuickInvestGoal(GoalBase):
     def __init__(self, goal_object):
@@ -175,7 +220,14 @@ class RetirementGoal(GoalBase):
               
         return 0
     
-    def get_lumpsum_amount(self, data=None):
+    def get_duration(self, data=None):
+        if data and data.get('current_age') and data.get('retirement_age'):
+            retirement_age = int(data.get('retirement_age'))
+            current_age = int(data.get('current_age'))
+            return retirement_age - current_age
+        else: 
+            if self.goal_object:
+                return self.goal_object.duration
         return 0
 
     def create_or_update_goal(self, user, data, goal_type, goal_name=""):

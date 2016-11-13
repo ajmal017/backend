@@ -551,19 +551,6 @@ class Goal(TimeStampedModel):
     class Meta:
         unique_together = (("user", "category", "portfolio", "name"),)
 
-    def calculate_duration(self):
-        duration = None
-        try:
-            if self.category == constants.RETIREMENT:
-                duration = api_utils.age_calculator_goal(self.user.user, self)
-            else:
-                answer = Answer.objects.get(question__question_id='term', goal=self)
-                if answer:
-                    duration = int(answer.text) 
-        except:
-            pass
-        if duration is not None:
-            self.duration = int(duration)
             
 class Answer(TimeStampedModel):
     """

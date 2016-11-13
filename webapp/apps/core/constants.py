@@ -70,6 +70,7 @@ PORTFOLIO_DETAILS = 'portfolio_details'
 DASHBOARD = 'dashboard'
 RETIREMENT_ALLOCATION = "retirement_allocation"
 ALLOCATION = "allocation"
+GOAL_NAME = "goal_name"
 
 NOT_IN_PORTFOLIO = 'not_in_portfolio'
 IN_PORTFOLIO = 'in_portfolio'

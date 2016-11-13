@@ -291,7 +291,7 @@ class RecommendedPortfolios(APIView):
         :param request:
         :return: overall allocation for a user and the recommended schemes for the user
         """
-        overall_allocation, sip_lumpsum_allocation, status_summary = utils.calculate_overall_allocation(request.user.id)
+        overall_allocation, sip_lumpsum_allocation, status_summary = utils.calculate_overall_allocation(request.user)
         portfolio_items, errors = utils.get_portfolio_items(request.user.id, overall_allocation, sip_lumpsum_allocation)
         if portfolio_items is not None:
             portfolio_items.update(overall_allocation)
@@ -318,7 +318,7 @@ class ReviewCard(APIView):
         :param request:
         :return: overall allocation for a user
         """
-        overall_allocation, sip_lumpsum_allocation, status_summary = utils.calculate_overall_allocation(request.user.id)
+        overall_allocation, sip_lumpsum_allocation, status_summary = utils.calculate_overall_allocation(request.user)
         portfolio_items, errors = utils.get_portfolio_items(request.user.id, overall_allocation, sip_lumpsum_allocation)
         if portfolio_items is not None:
             return api_utils.response(portfolio_items, status.HTTP_200_OK)
@@ -624,7 +624,7 @@ class FundsDividedIntoCategories(APIView):
             utils.get_recommended_and_scheme_funds(request.user.id)
 
         # function to find max allowed for each cases
-        overall_allocation, sip_lumpsum_allocation, status_summary = utils.calculate_overall_allocation(request.user.id)
+        overall_allocation, sip_lumpsum_allocation, status_summary = utils.calculate_overall_allocation(request.user)
         number_of_equity_funds_by_sip, number_of_equity_funds_by_lumpsum, number_of_debt_funds_by_sip, \
         number_of_debt_funds_by_lumpsum, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum, is_error, \
         errors = utils.get_number_of_funds(sip_lumpsum_allocation)
@@ -1310,7 +1310,7 @@ class GetCategorySchemes(APIView):
         """
         # get the category for which reset is being done
         reset = request.query_params.get('reset')
-        overall_allocation, sip_lumpsum_allocation, status_summary = utils.calculate_overall_allocation(request.user.id)
+        overall_allocation, sip_lumpsum_allocation, status_summary = utils.calculate_overall_allocation(request.user)
         number_of_equity_funds_by_sip, number_of_equity_funds_by_lumpsum, number_of_debt_funds_by_sip, \
         number_of_debt_funds_by_lumpsum, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum, is_error, \
         errors = utils.get_number_of_funds(sip_lumpsum_allocation)
