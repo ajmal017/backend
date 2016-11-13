@@ -213,27 +213,9 @@ def process_assess_answer(request):
     :param request:
     :return:
     """
-    total_denominator = 0.0
-    score = 0.0
-    for key, value in request.data.items():
-        if key != "A1":
-            question = models.Question.objects.get(question_id=key)
-            option_selected = models.Option.objects.get(option_id=value, question__question_id=key)
-            total_denominator += question.weight
-            score += (option_selected.weight * question.weight)
-            models.Answer.objects.update_or_create(
-                question_id=question.id, user=request.user, defaults={'option': option_selected})
-        else:
-            request.user.age = int(value)
-            request.user.save()
-            value = helpers.find_right_option(int(value))
-            question = models.Question.objects.get(question_id=key)
-            option_selected = models.Option.objects.get(option_id=value, question__question_id=key)
-            total_denominator += question.weight
-            score += (option_selected.weight * question.weight)
-            models.Answer.objects.update_or_create(
-                question_id=question.id, user=request.user, defaults={'option': option_selected})
-    request.user.risk_score = round((score / total_denominator), 1)
+    age,risk_score = calculate_risk_score(request,request.user)
+    request.user.risk_score = risk_score
+    request.user.age = age
     request.user.save()
     return True
 
@@ -242,27 +224,36 @@ def process_assess_answer_unregistered_users(request):
     :param request:
     :return: risk score value
     """
-    total_denominator = 0.0
-    score = 0.0
     try:
-        for key, value in request.data.items():
-            if key != "A1":
-                question = models.Question.objects.get(question_id=key)
-                option_selected = models.Option.objects.get(option_id=value, question__question_id=key)
-                total_denominator += question.weight
-                score += (option_selected.weight * question.weight)
-            else:
-                value = helpers.find_right_option(int(value))
-                question = models.Question.objects.get(question_id=key)
-                option_selected = models.Option.objects.get(option_id=value, question__question_id=key)
-                total_denominator += question.weight
-                score += (option_selected.weight * question.weight)
-        risk_score = round((score / total_denominator), 1)
+        age,risk_score = calculate_risk_score(request)
     except:
         risk_score = None
     return risk_score
 
-
+def calculate_risk_score(request,user=None):
+    total_denominator = 0.0
+    score = 0.0
+    age = None
+    for key, value in request.data.items():
+        if key != "A1":
+            question = models.Question.objects.get(question_id=key)
+            option_selected = models.Option.objects.get(option_id=value, question__question_id=key)
+            total_denominator += question.weight
+            score += (option_selected.weight * question.weight)
+            if user and user is not None:
+                models.Answer.objects.update_or_create(
+                       question_id=question.id, user=user, defaults={'option': option_selected})
+        else:
+            age = int(value)
+            value = helpers.find_right_option(int(value))
+            question = models.Question.objects.get(question_id=key)
+            option_selected = models.Option.objects.get(option_id=value, question__question_id=key)
+            total_denominator += question.weight
+            score += (option_selected.weight * question.weight)
+            if user and user is not None:
+                models.Answer.objects.update_or_create(
+                       question_id=question.id, user=user, defaults={'option': option_selected})
+    return age,round((score / total_denominator), 1)
 
 def make_allocation_dict(sip, lumpsum, allocation):
     """
