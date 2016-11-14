@@ -18,12 +18,13 @@ def generate_order_pipe_file(user_id, order_detail):
     """
     user = profile_models.User.objects.get(id=user_id)
     order_items = order_detail.fund_order_items.all()
+    order_id = order_detail.order_id
     
     base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps/external_api', '')
     output_path = base_dir + '/webapp/static/'
     timestamp = time.strftime("%Y%m%d-%H%M%S")
-    bulk_order_pipe_file_name = "bulk_order_pipe" + timestamp + ".txt"
-    outfile = open(output_path + bulk_order_pipe_file_name, "w")
+    bulk_order_pipe_file_name = order_id + "_lumpsum_" + user.finaskus_id +".txt"
+    outfile = open(output_path + bulk_order_pipe_file_name, "w") 
     for i, item in enumerate(order_items):
         neft_code = ''
         if item.portfolio_item.fund.bse_neft_scheme_code:
