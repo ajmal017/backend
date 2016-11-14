@@ -363,7 +363,7 @@ class AssessAnswer(APIView):
         :return:
         """
         serializer = serializers.AssessSerializer(data=request.data)
-        if serializer.is_valid() and utils.process_assess_answer(request):
+        if serializer.is_valid() and utils.process_assess_answer(request) is not None:
             return api_utils.response({"message": "success"}, status.HTTP_200_OK)
         return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
                                   generate_error_message(serializer.errors))
@@ -382,8 +382,13 @@ class AssessAnswer_v3(APIView):
         :return:
         """
         serializer = serializers.AssessSerializer_v3(data=request.data)
-        if serializer.is_valid() and utils.process_assess_answer(request):
-            return api_utils.response({"message": "success"}, status.HTTP_200_OK)
+        if serializer.is_valid():
+            risk_score = utils.process_assess_answer(request)
+            if risk_score is not None:
+                return api_utils.response({"message": "success","risk_score":risk_score}, status.HTTP_200_OK)
+            else:
+                return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
+                                  "Unable to calculate risk score")
         return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
                                   generate_error_message(serializer.errors))
         

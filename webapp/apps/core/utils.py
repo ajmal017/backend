@@ -281,11 +281,14 @@ def process_assess_answer(request):
     :param request:
     :return:
     """
-    age,risk_score = calculate_risk_score(request,request.user)
-    request.user.risk_score = risk_score
-    request.user.age = age
-    request.user.save()
-    return True
+    try:
+        age,risk_score = calculate_risk_score(request,request.user)
+        request.user.risk_score = risk_score
+        request.user.age = age
+        request.user.save()
+        return risk_score
+    except:
+        return None
 
 def process_assess_answer_unregistered_users(request):
     """
