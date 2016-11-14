@@ -17,13 +17,13 @@ class GoalBase(ABC):
     @staticmethod
     def get_current_goal(user, goal_type):
         try:
-            return models.Goal.objects.get(user=user, category=goal_type, Q(portfolio=None) | (Q(portfolio__has_invested=False) & Q(portfolio__is_deleted=False))).prefetch_related('answer')
+            return models.Goal.objects.get(Q(user=user), Q(category=goal_type), Q(portfolio=None) | (Q(portfolio__has_invested=False) & Q(portfolio__is_deleted=False))).prefetch_related('answer')
         except:
             return None
 
     @staticmethod
     def get_current_goals(user):
-        return models.Goal.objects.filter(user=user, Q(portfolio=None) | (Q(portfolio__has_invested=False) & Q(portfolio__is_deleted=False))).prefetch_related('answer')
+        return models.Goal.objects.filter(Q(user=user), Q(portfolio=None) | (Q(portfolio__has_invested=False) & Q(portfolio__is_deleted=False))).prefetch_related('answer')
 
     @staticmethod
     def get_portfolio_goals(user, portfolio):

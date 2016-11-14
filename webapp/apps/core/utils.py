@@ -25,7 +25,6 @@ import hashlib
 import threading
 
 from itertools import chain
-from core.utils import asset_allocation
 
 debug_logger = logging.getLogger('django.debug')
 
