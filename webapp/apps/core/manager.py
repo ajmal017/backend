@@ -47,6 +47,13 @@ class AnswerManager(models.Manager):
         """
         return self.filter(user=user, question__in=question_list)
 
+    def get_answers_by_goal(self, goal):
+        """
+        :param user:
+        :param question_list:
+        :return:
+        """
+        return self.filter(goal=goal)
 
 class OptionManager(models.Manager):
     """

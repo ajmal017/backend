@@ -51,7 +51,6 @@ def create_error_message(error_dict):
         error_string += error_dict[error] + ". "
     return error_string
 
-
 def age_calculator(answers, portfolio):
     """
     returns the differenc between current age and retirement age

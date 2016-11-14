@@ -4,7 +4,6 @@ from core import views
 urlpatterns = [
     url(r'^leader/profile/funds/$', views.LeaderFunds.as_view(), name='funds-leader-profile'),
     url(r'^leader/board/$', views.LeaderBoard.as_view(), name='leader-board'),
-    url(r'^(?P<type>^[a-z]+)/response/add/$', views.AssessAnswerNew.as_view(), name='assess-answers-add'),
     url(r'^recommended/portfolios/$', views.RecommendedPortfolios.as_view(), name='recommended-portfolios'),
     url(r'^(?P<fund_id>^[0-9]+)/schema/fact-sheet/$', views.SchemaFactSheet.as_view(), name='schema-fact-sheet'),
     url(r'^assess/new/response/add/$', views.AssessAnswer_v3.as_view(), name='assess-new-answers-add'),

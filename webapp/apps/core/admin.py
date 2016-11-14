@@ -399,7 +399,7 @@ class AnswerAdmin(admin.ModelAdmin):
     display list: question id, answer, options
     search fields: user's email, user's phone number
     """
-    list_display = ['question_id', 'text', 'option']
+    list_display = ['question_id', 'text', 'option', 'goal']
     readonly_fields = ('user',)
     search_fields = ['user__email', 'user__phone_number']
     actions = None

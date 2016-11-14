@@ -258,7 +258,7 @@ class Register(APIView):
                                        "plan": core_utils.get_plan_answers(user),
                                        "retirement": core_utils.get_category_answers(user, "retirement"),
                                        "tax": core_utils.get_category_answers(user, "tax"),
-                                       "invest": core_utils.get_invest_answers(user),
+                                       "invest": core_utils.get_category_answers(user, "invest"),
                                        "education": core_utils.get_category_answers(user, "education"),
                                        "wedding": core_utils.get_category_answers(user, "wedding"),
                                        "property": core_utils.get_category_answers(user, "property"),
@@ -366,6 +366,8 @@ class ProfileCompleteness(APIView):
         :param request:
         An internal call to /o/token/ is sent to get access token which is then returned as response
         """
+        from core import goals_helper
+        
         user = request.user
         if user:
             data = {"assess": core_utils.get_assess_answer(user), "plan": core_utils.get_plan_answers(user),
@@ -412,16 +414,16 @@ class ProfileCompleteness(APIView):
                 portfolio = core_models.Portfolio.objects.get(user=request.user, has_invested=False)
                 flag_data['portfolio'] = True
                 portfolio_last_modified = portfolio.modified_at
-                try:
-                    answer_last_modified = core_models.Answer.objects.filter(
-                        user=request.user, portfolio=None).latest("modified_at").modified_at
-                    if answer_last_modified > portfolio_last_modified:
+                goals = goals_helper.GoalBase.get_current_goals(request.user)
+                if goals:
+                    goal_last_modified = goals.latest("modified_at").modified_at
+                    if goal_last_modified > portfolio_last_modified:
                         flag_data['rebuild_portfolio'] = True
                     elif request.user.rebuild_portfolio:
                         flag_data['rebuild_portfolio'] = True
                     else:
                         flag_data['rebuild_portfolio'] = False
-                except core_models.Answer.DoesNotExist as e:
+                else:
                     flag_data['rebuild_portfolio'] = True
 
 
@@ -1884,7 +1886,7 @@ class GoogleRegister(APIView):
                                                        "plan": core_utils.get_plan_answers(user),
                                                        "retirement": core_utils.get_category_answers(user, "retirement"),
                                                        "tax": core_utils.get_category_answers(user, "tax"),
-                                                       "invest": core_utils.get_invest_answers(user),
+                                                       "invest": core_utils.get_category_answers(user, "invest"),
                                                        "education": core_utils.get_category_answers(user, "education"),
                                                        "wedding": core_utils.get_category_answers(user, "wedding"),
                                                        "property": core_utils.get_category_answers(user, "property"),
@@ -1970,7 +1972,7 @@ class GoogleRegisterExistingUser(APIView):
                                                            "plan": core_utils.get_plan_answers(user),
                                                            "retirement": core_utils.get_category_answers(user, "retirement"),
                                                            "tax": core_utils.get_category_answers(user, "tax"),
-                                                           "invest": core_utils.get_invest_answers(user),
+                                                           "invest": core_utils.get_category_answers(user, "invest"),
                                                            "education": core_utils.get_category_answers(user, "education"),
                                                            "wedding": core_utils.get_category_answers(user, "wedding"),
                                                            "property": core_utils.get_category_answers(user, "property"),

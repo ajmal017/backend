@@ -204,6 +204,10 @@ class TaxSerializer(serializers.Serializer):
     amount_allowed = serializers.IntegerField(required=True)
     amount_invested = serializers.IntegerField(required=True)
 
+class GoalSerializer(serializers.Serializer):
+    class Meta:
+        model = models.Goal
+    
 
 class GenericGoalSerializer(serializers.Serializer):
     """
