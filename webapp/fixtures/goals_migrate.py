@@ -50,8 +50,8 @@ def migrateAll():
     users = User.objects.all()
     for u in users:
         print("Migrating for user: " + u.email)
-        goal_names = {constants.INVEST:"INV1", constants.RETIREMENT:"RET1", constants.TAX_SAVING: "TAX1", constants.OTHER_EVENT:"EVT1",
-                      constants.BUY_PROPERTY:"PRO1", constants.WEDDING:"WED1", constants.EDUCATION: "EDU1"}
+        goal_names = {constants.INVEST:1, constants.RETIREMENT:1, constants.TAX_SAVING: 1, constants.OTHER_EVENT:1,
+                      constants.BUY_PROPERTY:1, constants.WEDDING: 1, constants.EDUCATION: 1}
         try:
             portfolios = Portfolio.objects.filter(user=u, has_invested=True)
             for p in portfolios:
@@ -59,7 +59,7 @@ def migrateAll():
                     answers, allocation = get_category_answers(u, c, p)
                     if answers and len(answers) > 0:
                         cat = constants.MAP(c)
-                        duration = calculate_duration(u, answers, p, c)
+                        duration = calculate_duration(u, answers, p, cat)
                         name = str(constants.ASSET_ALLOCATION_MAP[cat][2]) + str(goal_names[cat])
                         goal_names[cat] += 1
                         goal = Goal.objects.update_or_create(user=u, category=cat, name=name, asset_allocation=allocation, duration=duration, portfolio=p)
@@ -69,7 +69,7 @@ def migrateAll():
                 answers, allocation = get_category_answers(u, c)
                 if answers and len(answers) > 0:
                     cat = constants.MAP(c)
-                    duration = calculate_duration(u, answers, None, c)
+                    duration = calculate_duration(u, answers, None, cat)
                     try:
                         p = Portfolio.objects.get(user=u, has_invested=False)
                     except:
