@@ -9,7 +9,7 @@ import os
 import time
 
 
-def generate_order_pipe_file(user_id, order_detail):
+def generate_order_pipe_file(user_id, order_detail,exch_backend):
     """
     This function generates a pipe separated file for bulk order entry.
     :param order_items: list of order_items for that order_detail
@@ -19,11 +19,13 @@ def generate_order_pipe_file(user_id, order_detail):
     user = profile_models.User.objects.get(id=user_id)
     order_items = order_detail.fund_order_items.all()
     order_id = order_detail.order_id
+    user_vendor = profile_models.UserVendor.objects.get(user=user, vendor__name=exch_backend.vendor_name)
     
     base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps/external_api', '')
     output_path = base_dir + '/webapp/static/'
     timestamp = time.strftime("%Y%m%d-%H%M%S")
-    bulk_order_pipe_file_name = order_id + "_lumpsum_" + user.finaskus_id +".txt"
+    bulk_order_pipe_file_name = order_id + "_lumpsum_" + user_vendor.ucc +".txt"
+    print(bulk_order_pipe_file_name)
     outfile = open(output_path + bulk_order_pipe_file_name, "w") 
     for i, item in enumerate(order_items):
         neft_code = ''
@@ -48,7 +50,7 @@ def generate_order_pipe_file(user_id, order_detail):
             bulk_order_dict = OrderedDict([('SCHEME CODE', neft_code if item.order_amount < 200000 else rgts_code),
                                            ('Purchase / Redeem', cons.Order_Purchase),
                                            ('Buy Sell Type', cons.Order_Buy_Type),
-                                           ('Client Code', str(user.finaskus_id)),
+                                           ('Client Code', str(user_vendor.ucc)),
                                            ('Demat / Physical', cons.Order_Demat),
                                            ('Order Val AMOUNT', str(order_items[i].agreed_lumpsum)),
                                            ('Folio No (10 digits)', str(folio_number)),

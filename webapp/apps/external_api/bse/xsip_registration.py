@@ -7,7 +7,7 @@ from datetime import datetime
 import os, time
 
 
-def generate_order_pipe_file(user_id, order_detail):
+def generate_order_pipe_file(user_id, order_detail,exch_backend):
     """
     This function generates a pipe separated file for bulk order entry.
     :param order_items: list of order_items for that order_detail
@@ -17,6 +17,8 @@ def generate_order_pipe_file(user_id, order_detail):
     user = profile_models.User.objects.get(id=user_id)
     order_items = order_detail.fund_order_items.all()
     bank_mandate = order_detail.bank_mandate
+    
+    user_vendor = profile_models.UserVendor.objects.get(user=user, vendor__name=exch_backend.vendor_name)
     if not bank_mandate:
         return None
 
@@ -24,7 +26,7 @@ def generate_order_pipe_file(user_id, order_detail):
     output_path = base_dir + '/webapp/static/'
     timestamp = time.strftime("%Y%m%d-%H%M%S")
     order_id = order_detail.order_id
-    bulk_user_pipe_file_name = order_id + "_xsip_" + user.finaskus_id +".txt"
+    bulk_user_pipe_file_name = order_id + "_xsip_" + user_vendor.ucc +".txt"
     outfile = open(output_path + bulk_user_pipe_file_name, "w")
     for i, item in enumerate(order_items):
         neft_code = ''
@@ -66,7 +68,7 @@ def generate_order_pipe_file(user_id, order_detail):
 
         bulk_user_dict = OrderedDict([('AMC Code', amc_code),
                                       ('SCHEME CODE', neft_code if item.order_amount < 200000 else rgts_code),
-                                      ('Client Code', str(user.finaskus_id)),
+                                      ('Client Code', str(user_vendor.ucc)),
                                       ('Internal Ref No.', internal_ref_no),
                                       ('Trans Mode ', cons.Accept_Mode),
                                       ('DP TXN Mode', cons.DP_TXN_MODE),

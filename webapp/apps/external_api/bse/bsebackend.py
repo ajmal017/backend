@@ -65,7 +65,7 @@ class BSEBackend(ExchangeBackend):
         return constants.RETURN_CODE_SUCCESS, file_path
 
     def create_order(self, user_id, order_detail):
-        return constants.RETURN_CODE_SUCCESS, bulk_upload.generate_order_pipe_file(user_id, order_detail)
+        return constants.RETURN_CODE_SUCCESS, bulk_upload.generate_order_pipe_file(user_id, order_detail,self)
     
     def generate_payment_link(self, transaction):
         return transaction.url_hashed(), constants.RETURN_CODE_SUCCESS 
@@ -74,4 +74,4 @@ class BSEBackend(ExchangeBackend):
         return constants.RETURN_CODE_SUCCESS, bulk_upload.generate_redeem_pipe_file(user_id, grouped_redeem)
 
     def create_xsip_order(self, user_id, order_detail):
-        return constants.RETURN_CODE_SUCCESS, xsip_registration.generate_order_pipe_file(user_id, order_detail)
+        return constants.RETURN_CODE_SUCCESS, xsip_registration.generate_order_pipe_file(user_id, order_detail,self)
