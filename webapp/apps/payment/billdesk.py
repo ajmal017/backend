@@ -39,6 +39,21 @@ def update_transaction_failure(order_number, ref_no, txn_amount, auth_status, ms
         txn.save()
     return txn
 
+def update_transaction_ongoing(order_number, ref_no, txn_amount, auth_status, msg, txn_time):
+    """
+    :return: Changes the status of the transaction to failure code(ie 2)
+    """
+    txn = models.Transaction.objects.get(additional_info_1=order_number, txn_amount=txn_amount,
+                                         txn_status=models.Transaction.Status.Pending.value)
+    if txn.txn_status in {models.Transaction.Status.Pending.value,models.Transaction.Status.ongoing.value}:
+        txn.txn_status = models.Transaction.Status.ongoing.value
+        txn.auth_status = auth_status
+        txn.txn_reference_no = ref_no
+        txn.txn_time = txn_time
+        txn.response_string = {"string": msg}
+        txn.save()
+    return txn
+
 
 def update_transaction_success(order_number, ref_no, txn_amount, auth_status, msg, txn_time):
     """

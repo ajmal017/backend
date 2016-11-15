@@ -809,21 +809,40 @@ class BilldeskComplete(APIView):
                 txn_time_dt = datetime.strptime(txn_time, '%d-%m-%Y %H:%M:%S')
             except:
                 logger.info("Billdesk response: Error parsing transaction time: " + txn_time)
-        if not billdesk.verify_billdesk_checksum(msg) or auth_status!= "0300":
+        if billdesk.verify_billdesk_checksum(msg):
+            if auth_status == "0399":
+                txn = billdesk.update_transaction_failure(order_id, ref_no, float(txn_amount), auth_status, msg, txn_time_dt)
+                query_params = {"txn_amount" :txn_amount, "auth_status": auth_status, "order_id": ref_no,
+                                "message" : msg.split("|")[24] # as error message is the 24th pipe seperated in the string
+                                }
+                query_params_string = self.create_query_params(query_params)
+                full_url = reverse("api_urls:core_urls:billdesk-fail") + "?" + query_params_string
+            
+            elif auth_status == "0300":
+                txn = billdesk.update_transaction_success(order_id, ref_no, float(txn_amount), auth_status, msg, txn_time_dt)
+                active_exchange_vendor = external_helpers.get_exchange_vendor_helper().get_active_vendor()
+                utils.convert_to_investor(txn, active_exchange_vendor)
+                query_params = {"txn_amount" :txn_amount, "auth_status": auth_status, "order_id": ref_no,
+                                "message": "Payment successful"}
+                query_params_string = self.create_query_params(query_params)
+                full_url = reverse("api_urls:core_urls:billdesk-success") + "?" + query_params_string
+            
+            else:
+                txn = billdesk.update_transaction_failure(order_id, ref_no, float(txn_amount), auth_status, msg, txn_time_dt)
+                query_params = {"txn_amount" :txn_amount, "auth_status": auth_status, "order_id": ref_no,
+                                "message" : msg.split("|")[24] # as error message is the 24th pipe seperated in the string
+                                }
+                query_params_string = self.create_query_params(query_params)
+                full_url = reverse("api_urls:core_urls:billdesk-ongoing") + "?" + query_params_string
+                
+        else:
             txn = billdesk.update_transaction_failure(order_id, ref_no, float(txn_amount), auth_status, msg, txn_time_dt)
             query_params = {"txn_amount" :txn_amount, "auth_status": auth_status, "order_id": ref_no,
-                            "message" : msg.split("|")[24] # as error message is the 24th pipe seperated in the string
-                            }
+                                "message" : msg.split("|")[24] # as error message is the 24th pipe seperated in the string
+                                }
             query_params_string = self.create_query_params(query_params)
             full_url = reverse("api_urls:core_urls:billdesk-fail") + "?" + query_params_string
-        else:
-            txn = billdesk.update_transaction_success(order_id, ref_no, float(txn_amount), auth_status, msg, txn_time_dt)
-            active_exchange_vendor = external_helpers.get_exchange_vendor_helper().get_active_vendor()
-            utils.convert_to_investor(txn, active_exchange_vendor)
-            query_params = {"txn_amount" :txn_amount, "auth_status": auth_status, "order_id": ref_no,
-                            "message": "Payment successful"}
-            query_params_string = self.create_query_params(query_params)
-            full_url = reverse("api_urls:core_urls:billdesk-success") + "?" + query_params_string
+            
         return HttpResponseRedirect(full_url)
 
 
