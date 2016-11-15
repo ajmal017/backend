@@ -432,6 +432,29 @@ class Portfolio(TimeStampedModel):
     def __str__(self):
         return str(self.user) + str(self.id)
 
+class Goal(TimeStampedModel):
+    CATEGORY_CHOICE = (
+        (constants.RETIREMENT, 'Retirement'),
+        (constants.TAX_SAVING, 'Tax Saving'),
+        (constants.BUY_PROPERTY, 'Buy Property'),
+        (constants.EDUCATION, 'Higher Education'),
+        (constants.WEDDING, 'Save for Wedding'),
+        (constants.OTHER_EVENT, 'Other Events'),
+        (constants.INVEST, 'Invest')
+    )
+
+    user = models.ForeignKey(profile_models.User, related_name="goal_user")
+    portfolio = models.ForeignKey(Portfolio, null=True, blank=True, default=None)
+    category = models.CharField(_('Category'), max_length=254, choices=CATEGORY_CHOICE)
+    name = models.CharField(max_length=40, null=True, blank=True, default="")
+    duration = models.IntegerField(default=0)
+    asset_allocation = HStoreField(blank=True, null=True)
+     
+    def __str__(self):
+        return str(self.user) + " " + str(self.name) + " " + str(self.category)
+
+    class Meta:
+        unique_together = (("user", "category", "portfolio", "name"),)
 
 class PortfolioItem(TimeStampedModel):
     """
@@ -442,8 +465,9 @@ class PortfolioItem(TimeStampedModel):
         ('D', 'Debt'),
         ('T', 'ELSS')
     )
-    portfolio = models.ForeignKey(Portfolio)
+    portfolio = models.ForeignKey(Portfolio) #TODO remove
     fund = models.ForeignKey(Fund)
+    goal = models.ForeignKey(Goal)
 
     # Example : Equity its good to have though is equal to fund.broad_category_group
     broad_category_group = models.CharField(max_length=1, choices=TYPE_CHOICES)
@@ -525,32 +549,6 @@ class PortfolioItem(TimeStampedModel):
             self.returns_percentage = ((1 + r1) ** (365)) - 1
         except ZeroDivisionError:
             self.returns_percentage = 0
-
-
-class Goal(TimeStampedModel):
-    CATEGORY_CHOICE = (
-        (constants.RETIREMENT, 'Retirement'),
-        (constants.TAX_SAVING, 'Tax Saving'),
-        (constants.BUY_PROPERTY, 'Buy Property'),
-        (constants.EDUCATION, 'Higher Education'),
-        (constants.WEDDING, 'Save for Wedding'),
-        (constants.OTHER_EVENT, 'Other Events'),
-        (constants.INVEST, 'Invest')
-    )
-
-    user = models.ForeignKey(profile_models.User, related_name="goal_user")
-    portfolio = models.ForeignKey(Portfolio, null=True, blank=True, default=None)
-    category = models.CharField(_('Category'), max_length=254, choices=CATEGORY_CHOICE)
-    name = models.CharField(max_length=40, null=True, blank=True, default="")
-    duration = models.IntegerField(default=0)
-    asset_allocation = HStoreField(blank=True, null=True)
-     
-    def __str__(self):
-        return str(self.user) + " " + str(self.name) + " " + str(self.category)
-
-    class Meta:
-        unique_together = (("user", "category", "portfolio", "name"),)
-
             
 class Answer(TimeStampedModel):
     """

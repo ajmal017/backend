@@ -502,6 +502,19 @@ class UserEmailAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
+class GoalAdmin(admin.ModelAdmin):
+    """
+    disbale the option of deleting
+    """
+    list_filter = [UserFilter, 'category']
+    list_display = ['id', 'user', 'name', 'category', 'portfolio', 'created_at']
+    search_fields = ['category', 'user__email']
+    readonly_fields = ('user', 'name', 'category', 'portfolio', 'duration', 'asset_allocation')
+    actions = None
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 admin.site.register(models.Answer, AnswerAdmin)
 admin.site.register(models.FolioNumber, FolioNumberAdmin)
 admin.site.register(models.Fund, FundAdmin)
@@ -527,3 +540,4 @@ admin.site.register(models.TopThreeSectors, TopThreeSectorsAdmin)
 admin.site.register(models.PlanAssestAllocation, PlanAssestAllocationAdmin)
 admin.site.register(models.UserEmail, UserEmailAdmin)
 admin.site.register(models.FundVendorInfo, FundVendorInfoAdmin)
+admin.site.register(models.Goal, GoalAdmin)
