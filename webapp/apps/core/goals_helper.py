@@ -17,7 +17,7 @@ class GoalBase(ABC):
     @staticmethod
     def get_current_goal(user, goal_type):
         try:
-            return models.Goal.objects.get(Q(user=user), Q(category=goal_type), Q(portfolio=None) | (Q(portfolio__has_invested=False) & Q(portfolio__is_deleted=False))).prefetch_related('answer')
+            return models.Goal.objects.get(Q(user=user), Q(category=goal_type), Q(portfolio=None) | (Q(portfolio__has_invested=False) & Q(portfolio__is_deleted=False)))
         except:
             return None
 
@@ -118,14 +118,15 @@ class GoalBase(ABC):
             for key, value in data.items():
                 value, option_id = self.get_answer_value(key, value)
                 if option_id:
-                    option_selected = models.Option.objects.get(option_id=option_id, question__question_id=key)
+                    option_selected = models.Option.objects.get(option_id=option_id, question__question_id=key,
+                                                                question__question_for=goal_type)
                     defaults = {'option': option_selected}
                 else:
                     defaults = {'text': str(value)}
                 
                 question = models.Question.objects.get(question_id=key, question_for=goal_type)
                 models.Answer.objects.update_or_create(
-                        question_id=question.id, user=user, portfolio=None, defaults=defaults)
+                        question_id=question.id, user=user, goal=goal, portfolio=None, defaults=defaults)
 
         else:
             is_error = True
@@ -148,7 +149,7 @@ class GenericGoal(GoalBase):
         super(GenericGoal, self).__init__(goal_object)
         
     def create_or_update_goal(self, user, data, goal_type, goal_name=""):
-        return super(QuickInvestGoal, self).create_or_update_goal(user, data, constants.MAP[goal_type], goal_name)
+        return super(GenericGoal, self).create_or_update_goal(user, data, constants.MAP[goal_type], goal_name)
 
 class TaxGoal(GoalBase):
     def __init__(self, goal_object=None):
@@ -169,7 +170,7 @@ class TaxGoal(GoalBase):
         return 0
 
     def create_or_update_goal(self, user, data, goal_type, goal_name=""):
-        return super(QuickInvestGoal, self).create_or_update_goal(user, data, constants.TAX_SAVING, goal_name)
+        return super(TaxGoal, self).create_or_update_goal(user, data, constants.TAX_SAVING, goal_name)
 
     def get_answer_value(self, key, value):
         option_id = None
@@ -231,7 +232,7 @@ class RetirementGoal(GoalBase):
         return 0
 
     def create_or_update_goal(self, user, data, goal_type, goal_name=""):
-        return super(QuickInvestGoal, self).create_or_update_goal(user, data, constants.RETIREMENT, goal_name)
+        return super(RetirementGoal, self).create_or_update_goal(user, data, constants.RETIREMENT, goal_name)
 
     def get_answer_value(self, key, value):
         option_id = None
