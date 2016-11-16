@@ -10,7 +10,7 @@ from core import serializers, constants
 class GoalBase(ABC):
     error_logger = logging.getLogger('django.error')
     
-    def __init__(self, goal_object):
+    def __init__(self, goal_object=None):
         super(GoalBase, self).__init__()
         self.goal_object = goal_object
 
@@ -144,14 +144,14 @@ class GoalBase(ABC):
         return corpus
 
 class GenericGoal(GoalBase):
-    def __init__(self, goal_object):
+    def __init__(self, goal_object=None):
         super(GenericGoal, self).__init__(goal_object)
         
     def create_or_update_goal(self, user, data, goal_type, goal_name=""):
         return super(QuickInvestGoal, self).create_or_update_goal(user, data, constants.MAP[goal_type], goal_name)
 
 class TaxGoal(GoalBase):
-    def __init__(self, goal_object):
+    def __init__(self, goal_object=None):
         super(TaxGoal, self).__init__(goal_object)
 
     def get_lumpsum_amount(self, data=None):
@@ -190,7 +190,7 @@ class TaxGoal(GoalBase):
         return corpus
 
 class QuickInvestGoal(GoalBase):
-    def __init__(self, goal_object):
+    def __init__(self, goal_object=None):
         super(QuickInvestGoal, self).__init__(goal_object)
 
     def create_or_update_goal(self, user, data, goal_type, goal_name=""):
@@ -203,7 +203,7 @@ class QuickInvestGoal(GoalBase):
         return value, option_id
     
 class RetirementGoal(GoalBase):
-    def __init__(self, goal_object):
+    def __init__(self, goal_object=None):
         super(RetirementGoal, self).__init__(goal_object)
 
     def get_sip_amount(self, data=None):
