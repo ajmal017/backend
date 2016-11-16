@@ -23,11 +23,11 @@ class GoalBase(ABC):
 
     @staticmethod
     def get_current_goals(user):
-        return models.Goal.objects.filter(Q(user=user), Q(portfolio=None) | (Q(portfolio__has_invested=False) & Q(portfolio__is_deleted=False))).prefetch_related('answer')
+        return models.Goal.objects.filter(Q(user=user), Q(portfolio=None) | (Q(portfolio__has_invested=False) & Q(portfolio__is_deleted=False)))
 
     @staticmethod
     def get_portfolio_goals(user, portfolio):
-        return models.Goal.objects.filter(user=user, portfolio=portfolio).prefetch_related('answer')
+        return models.Goal.objects.filter(user=user, portfolio=portfolio)
     
     @staticmethod
     def get_goal_instance(goal_object):
@@ -109,7 +109,7 @@ class GoalBase(ABC):
         goal_serializer = serializers.GoalSerializer(data={'user':user, 'category':goal_type, 'name':goal_name, 'asset_allocation':allocation})
         if goal_serializer.is_valid():
             goal_name = goal_serializer.validated_data.get("name")
-            allocation = goal_serializer.validated_data.get('allocation')
+            allocation = goal_serializer.validated_data.get('asset_allocation')
             duration = self.get_duration(data)
 
             goal = self.get_current_goal(user, goal_type)
@@ -137,7 +137,7 @@ class GoalBase(ABC):
 
         else:
             is_error = True
-            errors = {"Invalid goal data"}
+            errors = {"serializerError": goal_serializer.errors}
         return is_error, errors
 
     def get_expected_corpus(self, actual_term, term):
