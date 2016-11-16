@@ -828,7 +828,7 @@ class BilldeskComplete(APIView):
                 full_url = reverse("api_urls:core_urls:billdesk-success") + "?" + query_params_string
             
             else:
-                txn = billdesk.update_transaction_failure(order_id, ref_no, float(txn_amount), auth_status, msg, txn_time_dt)
+                txn = billdesk.update_transaction_ongoing(order_id, ref_no, float(txn_amount), auth_status, msg, txn_time_dt)
                 query_params = {"txn_amount" :txn_amount, "auth_status": auth_status, "order_id": ref_no,
                                 "message" : msg.split("|")[24] # as error message is the 24th pipe seperated in the string
                                 }
@@ -836,7 +836,7 @@ class BilldeskComplete(APIView):
                 full_url = reverse("api_urls:core_urls:billdesk-ongoing") + "?" + query_params_string
                 
         else:
-            txn = billdesk.update_transaction_failure(order_id, ref_no, float(txn_amount), auth_status, msg, txn_time_dt)
+            txn = billdesk.update_transaction_checksum_failure(order_id, ref_no, float(txn_amount), auth_status, msg, txn_time_dt)
             query_params = {"txn_amount" :txn_amount, "auth_status": auth_status, "order_id": ref_no,
                                 "message" : msg.split("|")[24] # as error message is the 24th pipe seperated in the string
                                 }
