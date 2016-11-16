@@ -28,9 +28,9 @@ def update_transaction_failure(order_number, ref_no, txn_amount, auth_status, ms
     """
     :return: Changes the status of the transaction to failure code(ie 2)
     """
-    txn = models.Transaction.objects.get(additional_info_1=order_number, txn_amount=txn_amount,
-                                         txn_status=models.Transaction.Status.Pending.value)
-    if txn.txn_status == models.Transaction.Status.Pending.value:
+    txn = models.Transaction.objects.get(additional_info_1=order_number, txn_amount=txn_amount)
+                                
+    if txn.txn_status != models.Transaction.Status.Success.value:
         txn.txn_status = models.Transaction.Status.Failure.value
         txn.auth_status = auth_status
         txn.txn_reference_no = ref_no
@@ -39,15 +39,38 @@ def update_transaction_failure(order_number, ref_no, txn_amount, auth_status, ms
         txn.save()
     return txn
 
+def update_transaction_ongoing(order_number, ref_no, txn_amount, auth_status, msg, txn_time):
+    """
+    :return: Changes the status of the transaction to failure code(ie 2)
+    """
+    txn = models.Transaction.objects.get(additional_info_1=order_number, txn_amount=txn_amount)
+    if txn.txn_status != models.Transaction.Status.Success.value:
+        txn.txn_status = models.Transaction.Status.Ongoing.value
+        txn.auth_status = auth_status
+        txn.txn_reference_no = ref_no
+        txn.txn_time = txn_time
+        txn.response_string = {"string": msg}
+        txn.save()
+    return txn
+
+
+def update_transaction_checksum_failure(order_number, ref_no, txn_amount, auth_status, msg, txn_time):
+    """
+    :return: Changes the status of the transaction to failure code(ie 2)
+    """
+    txn = models.Transaction.objects.get(additional_info_1=order_number, txn_amount=txn_amount)
+    if txn.txn_status != models.Transaction.Status.Success.value:
+        txn.response_string = {"string": msg,'error':"Invalid checksum"}
+        txn.save()
+    return txn
 
 def update_transaction_success(order_number, ref_no, txn_amount, auth_status, msg, txn_time):
     """
     :return:  Changes the status of the transaction to failure code(ie 1)
     """
     if auth_status == "0300":
-        txn = models.Transaction.objects.get(additional_info_1=order_number, txn_amount=txn_amount,
-                                             txn_status=models.Transaction.Status.Pending.value)
-        if txn.txn_status == models.Transaction.Status.Pending.value:
+        txn = models.Transaction.objects.get(additional_info_1=order_number, txn_amount=txn_amount)
+        if txn.txn_status != models.Transaction.Status.Success.value:
             txn.txn_status = models.Transaction.Status.Success.value
             txn.auth_status = auth_status
             txn.txn_reference_no = ref_no

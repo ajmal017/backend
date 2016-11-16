@@ -27,6 +27,7 @@ class Transaction(TimeStampedModel):
         Pending = 0
         Success = 1
         Failure = 2
+        Ongoing = 3
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL)
     source_id = models.CharField(_('Source Id'), max_length=15, default=constants.UNKNOWN)

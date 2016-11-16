@@ -377,7 +377,9 @@ class ProfileCompleteness(APIView):
                     "education": core_utils.get_category_answers(user, "education"),
                     "wedding": core_utils.get_category_answers(user, "wedding"),
                     "property": core_utils.get_category_answers(user, "property"),
-                    "event": core_utils.get_category_answers(user, "event")}
+                    "event": core_utils.get_category_answers(user, "event"),
+                    "risk_score":user.risk_score
+                    }
 
             flag_data = {}
             for k, v in data.items():
