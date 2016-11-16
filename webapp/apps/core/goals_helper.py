@@ -41,18 +41,21 @@ class GoalBase(ABC):
             return GenericGoal()
         
     def get_sip_amount(self, data=None):
+        sip = 0
         if data:
-            return data.get('sip')
+            sip = data.get('sip')
         else:
             if self.goal_object:
                 try:
                     answer = self.goal_object.answer_set.get(question__id="sip")
                     if answer:
-                        return float(answer.text)
+                        sip = float(answer.text)
                 except Exception:
                     pass
-              
-        return 0
+        
+        if sip is None:
+            sip = 0
+        return sip
     
     def get_sip_growth(self):
         if self.goal_object:
@@ -66,18 +69,22 @@ class GoalBase(ABC):
         return 0
         
     def get_lumpsum_amount(self, data=None):
+        lumpsum = 0
         if data:
-            return data.get('lumpsum')
+            lumpsum = data.get('lumpsum')
         else:
             if self.goal_object:
                 try:
                     answer = self.goal_object.answer_set.get(question__id="lumpsum")
                     if answer:
-                        return float(answer.text)
+                        lumpsum = float(answer.text)
                 except Exception as e:
                     self.error_logger.error("Error retrieving lumpsum amount: " + str(e))
-              
-        return 0
+
+        if lumpsum is None:
+            lumpsum = 0
+                          
+        return lumpsum
         
     def get_duration(self, data=None):
         if data and data.get("term"):
@@ -156,18 +163,22 @@ class TaxGoal(GoalBase):
         super(TaxGoal, self).__init__(goal_object)
 
     def get_lumpsum_amount(self, data=None):
+        lumpsum = 0
         if data:
-            return data.get('amount_invested')
+            lumpsum = data.get('amount_invested')
         else:
             if self.goal_object:
                 try:
                     answer = models.Answer.objects.get(goal=self.goal_object, question__id="amount_invested")
                     if answer:
-                        return float(answer.text)
+                        lumpsum = float(answer.text)
                 except Exception as e:
                     self.error_logger.error("Error retrieving lumpsum amount: " + str(e))
-              
-        return 0
+
+        if lumpsum is None:
+            lumpsum = 0
+        
+        return lumpsum
 
     def create_or_update_goal(self, user, data, goal_type, goal_name=""):
         return super(TaxGoal, self).create_or_update_goal(user, data, constants.TAX_SAVING, goal_name)
@@ -208,18 +219,21 @@ class RetirementGoal(GoalBase):
         super(RetirementGoal, self).__init__(goal_object)
 
     def get_sip_amount(self, data=None):
+        sip = 0
         if data:
-            return data.get('monthly_investment')
+            sip = data.get('monthly_investment')
         else:
             if self.goal_object:
                 try:
                     answer = models.Answer.objects.get(goal=self.goal_object, question__id="monthly_investment")
                     if answer:
-                        return float(answer.text)
+                        sip = float(answer.text)
                 except Exception as e:
                     self.error_logger.error("Error retrieving sip amount: " + str(e))
-              
-        return 0
+
+        if sip is None:
+            sip = 0              
+        return sip
     
     def get_duration(self, data=None):
         if data and data.get('current_age') and data.get('retirement_age'):
