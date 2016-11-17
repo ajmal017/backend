@@ -47,7 +47,7 @@ class GoalBase(ABC):
         else:
             if self.goal_object:
                 try:
-                    answer = self.goal_object.answer_set.get(question__id="sip")
+                    answer = self.goal_object.answer_set.get(question__question_id="sip")
                     if answer:
                         sip = float(answer.text)
                 except Exception:
@@ -60,7 +60,7 @@ class GoalBase(ABC):
     def get_sip_growth(self):
         if self.goal_object:
             try:
-                answer = self.goal_object.answer_set.get(question__id="grow_sip")
+                answer = self.goal_object.answer_set.get(question__question_id="grow_sip")
                 if answer:
                     return float(answer.text)
             except Exception as e:
@@ -75,7 +75,7 @@ class GoalBase(ABC):
         else:
             if self.goal_object:
                 try:
-                    answer = self.goal_object.answer_set.get(question__id="lumpsum")
+                    answer = self.goal_object.answer_set.get(question__question_id="lumpsum")
                     if answer:
                         lumpsum = float(answer.text)
                 except Exception as e:
@@ -169,7 +169,7 @@ class TaxGoal(GoalBase):
         else:
             if self.goal_object:
                 try:
-                    answer = models.Answer.objects.get(goal=self.goal_object, question__id="amount_invested")
+                    answer = self.goal_object.answer_set.get(question__question_id="amount_invested")
                     if answer:
                         lumpsum = float(answer.text)
                 except Exception as e:
@@ -225,7 +225,7 @@ class RetirementGoal(GoalBase):
         else:
             if self.goal_object:
                 try:
-                    answer = models.Answer.objects.get(goal=self.goal_object, question__id="monthly_investment")
+                    answer = self.goal_object.answer_set.get(question__question_id="monthly_investment")
                     if answer:
                         sip = float(answer.text)
                 except Exception as e:
