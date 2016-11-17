@@ -1812,7 +1812,7 @@ def calculate_corpus_and_investment_till_date(goal, investment_date):
     """
     from core import goals_helper
     
-    investment_till_date, invest_date = 0, 0, investment_date
+    investment_till_date, invest_date = 0, investment_date
     term = 0
 
     category_allocation = goal.asset_allocation

@@ -106,7 +106,7 @@ class GoalBase(ABC):
             return is_error, errors
 
         allocation = data.pop('allocation')
-        goal_serializer = serializers.GoalSerializer(data={'user':user, 'category':goal_type, 'name':goal_name, 'asset_allocation':allocation})
+        goal_serializer = serializers.GoalSerializer(data={'user':user.id, 'category':goal_type, 'name':goal_name, 'asset_allocation':allocation})
         if goal_serializer.is_valid():
             goal_name = goal_serializer.validated_data.get("name")
             allocation = goal_serializer.validated_data.get('asset_allocation')
@@ -137,7 +137,7 @@ class GoalBase(ABC):
 
         else:
             is_error = True
-            errors = {"serializerError": goal_serializer.errors}
+            errors = {"serializerError": str(goal_serializer.errors)}
         return is_error, errors
 
     def get_expected_corpus(self, actual_term, term):
