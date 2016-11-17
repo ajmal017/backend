@@ -78,8 +78,8 @@ class GoalBase(ABC):
                     answer = self.goal_object.answer_set.get(question__question_id="lumpsum")
                     if answer:
                         lumpsum = float(answer.text)
-                except Exception as e:
-                    self.error_logger.error("Error retrieving lumpsum amount: " + str(e))
+                except:
+                    pass
 
         if lumpsum is None:
             lumpsum = 0
@@ -94,6 +94,9 @@ class GoalBase(ABC):
                 return self.goal_object.duration
         return 0
     
+    def get_allocation(self, data):
+        return data.get('allocation')
+    
     def get_answer_value(self, key, value):
         return value, None
 
@@ -101,7 +104,7 @@ class GoalBase(ABC):
         return ""
      
     def create_or_update_goal(self, user, data, goal_type, goal_name=None):
-        allocation_dict = utils.make_allocation_dict(self.get_sip_amount(data), self.get_lumpsum_amount(data), data.get('allocation'))
+        allocation_dict = utils.make_allocation_dict(self.get_sip_amount(data), self.get_lumpsum_amount(data), self.get_allocation(data))
 
         equity_sip, equity_lumpsum, debt_sip, debt_lumpsum, elss_sip, elss_lumpsum, is_error, errors = \
             utils.get_number_of_funds(allocation_dict)
@@ -181,7 +184,7 @@ class TaxGoal(GoalBase):
                     if answer:
                         lumpsum = float(answer.text)
                 except Exception as e:
-                    self.error_logger.error("Error retrieving lumpsum amount: " + str(e))
+                    pass
 
         if lumpsum is None:
             lumpsum = 0
@@ -211,6 +214,9 @@ class TaxGoal(GoalBase):
 
     def get_default_goalname(self, goal_type):
         return "TAX"
+
+    def get_allocation(self, data):
+        return constants.TAX_ALLOCATION
 
 class QuickInvestGoal(GoalBase):
     def __init__(self, goal_object=None):
