@@ -104,7 +104,8 @@ class GoalBase(ABC):
         return ""
      
     def create_or_update_goal(self, user, data, goal_type, goal_name=None):
-        allocation_dict = utils.make_allocation_dict(self.get_sip_amount(data), self.get_lumpsum_amount(data), self.get_allocation(data))
+        allocation = self.get_allocation(data)
+        allocation_dict = utils.make_allocation_dict(self.get_sip_amount(data), self.get_lumpsum_amount(data), allocation)
 
         equity_sip, equity_lumpsum, debt_sip, debt_lumpsum, elss_sip, elss_lumpsum, is_error, errors = \
             utils.get_number_of_funds(allocation_dict)
@@ -113,7 +114,10 @@ class GoalBase(ABC):
 
         if not goal_name:
             goal_name = self.get_default_goalname(goal_type)
-        allocation = data.pop('allocation')
+            
+        if data.get('allocation'):
+            data.pop('allocation')
+            
         goal_serializer = serializers.GoalSerializer(data={'user':user.id, 'category':goal_type, 'name':goal_name, 'asset_allocation':allocation})
         if goal_serializer.is_valid():
             goal_name = goal_serializer.validated_data.get("name")
