@@ -97,7 +97,10 @@ class GoalBase(ABC):
     def get_answer_value(self, key, value):
         return value, None
 
-    def create_or_update_goal(self, user, data, goal_type, goal_name=""):
+    def get_default_goalname(self, goal_type):
+        return ""
+     
+    def create_or_update_goal(self, user, data, goal_type, goal_name=None):
         allocation_dict = utils.make_allocation_dict(self.get_sip_amount(data), self.get_lumpsum_amount(data), data.get('allocation'))
 
         equity_sip, equity_lumpsum, debt_sip, debt_lumpsum, elss_sip, elss_lumpsum, is_error, errors = \
@@ -105,6 +108,8 @@ class GoalBase(ABC):
         if is_error:
             return is_error, errors
 
+        if not goal_name:
+            goal_name = self.get_default_goalname(goal_type)
         allocation = data.pop('allocation')
         goal_serializer = serializers.GoalSerializer(data={'user':user.id, 'category':goal_type, 'name':goal_name, 'asset_allocation':allocation})
         if goal_serializer.is_valid():
@@ -158,6 +163,9 @@ class GenericGoal(GoalBase):
     def create_or_update_goal(self, user, data, goal_type, goal_name=""):
         return super(GenericGoal, self).create_or_update_goal(user, data, constants.MAP[goal_type], goal_name)
 
+    def get_default_goalname(self, goal_type):
+        return constants.CATEGORY_CHOICE_REVERSE[goal_type]
+
 class TaxGoal(GoalBase):
     def __init__(self, goal_object=None):
         super(TaxGoal, self).__init__(goal_object)
@@ -201,6 +209,9 @@ class TaxGoal(GoalBase):
                              growth / 100)
         return corpus
 
+    def get_default_goalname(self, goal_type):
+        return "TAX"
+
 class QuickInvestGoal(GoalBase):
     def __init__(self, goal_object=None):
         super(QuickInvestGoal, self).__init__(goal_object)
@@ -213,6 +224,9 @@ class QuickInvestGoal(GoalBase):
         if key == "floating_sip":
             option_id = "op1" if value else "op2"
         return value, option_id
+    
+    def get_default_goalname(self, goal_type):
+        return "INV"
     
 class RetirementGoal(GoalBase):
     def __init__(self, goal_object=None):
@@ -253,3 +267,6 @@ class RetirementGoal(GoalBase):
         if key == "floating_sip":
             option_id = "op1" if value else "op2"
         return value, option_id
+
+    def get_default_goalname(self, goal_type):
+        return "RET"
