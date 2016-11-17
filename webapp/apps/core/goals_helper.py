@@ -32,13 +32,13 @@ class GoalBase(ABC):
     @staticmethod
     def get_goal_instance(goal_object):
         if goal_object.category == constants.INVEST:
-            return QuickInvestGoal()
+            return QuickInvestGoal(goal_object)
         elif goal_object.category == constants.TAX_SAVING:
-            return TaxGoal()
+            return TaxGoal(goal_object)
         elif goal_object.category == constants.RETIREMENT:
-            return RetirementGoal()
+            return RetirementGoal(goal_object)
         else:
-            return GenericGoal()
+            return GenericGoal(goal_object)
         
     def get_sip_amount(self, data=None):
         sip = 0
