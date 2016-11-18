@@ -485,7 +485,7 @@ def get_portfolio_items(user_id, overall_allocation, sip_lumpsum_allocation):
     latest_answer_time = goals_helper.GoalBase.get_current_goals(portfolio.user).latest(
         constants.MODIFIED_AT).modified_at
     portfolio_modified_time = models.Portfolio.objects.get(user_id=user_id, has_invested=False).modified_at
-    if latest_answer_time > portfolio_modified_time:
+    if portfolio.user.rebuild_portfolio == True or latest_answer_time > portfolio_modified_time:
         equity_funds, debt_funds, elss_funds, is_error, errors = create_portfolio_items(
             user_id, overall_allocation, sip_lumpsum_allocation)
         return format_porfolioitems(equity_funds, debt_funds, elss_funds, is_error, errors)
@@ -524,7 +524,7 @@ def create_portfolio_items(user_id, overall_allocation, sip_lumpsum_allocation):
             except Exception:
                 pass
             return None, None, None, is_error, errors
-        if created:
+        if portfolio:
             models.Goal.objects.filter(portfolio=None).update(portfolio=portfolio)
     get_funds_to_allocate_to_user(constants.EQUITY, number_of_equity_funds_by_sip, number_of_equity_funds_by_lumpsum,
                                   sip_lumpsum_allocation, portfolio)
