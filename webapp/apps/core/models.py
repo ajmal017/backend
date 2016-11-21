@@ -467,7 +467,7 @@ class PortfolioItem(TimeStampedModel):
     )
     portfolio = models.ForeignKey(Portfolio) #TODO remove
     fund = models.ForeignKey(Fund)
-    goal = models.ForeignKey(Goal)
+    goal = models.ForeignKey(Goal, null=True, blank=True, default=None)
 
     # Example : Equity its good to have though is equal to fund.broad_category_group
     broad_category_group = models.CharField(max_length=1, choices=TYPE_CHOICES)
@@ -482,7 +482,7 @@ class PortfolioItem(TimeStampedModel):
     investment_date = models.DateField(blank=True, null=True)
 
     class Meta:
-        unique_together = (('portfolio', 'fund'),)
+        unique_together = (('portfolio', 'fund', 'goal'),)
         
     def category_verbose(self):
         return dict(PortfolioItem.TYPE_CHOICES)[self.broad_category_group]

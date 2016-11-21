@@ -276,15 +276,6 @@ def make_allocation_dict(sip, lumpsum, allocation):
     return allocation_dict
 
 
-def roundTo100(amount1, amount2):
-    amount1_remainder = amount1%100
-    if amount1_remainder < 50:
-        amount1 -= amount1_remainder
-        amount2 += amount1_remainder
-    else:
-        amount1 += (100 - amount1_remainder)
-        amount2 -= (100 - amount1_remainder)
-    return amount1, amount2
     
 def calculate_asset_allocation(lumpsum_amount, sip_amount, equity_allocation, debt_allocation):
     lumpsum_equity, lumpsum_debt, sip_equity, sip_debt = 0, 0, 0, 0
@@ -298,15 +289,15 @@ def calculate_asset_allocation(lumpsum_amount, sip_amount, equity_allocation, de
     
     if lumpsum_equity > 0 and lumpsum_debt > 0:
         if lumpsum_amount%100 == 0 and lumpsum_equity%100 > 0:
-            lumpsum_equity, lumpsum_debt = roundTo100(lumpsum_equity, lumpsum_debt)
+            lumpsum_equity, lumpsum_debt = helpers.roundTo100(lumpsum_equity, lumpsum_debt)
                 
     if sip_equity > 0 and sip_debt > 0:
         if sip_amount%100 == 0 and sip_equity%100 > 0:
-            sip_equity, sip_debt = roundTo100(sip_equity, sip_debt)
+            sip_equity, sip_debt = helpers.roundTo100(sip_equity, sip_debt)
             
     return lumpsum_equity, lumpsum_debt, sip_equity, sip_debt
     
-
+        
 def calculate_overall_allocation(user, investment_date=None):
     """
     :param user_id:
@@ -334,15 +325,12 @@ def calculate_overall_allocation(user, investment_date=None):
         
         corpus, investment_till_date, term, debt, equity, elss = calculate_corpus_and_investment_till_date(goal, investment_date)
 
-        if float(category_allocation[constants.ELSS]):
-            elss_lumpsum += round((lumpsum_amount * float(category_allocation[constants.ELSS])) / 100)
-            elss_sip += round((sip_amount * float(category_allocation[constants.ELSS])) / 100)
-            
-        equity_l, debt_l, equity_s, debt_s = calculate_asset_allocation(lumpsum_amount, sip_amount, float(category_allocation[constants.EQUITY]), float(category_allocation[constants.DEBT]))
-        debt_lumpsum += debt_l
-        debt_sip += debt_s
-        equity_lumpsum += equity_l
-        equity_sip += equity_s
+        allocation = goal_object.calculate_asset_allocation(lumpsum_amount, sip_amount, float(category_allocation[constants.EQUITY]), float(category_allocation[constants.DEBT]))
+        
+        debt_lumpsum += allocation[constants.DEBT][constants.LUMPSUM]
+        debt_sip += allocation[constants.DEBT][constants.SIP]
+        equity_lumpsum += allocation[constants.EQUITY][constants.LUMPSUM]
+        equity_sip += allocation[constants.EQUITY][constants.SIP]
         
         category_summary = {"goal": goal.name, "corpus": round(corpus, 2), "sip": sip_amount,
                             "lumpsum": lumpsum_amount, "term": term}
@@ -366,7 +354,33 @@ def calculate_overall_allocation(user, investment_date=None):
                                            constants.ELSS: {"lumpsum": elss_lumpsum, "sip": elss_sip},}
     result = {"overall_allocation": overall_allocation, "total_sum": total_investment, "summary": summary}
     return result, overall_allocation_with_sip_lumpsum, status_summary
-        
+
+def get_sip_lumpsum_for_goal(user, goal):
+    """
+    :param user_id:
+    :param investment_date:the date for investing
+    :return: a dictionary of overall allocation for user with keys - equity, elss and debt and values as - a dictionary
+    with percentage and amount for respective ( elss, debt and equity )
+    """
+    from core import goals_helper #TODO
+    
+    category_allocation = goal.asset_allocation
+    
+    goal_object = goals_helper.GoalBase.get_goal_instance(goal)
+    lumpsum_amount = goal_object.get_lumpsum_amount()
+    sip_amount = goal_object.get_sip_amount()
+
+    total_investment = lumpsum_amount + sip_amount * 12
+     
+    allocation = goal_object.calculate_asset_allocation(lumpsum_amount, sip_amount, float(category_allocation[constants.EQUITY]), float(category_allocation[constants.DEBT]))
+    
+    corpus, investment_till_date, term, debt, equity, elss = calculate_corpus_and_investment_till_date(goal, None)
+
+    goal_summary = {"goal": goal.name, "corpus": round(corpus, 2), "sip": sip_amount,
+                        "lumpsum": lumpsum_amount, "term": term}
+
+    return allocation, goal_summary, total_investment
+
 
 def get_assess_answer(user):
     """
@@ -496,7 +510,36 @@ def get_portfolio_items(user_id, overall_allocation, sip_lumpsum_allocation):
         return format_porfolioitems(equity_funds, debt_funds, elss_funds, False, {})
 
 
-def create_portfolio_items(user_id, overall_allocation, sip_lumpsum_allocation):
+def get_portfolio_items_for_goal(user_id, overall_allocation, sip_lumpsum_allocation, goal):
+    """
+    Assigns funds to user's portfolio if no entry is present in portfolio item for that user or returns the portfolio
+    item list if an entry is already resent
+    :param user_id: the id of active user
+    :return: a dictionary of portfolio items of user
+    """
+    from core import goals_helper
+    
+    try:
+        portfolio = models.Portfolio.objects.get(user_id=user_id, has_invested=False)
+    except models.Portfolio.DoesNotExist:
+        equity_funds, debt_funds, elss_funds, is_error, errors = create_portfolio_items(
+            user_id, overall_allocation, sip_lumpsum_allocation, goal)
+        return format_porfolioitems(equity_funds, debt_funds, elss_funds, is_error, errors)
+    
+    latest_answer_time = goal.modified_at
+    portfolio_modified_time = models.Portfolio.objects.get(user_id=user_id, has_invested=False).modified_at
+    if portfolio.user.rebuild_portfolio == True or latest_answer_time > portfolio_modified_time:
+        equity_funds, debt_funds, elss_funds, is_error, errors = create_portfolio_items(
+            user_id, overall_allocation, sip_lumpsum_allocation)
+        return format_porfolioitems(equity_funds, debt_funds, elss_funds, is_error, errors)
+    else:
+        equity_funds = get_recommended_schemes(user_id, constants.EQUITY, goal)
+        debt_funds = get_recommended_schemes(user_id, constants.DEBT, goal)
+        elss_funds = get_recommended_schemes(user_id, constants.ELSS, goal)
+        return format_porfolioitems(equity_funds, debt_funds, elss_funds, False, {})
+
+
+def create_portfolio_items(user_id, overall_allocation, sip_lumpsum_allocation, goal=None):
     """
     Utility to create portfolio items for a user
     :param user_id: the id of user for whom portfolio items are to be created
@@ -527,14 +570,14 @@ def create_portfolio_items(user_id, overall_allocation, sip_lumpsum_allocation):
         if portfolio:
             models.Goal.objects.filter(portfolio=None).update(portfolio=portfolio)
     get_funds_to_allocate_to_user(constants.EQUITY, number_of_equity_funds_by_sip, number_of_equity_funds_by_lumpsum,
-                                  sip_lumpsum_allocation, portfolio)
+                                  sip_lumpsum_allocation, portfolio, None, goal)
     get_funds_to_allocate_to_user(constants.DEBT, number_of_debt_funds_by_sip, number_of_debt_funds_by_lumpsum,
-                                  sip_lumpsum_allocation, portfolio)
+                                  sip_lumpsum_allocation, portfolio, None, goal)
     get_funds_to_allocate_to_user(constants.ELSS, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum,
-                                  sip_lumpsum_allocation, portfolio)
-    equity_funds = get_recommended_schemes(user_id, constants.EQUITY)
-    debt_funds = get_recommended_schemes(user_id, constants.DEBT)
-    elss_funds = get_recommended_schemes(user_id, constants.ELSS)
+                                  sip_lumpsum_allocation, portfolio, None, goal)
+    equity_funds = get_recommended_schemes(user_id, constants.EQUITY, goal)
+    debt_funds = get_recommended_schemes(user_id, constants.DEBT, goal)
+    elss_funds = get_recommended_schemes(user_id, constants.ELSS, goal)
     return equity_funds, debt_funds, elss_funds, is_error, errors
 
 
@@ -598,7 +641,7 @@ def update_error(error_dictionary, type, user_amount, minimum_amount):
 
 
 def get_funds_to_allocate_to_user(type, number_of_funds_by_sip, number_of_funds_by_lumpsum, sip_lumpsum_allocation,
-                                  portfolio, funds=None):
+                                  portfolio, funds=None, goal=None):
     """
     Algorithm to allocate funds to user according to his investment
     :param type: the type of funds (equity, elss or debt)
@@ -633,10 +676,10 @@ def get_funds_to_allocate_to_user(type, number_of_funds_by_sip, number_of_funds_
         kwargs[constants.SIP] = fund_allocation[constants.SIP][index]
         kwargs[constants.LUMPSUM] = fund_allocation[constants.LUMPSUM][index]
         kwargs['sum_invested'] = int(fund_allocation[constants.SIP][index] + fund_allocation[constants.LUMPSUM][index])
-        models.PortfolioItem.objects.update_or_create(portfolio_id=portfolio.id, fund_id=fund.id, defaults=kwargs)
+        models.PortfolioItem.objects.update_or_create(portfolio_id=portfolio.id, goal=goal, fund_id=fund.id, defaults=kwargs)
         fund_ids_updated.append(fund.id)
     funds_to_be_deleted = models.PortfolioItem.objects.filter(
-        portfolio_id=portfolio, fund__type_of_fund=constants.FUND_MAP[type]).exclude(fund__id__in=fund_ids_updated)
+        portfolio_id=portfolio, goal=goal, fund__type_of_fund=constants.FUND_MAP[type]).exclude(fund__id__in=fund_ids_updated)
     funds_to_be_deleted.delete()
 
 
@@ -705,7 +748,7 @@ def amount_allocation(type, number_of_funds_by_sip, number_of_funds_by_lumpsum, 
     return {constants.SIP: sip_allocation, constants.LUMPSUM: lumpsum_allocation}
 
 
-def get_recommended_schemes(user_id, type):
+def get_recommended_schemes(user_id, type, goal=None):
     """
 
     :param user_id:
@@ -714,9 +757,15 @@ def get_recommended_schemes(user_id, type):
     """
     portfolio_dict = {"key": type}
     portfolio_data = []
-    portfolio_items = models.PortfolioItem.objects.filter(broad_category_group=constants.FUND_MAP[type],
+    if goal:
+        portfolio_items = models.PortfolioItem.objects.filter(broad_category_group=constants.FUND_MAP[type],
+                                                          portfolio__user_id=user_id, portfolio__has_invested=False, goal=goal
+                                                          ).select_related('fund').order_by('fund__fund_rank')
+    else:
+        portfolio_items = models.PortfolioItem.objects.filter(broad_category_group=constants.FUND_MAP[type],
                                                           portfolio__user_id=user_id, portfolio__has_invested=False
                                                           ).select_related('fund').order_by('fund__fund_rank')
+        
     for portfolio_item in portfolio_items:
         portfolio_data.append({"id": portfolio_item.fund.id, "fund_name": portfolio_item.fund.fund_name,
                                "sip": portfolio_item.sip, "lumpsum": portfolio_item.lumpsum, 
@@ -725,7 +774,7 @@ def get_recommended_schemes(user_id, type):
     return portfolio_dict
 
 
-def get_recommended_and_scheme_funds(user_id):
+def get_recommended_and_scheme_funds(user_id, goal=None):
     """
     Utility to return funds of user divided into elss , equity, debt and each category having two subsections-
     -Funds in portfolio item of user
@@ -736,7 +785,7 @@ def get_recommended_and_scheme_funds(user_id):
     equity_funds, debt_funds, elss_funds, user_fund_ids = [], [], [], []
     user_equity_funds, user_debt_funds, user_elss_funds = [], [], []
     # get schemes under user portfolio items
-    user_portfolio_items = models.PortfolioItem.objects.filter(portfolio__user_id=user_id, portfolio__has_invested=False
+    user_portfolio_items = models.PortfolioItem.objects.filter(portfolio__user_id=user_id, goal=goal, portfolio__has_invested=False
                                                                ).order_by('fund__fund_rank')
     # makes a list of the ids of funds in user portfolio items
     for portfolio_item in user_portfolio_items:
@@ -2983,7 +3032,7 @@ def generate_graph_for_portfolio(user, earliest_date, last_date):
     return []
 
 
-def calculate_sip_lumpsum_category_wise_for_a_portfolio(portfolio):
+def calculate_sip_lumpsum_category_wise_for_a_portfolio(portfolio, goal=None):
     """
     utility to calculate sip and lumpsum category wise (equity/elss/debt)  for a portfolio
 
@@ -2999,7 +3048,11 @@ def calculate_sip_lumpsum_category_wise_for_a_portfolio(portfolio):
 
     # loop through all portfolio items of a portfolio and increase category sip/lumpsum if portfolio item's fund type is
     # as category
-    for portfolio_item in portfolio.portfolioitem_set.all():
+    if goal:
+        portfolio_items = portfolio.portfolioitem_set.filter(goal=goal)
+    else:
+        portfolio_items = portfolio.portfolioitem_set.all()
+    for portfolio_item in portfolio_items:
         sip_lump = category_sip_lumpsum_map[portfolio_item.fund.get_type_of_fund_display().lower()]
         if portfolio_item.lumpsum > 0:
             sip_lump[constants.LUMPSUM] += portfolio_item.lumpsum
@@ -3012,7 +3065,7 @@ def calculate_sip_lumpsum_category_wise_for_a_portfolio(portfolio):
     return category_sip_lumpsum_map
 
 
-def change_portfolio(category_sip_lumpsum_map, user_portfolio, fund_id_map):
+def change_portfolio(category_sip_lumpsum_map, user_portfolio, fund_id_map, goal=None):
     """
     utility to delete old portfolio items and create new portfolio items based on the fund id map
 
@@ -3041,7 +3094,7 @@ def change_portfolio(category_sip_lumpsum_map, user_portfolio, fund_id_map):
                 number_of_fund_map[category][constants.LUMPSUM],
                 category_sip_lumpsum_map,
                 user_portfolio,
-                fund_id_map[category])
+                fund_id_map[category], goal)
 
 
 def calculate_minimum_number_of_funds_for_category(

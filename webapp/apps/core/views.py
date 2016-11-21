@@ -278,7 +278,38 @@ class RiskProfile(APIView):
             return api_utils.response(serializer.data, status.HTTP_200_OK)
         return api_utils.response(serializer.errors, status.HTTP_404_NOT_FOUND, constants.RISK_PROFILES_ERROR)
 
+class GoalRecommendedPortfolio(APIView):
+    """
+    API to return the recommended portfolio for a user
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request, type):
+        """
 
+        :param request:
+        :return: overall allocation for a user and the recommended schemes for the user
+        """
+        goal = goals_helper.GoalBase.get_current_goal(request.user, type)
+        if not goal:
+            return api_utils.response({constants.MESSAGE: constants.USER_GOAL_NOT_PRESENT},
+                                      status.HTTP_400_BAD_REQUEST, constants.USER_GOAL_NOT_PRESENT)
+
+        overall_allocation, sip_lumpsum_allocation, status_summary = utils.calculate_overall_allocation(request.user, None)
+        goal_sip_lumpsum, goal_summary, goal_total_investment = utils.get_sip_lumpsum_for_goal(request.user, goal)
+        
+        portfolio_items, errors = utils.get_portfolio_items_for_goal(request.user.id, overall_allocation, goal_sip_lumpsum, goal)
+        if portfolio_items is not None:
+            overall_allocation.update({'summary': goal_summary, 'total_sum': goal_total_investment})
+            portfolio_items.update(overall_allocation)
+            request.user.rebuild_portfolio = False
+            request.user.save()
+            msg=api_utils.response(portfolio_items, status.HTTP_200_OK)
+            return msg
+        else:
+            return api_utils.response({constants.MESSAGE: errors},
+                                      status.HTTP_400_BAD_REQUEST, api_utils.create_error_message(errors))
+    
 class RecommendedPortfolios(APIView):
     """
     API to return the recommended portfolio for a user
@@ -653,7 +684,55 @@ class FundsDividedIntoCategories(APIView):
             return api_utils.response(funds_divided, status.HTTP_200_OK)
         return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(equity_fund.errors))
 
+class FundsDividedIntoCategoriesForGoal(APIView):
+    """
+    API to return funds divided into equity, elss and debt each having two subsections -
+    other recommended and those in user portfolio items
+    """
+    permission_classes = [permissions.IsAuthenticated]
 
+    def get(self, request, type):
+        """
+        Returns the funds clubbed according to their type(elss, debt or equity)
+        :param request:
+        :return: serialized data of all funds
+        """
+        funds_divided = {}
+        
+        goal = goals_helper.GoalBase.get_current_goal(request.user, type)
+        if not goal:
+            return api_utils.response({constants.MESSAGE: constants.USER_GOAL_NOT_PRESENT},
+                                      status.HTTP_400_BAD_REQUEST, constants.USER_GOAL_NOT_PRESENT)
+
+        # get funds for each category via utility
+        equity_funds, debt_funds, elss_funds, user_equity_funds, user_debt_funds, user_elss_funds =\
+            utils.get_recommended_and_scheme_funds(request.user.id, goal)
+
+        # function to find max allowed for each cases
+        sip_lumpsum_allocation = utils.get_sip_lumpsum_for_goal(request.user, goal)
+        number_of_equity_funds_by_sip, number_of_equity_funds_by_lumpsum, number_of_debt_funds_by_sip, \
+        number_of_debt_funds_by_lumpsum, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum, is_error, \
+        errors = utils.get_number_of_funds(sip_lumpsum_allocation)
+
+        # serializes all categories of funds
+        user_equity_fund = serializers.FundSerializerForFundDividedIntoCategory(user_equity_funds, many=True)
+        equity_fund = serializers.FundSerializerForFundDividedIntoCategory(equity_funds, many=True)
+        debt_fund = serializers.FundSerializerForFundDividedIntoCategory(debt_funds, many=True)
+        user_debt_fund = serializers.FundSerializerForFundDividedIntoCategory(user_debt_funds, many=True)
+        elss_fund = serializers.FundSerializerForFundDividedIntoCategory(elss_funds, many=True)
+        user_elss_fund = serializers.FundSerializerForFundDividedIntoCategory(user_elss_funds, many=True)
+        # if serializers are valid return funds_divided else return serializer errors
+        if equity_fund.is_valid and debt_fund.is_valid and elss_fund.is_valid and user_elss_fund.is_valid \
+            and user_debt_fund.is_valid and user_elss_fund.is_valid:
+            funds_divided[constants.EQUITY] = {constants.SCHEME: user_equity_fund.data, constants.OTHER_RECOMMENDED: equity_fund.data}
+            funds_divided[constants.DEBT] = {constants.SCHEME: user_debt_fund.data, constants.OTHER_RECOMMENDED: debt_fund.data}
+            funds_divided[constants.ELSS] = {constants.SCHEME: user_elss_fund.data, constants.OTHER_RECOMMENDED: elss_fund.data}
+            funds_divided["elss_max"] = max(number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum)
+            funds_divided["equity_max"] = max(number_of_equity_funds_by_sip, number_of_equity_funds_by_lumpsum)
+            funds_divided["debt_max"] = max(number_of_debt_funds_by_sip, number_of_debt_funds_by_lumpsum)
+            return api_utils.response(funds_divided, status.HTTP_200_OK)
+        return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(equity_fund.errors))
+    
 class FundsComparedData(APIView):
     """
     API o return data for fund comaprison.
@@ -1418,6 +1497,56 @@ class ChangePortfolio(APIView):
         utils.change_portfolio(category_sip_lumpsum_map, user_portfolio, fund_id_map)
         return api_utils.response({constants.MESSAGE: constants.SUCCESS}, status.HTTP_200_OK)
 
+class ChangeGoalPortfolio(APIView):
+    """
+    API to change portfolio for swap funds
+
+    Receives three lists corresponding to fund ids user want to have in his portfolio for each category.
+    Based on the above three lists it deletes / replaces the funds in his portfolio.
+    The number of new funds can be equal to or less than(not zero for each category if initially not zero) the number of
+    funds originally present in his portfolio for each category but cannot be more than that.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, type):
+        """
+        :param request:
+        :return:
+        """
+        # check if a portfolio of user for which he has not invested is present. If not send an error message
+        try:
+            user_portfolio = models.Portfolio.objects.get(user=request.user, has_invested=False)
+        except models.Portfolio.DoesNotExist:
+            return api_utils.response({constants.MESSAGE: constants.USER_PORTOFOLIO_NOT_PRESENT},
+                                      status.HTTP_400_BAD_REQUEST, constants.USER_PORTOFOLIO_NOT_PRESENT)
+
+        goal = goals_helper.GoalBase.get_current_goal(request.user, type)
+        if not goal:
+            return api_utils.response({constants.MESSAGE: constants.USER_GOAL_NOT_PRESENT},
+                                      status.HTTP_400_BAD_REQUEST, constants.USER_GOAL_NOT_PRESENT)
+
+        # if portfolio is present get ids of new funds user wants to keep from request
+        fund_id_map = {constants.EQUITY: [], constants.DEBT: [], constants.ELSS: []}
+        for category in constants.FUND_CATEGORY_LIST:
+            fund_id_map[category] = request.data.get(category)
+
+        
+        # calculate sip and lumpsum for each category based on old portfolio
+        category_sip_lumpsum_map = utils.calculate_sip_lumpsum_category_wise_for_a_portfolio(user_portfolio, goal)
+
+        if fund_id_map[constants.EQUITY]:
+            if category_sip_lumpsum_map[constants.EQUITY][constants.SIP] !=0:
+                defected_funds = utils.find_funds_with_sip_lower_than_minimum_sip(
+                    category_sip_lumpsum_map[constants.EQUITY][constants.SIP], category_sip_lumpsum_map[constants.EQUITY][constants.SIP_COUNT], fund_id_map[constants.EQUITY])
+
+                if defected_funds != '':
+                    # string_to_return = constants.CHECK_PORTFOLIO_DISTRIBUTION_MESSAGE.format(defected_funds)
+                    return api_utils.response({}, status.HTTP_400_BAD_REQUEST, defected_funds)
+
+        # add the new funds as portfolio items and allocate them sip and lumpsum based on category_sip_lumpsum_map
+        utils.change_portfolio(category_sip_lumpsum_map, user_portfolio, fund_id_map, goal)
+        return api_utils.response({constants.MESSAGE: constants.SUCCESS}, status.HTTP_200_OK)
 
 class FundsDistributionValidate(APIView):
     """

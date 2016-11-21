@@ -28,3 +28,13 @@ def percentage(dividend, divisor):
     :return: percentage rounded to two digits
     """
     return round(((dividend*100)/divisor), 1)
+
+def roundTo100(amount1, amount2):
+    amount1_remainder = amount1%100
+    if amount1_remainder < 50:
+        amount1 -= amount1_remainder
+        amount2 += amount1_remainder
+    else:
+        amount1 += (100 - amount1_remainder)
+        amount2 -= (100 - amount1_remainder)
+    return amount1, amount2

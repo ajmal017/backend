@@ -289,7 +289,7 @@ class FundDataPointsChangeDailyAdmin(admin.ModelAdmin):
     disable the option of deleting fund data
     """
 
-    list_display = ('fund', 'aum')
+    list_display = ('fund', 'aum', 'day_end_nav', 'day_end_date')
     list_editable = ('aum',)
     readonly_fields=('fund',)
     actions = None

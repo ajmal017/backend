@@ -3,7 +3,7 @@ from datetime import datetime
 from abc import ABC
 import logging
 from core import models
-from core import utils
+from core import utils, helpers
 from core import serializers, constants
 
 
@@ -39,7 +39,28 @@ class GoalBase(ABC):
             return RetirementGoal(goal_object)
         else:
             return GenericGoal(goal_object)
+
+    @staticmethod        
+    def calculate_asset_allocation(lumpsum_amount, sip_amount, equity_allocation, debt_allocation):
+        lumpsum_equity, lumpsum_debt, sip_equity, sip_debt = 0, 0, 0, 0
+        if equity_allocation:
+            lumpsum_equity = round((lumpsum_amount * float(equity_allocation)) / 100)
+            sip_equity = round((sip_amount * float(equity_allocation)) / 100)
         
+        if debt_allocation:
+            lumpsum_debt = round((lumpsum_amount * float(debt_allocation)) / 100)
+            sip_debt = round((sip_amount * float(debt_allocation)) / 100)
+        
+        if lumpsum_equity > 0 and lumpsum_debt > 0:
+            if lumpsum_amount%100 == 0 and lumpsum_equity%100 > 0:
+                lumpsum_equity, lumpsum_debt = helpers.roundTo100(lumpsum_equity, lumpsum_debt)
+                    
+        if sip_equity > 0 and sip_debt > 0:
+            if sip_amount%100 == 0 and sip_equity%100 > 0:
+                sip_equity, sip_debt = helpers.roundTo100(sip_equity, sip_debt)
+                
+        return lumpsum_equity, lumpsum_debt, sip_equity, sip_debt
+
     def get_sip_amount(self, data=None):
         sip = 0
         if data:
@@ -95,7 +116,11 @@ class GoalBase(ABC):
         return 0
     
     def get_allocation(self, data):
-        return data.get('allocation')
+        if data:
+            return data.get('allocation')
+        
+        if self.goal_object:
+            return self.goal_object.asset_allocation
     
     def get_answer_value(self, key, value):
         return value, None
@@ -151,6 +176,27 @@ class GoalBase(ABC):
             is_error = True
             errors = {"serializerError": str(goal_serializer.errors)}
         return is_error, errors
+
+    def get_asset_allocation_amount(self):
+        if not self.goal_object:
+            return 0, 0, 0, 0, 0, 0
+        
+        lumpsum_amount = self.goal_object.get_lumpsum_amount()
+        sip_amount = self.goal_object.get_sip_amount()
+        
+        allocation = self.goal_object.asset_allocation
+        
+        elss_lumpsum, elss_sip = 0, 0
+        
+        if float(allocation[constants.ELSS]):
+            elss_lumpsum = round((lumpsum_amount * float(allocation[constants.ELSS])) / 100)
+            elss_sip = round((sip_amount * float(allocation[constants.ELSS])) / 100)
+            
+        equity_lumpsum, debt_lumpsum, equity_sip, debt_sip = self.calculate_asset_allocation(lumpsum_amount, sip_amount, float(allocation[constants.EQUITY]), float(allocation[constants.DEBT]))
+
+        return {constants.EQUITY: {constants.LUMPSUM: equity_lumpsum, constants.SIP: equity_sip},
+                constants.DEBT: {constants.LUMPSUM: debt_lumpsum, constants.SIP: debt_sip},
+                constants.ELSS: {constants.LUMPSUM: elss_lumpsum, constants.SIP: elss_sip}} 
 
     def get_expected_corpus(self, actual_term, term):
         sip_amount = self.get_sip_amount()

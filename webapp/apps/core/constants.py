@@ -242,6 +242,7 @@ INVESTED_AMOUNT = 'invested_amount'
 XIRR = 'xirr'
 
 USER_PORTOFOLIO_NOT_PRESENT = 'User portfolio is not present.'
+USER_GOAL_NOT_PRESENT = 'User goal is not present.'
 USER_PERFORMANCE_PORTOFOLIO_NOT_PRESENT = 'User performance portfolio is not present'
 USER_HAS_NOT_INVESTED = 'user has not invested'
 FUND_NOT_PRESENT = 'Fund related to ID not present'
