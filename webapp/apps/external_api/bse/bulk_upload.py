@@ -62,7 +62,8 @@ def generate_order_pipe_file(user_id, order_detail,exch_backend):
                                            ('MIN redemption flag', cons.Order_MIN_redemption_Flag),
                                            ('DPC Flag', cons.Order_DPC_Flag),  # TODO:
                                            ('All Units', cons.Order_All_Units),  # TODO:
-                                           ('Redemption Units', '')])  # TODO:
+                                           ('Redemption Units', ''),
+                                           ('SubBroker ARN', '')])  # TODO:
             outfile.write("|".join(bulk_order_dict.values()))
             if i < len(order_items) - 1:
                 outfile.write("\r")

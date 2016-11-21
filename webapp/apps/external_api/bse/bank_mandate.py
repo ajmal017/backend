@@ -7,6 +7,7 @@ from datetime import datetime
 from subprocess import call
 from fdfgen import forge_fdf
 from external_api import constants as cons
+from external_api.bse import constants as bse_cons
 import os
 import time
 
@@ -32,7 +33,8 @@ def generate_bank_mandate_file(user_id, bank_mandate):
                                      ('UCC', str(user_vendor.ucc)),
                                      ('Amount', str(bank_mandate.mandate_amount)),
                                      ('IFSC Code', bank_mandate.mandate_bank_details.ifsc_code.ifsc_code),
-                                     ('Account Number', bank_mandate.mandate_bank_details.account_number), ])
+                                     ('Account Number', bank_mandate.mandate_bank_details.account_number),
+                                     ('Mandate Type', bse_cons.MANDATE_TYPE_XSIP) ])
     outfile.write("|".join(bank_mandate_dict.values()))
     outfile.write("\r")
     outfile.close()
