@@ -240,7 +240,8 @@ class Question(TimeStampedModel):
         (constants.EDUCATION, 'Higher Education'),
         (constants.WEDDING, 'Save for Wedding'),
         (constants.OTHER_EVENT, 'Other Events'),
-        (constants.INVEST, 'Invest')
+        (constants.INVEST, 'Invest'),
+        (constants.LIQUID_GOAL, 'Liquid')
     )
 
     question_id = models.CharField(max_length=254, blank=True)
@@ -327,7 +328,8 @@ class Fund(TimeStampedModel):
     TYPE_CHOICES = (
         ('E', 'Equity'),
         ('D', 'Debt'),
-        ('T', 'ELSS')
+        ('T', 'ELSS'),
+        ('L', 'Liquid')
     )
     mapped_benchmark = models.ForeignKey(Indices, null=True, blank=True)
     isin = models.CharField(max_length=50, unique=True)  # Example : INF179K01UT0
@@ -410,9 +412,10 @@ class Portfolio(TimeStampedModel):
     Store the portfolio information
     """
     user = models.ForeignKey(profile_models.User)
-    elss_percentage = models.FloatField(null=False, blank=False)  # these are weighted sum of pertectage of elss
+    elss_percentage = models.FloatField(null=False, blank=False)  # these areweighted sum of pertectage of elss
     debt_percentage = models.FloatField(null=False, blank=False)  # these are weighted sum of pertectage of debt
     equity_percentage = models.FloatField(null=False, blank=False)  # these are weighted sum of pertectage of credit
+    liquid_percentage = models.FloatField(null=False, blank=False,default=0.00)  # these are weighted sum of pertectage of credit
     total_sum_invested = models.FloatField(null=True, blank=True, default=0.00)
     returns_value = models.FloatField(null=True, blank=True, default=0.00)
     returns_percentage = models.FloatField(null=True, blank=True, default=0.00) # change from intial investment
@@ -440,7 +443,8 @@ class Goal(TimeStampedModel):
         (constants.EDUCATION, 'Higher Education'),
         (constants.WEDDING, 'Save for Wedding'),
         (constants.OTHER_EVENT, 'Other Events'),
-        (constants.INVEST, 'Invest')
+        (constants.INVEST, 'Invest'),
+        (constants.LIQUID_GOAL, 'liquid')
     )
 
     user = models.ForeignKey(profile_models.User, related_name="goal_user")
@@ -463,11 +467,12 @@ class PortfolioItem(TimeStampedModel):
     TYPE_CHOICES = (
         ('E', 'Equity'),
         ('D', 'Debt'),
-        ('T', 'ELSS')
+        ('T', 'ELSS'),
+        ('L', 'Liquid')
     )
     portfolio = models.ForeignKey(Portfolio) #TODO remove
     fund = models.ForeignKey(Fund)
-    goal = models.ForeignKey(Goal)
+    #goal = models.ForeignKey(Goal)
 
     # Example : Equity its good to have though is equal to fund.broad_category_group
     broad_category_group = models.CharField(max_length=1, choices=TYPE_CHOICES)
@@ -648,7 +653,26 @@ class EquityFunds(TimeStampedModel):
 
     def __str__(self):
         return str(self.fund.legal_name)
+    
 
+class LiquidFunds(TimeStampedModel):
+    """
+    Stores data about the Equity Funds
+    """
+    fund = models.ForeignKey(Fund)
+    number_of_holdings_total = models.BigIntegerField()
+    top_ten_holdings = models.FloatField()
+    average_maturity = models.FloatField()
+    modified_duration = models.FloatField()
+    yield_to_maturity = models.FloatField()
+    number_of_holdings_top_three_portfolios = HStoreField(blank=False, null=False)
+    credit_quality_a = models.FloatField()
+    credit_quality_aa = models.FloatField()
+    credit_quality_aaa = models.FloatField()
+    average_credit_quality = models.CharField(max_length=10)
+
+    def __str__(self):
+        return str(self.fund.legal_name)
 
 class TopThreeSectors(models.Model):
     """

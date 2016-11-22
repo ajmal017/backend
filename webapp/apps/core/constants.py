@@ -32,6 +32,7 @@ EDUCATION = 'E'
 WEDDING = 'W'
 OTHER_EVENT = 'O'
 INVEST = 'I'
+LIQUID_GOAL = 'L'
 
 MAP = {
     "invest": INVEST,
@@ -43,6 +44,7 @@ MAP = {
     "education": EDUCATION,
     "wedding": WEDDING,
     "event": OTHER_EVENT,
+    "liquid":LIQUID_GOAL
 }
 
 
@@ -53,10 +55,11 @@ ASSET_ALLOCATION_MAP = {
     EDUCATION: ['lumpsum', 'sip', 'EDU', ['term'], None],
     WEDDING: ['lumpsum', 'sip', 'WED', ['term'], None],
     OTHER_EVENT: ['lumpsum', 'sip', 'EVT', ['term'], None],
-    INVEST: ['lumpsum', 'sip', 'INV', ['term'], 'grow_sip']
+    INVEST: ['lumpsum', 'sip', 'INV', ['term'], 'grow_sip'],
+    LIQUID_GOAL: ['amount_invested', None, 'LIQ', None, None]
 }
 
-ALLOCATION_LIST = ['invest', 'tax', 'retirement', 'property', 'education', 'wedding', 'event']
+ALLOCATION_LIST = ['invest', 'tax', 'retirement', 'property', 'education', 'wedding', 'event','liquid']
 
 EQUITY = "equity"
 DEBT = "debt"
@@ -71,31 +74,37 @@ DASHBOARD = 'dashboard'
 RETIREMENT_ALLOCATION = "retirement_allocation"
 ALLOCATION = "allocation"
 GOAL_NAME = "goal_name"
+LIQUID = "liquid"
 
 NOT_IN_PORTFOLIO = 'not_in_portfolio'
 IN_PORTFOLIO = 'in_portfolio'
 
-EMPTY_ALLOCATION = {ELSS: "0", DEBT: "0", EQUITY: "0"}
-TAX_ALLOCATION = {"elss": "100", "debt": "0", "equity": "0"}
+EMPTY_ALLOCATION = {ELSS: "0", DEBT: "0", EQUITY: "0",LIQUID:"0"}
+TAX_ALLOCATION = {"elss": "100", "debt": "0", "equity": "0","liquid":"0"}
+LIQUID_ALLOCATION = {"elss": "0", "debt": "0", "equity": "0",'liquid':'100'}
+
 
 TEST_API_URL = 'http://api.morningstar.com/service/mf/Price/mstarid/F0GBR06SDC?accesscode=jvon369domrbr3hcbivbdiorvkvjbb3a&startdate=2016-03-01&enddate=2016-03-04&format=json'
 
-ALLOCATION_PROPERTY_LIST = ["retirement", "tax", "property", "education", "wedding", "event", "invest"]
+ALLOCATION_PROPERTY_LIST = ["retirement", "tax", "property", "education", "wedding", "event", "invest","liquid"]
 
 TAX_DEFAULT_TERM = 3
+LIQUID_DEFAULT_TERM = 3
 
 DUMMY_THREE_YEAR_RETURN = 13.5
 
 FUND_MAP = {
     EQUITY: "E",
     DEBT: "D",
-    ELSS: "T"
+    ELSS: "T",
+    LIQUID:"L"
 }
 
 FUND_MAP_REVERSE = {
     "E": EQUITY,
     "D": DEBT,
-    "T": ELSS
+    "T": ELSS,
+    "L":LIQUID
 }
 
 PENDING = 0
@@ -222,6 +231,7 @@ FUND_MANAGER_NAME = 'Fund manager name'
 FUND_MANAGER_START_DATE = 'Fund manager start date'
 
 ELSS_FUNDS_BY_SIP = 0
+LIQUID_FUNDS_BY_SIP = 0
 
 ID = 'id'
 FUND_NAME = 'fund_name'
@@ -247,7 +257,7 @@ USER_HAS_NOT_INVESTED = 'user has not invested'
 FUND_NOT_PRESENT = 'Fund related to ID not present'
 FUND_LIST_INCORRECT = 'FUND list was incorrect'
 IS_VIRTUAL = 'is_virtual'
-FUND_CATEGORY_LIST = [EQUITY, DEBT, ELSS]
+FUND_CATEGORY_LIST = [EQUITY, DEBT, ELSS,LIQUID]
 TIME_INTERVAL_FOR_ANNUALISED_API = 365
 
 ONE_YEAR_RETURN = 'one_year_return'

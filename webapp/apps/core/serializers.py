@@ -204,6 +204,13 @@ class TaxSerializer(serializers.Serializer):
     amount_allowed = serializers.IntegerField(required=True)
     amount_invested = serializers.IntegerField(required=True)
 
+
+class LiquidSerializer(serializers.Serializer):
+    """
+    Serializer for tax post api
+    """
+    amount_invested = serializers.IntegerField(required=True)
+
 class GoalSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Goal

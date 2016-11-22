@@ -7,7 +7,7 @@ from . import models
 from profiles.utils import is_investable
 
 admin.site.register(models.RiskProfile)
-
+admin.site.register(models.LiquidFunds)
 
 class OpinionsInline(admin.StackedInline):
     """
@@ -322,7 +322,7 @@ class PortfolioAdmin(admin.ModelAdmin):
     list_display = ['user', 'has_invested', 'vault_completed']
     list_filter = ['has_invested']
     search_fields = ['user__email']
-    readonly_fields = ('elss_percentage', 'debt_percentage', 'equity_percentage', 'total_sum_invested', 'returns_value', 'returns_percentage')
+    readonly_fields = ('elss_percentage', 'debt_percentage', 'equity_percentage','liquid_percentage', 'total_sum_invested', 'returns_value', 'returns_percentage')
     actions = None
 
     def has_delete_permission(self, request, obj=None):
@@ -409,6 +409,18 @@ class AnswerAdmin(admin.ModelAdmin):
 
 
 class DebtFundsAdmin(admin.ModelAdmin):
+    """
+    defining search fields
+    search fields: fund's legal name
+    """
+    readonly_fields = ('fund',)
+    search_fields = ['fund__legal_name']
+    actions = None
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+    
+class LiquidFundsAdmin(admin.ModelAdmin):
     """
     defining search fields
     search fields: fund's legal name
