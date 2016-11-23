@@ -12,9 +12,12 @@ from import_export.fields import Field
 
 from . import models
 from external_api import views 
+from external_api import constants
 from external_api.bulk_order_entry import generate_client_fatca_pipe
 from django.http import HttpResponse
 import os
+import csv
+import time
 
 from rangefilter.filter import DateRangeFilter
 
@@ -94,7 +97,46 @@ class VaultComplete(admin.SimpleListFilter):
             return queryset.exclude(signature="")
         if self.value() == 'Vault Incomplete':
             return queryset.filter(signature="")
-
+        
+        
+class download_csv(admin.SimpleListFilter):
+    title = 'Download csv'
+    parameter_name = 'csv'
+    
+    def lookups(self, request, model_admin):
+        """
+        Returns a list of tuples.
+        """
+        return (
+            ('Download CSV', _('Download CSV')),
+        )
+        
+    def queryset(self, request, queryset):
+        """
+        Segregates a user as vault complete or not
+        """
+        if self.value() == 'Download CSV':
+            #output_file = views.create_user_csv(queryset)
+            base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps', '')
+            output_path = base_dir + '/webapp/static/'
+            timestamp = time.strftime("%Y%m%d-%H%M%S")
+            user_csv_file = "user_detail_" + timestamp + ".csv"
+            output_file = output_path + user_csv_file
+            with open(output_file, "w") as output:
+                writer = csv.writer(output)
+                for user in queryset:
+                    writer.writerow([user.email,user.phone_number]) 
+            my_file = open(output_file, "rb")
+            timestamp = time.strftime("%Y%m%d-%H%M%S")
+            content_type = 'text/csv'
+            response = HttpResponse(my_file, content_type=content_type, status=200)
+            response['Content-Disposition'] = 'attachment;filename=%s' % str(timestamp) + '_user_detail.csv'
+            my_file.close()
+            return response
+           
+        
+        
+        
 class UserAdmin(admin.ModelAdmin):
     """
     to achieve:
@@ -113,12 +155,13 @@ class UserAdmin(admin.ModelAdmin):
                     'tiff_mailed', 'tiff_accepted', 'kyc_mailed', 'kyc_accepted', 'mandate_status', 'xsip_status',
                     'finaskus_id', 'mandate_reg_no', 'remarks', 'button', 'button1', 'button2', 'button3', 'button4', 'button5']
     list_editable = ['email', 'phone_number', 'remarks', 'finaskus_id']
-    list_filter = ['phone_number_verified', 'email_verified', 'mandate_status',('created_at', DateRangeFilter), BseOrKra, VaultComplete, KraVerified]
+    list_filter = ['phone_number_verified', 'email_verified', 'mandate_status',('created_at', DateRangeFilter), BseOrKra, VaultComplete, KraVerified,download_csv]
     exclude = ('password', 'id', 'username', 'last_login' )
     empty_value_display = 'unknown'
-    actions = ['generate_client_ucc_pipe_file', 'generate_client_fatca_pipe_file']
+    actions = ['generate_client_ucc_pipe_file', 'generate_client_fatca_pipe_file','generate_user_csv']
 
     # disable delete action as well as delete button.
+    
     def get_actions(self, request):
         """
         removes the delete selected users option from the drop down list of actions.
@@ -128,7 +171,7 @@ class UserAdmin(admin.ModelAdmin):
         actions = super(UserAdmin, self).get_actions(request)
         del actions['delete_selected']
         return actions
-
+    
     def has_delete_permission(self, request, obj=None):
         """
         removes the delete red button inside each user object.
@@ -166,7 +209,27 @@ class UserAdmin(admin.ModelAdmin):
         
             #message = mark_safe("Successfully generated the bulk client master upload file.<a href='/"+"/".join(response.split("/")[-2:])+"'>Click here.</a>")
             #self.message_user(request, message, level="success")
-
+    
+    
+    def generate_user_csv(self, request, queryset):
+        
+        base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps', '')
+        output_path = base_dir + '/webapp/static/'
+        timestamp = time.strftime("%Y%m%d-%H%M%S")
+        user_csv_file = "user_detail_" + timestamp + ".csv"
+        output_file = output_path + user_csv_file
+        with open(output_file, "w") as output:
+            writer = csv.writer(output)
+            for user in queryset:
+                writer.writerow([user.email,user.phone_number]) 
+        #output_file = views.create_user_csv(queryset)
+        my_file = open(output_file, "rb")
+        timestamp = time.strftime("%Y%m%d-%H%M%S")
+        content_type = 'text/csv'
+        response = HttpResponse(my_file, content_type=content_type, status=200)
+        response['Content-Disposition'] = 'attachment;filename=%s' % str(timestamp) + '_user_detail.csv'
+        my_file.close()
+        return response
 
     def generate_client_fatca_pipe_file(self, request, queryset):
         """

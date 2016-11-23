@@ -212,6 +212,7 @@ class GenerateBseOrderPipe(View):
                 if order_vendor:
                     exch_backend = helpers.get_exchange_vendor_helper().get_backend_instance(order_vendor.name) 
                 if exch_backend:
+                    user_vendor = pr_models.UserVendor.objects.get(user=order_detail.user, vendor__name=exch_backend.vendor_name)
                     error_status, output_file = exch_backend.create_order(order_detail.user.id, order_detail)
                     if error_status == constants.RETURN_CODE_SUCCESS:
                         if output_file:
@@ -221,7 +222,7 @@ class GenerateBseOrderPipe(View):
                             my_file = open(my_file_path, "rb")
                             content_type = 'text/plain'
                             response = HttpResponse(my_file, content_type=content_type, status=200)
-                            response['Content-Disposition'] = 'attachment;filename=%s' % str(order_detail.id) + '_order.txt'
+                            response['Content-Disposition'] = 'attachment;filename=%s' % str(order_detail.order_id) + '_lumpsum_'+user_vendor.ucc+'.txt'
                             my_file.close()
                             return response  # contains the pdf of the pertinent user
                         else:
@@ -260,6 +261,7 @@ class GenerateXsipRegistration(View):
                 if order_vendor:
                     exch_backend = helpers.get_exchange_vendor_helper().get_backend_instance(order_vendor.name) 
                 if exch_backend:
+                    user_vendor = pr_models.UserVendor.objects.get(user=order_detail.user, vendor__name=exch_backend.vendor_name)
                     error_status, output_file = exch_backend.create_xsip_order(order_detail.user.id, order_detail)
                     if error_status == constants.RETURN_CODE_SUCCESS:
                         if output_file:
@@ -269,7 +271,7 @@ class GenerateXsipRegistration(View):
                             my_file = open(my_file_path, "rb")
                             content_type = 'text/plain'
                             response = HttpResponse(my_file, content_type=content_type, status=200)
-                            response['Content-Disposition'] = 'attachment;filename=%s' % str(order_detail.id) + '_xip_order.txt'
+                            response['Content-Disposition'] = 'attachment;filename=%s' % str(order_detail.order_id) + '_xsip_'+user_vendor.ucc+'.txt'
                             my_file.close()
                             return response  # contains the pdf of the pertinent user
                         else:
@@ -308,6 +310,7 @@ class GenerateBankMandateRegistration(View):
                 if order_vendor:
                     exch_backend = helpers.get_exchange_vendor_helper().get_backend_instance(order_vendor.name) 
                 if exch_backend:
+                    user_vendor = pr_models.UserVendor.objects.get(user=order_detail.user, vendor__name=exch_backend.vendor_name)
                     mandate_helper_instance = bank_mandate_helper.BankMandateHelper()
                     is_mandate_required, bank_mandate = mandate_helper_instance.is_new_mandate_required(order_detail.user, order_detail, True)
                     status, output_file = exch_backend.generate_bank_mandate_registration(order_detail.user.id, bank_mandate)
@@ -319,7 +322,7 @@ class GenerateBankMandateRegistration(View):
                             my_file = open(my_file_path, "rb")
                             content_type = 'text/plain'
                             response = HttpResponse(my_file, content_type=content_type, status=200)
-                            response['Content-Disposition'] = 'attachment;filename=%s' % str(order_detail.id) + '_order.txt'
+                            response['Content-Disposition'] = 'attachment;filename=%s' % 'mandate_' + user_vendor.ucc + '.txt'
                             my_file.close()
                             return response  # contains the pipe file of the pertinent user
                         else:
@@ -497,8 +500,10 @@ class GenerateMandatePdf(View):
         # makes sure that only superuser can access this file.
 
         if request.user.is_superuser:
+            print(request.GET.get('mandate_id'))
             bank_mandate = pr_models.UserBankMandate.objects.get(id=request.GET.get('mandate_id'))
             if bank_mandate:
+                user_vendor = pr_models.UserVendor.objects.get(user=bank_mandate.user, vendor__name=bank_mandate.vendor)
                 mandate_helper_instance = bank_mandate_helper.BankMandateHelper()
                 output_file, error = mandate_helper_instance.generate_mandate_pdf(bank_mandate)
                 if output_file is None:
@@ -509,7 +514,7 @@ class GenerateMandatePdf(View):
                 my_file = open(my_file_path, "rb")
                 content_type = 'application/pdf'
                 response = HttpResponse(my_file, content_type=content_type, status=200)
-                response['Content-Disposition'] = 'attachment;filename=%s' % str(bank_mandate.user.id) + '_mandate.pdf'
+                response['Content-Disposition'] = 'attachment;filename=%s' % str(user_vendor.ucc) + '_bank_mandate_file.pdf'
                 my_file.close()
                 return response  # contains the pdf of the pertinent user
 
@@ -556,3 +561,17 @@ class GenerateUserCsv(View):
             return response
         else:
             return HttpResponse(constants.FORBIDDEN_ERROR, status=403)
+        
+def create_user_csv(users):
+    base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps', '')
+    output_path = base_dir + '/webapp/static/'
+    timestamp = time.strftime("%Y%m%d-%H%M%S")
+    user_csv_file = "user_detail_" + timestamp + ".csv"
+    output_file = output_path + user_csv_file
+    with open(output_file, "w") as output:
+        writer = csv.writer(output)
+        for user in users:
+            writer.writerow([user.email,user.phone_number])  
+    return output_file        
+    
+        
