@@ -8,6 +8,7 @@ from django.db import models
 from django.db.models import Sum
 from django.utils.translation import ugettext_lazy as _
 from djutil.models import TimeStampedModel
+from django.db.models import F
 
 import profiles.models as profile_models
 import profiles.helpers as profile_helpers
@@ -47,14 +48,6 @@ def order_detail_info_function(order_detail,portfolio):
     except investor_info_check.DoesNotExist:
         applicant_name = order_detail.user.email
                     
-    sip_tenure = 0
-    goal_tenure_len = 0
-    try:
-        sip_tenure,goal_tenure_len = order_detail.user.get_sip_tenure(portfolio)
-    except: 
-        sip_tenure = 0
-        goal_tenure_len = 0
-            
     if order_detail.bank_mandate and order_detail.bank_mandate.mandate_status == "0":
         mandate_helper_instance = bank_mandate_helper.BankMandateHelper() 
         email_attachment,attachment_error = mandate_helper_instance.generate_mandate_pdf(order_detail.bank_mandate)
@@ -100,7 +93,7 @@ def order_detail_info_function(order_detail,portfolio):
                     error_logger.error("Unit has not been alloted for the order detail")
                     break
          
-    return order_info,applicant_name,order_detail.user,email_attachment,attachment_error,sip_tenure,goal_tenure_len      
+    return order_info, applicant_name, email_attachment, attachment_error
 
 
 def order_detail_transaction_mail_send(order_detail):
@@ -110,9 +103,9 @@ def order_detail_transaction_mail_send(order_detail):
         if len(fund_order_items) > 0:
             portfolio = fund_order_items.first().portfolio_item.portfolio
             if order_detail.is_lumpsum == True:
-                order_info,applicant_name,order_detail.user,email_attachment,attachment_error,sip_tenure,goal_tenure_len = order_detail_info_function(order_detail,portfolio)           
+                order_info, applicant_name, email_attachment,attachment_error = order_detail_info_function(order_detail,portfolio)           
                 first_order = True
-                msg = profile_helpers.send_transaction_change_email(first_order,order_info,applicant_name,order_detail.user,email_attachment,attachment_error,sip_tenure,goal_tenure_len,use_https=settings.USE_HTTPS)
+                msg = profile_helpers.send_transaction_change_email(first_order,order_info,applicant_name,order_detail.user,email_attachment,attachment_error,use_https=settings.USE_HTTPS)
                 if msg == "success":
                     response = "Email Send Successfully to the Investor"
                 else:
@@ -122,9 +115,9 @@ def order_detail_transaction_mail_send(order_detail):
             else:
                 investment_date = portfolio.investment_date
                 if datetime.datetime.date(order_detail.created_at) > investment_date:
-                    order_info,applicant_name,order_detail.user,email_attachment,attachment_error,sip_tenure,goal_tenure_len = order_detail_info_function(order_detail,portfolio)
+                    order_info,applicant_name,email_attachment,attachment_error = order_detail_info_function(order_detail,portfolio)
                     first_order = False
-                    msg = profile_helpers.send_transaction_change_email(first_order,order_info,applicant_name,order_detail.user,email_attachment,attachment_error,sip_tenure,goal_tenure_len,use_https=settings.USE_HTTPS)
+                    msg = profile_helpers.send_transaction_change_email(first_order,order_info,applicant_name,order_detail.user,email_attachment,attachment_error,use_https=settings.USE_HTTPS)
                     if msg == "success":
                         response = "Email Send Successfully to the Investor"
                     else:
@@ -480,6 +473,7 @@ class PortfolioItem(TimeStampedModel):
     one_day_previous_portfolio_value = models.FloatField(null=True, blank=True, default=0.00)
     one_day_return = models.FloatField(null=True, blank=True, default=0.00)
     investment_date = models.DateField(blank=True, null=True)
+    sip_date = models.DateField(blank=True, null=True)
 
     class Meta:
         unique_together = (('portfolio', 'fund', 'goal'),)
@@ -489,7 +483,7 @@ class PortfolioItem(TimeStampedModel):
 
     def __str__(self):
         return str(self.portfolio.user.email + " " + self.fund.fund_name + " " + self.broad_category_group + '' +
-                   str(self.fund_id))
+                   str(self.fund_id) + " " + str(self.id))
 
     def set_values(self, latest_index_date=None):
         # find latest nav and date from fund data points change daily table
@@ -517,18 +511,23 @@ class PortfolioItem(TimeStampedModel):
         investment_date = self.portfolio.modified_at.date()
         if investment_date > latest_index_date:
             investment_date = latest_index_date
-        months = relativedelta(date.today(), investment_date).months
-        days = relativedelta(date.today(), investment_date).days
-        time_since_invest = months + (1 if days >= 0 else 0)
-        duration_date = investment_date + relativedelta(months=months, days=days)
-        time_since_invest += relativedelta(date.today(), duration_date).years * 12
+        
+        if self.portfolio.has_invested == True:
+            invested_sip_count = FundOrderItem.objects.filter(portfolio_item=self, is_verified=True, order_amount=F('agreed_sip')).count()
+        else:
+            months = relativedelta(date.today(), investment_date).months
+            days = relativedelta(date.today(), investment_date).days
+            time_since_invest = months + (1 if days >= 0 else 0)
+            duration_date = investment_date + relativedelta(months=months, days=days)
+            time_since_invest += relativedelta(date.today(), duration_date).years * 12
+            invested_sip_count = float(self.lumpsum) + (float(self.sip) * time_since_invest)
 
         try:
             fund_nav_on_investment = HistoricalFundData.objects.get(fund_id=self.fund, date=investment_date).nav
         except HistoricalFundData.DoesNotExist:
             fund_nav_on_investment = fund_latest_nav
 
-        self.sum_invested = float(self.lumpsum) + (float(self.sip) * time_since_invest)
+        self.sum_invested = float(self.lumpsum) + (float(self.sip) * invested_sip_count)
         normal_return_percentage = (fund_latest_nav - fund_nav_on_investment) / fund_nav_on_investment
         self._generate_xirr(normal_return_percentage, (fund_latest_nav_date - investment_date).days)
         self.returns_value = self.sum_invested * normal_return_percentage
@@ -745,7 +744,9 @@ class FundRedeemItem(TimeStampedModel):
     """
     Model to store the historical data for Redemption
     """
+
     portfolio_item = models.ForeignKey(PortfolioItem)
+    grouped_redeem = models.ForeignKey('GroupedRedeemDetail', null=True, blank=True, default=None)
     redeem_amount = models.FloatField(default=0.00)
     invested_redeem_amount = models.FloatField(default=0.00)
     unit_redeemed = models.FloatField(null=True, blank=True)
@@ -753,7 +754,7 @@ class FundRedeemItem(TimeStampedModel):
     is_verified = models.BooleanField(_('is verified'), default=False)
     is_cancelled = models.BooleanField(_('is cancelled'), default=False)
     is_all_units_redeemed = models.BooleanField(_('Redeem all units ?'), default=False)
-
+    folio_number = models.CharField(max_length=100)
 
     def __str__(self):
         return str(self.portfolio_item.fund.legal_name)
@@ -768,7 +769,7 @@ class FundRedeemItem(TimeStampedModel):
         """
         Returns the date of redeem
         """
-        redeem_status = self.redeemdetail_set.all()[0].redeem_status
+        redeem_status = self.redeem_status
         if self.is_cancelled == True:
             return "Cancelled"
         elif redeem_status == constants.PENDING:
@@ -783,9 +784,11 @@ class FundRedeemItem(TimeStampedModel):
         """
         Returns the units redeemed, rounded off to 3 decimal points
         """
+        if self.is_all_units_redeemed and not self.is_verified and not self.is_cancelled:
+            return "All units"
         if self.unit_redeemed:
             try:
-                return format(self.unit_redeemed, '.3f')
+                return str("-" + format(self.unit_redeemed, '.3f'))
             except ValueError:
                 return self.unit_redeemed
         return "-"
@@ -793,6 +796,29 @@ class FundRedeemItem(TimeStampedModel):
     def get_redeem_amount(self):
         return round((self.redeem_amount) * -1.0, 2)
 
+    def get_invested_redeem_amount(self):
+        from core import funds_helper
+        invested_redeem_amount = self.invested_redeem_amount
+        
+        if not self.invested_redeem_amount or self.invested_redeem_amount == 0:
+            if self.unit_redeemed and self.unit_redeemed > 0:
+                fund_order_items = FundOrderItem.objects.filter(portfolio_item=self.portfolio_item, is_verified=True, 
+                                                                is_cancelled=False, folio_number=self.folio_number, 
+                                                                unit_alloted__gt=F('units_redeemed')).order_by('allotment_date')
+                units_redeemed = self.unit_redeemed
+                
+                for foi in fund_order_items:
+                    fund_order_units_redeemed = min(foi.unit_alloted - foi.units_redeemed, units_redeemed)
+                    nav = funds_helper.FundsHelper.get_current_nav(self.portfolio_item.fund_id, foi.allotment_date)
+                    invested_redeem_amount += (fund_order_units_redeemed * nav)
+                    foi.units_redeemed += fund_order_units_redeemed
+                    units_redeemed -= fund_order_units_redeemed
+                    foi.save()
+                    if units_redeemed <= 0:
+                        break
+        
+        return invested_redeem_amount
+                
     def save(self, *args, **kwargs):
         """
         creates a check while saving instance of model, if is_verified is True then unit must be redeemed.
@@ -808,19 +834,22 @@ class FundRedeemItem(TimeStampedModel):
             historical_fund_data_objects = HistoricalFundData.objects.order_by('fund_id__id', '-date').distinct('fund_id__id').select_related('fund_id')
             historical_fund_id = {historical_object.fund_id.id: historical_object.date for historical_object in historical_fund_data_objects}
 
-            if self.redeem_date and not self.unit_redeemed and not self.is_cancelled:
+            if self.redeem_date and self.redeem_amount > 0 and not self.unit_redeemed and not self.is_cancelled and not self.is_verified:
                 if self.redeem_date <= historical_fund_id[self.portfolio_item.fund.id]:
                     nav = HistoricalFundData.objects.get(date=self.redeem_date, fund_id=self.portfolio_item.fund).nav
                     unit_redeemed = round(self.redeem_amount / nav, 3)
                     self.unit_redeemed = unit_redeemed
+                    self.invested_redeem_amount = self.get_invested_redeem_amount()
                     self.is_verified = True
 
-            if self.redeem_date and not self.is_verified and not self.is_cancelled and self.redeem_amount==0.00:
+            if self.redeem_date and self.unit_redeemed > 0 and not self.is_verified and not self.is_cancelled:
                 if self.redeem_date <= historical_fund_id[self.portfolio_item.fund.id]:
                     nav_on_redeem_date = HistoricalFundData.objects.get(fund_id=self.portfolio_item.fund,
                                                                         date=self.redeem_date)
                     self.redeem_amount = self.unit_redeemed * nav_on_redeem_date.nav
+                    self.invested_redeem_amount = self.get_invested_redeem_amount()
                     self.is_verified = True
+            
         return super(FundRedeemItem, self).save(*args, **kwargs)
 
 
@@ -909,12 +938,6 @@ class RedeemDetail(TimeStampedModel):
         # Makes sure a redeem_id is generated when any Pending state Redeem detail is created.
         if self.redeem_id == 0:
             self.redeem_id = "RR" + str(random_with_N_digits(8))
-
-        # Makes sure all fund_redeem_items are marked called when anyone changes redeem status to  Cancelled state
-        if self.redeem_status == 3:
-            for fund_redeem_item in self.fund_redeem_items.all():
-                fund_redeem_item.is_cancelled = True
-                fund_redeem_item.save()
 
         # Makes sure when redeem date is changed its reflected in fund redeem
         if self.pk:
@@ -1014,16 +1037,10 @@ class GroupedRedeemDetail(TimeStampedModel):
 
         # Makes sure all redeem details are marked cancelled when anyone changes redeem status to Cancelled state
         if self.redeem_status == 3:
-            for redeem_detail in self.redeem_details.all():
-                redeem_detail.is_cancelled = True
-                redeem_detail.redeem_status = 3
-                redeem_detail.save()
+            for fund_redeem_item in self.fund_redeem_item_set.all():
+                fund_redeem_item.is_cancelled = True
+                fund_redeem_item.save()
 
-        # Makes sure all redeem details are marked ongoing too when anyone changes redeem status to Ongoing state
-        if self.redeem_status == 1:
-            for redeem_detail in self.redeem_details.all():
-                redeem_detail.redeem_status = 1
-                redeem_detail.save()
         return super(GroupedRedeemDetail, self).save(*args, **kwargs)
 
 
@@ -1044,6 +1061,8 @@ class FundOrderItem(TimeStampedModel):
     bse_transaction_id = models.CharField(max_length=100, blank=True, null=True)
     internal_ref_no = models.CharField(max_length=10, unique=True, default=0000000000)
     sip_reminder_sent = models.BooleanField(_('sip_reminder_sent'), default=False)
+    folio_number = models.CharField(max_length=100)
+    units_redeemed = models.FloatField(default=0.00)
 
     def __str__(self):
         return str(self.portfolio_item.fund.legal_name)
@@ -1091,6 +1110,16 @@ class FundOrderItem(TimeStampedModel):
             self.next_allotment_date = None
             self.is_verified = False
             self.allotment_date = None
+
+        if self.pk is not None:
+            if self.folio_number:
+                try:
+                    orig = FundOrderItem.objects.get(pk=self.pk)
+                    if orig is not None and orig.folio_number != self.folio_number:
+                        FolioNumber.objects.update_or_create(user=self.portfolio_item.portfolio.user, 
+                                                             fund_house=self.portfolio_item.fund.fund_house, folio_number=self.folio_number, )
+                except:
+                    pass
 
         # Code to set alloment date if possible and also assigns next_allotment_date
         historical_fund_data_objects = HistoricalFundData.objects.order_by('fund_id__id', '-date').distinct('fund_id__id').select_related('fund_id')
@@ -1187,7 +1216,7 @@ class FolioNumber(models.Model):
     fund_house = models.ForeignKey(FundHouse, null=True, blank=True)
 
     class Meta:
-        unique_together = (('user', 'fund_house'),)
+        unique_together = (('user', 'fund_house', "folio_number"),)
 
     def __str__(self):
         return str(self.folio_number)

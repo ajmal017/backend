@@ -32,16 +32,9 @@ def generate_order_pipe_file(user_id, order_detail):
         if item.portfolio_item.fund.bse_rgts_scheme_code:
             rgts_code = item.portfolio_item.fund.bse_rgts_scheme_code
 
-        fund_house = ""
         folio_number = ""
-        if item.portfolio_item.fund.fund_house:
-            fund_house = item.portfolio_item.fund.fund_house
-            try:
-                f_number = models.FolioNumber.objects.get(user=user, fund_house=fund_house).folio_number
-                if f_number:
-                    folio_number = f_number
-            except models.FolioNumber.DoesNotExist:
-                folio_number = ""
+        if order_items[i].folio_number:
+            folio_number = order_items[i].folio_number
 
         if int(order_items[i].agreed_lumpsum) > 0:
             bulk_order_dict = OrderedDict([('SCHEME CODE', neft_code if item.order_amount < 200000 else rgts_code),
@@ -82,7 +75,7 @@ def generate_redeem_pipe_file(user_id, grouped_redeem):
     redeem_pipe_file_name = "redeem_pipe" + timestamp + ".txt"
     outfile = open(output_path + redeem_pipe_file_name, "w")
     
-    redeem_items = grouped_redeem.redeem_details.all()
+    redeem_items = grouped_redeem.fund_redeem_item_set.all()
     user = profile_models.User.objects.get(id=user_id)
     
     for i, item in enumerate(redeem_items):
@@ -94,16 +87,10 @@ def generate_redeem_pipe_file(user_id, grouped_redeem):
         if item.fund.bse_rgts_scheme_code:
             rgts_code = item.fund.bse_rgts_scheme_code
 
-        fund_house = ""
         folio_number = ""
-        if item.fund.fund_house:
-            fund_house = item.fund.fund_house
-            try:
-                f_number = models.FolioNumber.objects.get(user=user, fund_house=fund_house).folio_number
-                if f_number:
-                    folio_number = f_number
-            except models.FolioNumber.DoesNotExist:
-                folio_number = ""
+        if redeem_items[i].folio_number:
+            folio_number = redeem_items[i].folio_number
+            
         redeem_value = str(redeem_items[i].redeem_amount)
         all_units = cons.Redeem_All_Units
         if redeem_items[i].is_all_units_redeemed:

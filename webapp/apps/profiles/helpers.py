@@ -254,7 +254,7 @@ def send_vault_completion_email(user, user_email, domain_override=None,
               html_email_template_name=html_email_template_name)
     
 
-def send_transaction_completed_email(order_detail_lumpsum,order_detail_sip,applicant_name,user_email,sip_tenure,goal_len, payment_completed, inlinePayment, 
+def send_transaction_completed_email(order_detail_lumpsum,applicant_name,user_email, payment_completed, inlinePayment, 
                                      domain_override=None, subject_template_name='transaction/subject.txt',
                                      email_template_name='transaction/transaction_completed.html', use_https=False,
                                      token_generator=default_token_generator, from_email=None,
@@ -269,10 +269,7 @@ def send_transaction_completed_email(order_detail_lumpsum,order_detail_sip,appli
     
     context = {   
         'order_detail_lumpsum':order_detail_lumpsum,
-        'order_detail_sip':order_detail_sip,       
         'user_name':user_name,
-        'sip_tenure':sip_tenure,
-        'goal_len':goal_len,
         'domain': settings.SITE_API_BASE_URL,
         'site_name': "Finaskus",
         'protocol': 'https' if use_https else 'http',
@@ -289,7 +286,8 @@ def send_transaction_completed_email(order_detail_lumpsum,order_detail_sip,appli
               html_email_template_name=html_email_template_name)
 
 
-def send_transaction_change_email(first_order,order_detail,applicant_name,user,email_attachment,attachment_error,sip_tenure,goal_len,domain_override=None, subject_template_name='transaction/subject.txt',
+def send_transaction_change_email(first_order,order_detail,applicant_name,user,email_attachment,attachment_error,
+                                  domain_override=None, subject_template_name='transaction/subject.txt',
                                      email_template_name='transaction/transaction_status_change.html', use_https=False,
                                      token_generator=default_token_generator, from_email=None,
                                      request=None,extra_email_context=None):
@@ -325,8 +323,6 @@ def send_transaction_change_email(first_order,order_detail,applicant_name,user,e
     month = datetime.datetime.strftime(order_detail.created_at, '%B')    
 
     context = {
-        'sip_tenure':sip_tenure,
-        'goal_len':goal_len,
         'order_detail':list1,        
         'user_name':user_name,
         'transaction_detail':order_detail,

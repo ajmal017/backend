@@ -202,8 +202,9 @@ class GenerateBseOrderPipe(View):
         if request.user.is_superuser:
             order_detail = OrderDetail.objects.get(order_id=request.GET.get('order_id'))
             if order_detail.is_lumpsum == False:
-                if len(order_detail.fund_order_items) > 0:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
-                    order_detail = OrderDetail.objects.filter(is_lumpsum=True, fund_order_items__portfolio_item=order_detail.fund_order_items[0].portfolio_item).first()
+                fund_order_item = order_detail.fund_order_items.first()
+                if fund_order_item:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
+                    order_detail = OrderDetail.objects.filter(is_lumpsum=True, fund_order_items__portfolio_item=order_detail.fund_order_item.portfolio_item).first()
             if is_investable(order_detail.user):
                 exch_backend = helpers.get_exchange_vendor_helper().get_backend_instance()
                 order_vendor = order_detail.vendor

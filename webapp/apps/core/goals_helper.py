@@ -1,10 +1,11 @@
 from django.db.models import Q
-from datetime import datetime
+from datetime import date
 from abc import ABC
 import logging
 from core import models
 from core import utils, helpers
 from core import serializers, constants
+
 
 
 class GoalBase(ABC):
@@ -28,6 +29,17 @@ class GoalBase(ABC):
     @staticmethod
     def get_portfolio_goals(user, portfolio):
         return models.Goal.objects.filter(user=user, portfolio=portfolio)
+
+    @staticmethod
+    def get_goal(user, goal_id):
+        try:
+            return models.Goal.objects.get(id=goal_id, user=user)
+        except:
+            return None
+
+    @staticmethod
+    def get_invested_goals(user):
+        return models.Goal.objects.filter(user=user, portfolio__has_invested=True, portfolio__is_deleted=False)
     
     @staticmethod
     def get_goal_instance(goal_object):
@@ -114,6 +126,11 @@ class GoalBase(ABC):
             if self.goal_object:
                 return self.goal_object.duration
         return 0
+
+    def get_default_term(self):
+        if self.goal_object:
+            return self.goal_object.duration
+        return 0
     
     def get_allocation(self, data):
         if data:
@@ -178,6 +195,9 @@ class GoalBase(ABC):
         return is_error, errors
 
     def get_asset_allocation_amount(self):
+        '''
+        Given a lumpsum and sip amount calculate the amounts allocated per asset class.  
+        '''
         if not self.goal_object:
             return 0, 0, 0, 0, 0, 0
         
@@ -198,7 +218,13 @@ class GoalBase(ABC):
                 constants.DEBT: {constants.LUMPSUM: debt_lumpsum, constants.SIP: debt_sip},
                 constants.ELSS: {constants.LUMPSUM: elss_lumpsum, constants.SIP: elss_sip}} 
 
-    def get_expected_corpus(self, actual_term, term):
+    def get_expected_corpus(self):
+        term = self.get_duration()
+            
+        actual_term = term
+        if self.goal_object.category == constants.INVEST and term == 0:
+            term = constants.INVEST_MINIMUM_TERM
+
         sip_amount = self.get_sip_amount()
         lumpsum_amount = self.get_lumpsum_amount()
         category_allocation = self.goal_object.asset_allocation
@@ -207,8 +233,39 @@ class GoalBase(ABC):
                              float(category_allocation[constants.DEBT]) / 100,
                              float(category_allocation[constants.EQUITY]) / 100, actual_term, term,
                              growth / 100)
-        return corpus
+        return corpus, term
 
+    def get_investment_till_date(self):
+        from core import portfolio_helper, funds_helper
+        
+        if not self.goal_object or not self.goal_object.portfolio:
+            return 
+        
+        invested_amount = 0
+        investment_value = 0
+        latest_date = funds_helper.FundsHelper.get_dashboard_change_date()
+        # virtual portfolio
+        if not self.goal_object.portfolio.has_invested:
+            for portfolio_item in self.goal_object.portfolio_item_set.all():
+                portfolio_item.set_values()
+                investment_value += portfolio_item.returns_value
+                invested_amount += portfolio_item.sum_invested
+        else:
+            for portfolio_item in self.goal_object.portfolio_item_set.all():
+                transactions = portfolio_helper.get_all_transactions(portfolio_item)
+                latest_fund_data_nav, latest_fund_data_nav_date, fund_one_previous_nav = funds_helper.FundsHelper.calculate_latest_and_one_previous_nav(portfolio_item.fund, latest_date)
+                fund_current_values = utils.get_current_value_of_a_fund(transactions, latest_fund_data_nav, fund_one_previous_nav)
+                invested_amount += fund_current_values[0]
+                investment_value += fund_current_values[1]
+        
+        category_allocation = self.goal_object.asset_allocation
+
+        return_value = { constants.DEBT: investment_value * float(category_allocation[constants.DEBT]) / 100,
+                        constants.EQUITY: investment_value * float(category_allocation[constants.EQUITY]) / 100,
+                        constants.ELSS: investment_value * float(category_allocation[constants.ELSS]) / 100,
+                        constants.INVESTED_VALUE: invested_amount, constants.CURRENT_VALUE: investment_value}
+        return return_value
+        
 class GenericGoal(GoalBase):
     def __init__(self, goal_object=None):
         super(GenericGoal, self).__init__(goal_object)
@@ -251,16 +308,20 @@ class TaxGoal(GoalBase):
 
         return value, option_id
 
-    def get_expected_corpus(self, actual_term, term):
+    def get_default_term(self):
+        return constants.TAX_DEFAULT_TERM
+    
+    def get_expected_corpus(self):
+        term = constants.TAX_DEFAULT_TERM
         sip_amount = self.get_sip_amount()
         lumpsum_amount = self.get_lumpsum_amount()
         category_allocation = self.goal_object.asset_allocation
         growth = self.get_sip_growth()
         corpus = utils.new_expected_corpus(sip_amount, lumpsum_amount,
                              float(category_allocation[constants.DEBT]) / 100,
-                             float(category_allocation[constants.ELSS]) / 100, actual_term, term,
+                             float(category_allocation[constants.ELSS]) / 100, term, term,
                              growth / 100)
-        return corpus
+        return corpus, term
 
     def get_default_goalname(self, goal_type):
         return "TAX"
