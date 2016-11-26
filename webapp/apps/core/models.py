@@ -1085,7 +1085,7 @@ class FundOrderItem(TimeStampedModel):
     bse_transaction_id = models.CharField(max_length=100, blank=True, null=True)
     internal_ref_no = models.CharField(max_length=10, unique=True, default=0000000000)
     sip_reminder_sent = models.BooleanField(_('sip_reminder_sent'), default=False)
-    folio_number = models.CharField(max_length=100)
+    folio_number = models.CharField(max_length=100, null=True, blank=True, default=None)
     units_redeemed = models.FloatField(default=0.00)
 
     def __str__(self):

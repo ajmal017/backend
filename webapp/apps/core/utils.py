@@ -2541,7 +2541,8 @@ def create_order_items_based_on_next_allotment_date():
                                                             order_amount=fund_order_item.agreed_sip,
                                                             agreed_sip=fund_order_item.agreed_sip,
                                                             agreed_lumpsum=fund_order_item.agreed_lumpsum,
-                                                            internal_ref_no= "FIN" + str(random_with_N_digits(7)))
+                                                            internal_ref_no= "FIN" + str(random_with_N_digits(7)),
+                                                            folio_number=fund_order_item.folio_number)
 
         try:
             order_detail_map[fund_order_item.portfolio_item.portfolio.user].append(new_fund_item)
