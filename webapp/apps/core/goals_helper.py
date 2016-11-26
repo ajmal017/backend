@@ -49,6 +49,8 @@ class GoalBase(ABC):
             return TaxGoal(goal_object)
         elif goal_object.category == constants.RETIREMENT:
             return RetirementGoal(goal_object)
+        elif goal_object.category == constants.LIQUID_GOAL:
+            return LiquidGoal(goal_object)
         else:
             return GenericGoal(goal_object)
 
@@ -142,14 +144,16 @@ class GoalBase(ABC):
     def get_answer_value(self, key, value):
         return value, None
 
+
     def get_default_goalname(self, goal_type):
         return ""
      
     def create_or_update_goal(self, user, data, goal_type, goal_name=None):
+
         allocation = self.get_allocation(data)
         allocation_dict = utils.make_allocation_dict(self.get_sip_amount(data), self.get_lumpsum_amount(data), allocation)
 
-        equity_sip, equity_lumpsum, debt_sip, debt_lumpsum, elss_sip, elss_lumpsum, is_error, errors = \
+        equity_sip, equity_lumpsum, debt_sip, debt_lumpsum, elss_sip, elss_lumpsum, is_error, errors,liquid_sip, liquid_lumpsum= \
             utils.get_number_of_funds(allocation_dict)
         if is_error:
             return is_error, errors
@@ -184,7 +188,7 @@ class GoalBase(ABC):
                     defaults = {'option': option_selected}
                 else:
                     defaults = {'text': str(value)}
-                
+
                 question = models.Question.objects.get(question_id=key, question_for=goal_type)
                 models.Answer.objects.update_or_create(
                         question_id=question.id, user=user, goal=goal, portfolio=None, defaults=defaults)
@@ -206,17 +210,22 @@ class GoalBase(ABC):
         
         allocation = self.goal_object.asset_allocation
         
-        elss_lumpsum, elss_sip = 0, 0
+        elss_lumpsum, elss_sip, liquid_lumpsum, liquid_sip = 0, 0, 0, 0
         
         if float(allocation[constants.ELSS]):
             elss_lumpsum = round((lumpsum_amount * float(allocation[constants.ELSS])) / 100)
             elss_sip = round((sip_amount * float(allocation[constants.ELSS])) / 100)
+
+        if float(allocation[constants.LIQUID]):
+            liquid_lumpsum += round((lumpsum_amount * float(allocation[constants.LIQUID])) / 100)
+            liquid_sip += round((sip_amount * float(allocation[constants.LIQUID])) / 100)
             
         equity_lumpsum, debt_lumpsum, equity_sip, debt_sip = self.calculate_asset_allocation(lumpsum_amount, sip_amount, float(allocation[constants.EQUITY]), float(allocation[constants.DEBT]))
 
         return {constants.EQUITY: {constants.LUMPSUM: equity_lumpsum, constants.SIP: equity_sip},
                 constants.DEBT: {constants.LUMPSUM: debt_lumpsum, constants.SIP: debt_sip},
-                constants.ELSS: {constants.LUMPSUM: elss_lumpsum, constants.SIP: elss_sip}} 
+                constants.ELSS: {constants.LUMPSUM: elss_lumpsum, constants.SIP: elss_sip},
+                constants.LIQUID: {constants.LUMPSUM: liquid_lumpsum, constants.SIP: liquid_sip}} 
 
     def get_expected_corpus(self):
         term = self.get_duration()
@@ -244,25 +253,28 @@ class GoalBase(ABC):
         invested_amount = 0
         investment_value = 0
         latest_date = funds_helper.FundsHelper.get_dashboard_change_date()
+        asset_values = {constants.DEBT: 0, constants.EQUITY: 0, constants.ELSS: 0, constants.LIQUID: 0}
+        
         # virtual portfolio
         if not self.goal_object.portfolio.has_invested:
             for portfolio_item in self.goal_object.portfolio_item_set.all():
                 portfolio_item.set_values()
                 investment_value += portfolio_item.returns_value
                 invested_amount += portfolio_item.sum_invested
+                asset_values[constants.FUND_MAP_REVERSE[portfolio_item.fund.type_of_fund]] += portfolio_item.returns_value
         else:
             for portfolio_item in self.goal_object.portfolio_item_set.all():
-                transactions = portfolio_helper.get_all_transactions(portfolio_item)
+                transactions = portfolio_helper.PortfolioHelper.get_all_transactions(portfolio_item)
                 latest_fund_data_nav, latest_fund_data_nav_date, fund_one_previous_nav = funds_helper.FundsHelper.calculate_latest_and_one_previous_nav(portfolio_item.fund, latest_date)
                 fund_current_values = utils.get_current_value_of_a_fund(transactions, latest_fund_data_nav, fund_one_previous_nav)
                 invested_amount += fund_current_values[0]
                 investment_value += fund_current_values[1]
+                asset_values[constants.FUND_MAP_REVERSE[portfolio_item.fund.type_of_fund]] += fund_current_values[1]
         
-        category_allocation = self.goal_object.asset_allocation
-
-        return_value = { constants.DEBT: investment_value * float(category_allocation[constants.DEBT]) / 100,
-                        constants.EQUITY: investment_value * float(category_allocation[constants.EQUITY]) / 100,
-                        constants.ELSS: investment_value * float(category_allocation[constants.ELSS]) / 100,
+        return_value = { constants.DEBT: asset_values[constants.DEBT],
+                        constants.EQUITY: asset_values[constants.EQUITY],
+                        constants.ELSS: asset_values[constants.ELSS],
+                        constants.LIQUID: asset_values[constants.LIQUID],
                         constants.INVESTED_VALUE: invested_amount, constants.CURRENT_VALUE: investment_value}
         return return_value
         
@@ -387,3 +399,57 @@ class RetirementGoal(GoalBase):
 
     def get_default_goalname(self, goal_type):
         return "RET"
+    
+    
+class LiquidGoal(GoalBase):
+    def __init__(self, goal_object=None):
+        super(LiquidGoal, self).__init__(goal_object)
+
+    def get_lumpsum_amount(self, data=None):
+        lumpsum = 0
+        if data:
+            lumpsum = data.get('amount_invested')
+        else:
+            if self.goal_object:
+                try:
+                    answer = self.goal_object.answer_set.get(question__question_id="amount_invested")
+                    if answer:
+                        lumpsum = float(answer.text)
+                except Exception as e:
+                    pass
+
+        if lumpsum is None:
+            lumpsum = 0
+        
+        return lumpsum
+
+    def create_or_update_goal(self, user, data, goal_type, goal_name=""):
+        return super(LiquidGoal, self).create_or_update_goal(user, data, constants.LIQUID_GOAL, goal_name)
+
+    def get_answer_value(self, key, value):
+        option_id = None
+        if key == "estimate_needed":
+            option_id = "op1" if value else "op2"
+
+        return value, option_id
+
+    def get_default_term(self):
+        return constants.LIQUID_DEFAULT_TERM
+    
+    def get_expected_corpus(self):
+        term = constants.LIQUID_DEFAULT_TERM
+        sip_amount = self.get_sip_amount()
+        lumpsum_amount = self.get_lumpsum_amount()
+        category_allocation = self.goal_object.asset_allocation
+        growth = self.get_sip_growth()
+        corpus = utils.new_expected_corpus(sip_amount, lumpsum_amount,
+                             float(category_allocation[constants.LIQUID]) / 100,
+                             float(category_allocation[constants.EQUITY]) / 100, term, term,
+                             growth / 100)
+        return corpus, term
+
+    def get_default_goalname(self, goal_type):
+        return "LIQUID"
+
+    def get_allocation(self, data):
+        return constants.LIQUID_ALLOCATION

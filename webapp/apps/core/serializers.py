@@ -204,6 +204,13 @@ class TaxSerializer(serializers.Serializer):
     amount_allowed = serializers.IntegerField(required=True)
     amount_invested = serializers.IntegerField(required=True)
 
+
+class LiquidSerializer(serializers.Serializer):
+    """
+    Serializer for tax post api
+    """
+    amount_invested = serializers.IntegerField(required=True)
+
 class GoalSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Goal
@@ -373,24 +380,6 @@ class RedeemDetailSerializer(serializers.ModelSerializer):
         model = models.RedeemDetail
         fields = ('id', 'fund_name', 'unit_alloted', 'allotment_date', 'is_verified', 'order_amount',
                   'transaction_date', 'fund_id')
-
-class FundRedeemItemSerializer_v3(serializers.ModelSerializer):
-    """
-    Fund order item Serializer used to display fund order item detail
-    """
-
-    fund_name = serializers.CharField(source='portfolio_item.fund.fund_name')
-    fund_id = serializers.CharField(source='portfolio_item.fund.id')
-    transaction_date = serializers.DateField(source='get_transaction_date')
-    allotment_date = serializers.CharField(source='get_redeem_date')
-    unit_alloted = serializers.CharField(source='get_unit_redeemed')
-    order_amount = serializers.FloatField(source='get_redeem_amount')
-
-    class Meta:
-        model = models.FundRedeemItem
-        fields = ('id', 'fund_name', 'unit_alloted', 'allotment_date', 'is_verified', 'order_amount',
-                  'transaction_date', 'fund_id')
-
 
 class FutureFundOrderItemSerializer(serializers.ModelSerializer):
     """

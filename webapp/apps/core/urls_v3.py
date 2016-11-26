@@ -47,6 +47,7 @@ urlpatterns = [
     url(r'^billdesk/fail/$', views.Billdesk.as_view(), name='billdesk-fail'),
     
     url(r'^transaction/complete/$', views.TransactionComplete.as_view(), name='transaction-complete'),
+    url(r'^liquid/new/response/add/$', views.LiquidAnswer.as_view(), name='liquid-new-answers-add'),
 
     # ===================  DEPRECATED APIS =========================================================================
 

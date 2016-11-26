@@ -10,6 +10,7 @@ urlpatterns = [
     url(r'^retirement/new/response/add/$', views.RetirementAnswer.as_view(), name='retirement-new-answers-add'),
     url(r'^invest/new/response/add/$', views.InvestAnswer.as_view(), name='invest-new-answers-add'),
     url(r'^tax/new/response/add/$', views.TaxAnswer.as_view(), name='tax-new-answers-add'),
+    url(r'^liquid/new/response/add/$', views.LiquidAnswer.as_view(), name='liquid-new-answers-add'),
     url(r'^(?P<type>^[a-z]+)/new/response/add/$', views.GenericGoalAnswer.as_view(), name='generic-answers-add'),
     url(r'^save/email/$', views.SaveEmail.as_view(), name='save-email'),
     url(r'^funds/get/all/$', views.FundsDividedIntoCategories.as_view(), name='fund-get-all'),
@@ -40,6 +41,8 @@ urlpatterns = [
     url(r'^billdesk/ongoing/$', views.Billdesk.as_view(), name='billdesk-ongoing'),
     
     url(r'^transaction/complete/$', views.TransactionComplete.as_view(), name='transaction-complete'),
+    
+    
 
     # ===================  DEPRECATED APIS =========================================================================
 

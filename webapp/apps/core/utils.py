@@ -271,7 +271,9 @@ def make_allocation_dict(sip, lumpsum, allocation):
         constants.DEBT: {"lumpsum": lumpsum * int(allocation[constants.DEBT]) / 100,
                          "sip": sip * int(allocation[constants.DEBT]) / 100},
         constants.ELSS: {"lumpsum": lumpsum * int(allocation[constants.ELSS]) / 100,
-                         "sip": sip * int(allocation[constants.ELSS]) / 100}
+                         "sip": sip * int(allocation[constants.ELSS]) / 100},
+        constants.LIQUID: {"lumpsum": lumpsum * int(allocation[constants.LIQUID]) / 100,
+                         "sip": sip * int(allocation[constants.LIQUID]) / 100}
     }
     return allocation_dict
 
@@ -311,26 +313,26 @@ def calculate_overall_allocation(user):
     goals = goals_helper.GoalBase.get_current_goals(user) 
 
     summary, status_summary = [], []
-    total_equity, total_debt, total_elss = 0, 0, 0
-    elss_lumpsum, elss_sip, debt_lumpsum, debt_sip, equity_lumpsum, equity_sip = 0, 0, 0, 0, 0, 0
+    total_equity, total_debt, total_elss,total_liquid = 0, 0, 0,0
+    elss_lumpsum, elss_sip, debt_lumpsum, debt_sip, equity_lumpsum, equity_sip,liquid_lumpsum,liquid_sip = 0, 0, 0, 0, 0, 0,0,0
 
     for goal in goals:
         lumpsum_amount, sip_amount, term = 0, 0, 0
 
-        category_allocation = goal.asset_allocation
-        
         goal_object = goals_helper.GoalBase.get_goal_instance(goal)
         lumpsum_amount = goal_object.get_lumpsum_amount()
         sip_amount = goal_object.get_sip_amount()
         
         corpus, term = goal_object.get_expected_corpus()
 
-        allocation = goal_object.calculate_asset_allocation(lumpsum_amount, sip_amount, float(category_allocation[constants.EQUITY]), float(category_allocation[constants.DEBT]))
+        allocation = goal_object.get_asset_allocation_amount()
         
         debt_lumpsum += allocation[constants.DEBT][constants.LUMPSUM]
         debt_sip += allocation[constants.DEBT][constants.SIP]
         equity_lumpsum += allocation[constants.EQUITY][constants.LUMPSUM]
         equity_sip += allocation[constants.EQUITY][constants.SIP]
+        liquid_lumpsum += allocation[constants.LIQUID][constants.LUMPSUM]
+        liquid_sip += allocation[constants.LIQUID][constants.SIP]
         
         category_summary = {"goal": goal.name, "corpus": round(corpus, 2), "sip": sip_amount,
                             "lumpsum": lumpsum_amount, "term": term}
@@ -342,16 +344,23 @@ def calculate_overall_allocation(user):
     total_equity += equity_lumpsum + equity_sip * 12
     total_debt += debt_lumpsum + debt_sip * 12
     total_elss += elss_lumpsum + elss_sip * 12
-    total_investment = total_equity + total_elss + total_debt  # total investment by user in all categories
+    total_liquid += liquid_lumpsum + liquid_sip * 12
+    
+    total_investment = total_equity + total_elss + total_debt + total_liquid # total investment by user in all categories
     overall_allocation = {constants.EQUITY: {"percentage": helpers.percentage(total_equity, total_investment),
                                              "amount": total_equity},
                           constants.DEBT: {"percentage": helpers.percentage(total_debt, total_investment),
                                            "amount": total_debt},
                           constants.ELSS: {"percentage": helpers.percentage(total_elss, total_investment),
-                                           "amount": total_elss}}
+                                           "amount": total_elss},
+                          constants.LIQUID: {"percentage": helpers.percentage(total_liquid, total_investment),
+                                           "amount": total_liquid}
+                          }
     overall_allocation_with_sip_lumpsum = {constants.EQUITY: {"lumpsum": equity_lumpsum, "sip": equity_sip},
                                            constants.DEBT: {"lumpsum": debt_lumpsum, "sip": debt_sip},
-                                           constants.ELSS: {"lumpsum": elss_lumpsum, "sip": elss_sip},}
+                                           constants.ELSS: {"lumpsum": elss_lumpsum, "sip": elss_sip},
+                                           constants.LIQUID: {"lumpsum": liquid_lumpsum, "sip": liquid_sip}
+                                           }
     result = {"overall_allocation": overall_allocation, "total_sum": total_investment, "summary": summary}
     return result, overall_allocation_with_sip_lumpsum, status_summary
 
@@ -456,7 +465,7 @@ def get_plan_answers(user):
     return category_answers
 
 
-def format_porfolioitems(equity_funds, debt_funds, elss_funds, is_error, errors):
+def format_porfolioitems(equity_funds, debt_funds, elss_funds, is_error, errors,liquid_funds):
     """
     :param equity_funds:the equity funds in user portfolio
     :param debt_funds:the debt funds in user portfolio
@@ -473,6 +482,8 @@ def format_porfolioitems(equity_funds, debt_funds, elss_funds, is_error, errors)
             return_value.get(constants.RECOMMENDED_SCHEMES).append(debt_funds)
         if elss_funds.get("data"):
             return_value.get(constants.RECOMMENDED_SCHEMES).append(elss_funds)
+        if liquid_funds.get("data"):
+            return_value.get(constants.RECOMMENDED_SCHEMES).append(liquid_funds)
         return return_value, errors
     else:
         return None, errors
@@ -490,22 +501,23 @@ def get_portfolio_items(user_id, overall_allocation, sip_lumpsum_allocation):
     try:
         portfolio = models.Portfolio.objects.get(user_id=user_id, has_invested=False)
     except models.Portfolio.DoesNotExist:
-        equity_funds, debt_funds, elss_funds, is_error, errors = create_portfolio_items(
+        equity_funds, debt_funds, elss_funds, is_error, errors,liquid_funds = create_portfolio_items(
             user_id, overall_allocation, sip_lumpsum_allocation)
-        return format_porfolioitems(equity_funds, debt_funds, elss_funds, is_error, errors)
-    
+        return format_porfolioitems(equity_funds, debt_funds, elss_funds, is_error, errors,liquid_funds)
+
     latest_answer_time = goals_helper.GoalBase.get_current_goals(portfolio.user).latest(
         constants.MODIFIED_AT).modified_at
     portfolio_modified_time = models.Portfolio.objects.get(user_id=user_id, has_invested=False).modified_at
     if portfolio.user.rebuild_portfolio == True or latest_answer_time > portfolio_modified_time:
-        equity_funds, debt_funds, elss_funds, is_error, errors = create_portfolio_items(
+        equity_funds, debt_funds, elss_funds, is_error, errors,liquid_funds = create_portfolio_items(
             user_id, overall_allocation, sip_lumpsum_allocation)
-        return format_porfolioitems(equity_funds, debt_funds, elss_funds, is_error, errors)
+        return format_porfolioitems(equity_funds, debt_funds, elss_funds, is_error, errors,liquid_funds)
     else:
         equity_funds = get_recommended_schemes(user_id, constants.EQUITY)
         debt_funds = get_recommended_schemes(user_id, constants.DEBT)
         elss_funds = get_recommended_schemes(user_id, constants.ELSS)
-        return format_porfolioitems(equity_funds, debt_funds, elss_funds, False, {})
+        liquid_funds = get_recommended_schemes(user_id, constants.LIQUID)
+        return format_porfolioitems(equity_funds, debt_funds, elss_funds, False, {},liquid_funds)
 
 def get_recommended_schemes_per_goal(user, goal):
     equity_funds = get_recommended_schemes(user, constants.EQUITY, goal)
@@ -554,7 +566,8 @@ def get_portfolio_items_per_goal(user, overall_allocation, goal=None):
         equity_funds = get_recommended_schemes(user, constants.EQUITY, goal)
         debt_funds = get_recommended_schemes(user, constants.DEBT, goal)
         elss_funds = get_recommended_schemes(user, constants.ELSS, goal)
-        goal_data.update(format_porfolioitems(equity_funds, debt_funds, elss_funds, False, {}))
+        liquid_funds = get_recommended_schemes(user, constants.LIQUID)
+        goal_data.update(format_porfolioitems(equity_funds, debt_funds, elss_funds, False, {}, liquid_funds))
         goals_portfolio_items.append(goal_data)
 
     return {"goals_recommended_schemes":goals_portfolio_items}
@@ -577,8 +590,9 @@ def create_portfolio_items(user_id, overall_allocation, sip_lumpsum_allocation, 
         portfolio, created = models.Portfolio.objects.update_or_create(user_id=user_id, has_invested=False,
                                                                        defaults=kwargs)
         number_of_equity_funds_by_sip, number_of_equity_funds_by_lumpsum, number_of_debt_funds_by_sip, \
-        number_of_debt_funds_by_lumpsum, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum, is_error, \
-        errors = get_number_of_funds(sip_lumpsum_allocation)
+        number_of_debt_funds_by_lumpsum, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum, \
+        number_of_liquid_funds_by_sip, number_of_liquid_funds_by_lumpsum, \
+        is_error, errors = get_number_of_funds(sip_lumpsum_allocation)
         if is_error:
             transaction.savepoint_rollback(start)
             try:
@@ -595,10 +609,13 @@ def create_portfolio_items(user_id, overall_allocation, sip_lumpsum_allocation, 
                                   sip_lumpsum_allocation, portfolio, None, goal)
     get_funds_to_allocate_to_user(constants.ELSS, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum,
                                   sip_lumpsum_allocation, portfolio, None, goal)
+    get_funds_to_allocate_to_user(constants.LIQUID, number_of_liquid_funds_by_sip, number_of_liquid_funds_by_lumpsum,
+                                  sip_lumpsum_allocation, portfolio, None, goal)
     equity_funds = get_recommended_schemes(user_id, constants.EQUITY, goal)
     debt_funds = get_recommended_schemes(user_id, constants.DEBT, goal)
     elss_funds = get_recommended_schemes(user_id, constants.ELSS, goal)
-    return equity_funds, debt_funds, elss_funds, is_error, errors
+    liquid_funds = get_recommended_schemes(user_id, constants.LIQUID, goal)
+    return equity_funds, debt_funds, elss_funds, is_error, errors,liquid_funds
 
 def create_portfolio_items_per_goal(user, overall_allocation, portfolio_modified_time=None):
     """
@@ -625,8 +642,9 @@ def create_portfolio_items_per_goal(user, overall_allocation, portfolio_modified
             goal_object = goals_helper.GoalBase.get_goal_instance(goal)
             sip_lumpsum_allocation = goal_object.get_asset_allocation_amount()
             number_of_equity_funds_by_sip, number_of_equity_funds_by_lumpsum, number_of_debt_funds_by_sip, \
-                number_of_debt_funds_by_lumpsum, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum, is_error, \
-                errors = get_number_of_funds(sip_lumpsum_allocation)
+                number_of_debt_funds_by_lumpsum, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum, \
+                number_of_liquid_funds_by_sip, number_of_liquid_funds_by_lumpsum, \
+                is_error, errors = get_number_of_funds(sip_lumpsum_allocation)
 
             if is_error:
                 try:
@@ -641,6 +659,8 @@ def create_portfolio_items_per_goal(user, overall_allocation, portfolio_modified
             get_funds_to_allocate_to_user(constants.DEBT, number_of_debt_funds_by_sip, number_of_debt_funds_by_lumpsum,
                                           sip_lumpsum_allocation, portfolio, None, goal)
             get_funds_to_allocate_to_user(constants.ELSS, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum,
+                                          sip_lumpsum_allocation, portfolio, None, goal)
+            get_funds_to_allocate_to_user(constants.LIQUID, number_of_liquid_funds_by_sip, number_of_liquid_funds_by_lumpsum,
                                           sip_lumpsum_allocation, portfolio, None, goal)
                 
     if portfolio:
@@ -661,6 +681,7 @@ def get_number_of_funds(sip_lumpsum_allocation):
     equity_lumpsum = sip_lumpsum_allocation[constants.EQUITY][constants.LUMPSUM]
     debt_lumpsum = sip_lumpsum_allocation[constants.DEBT][constants.LUMPSUM]
     elss_lumpsum = sip_lumpsum_allocation[constants.ELSS][constants.LUMPSUM]
+    liquid_lumpsum = sip_lumpsum_allocation[constants.LIQUID][constants.LUMPSUM]
     # TODO add numbers to constants
     equity_funds_by_sip = 4 if equity_sip >= 8000 else (
         3 if equity_sip >= 4500 else(2 if equity_sip >= 2000 else (1 if equity_sip >= 500 else (
@@ -689,8 +710,19 @@ def get_number_of_funds(sip_lumpsum_allocation):
     if elss_funds_by_lumpsum is -1:
         is_error = True
         errors = update_error(errors, 'Lumpsum amount in ELSS', elss_lumpsum, 500)
+    
+    """
+    Liquid funds count to return
+    """
+    liquid_funds_by_lumpsum = 3 if liquid_lumpsum >= 20000 else(
+        2 if liquid_lumpsum >= 10000 else (1 if liquid_lumpsum >= 5000 else (-1 if liquid_lumpsum > 0 else 0)))
+    if liquid_funds_by_lumpsum is -1:
+        is_error = True
+        errors = update_error(errors, 'Liquid amount in Debt', liquid_lumpsum, 5000)
+    
     return equity_funds_by_sip, equity_funds_by_lumpsum, debt_funds_by_sip, debt_funds_by_lumpsum, \
-           constants.ELSS_FUNDS_BY_SIP, elss_funds_by_lumpsum, is_error, errors
+           constants.ELSS_FUNDS_BY_SIP, elss_funds_by_lumpsum, constants.LIQUID_FUNDS_BY_SIP,liquid_funds_by_lumpsum, \
+           is_error, errors
 
 
 def update_error(error_dictionary, type, user_amount, minimum_amount):
@@ -727,10 +759,10 @@ def get_funds_to_allocate_to_user(type, number_of_funds_by_sip, number_of_funds_
         if type == constants.EQUITY and number_of_funds == constants.MAX_NUMBER_EQUITY_FUNDS:
             
             fund_objects = recommendedPortfolio_equity(type)
-            
         else:
             fund_objects = models.Fund.objects.filter(type_of_fund=constants.FUND_MAP[type], is_enabled=True
                                            ).order_by('fund_rank')[:number_of_funds]
+            
     else:
         fund_data = models.Fund.objects.in_bulk(funds)
         fund_objects = [fund_data.get(id, None) for id in funds]
@@ -753,17 +785,17 @@ def get_funds_to_allocate_to_user(type, number_of_funds_by_sip, number_of_funds_
     funds_to_be_deleted.delete()
 
 
-def recommendedPortfolio_equity(type):
+def recommendedPortfolio_equity(fund_type):
     fund_objects = []
     
     mid_cap_count = constants.MAX_NUMBER_EQUITY_FUNDS - constants.MAX_NUMBER_EQUITY_FUNDS_LARGE
     
-    fund_object_cat1 = models.Fund.objects.filter(type_of_fund=constants.FUND_MAP[type], 
+    fund_object_cat1 = models.Fund.objects.filter(type_of_fund=constants.FUND_MAP[fund_type], 
                                                          category_name=constants.FUND_CATEGORY_NAME_LARGE, is_enabled=True
                                                          ).order_by('fund_rank')[:constants.MAX_NUMBER_EQUITY_FUNDS_LARGE]
     fund_objects.extend(fund_object_cat1)
             
-    fund_object_cat2 = models.Fund.objects.filter(type_of_fund=constants.FUND_MAP[type], 
+    fund_object_cat2 = models.Fund.objects.filter(type_of_fund=constants.FUND_MAP[fund_type], 
                                                           category_name=constants.FUND_CATEGORY_NAME_MID, is_enabled=True
                                                           ).order_by('fund_rank')[:mid_cap_count]
     fund_objects.extend(fund_object_cat2)
@@ -771,7 +803,7 @@ def recommendedPortfolio_equity(type):
     return fund_objects
     
 
-def amount_allocation(type, number_of_funds_by_sip, number_of_funds_by_lumpsum, sip_lumpsum_allocation):
+def amount_allocation(fund_type, number_of_funds_by_sip, number_of_funds_by_lumpsum, sip_lumpsum_allocation):
     """
     :param type: the type for which we are allocating
     :param number_of_funds_by_sip: number of funds to be allocated to user on basis of sip
@@ -783,7 +815,7 @@ def amount_allocation(type, number_of_funds_by_sip, number_of_funds_by_lumpsum, 
     sip_allocation, lumpsum_allocation = [], []
     sip_amount_left, lumpsum_amount_left = sip_amount, lumpsum_amount
     for i in range(max(number_of_funds_by_sip, number_of_funds_by_lumpsum)):
-        if type == constants.ELSS:
+        if fund_type == constants.ELSS:
             sip = 0
             if i == 0:
                 lumpsum = math.ceil(lumpsum_amount/(number_of_funds_by_lumpsum*500)) * 500
@@ -818,21 +850,21 @@ def amount_allocation(type, number_of_funds_by_sip, number_of_funds_by_lumpsum, 
     return {constants.SIP: sip_allocation, constants.LUMPSUM: lumpsum_allocation}
 
 
-def get_recommended_schemes(user_id, type, goal=None):
+def get_recommended_schemes(user_id, fund_type, goal=None):
     """
 
     :param user_id:
     :param type:
     :return:
     """
-    portfolio_dict = {"key": type}
+    portfolio_dict = {"key": fund_type}
     portfolio_data = []
     if goal:
-        portfolio_items = models.PortfolioItem.objects.filter(broad_category_group=constants.FUND_MAP[type],
+        portfolio_items = models.PortfolioItem.objects.filter(broad_category_group=constants.FUND_MAP[fund_type],
                                                           portfolio__user_id=user_id, portfolio__has_invested=False, goal=goal
                                                           ).select_related('fund').order_by('fund__fund_rank')
     else:
-        portfolio_items = models.PortfolioItem.objects.filter(broad_category_group=constants.FUND_MAP[type],
+        portfolio_items = models.PortfolioItem.objects.filter(broad_category_group=constants.FUND_MAP[fund_type],
                                                           portfolio__user_id=user_id, portfolio__has_invested=False
                                                           ).select_related('fund').order_by('fund__fund_rank')
         
@@ -852,8 +884,8 @@ def get_recommended_and_scheme_funds(user_id, goal=None):
     :param user_id: The id of the user
     :return: a list of funds f user in different category
     """
-    equity_funds, debt_funds, elss_funds, user_fund_ids = [], [], [], []
-    user_equity_funds, user_debt_funds, user_elss_funds = [], [], []
+    equity_funds, debt_funds, elss_funds, user_fund_ids , liquid_funds= [], [], [], [],[]
+    user_equity_funds, user_debt_funds, user_elss_funds, user_liquid_funds = [], [], [],[]
     # get schemes under user portfolio items
     if goal:
         user_portfolio_items = models.PortfolioItem.objects.filter(portfolio__user_id=user_id, goal=goal, portfolio__has_invested=False
@@ -873,6 +905,8 @@ def get_recommended_and_scheme_funds(user_id, goal=None):
             equity_funds.append(fund)
         elif fund.type_of_fund == constants.FUND_MAP[constants.DEBT]:
             debt_funds.append(fund)
+        elif fund.type_of_fund == constants.FUND_MAP[constants.LIQUID]:
+            liquid_funds.append(fund) 
         else:
             elss_funds.append(fund)
     # divides user portfolio funds under elss, equity, debt
@@ -881,9 +915,11 @@ def get_recommended_and_scheme_funds(user_id, goal=None):
             user_equity_funds.append(user_portfolio_item.fund)
         elif user_portfolio_item.fund.type_of_fund == constants.FUND_MAP[constants.DEBT]:
             user_debt_funds.append(user_portfolio_item.fund)
+        elif user_portfolio_item.fund.type_of_fund == constants.FUND_MAP[constants.LIQUID]:
+            user_liquid_funds.append(user_portfolio_item.fund)
         else:
             user_elss_funds.append(user_portfolio_item.fund)
-    return equity_funds, debt_funds, elss_funds, user_equity_funds, user_debt_funds, user_elss_funds
+    return equity_funds, debt_funds, elss_funds, user_equity_funds, user_debt_funds, user_elss_funds,liquid_funds,user_liquid_funds
 
 
 def get_scheme_details(fund, monthly_data_points, daily_data_points):
@@ -1150,10 +1186,10 @@ def get_annualised_return(portfolio_items, nav_list):
     :param nav_list: a list of nav fro the funds in portfolio items of user at dates required
     :return:
     """
-    portfolio_item_map, nav_list_map, = {constants.EQUITY: [], constants.DEBT: [], constants.ELSS: []}, {}
+    portfolio_item_map, nav_list_map, = {constants.EQUITY: [], constants.DEBT: [], constants.ELSS: [],constants.LIQUID: []}, {}
     # 0 is current category value, 1 represents value 1 year earlier , 2 is value 3 years earlier
     #  and 4 is value 5 years earlier
-    category_value_map = {constants.EQUITY: [0, 0, 0, 0], constants.DEBT: [0, 0, 0, 0], constants.ELSS: [0, 0, 0, 0]}
+    category_value_map = {constants.EQUITY: [0, 0, 0, 0], constants.DEBT: [0, 0, 0, 0], constants.ELSS: [0, 0, 0, 0],constants.LIQUID: [0, 0, 0, 0]}
     portfolio_value_map = [0, 0, 0, 0]
     annualised_return = []
 
@@ -1465,7 +1501,7 @@ def get_portfolio_overview(portfolio_items):
     :param portfolio_items: the funds in which user has invested
     :return:
     """
-    asset_overview, portfolio_item_map, default_indices_id = [], {'equity': [], 'debt': [], 'elss': []}, []
+    asset_overview, portfolio_item_map, default_indices_id = [], {'equity': [], 'debt': [], 'elss': [],'liquid':[]}, []
     invested_value, total_return_value, total_one_day_return, total_previous_day_port_value = 0, 0, 0, 0
     latest_date = funds_helper.FundsHelper.get_dashboard_change_date()
 
@@ -1725,10 +1761,12 @@ def get_portfolio_details(portfolio_items, for_leader_board=False):
     :return:
     """
     portfolio_current_value, sum_invested = 0, 0
-    portfolio_id, equity_id, debt_id, elss_id = [], [], [], []
+    portfolio_id, equity_id, debt_id, elss_id,liquid_id = [], [], [], [],[]
     fund_map = [{constants.KEY: constants.EQUITY, constants.VALUE: []},
                 {constants.KEY: constants.DEBT, constants.VALUE: []},
-                {constants.KEY: constants.ELSS, constants.VALUE: []}]
+                {constants.KEY: constants.ELSS, constants.VALUE: []},
+                {constants.KEY: constants.LIQUID, constants.VALUE: []}
+                ]
 
     latest_date = funds_helper.FundsHelper.get_dashboard_change_date()
     for portfolio_item in portfolio_items:
@@ -1753,6 +1791,13 @@ def get_portfolio_details(portfolio_items, for_leader_board=False):
                 fund_map[1].get(constants.VALUE).append(fund_data_for_portfolio_details(
                     portfolio_item, portfolio_current_value))
                 debt_id.append(portfolio_item.fund.id)
+        elif portfolio_item.broad_category_group == constants.FUND_MAP[constants.LIQUID]:
+            if portfolio_item.fund.id in liquid_id:
+                fund_map = similar_fund_data_for_portfolio_details(fund_map, 3, portfolio_item, portfolio_current_value) # 1 refers to position of debt fund in dictionary
+            else:
+                fund_map[3].get(constants.VALUE).append(fund_data_for_portfolio_details(
+                    portfolio_item, portfolio_current_value))
+                liquid_id.append(portfolio_item.fund.id)
         else:
             if portfolio_item.fund.id in elss_id:
                 fund_map = similar_fund_data_for_portfolio_details(fund_map, 2, portfolio_item, portfolio_current_value) # 2 refers to position of elss fund in dictionary
@@ -1782,7 +1827,7 @@ def calculate_financial_goal_status(asset_class_overview, portfolios_to_be_consi
     """
     from core import goals_helper
     
-    total_debt, total_equity, total_elss = 0, 0, 0
+    total_debt, total_equity, total_elss,total_liquid = 0, 0, 0
     goal_map = {
         constants.RETIREMENT: [[], 0], constants.TAX_SAVING: [[], 0], constants.BUY_PROPERTY: [[], 0],
         constants.EDUCATION: [[], 0], constants.WEDDING: [[], 0], constants.OTHER_EVENT: [[], 0],
@@ -1808,20 +1853,23 @@ def calculate_financial_goal_status(asset_class_overview, portfolios_to_be_consi
                 constants.EXPECTD_VALUE: corpus,
                 constants.INVESTED_VALUE: investment_till_date_object[constants.INVESTED_VALUE],
                 constants.CURRENT_VALUE: investment_till_date_object[constants.CURRENT_VALUE],
-                constants.EQUITY: investment_till_date_object[constants.EQUITY], constants.DEBT: investment_till_date_object[constants.DEBT],
+                constants.EQUITY: investment_till_date_object[constants.EQUITY], 
+                constants.DEBT: investment_till_date_object[constants.DEBT],
                 constants.ELSS: investment_till_date_object[constants.ELSS],
+                constants.LIQUID: investment_till_date_object[constants.LIQUID],
                 constants.DATE: portfolio.modified_at.date() + relativedelta(years=int(term)),
                 constants.GOAL_ANSWERS: goal_data
             })
             total_debt += investment_till_date_object[constants.DEBT]
             total_equity += investment_till_date_object[constants.EQUITY]
             total_elss += investment_till_date_object[constants.ELSS]
+            total_liquid += investment_till_date_object[constants.LIQUID]
      
-    return make_financial_goal_response(goal_map, total_equity, total_debt, total_elss, asset_class_overview)   
+    return make_financial_goal_response(goal_map, total_equity, total_debt, total_elss,total_liquid, asset_class_overview)   
 
 
-def make_financial_goal_response(goal_map, total_equity_invested, total_debt_invested, total_elss_invested,
-                                 asset_class_overview):
+def make_financial_goal_response(goal_map, total_equity_invested, total_debt_invested, total_elss_invested, 
+                                 total_liquid_invested, asset_class_overview):
     """
     utility to make financial goal response as required by dashboard
 
@@ -1833,7 +1881,7 @@ def make_financial_goal_response(goal_map, total_equity_invested, total_debt_inv
      gain
     :return:
     """
-    current_value_map = {constants.EQUITY: 0, constants.DEBT: 0, constants.ELSS: 0}
+    current_value_map = {constants.EQUITY: 0, constants.DEBT: 0, constants.ELSS: 0,constants.LIQUID: 0}
     for category in asset_class_overview:
         current_value_map[category[constants.NAME]] = category[constants.INVESTED] + category[constants.GAIN]
     financial_goal_list = []
@@ -1876,12 +1924,14 @@ def make_xirr_calculations_for_dashboard(amount_invested_fund_map, api_type, is_
     sum_invested_in_portfolio, portfolio_gain_percentage, date_for_portfolio = 0, 0, date.today()
     fund_map_based_on_type = [{constants.KEY: constants.EQUITY, constants.VALUE: []},
                               {constants.KEY: constants.DEBT, constants.VALUE: []},
-                              {constants.KEY: constants.ELSS, constants.VALUE: []}]
+                              {constants.KEY: constants.ELSS, constants.VALUE: []},
+                              {constants.KEY: constants.LIQUID, constants.VALUE: []}]
     # in the list first element is an array for gain calculation, second is sum invested in that category, third is
     # current value of that category, and last is gain percentage for that category
     array_for_category_gain_calculation = {constants.FUND_MAP[constants.EQUITY]: [[], 0, 0, 0],
                                            constants.FUND_MAP[constants.DEBT]: [[], 0, 0, 0],
-                                           constants.FUND_MAP[constants.ELSS]: [[], 0, 0, 0]}
+                                           constants.FUND_MAP[constants.ELSS]: [[], 0, 0, 0],
+                                           constants.FUND_MAP[constants.LIQUID]: [[], 0, 0, 0]}
 
     # loop through all transactions of a user clubbed according to fund id and calculate fund gain for each fund
     # on basis of all fund gains and type calculate equity/debt/elss and portfolio gain
@@ -1986,32 +2036,6 @@ def make_yesterday_change_dashboard(portfolio_one_previous_day_value, portfolio_
          constants.CURRENT_VALUE: round(index_one_latest_nav, 2)}
     ]
     return yesterday_changes
-
-
-def calculate_latest_and_one_previous_nav(fund, latest_index_date=None):
-    """
-    utility to find latest fund data nd one previous nav for a fund
-    :param fund: the fund whose latest and one previous nav is to be found
-    :param latest_index_date: the minimum date of bse and nse
-    :return:
-    """
-    latest_fund_data = models.FundDataPointsChangeDaily.objects.get(fund_id=fund)
-    if latest_index_date is not None:
-        if latest_fund_data.day_end_date > latest_index_date:
-            latest_fund_data = models.HistoricalFundData.objects.get(fund_id=fund, date=latest_index_date)
-            fund_latest_nav_date = latest_fund_data.date
-        else:
-            fund_latest_nav_date = latest_fund_data.day_end_date
-    else:
-        fund_latest_nav_date = latest_fund_data.day_end_date
-    if fund_latest_nav_date.isoweekday() == 7:
-        fund_one_previous_date = fund_latest_nav_date - timedelta(days=3)
-    elif fund_latest_nav_date.isoweekday() == 6:
-        fund_one_previous_date = fund_latest_nav_date - timedelta(days=2)
-    else:
-        fund_one_previous_date = fund_latest_nav_date - timedelta(days=1)
-    one_previous_nav = models.HistoricalFundData.objects.get(fund_id=fund, date=fund_one_previous_date).nav
-    return latest_fund_data, one_previous_nav
 
 
 def make_portfolio_overview(invested_value, current_value, gain_percentage):
@@ -2945,7 +2969,8 @@ def calculate_sip_lumpsum_category_wise_for_a_portfolio(portfolio, goal=None):
     category_sip_lumpsum_map = {
         constants.EQUITY: {constants.LUMPSUM: 0, constants.SIP: 0, constants.SIP_COUNT: 0, constants.LUMPSUM_COUNT: 0},
         constants.DEBT: {constants.LUMPSUM: 0, constants.SIP: 0, constants.SIP_COUNT: 0, constants.LUMPSUM_COUNT: 0},
-        constants.ELSS: {constants.LUMPSUM: 0, constants.SIP: 0, constants.SIP_COUNT: 0, constants.LUMPSUM_COUNT: 0}
+        constants.ELSS: {constants.LUMPSUM: 0, constants.SIP: 0, constants.SIP_COUNT: 0, constants.LUMPSUM_COUNT: 0},
+        constants.LIQUID: {constants.LUMPSUM: 0, constants.SIP: 0, constants.SIP_COUNT: 0, constants.LUMPSUM_COUNT: 0}
     }
 
     # loop through all portfolio items of a portfolio and increase category sip/lumpsum if portfolio item's fund type is
@@ -2963,7 +2988,7 @@ def calculate_sip_lumpsum_category_wise_for_a_portfolio(portfolio, goal=None):
         if portfolio_item.sip > 0:
             sip_lump[constants.SIP] += portfolio_item.sip
             sip_lump[constants.SIP_COUNT] += 1
-
+    
     return category_sip_lumpsum_map
 
 
@@ -2978,14 +3003,16 @@ def change_portfolio(category_sip_lumpsum_map, user_portfolio, fund_id_map, goal
     """
     # utility to calculate number of funds according to lumpsum and debt
     number_of_equity_funds_by_sip, number_of_equity_funds_by_lumpsum, number_of_debt_funds_by_sip, \
-    number_of_debt_funds_by_lumpsum, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum, is_error, \
-    errors = get_number_of_funds(category_sip_lumpsum_map)
+    number_of_debt_funds_by_lumpsum, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum, \
+    number_of_liquid_funds_by_sip, number_of_liquid_funds_by_lumpsum, \
+    is_error, errors, = get_number_of_funds(category_sip_lumpsum_map)
 
     # compare and evaluate the minimum of new funds length and number of funds received from above
     # the minimum of the two will be used to allocate sum investment in each fund
     number_of_fund_map = calculate_minimum_number_of_funds_for_category(
         fund_id_map, number_of_equity_funds_by_sip, number_of_equity_funds_by_lumpsum, number_of_debt_funds_by_sip,
-        number_of_debt_funds_by_lumpsum, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum)
+        number_of_debt_funds_by_lumpsum, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum,
+        number_of_liquid_funds_by_sip, number_of_liquid_funds_by_lumpsum)
 
     # create new portfolio items
     for category in constants.FUND_CATEGORY_LIST:
@@ -3001,7 +3028,8 @@ def change_portfolio(category_sip_lumpsum_map, user_portfolio, fund_id_map, goal
 
 def calculate_minimum_number_of_funds_for_category(
         fund_id_map, number_of_equity_funds_by_sip, number_of_equity_funds_by_lumpsum, number_of_debt_funds_by_sip,
-        number_of_debt_funds_by_lumpsum, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum):
+        number_of_debt_funds_by_lumpsum, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum,
+        number_of_liquid_funds_by_sip, number_of_liquid_funds_by_lumpsum):
     """
     calculates the minimum number of funds for each category and returns it as a dict
 
@@ -3026,6 +3054,10 @@ def calculate_minimum_number_of_funds_for_category(
         constants.ELSS: {
             constants.SIP: min(number_of_elss_funds_by_sip, len(fund_id_map[constants.ELSS])),
             constants.LUMPSUM: min(number_of_elss_funds_by_lumpsum, len(fund_id_map[constants.ELSS]))
+        },
+        constants.LIQUID: {
+            constants.SIP: min(number_of_liquid_funds_by_sip, len(fund_id_map[constants.LIQUID])),
+            constants.LUMPSUM: min(number_of_liquid_funds_by_lumpsum, len(fund_id_map[constants.LIQUID]))
         }
     }
 
@@ -3204,7 +3236,8 @@ def make_xirr_calculations_for_dashboard_version_two(transaction_fund_map, api_t
     asset_class_overview = [
         {constants.KEY: constants.EQUITY, constants.VALUE: []},
         {constants.KEY: constants.DEBT, constants.VALUE: []},
-        {constants.KEY: constants.ELSS, constants.VALUE: []}
+        {constants.KEY: constants.ELSS, constants.VALUE: []},
+        {constants.KEY: constants.LIQUID, constants.VALUE: []}
     ]
     portfolio_current_value_for_yesterday_change, previous_day_value_of_a_portfolio_for_yesterday_change = 0, 0
     portfolio_current_verified_value = 0
@@ -3214,7 +3247,7 @@ def make_xirr_calculations_for_dashboard_version_two(transaction_fund_map, api_t
     # second value is current value of the category and third value is an array for gain calculation for that category
     category_dashboard_map = OrderedDict([
         (constants.EQUITY, [0, 0, 0, [], False]), (constants.DEBT, [0, 0, 0, [], False]),
-        (constants.ELSS, [0, 0, 0, [], False])
+        (constants.ELSS, [0, 0, 0, [], False]),(constants.LIQUID, [0, 0, 0, [], False])
     ])
 
     latest_date = funds_helper.FundsHelper.get_dashboard_change_date()
@@ -3674,7 +3707,7 @@ def store_most_popular_fund_data():
     """
     :return:
     """
-    cases = {'E': 'equity', 'D': 'debt', 'T': 'elss'}
+    cases = {'E': 'equity', 'D': 'debt', 'T': 'elss','L':'liquid'}
     popular_funds = dict()
     for k, v in cases.items():
         popular_funds[v] = dict(data=get_most_popular_funds(k))

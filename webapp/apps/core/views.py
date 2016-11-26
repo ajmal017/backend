@@ -484,6 +484,33 @@ class TaxAnswer(APIView):
                                   generate_error_message(serializer.errors))
 
 
+class LiquidAnswer(APIView):
+    """
+    Save Liquid data
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        API to save answer for a particular question
+        :param request:
+        :return:
+        """
+        serializer = serializers.LiquidSerializer(data=request.data)
+        if serializer.is_valid():
+            goal_object = goals_helper.LiquidGoal()
+            is_error, errors = goal_object.create_or_update_goal(request.user, serializer.data, None, request.data.get('goal_name')) 
+    
+            if is_error:
+                return api_utils.response({constants.MESSAGE: errors}, status.HTTP_400_BAD_REQUEST,
+                                          api_utils.create_error_message(errors))
+            return api_utils.response({"message": "success"}, status.HTTP_200_OK)
+        return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
+                                  generate_error_message(serializer.errors))
+
+
+
+
 class RetirementAnswer(APIView):
     """
     Save retirement data
@@ -673,14 +700,14 @@ class FundsDividedIntoCategories(APIView):
         """
         funds_divided = {}
         # get funds for each category via utility
-        equity_funds, debt_funds, elss_funds, user_equity_funds, user_debt_funds, user_elss_funds =\
+        equity_funds, debt_funds, elss_funds, user_equity_funds, user_debt_funds, user_elss_funds,liquid_funds,user_liquid_funds =\
             utils.get_recommended_and_scheme_funds(request.user.id)
 
         # function to find max allowed for each cases
         overall_allocation, sip_lumpsum_allocation, status_summary = utils.calculate_overall_allocation(request.user)
         number_of_equity_funds_by_sip, number_of_equity_funds_by_lumpsum, number_of_debt_funds_by_sip, \
         number_of_debt_funds_by_lumpsum, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum, is_error, \
-        errors = utils.get_number_of_funds(sip_lumpsum_allocation)
+        errors,number_of_liquid_funds_by_sip, number_of_liquid_funds_by_lumpsum = utils.get_number_of_funds(sip_lumpsum_allocation)
 
         # serializes all categories of funds
         user_equity_fund = serializers.FundSerializerForFundDividedIntoCategory(user_equity_funds, many=True)
@@ -689,15 +716,19 @@ class FundsDividedIntoCategories(APIView):
         user_debt_fund = serializers.FundSerializerForFundDividedIntoCategory(user_debt_funds, many=True)
         elss_fund = serializers.FundSerializerForFundDividedIntoCategory(elss_funds, many=True)
         user_elss_fund = serializers.FundSerializerForFundDividedIntoCategory(user_elss_funds, many=True)
+        liquid_fund = serializers.FundSerializerForFundDividedIntoCategory(liquid_funds, many=True)
+        user_liquid_fund = serializers.FundSerializerForFundDividedIntoCategory(user_liquid_funds, many=True)
         # if serializers are valid return funds_divided else return serializer errors
-        if equity_fund.is_valid and debt_fund.is_valid and elss_fund.is_valid and user_elss_fund.is_valid \
-            and user_debt_fund.is_valid and user_elss_fund.is_valid:
+        if equity_fund.is_valid and debt_fund.is_valid and elss_fund.is_valid and liquid_fund.is_valid and user_elss_fund.is_valid \
+            and user_debt_fund.is_valid and user_elss_fund.is_valid and user_liquid_fund.is_valid:
             funds_divided[constants.EQUITY] = {constants.SCHEME: user_equity_fund.data, constants.OTHER_RECOMMENDED: equity_fund.data}
             funds_divided[constants.DEBT] = {constants.SCHEME: user_debt_fund.data, constants.OTHER_RECOMMENDED: debt_fund.data}
             funds_divided[constants.ELSS] = {constants.SCHEME: user_elss_fund.data, constants.OTHER_RECOMMENDED: elss_fund.data}
+            funds_divided[constants.LIQUID] = {constants.SCHEME: user_liquid_fund.data, constants.OTHER_RECOMMENDED: liquid_fund.data}
             funds_divided["elss_max"] = max(number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum)
             funds_divided["equity_max"] = max(number_of_equity_funds_by_sip, number_of_equity_funds_by_lumpsum)
             funds_divided["debt_max"] = max(number_of_debt_funds_by_sip, number_of_debt_funds_by_lumpsum)
+            funds_divided["liquid_max"] = max(number_of_liquid_funds_by_sip, number_of_liquid_funds_by_lumpsum)
             return api_utils.response(funds_divided, status.HTTP_200_OK)
         return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(equity_fund.errors))
 
@@ -1197,8 +1228,8 @@ class GetInvestedFundReturn(APIView):
             portfolio_item__portfolio__has_invested=True, portfolio_item__portfolio__is_deleted=False, is_verified=True,
             is_cancelled=False).distinct('portfolio_item').select_related('portfolio_item')
         portfolio_items = [fund_order_item.portfolio_item for fund_order_item in fund_order_items]
-        equity_funds, debt_funds, elss_funds = [], [], []
-        equity_funds_id, debt_funds_id, elss_funds_id = [], [], []
+        equity_funds, debt_funds, elss_funds, liquid_funds = [], [], [],[]
+        equity_funds_id, debt_funds_id, elss_funds_id, liquid_funds_id= [], [], [],[]
         for portfolio_item in portfolio_items:
             if portfolio_item.fund.type_of_fund == 'E':
                 if(portfolio_item.fund.id in equity_funds_id):
@@ -1218,9 +1249,17 @@ class GetInvestedFundReturn(APIView):
                 else:
                     elss_funds.append(utils.get_fund_detail(portfolio_item))
                     elss_funds_id.append(portfolio_item.fund.id)
+            elif portfolio_item.fund.type_of_fund == 'L':
+                if(portfolio_item.fund.id in liquid_funds_id):
+                    liquid_funds = utils.update_funds_list(liquid_funds, portfolio_item)
+                else:
+                    liquid_funds.append(utils.get_fund_detail(portfolio_item))
+                    liquid_funds_id.append(portfolio_item.fund.id)
         invested_fund_return = [{"key": constants.EQUITY, "value": equity_funds},
                                 {"key": constants.DEBT, "value": debt_funds},
-                                {"key": constants.ELSS, "value": elss_funds}]
+                                {"key": constants.ELSS, "value": elss_funds},
+                                {"key": constants.LIQUID, "value": liquid_funds}
+                                ]
 
         invested_fund_return_new = copy.deepcopy(invested_fund_return)
         for index in range(3):
@@ -1293,6 +1332,7 @@ class TransactionDetail(APIView):
             equity_funds = []
             debt_funds = []
             elss_funds = []
+            liquid_funds = []
             for item in redeem_detail.fund_redeem_items.all():
                 fund_redeem_items = models.FundRedeemItem.objects.filter(id=item.id).select_related('portfolio_item')
                 for fund_redeem_item in fund_redeem_items:
@@ -1302,9 +1342,11 @@ class TransactionDetail(APIView):
                         debt_funds.append(utils.get_redeem_fund(fund_redeem_item))
                     elif fund_redeem_item.portfolio_item.fund.type_of_fund == 'T':
                         elss_funds.append(utils.get_redeem_fund(fund_redeem_item))
+                    elif fund_redeem_item.portfolio_item.fund.type_of_fund == 'L':
+                        liquid_funds.append(utils.get_redeem_fund(fund_redeem_item))
             redeem_fund_detail = {'redeem_id': redeem_detail.redeem_id,
                                   'redeem_status': redeem_detail.redeem_status, constants.EQUITY: equity_funds,
-                                  constants.DEBT: debt_funds, "ELSS": elss_funds}
+                                  constants.DEBT: debt_funds, "ELSS": elss_funds,constants.LIQUID: liquid_funds}
             redeem_data.append(redeem_fund_detail)
         return api_utils.response(redeem_data, status.HTTP_200_OK)
 
@@ -1558,11 +1600,12 @@ class GetCategorySchemes(APIView):
         overall_allocation, sip_lumpsum_allocation, status_summary = utils.calculate_overall_allocation(request.user)
         number_of_equity_funds_by_sip, number_of_equity_funds_by_lumpsum, number_of_debt_funds_by_sip, \
         number_of_debt_funds_by_lumpsum, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum, is_error, \
-        errors = utils.get_number_of_funds(sip_lumpsum_allocation)
+        errors,number_of_liquid_funds_by_sip, number_of_liquid_funds_by_lumpsum = utils.get_number_of_funds(sip_lumpsum_allocation)
         RANK_MAP = {
             constants.EQUITY: max(number_of_equity_funds_by_sip, number_of_equity_funds_by_lumpsum),
             constants.DEBT: max(number_of_debt_funds_by_sip, number_of_debt_funds_by_lumpsum),
-            constants.ELSS: max(number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum)
+            constants.ELSS: max(number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum),
+            constants.LIQUID: max(number_of_liquid_funds_by_sip, number_of_liquid_funds_by_lumpsum)
         }
 
         for category in constants.FUND_CATEGORY_LIST:
@@ -1670,6 +1713,9 @@ class ChangePortfolio(APIView):
         :return:
         """
         # check if a portfolio of user for which he has not invested is present. If not send an error message
+        #print(request.data)
+        #request.data['liquid'] = [27,49,53]
+
         try:
             user_portfolio = models.Portfolio.objects.get(user=request.user, has_invested=False)
         except models.Portfolio.DoesNotExist:
@@ -1677,7 +1723,7 @@ class ChangePortfolio(APIView):
                                       status.HTTP_400_BAD_REQUEST, constants.USER_PORTOFOLIO_NOT_PRESENT)
 
         # if portfolio is present get ids of new funds user wants to keep from request
-        fund_id_map = {constants.EQUITY: [], constants.DEBT: [], constants.ELSS: []}
+        fund_id_map = {constants.EQUITY: [], constants.DEBT: [], constants.ELSS: [],constants.LIQUID: []}
         for category in constants.FUND_CATEGORY_LIST:
             fund_id_map[category] = request.data.get(category)
 
