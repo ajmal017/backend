@@ -778,7 +778,7 @@ class FundRedeemItem(TimeStampedModel):
     is_verified = models.BooleanField(_('is verified'), default=False)
     is_cancelled = models.BooleanField(_('is cancelled'), default=False)
     is_all_units_redeemed = models.BooleanField(_('Redeem all units ?'), default=False)
-    folio_number = models.CharField(max_length=100)
+    folio_number = models.CharField(max_length=100, null=True, blank=True, default=None)
 
     def __str__(self):
         return str(self.portfolio_item.fund.legal_name)
