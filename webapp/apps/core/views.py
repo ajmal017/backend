@@ -1287,7 +1287,7 @@ class GetInvestedFundReturn_v3(APIView):
         goal_fund_data = []
         for goal in user_goals:
             equity_funds, debt_funds, elss_funds = [], [], []
-            for portfolio_item in goal.portfolio_item_set.all(): #TODO subquery for valid foi
+            for portfolio_item in goal.portfolioitem_set.all(): #TODO subquery for valid foi
                 fund_order_item_count = models.FundOrderItem.objects.filter(portfolio_item=portfolio_item, is_verified=True, is_cancelled=False).count()
                 if fund_order_item_count > 0:
                     if portfolio_item.fund.type_of_fund == 'E':

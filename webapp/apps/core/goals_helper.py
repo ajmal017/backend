@@ -257,13 +257,13 @@ class GoalBase(ABC):
         
         # virtual portfolio
         if not self.goal_object.portfolio.has_invested:
-            for portfolio_item in self.goal_object.portfolio_item_set.all():
+            for portfolio_item in self.goal_object.portfolioitem_set.all():
                 portfolio_item.set_values()
                 investment_value += portfolio_item.returns_value
                 invested_amount += portfolio_item.sum_invested
                 asset_values[constants.FUND_MAP_REVERSE[portfolio_item.fund.type_of_fund]] += portfolio_item.returns_value
         else:
-            for portfolio_item in self.goal_object.portfolio_item_set.all():
+            for portfolio_item in self.goal_object.portfolioitem_set.all():
                 transactions = portfolio_helper.PortfolioHelper.get_all_transactions(portfolio_item)
                 latest_fund_data_nav, latest_fund_data_nav_date, fund_one_previous_nav = funds_helper.FundsHelper.calculate_latest_and_one_previous_nav(portfolio_item.fund, latest_date)
                 fund_current_values = utils.get_current_value_of_a_fund(transactions, latest_fund_data_nav, fund_one_previous_nav)

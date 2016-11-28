@@ -23,6 +23,7 @@ from api import utils as api_utils
 import datetime
 
 from datetime import timedelta, date
+from builtins import True
 
 def unique_fund_image(instance, filename):
     return "fund/" + instance.mstar_id + "/image/" + filename
@@ -1088,8 +1089,15 @@ class FundOrderItem(TimeStampedModel):
     folio_number = models.CharField(max_length=100, null=True, blank=True, default=None)
     units_redeemed = models.FloatField(default=0.00)
 
+    @property
+    def is_sip(self):
+        if self.agreed_sip > 0:
+            return True
+        return False
+    
     def __str__(self):
-        return str(self.portfolio_item.fund.legal_name)
+        sip_lumpsum_text = "SIP" if self.is_sip else "Lumpsum"
+        return str(self.portfolio_item.fund.legal_name + " " + sip_lumpsum_text)
 
     def get_allotment_date(self):
         """
