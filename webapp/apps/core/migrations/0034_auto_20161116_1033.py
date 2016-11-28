@@ -39,11 +39,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterField(
             model_name='fund',
-            name='image_url',
-            field=models.ImageField(blank=True, max_length=700, null=True, upload_to='fund/image/'),
-        ),
-        migrations.AlterField(
-            model_name='fund',
             name='type_of_fund',
             field=models.CharField(choices=[('E', 'Equity'), ('D', 'Debt'), ('T', 'ELSS'), ('L', 'Liquid')], max_length=1),
         ),
