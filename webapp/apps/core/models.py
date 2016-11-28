@@ -23,7 +23,7 @@ from api import utils as api_utils
 import datetime
 
 from datetime import timedelta, date
-from builtins import True
+
 
 def unique_fund_image(instance, filename):
     return "fund/" + instance.mstar_id + "/image/" + filename
