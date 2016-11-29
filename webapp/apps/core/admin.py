@@ -329,7 +329,7 @@ class PortfolioAdmin(admin.ModelAdmin):
         returns a url formed for a particular redeem detail
         :param id: id associated with a redeem_detail
         """
-        url = reverse("admin:core_fundredeemitem_change", args=[goal_id])
+        url = reverse("admin:core_goal_change", args=[goal_id])
         return mark_safe(u'<a href=%s target="_blank">%s</a>' % (url, category))
 
     def list_of_goals(self, obj):
@@ -539,8 +539,26 @@ class GoalAdmin(admin.ModelAdmin):
     list_filter = [UserFilter, 'category']
     list_display = ['id', 'user', 'name', 'category', 'portfolio', 'created_at']
     search_fields = ['category', 'user__email','portfolio__id']
-    readonly_fields = ('user', 'name', 'category', 'portfolio', 'duration', 'asset_allocation')
+    readonly_fields = ('user', 'name', 'category', 'portfolio', 'duration', 'asset_allocation', 'list_of_portfolio_items')
     actions = None
+
+    def form_url(self, item_id, item):
+        """
+        returns a url formed for a particular redeem detail
+        :param id: id associated with a redeem_detail
+        """
+        url = reverse("admin:core_portfolioitem_change", args=[item_id])
+        return mark_safe(u'<a href=%s target="_blank">%s</a>' % (url, item))
+
+    def list_of_portfolio_items(self, obj):
+        """
+        returns list of redeem details related to a grouped redeemed detail
+        :param obj: contains an instance to grouped redeem detail object
+        """
+        return mark_safe(u"<br>".join([self.form_url(portfolio_item.id, portfolio_item) for portfolio_item in obj.portfolioitem_set.all()]))
+
+    list_of_portfolio_items.allow_tags = True
+    form_url.allow_tags = True
 
     def has_delete_permission(self, request, obj=None):
         return False
