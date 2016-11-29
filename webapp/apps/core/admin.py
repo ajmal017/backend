@@ -5,6 +5,7 @@ from django.core.urlresolvers import reverse
 
 from . import models
 from profiles.utils import is_investable
+from core import goals_helper
 
 admin.site.register(models.RiskProfile)
 admin.site.register(models.LiquidFunds)
@@ -63,7 +64,7 @@ class OrderDetailAdmin(admin.ModelAdmin):
     2. custom list display
     """
     list_filter = ['order_status', 'is_lumpsum', UserFilter]
-    list_display = ['user', 'order_id', 'order_status', 'created_at', 'bank_mandate', 'button3', 'button4', 'bank_mandate_button','button5']
+    list_display = ['user', 'order_id', 'order_status', 'is_lumpsum', 'created_at', 'bank_mandate', 'button3', 'button4', 'bank_mandate_button','button5']
     search_fields = ['order_id', 'user__email']
     readonly_fields = ('user', 'transaction', 'order_id', 'list_of_fund_order_items')
     exclude = ('fund_order_items', )
@@ -82,7 +83,7 @@ class OrderDetailAdmin(admin.ModelAdmin):
         returns list of fund_order_item related to a order detail
         :param obj: contains an instance to fund order item object
         """
-        return mark_safe(u"<br>".join([self.form_url(fund_order_item.id, fund_order_item.portfolio_item.fund.legal_name) for fund_order_item in obj.fund_order_items.all()]))
+        return mark_safe(u"<br>".join([self.form_url(fund_order_item.id, str(fund_order_item)) for fund_order_item in obj.fund_order_items.all()]))
 
     list_of_fund_order_items.allow_tags = True
     form_url.allow_tags = True
@@ -318,7 +319,7 @@ class PortfolioAdmin(admin.ModelAdmin):
     disable the deletion option
     make all amount of read only type
     """
-    list_display = ['user', 'has_invested', 'vault_completed']
+    list_display = ['id', 'user', 'has_invested', 'vault_completed']
     list_filter = ['has_invested']
     search_fields = ['user__email']
     readonly_fields = ('elss_percentage', 'debt_percentage', 'equity_percentage','liquid_percentage', 'total_sum_invested', 'returns_value', 'returns_percentage', 'list_of_goals')
@@ -393,7 +394,7 @@ class PortfolioItemAdmin(admin.ModelAdmin):
     defining list editable
     diasable the deletion option
     """
-    list_display = ['portfolio__user', 'portfolio__id', 'goal', 'fund']
+    list_display = ['id', 'portfolio', 'goal', 'fund']
     search_fields = ['portfolio__user__email', 'portfolio__user__phone_number', 'portfolio__id', 'goal__id']
     readonly_fields=('portfolio', 'sip', 'lumpsum', 'sum_invested', 'returns_value', 'returns_percentage', 'one_day_previous_portfolio_value', 'one_day_return')
     actions = None
@@ -539,7 +540,7 @@ class GoalAdmin(admin.ModelAdmin):
     list_filter = [UserFilter, 'category']
     list_display = ['id', 'user', 'name', 'category', 'portfolio', 'created_at']
     search_fields = ['category', 'user__email','portfolio__id']
-    readonly_fields = ('user', 'name', 'category', 'portfolio', 'duration', 'asset_allocation', 'list_of_portfolio_items')
+    readonly_fields = ('user', 'name', 'category', 'portfolio', 'duration', 'asset_allocation', 'sip_amount', 'lumpsum_amount', 'list_of_portfolio_items')
     actions = None
 
     def form_url(self, item_id, item):
@@ -556,6 +557,14 @@ class GoalAdmin(admin.ModelAdmin):
         :param obj: contains an instance to grouped redeem detail object
         """
         return mark_safe(u"<br>".join([self.form_url(portfolio_item.id, portfolio_item) for portfolio_item in obj.portfolioitem_set.all()]))
+
+    def sip_amount(self, obj):
+        goal_object = goals_helper.GoalBase.get_goal_instance(obj)
+        return goal_object.get_sip_amount()
+    
+    def lumpsum_amount(self, obj):
+        goal_object = goals_helper.GoalBase.get_goal_instance(obj)
+        return goal_object.get_lumpsum_amount()
 
     list_of_portfolio_items.allow_tags = True
     form_url.allow_tags = True

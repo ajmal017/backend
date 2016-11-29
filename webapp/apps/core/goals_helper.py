@@ -205,8 +205,8 @@ class GoalBase(ABC):
         if not self.goal_object:
             return 0, 0, 0, 0, 0, 0
         
-        lumpsum_amount = self.goal_object.get_lumpsum_amount()
-        sip_amount = self.goal_object.get_sip_amount()
+        lumpsum_amount = self.get_lumpsum_amount()
+        sip_amount = self.get_sip_amount()
         
         allocation = self.goal_object.asset_allocation
         
@@ -216,7 +216,7 @@ class GoalBase(ABC):
             elss_lumpsum = round((lumpsum_amount * float(allocation[constants.ELSS])) / 100)
             elss_sip = round((sip_amount * float(allocation[constants.ELSS])) / 100)
 
-        if float(allocation[constants.LIQUID]):
+        if allocation.get(constants.LIQUID) and float(allocation[constants.LIQUID]):
             liquid_lumpsum += round((lumpsum_amount * float(allocation[constants.LIQUID])) / 100)
             liquid_sip += round((sip_amount * float(allocation[constants.LIQUID])) / 100)
             
@@ -251,7 +251,7 @@ class GoalBase(ABC):
             return 
         
         invested_amount = 0
-        investment_value = 0
+        investment_value = 0    
         latest_date = funds_helper.FundsHelper.get_dashboard_change_date()
         asset_values = {constants.DEBT: 0, constants.EQUITY: 0, constants.ELSS: 0, constants.LIQUID: 0}
         

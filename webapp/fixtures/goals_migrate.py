@@ -43,6 +43,7 @@ def get_category_answers(user, question_for, portfolio=None):
     category = question_for + "_allocation"
     try:
         category_allocation = getattr(PlanAssestAllocation.objects.get(user=user, portfolio=portfolio), category)
+        category_allocation[constants.LIQUID] = '0'
     except PlanAssestAllocation.DoesNotExist:
         category_allocation = constants.EMPTY_ALLOCATION
         
@@ -89,6 +90,8 @@ def get_goals_with_asset_type(goals, asset_type):
         if float(g.asset_allocation[asset_type]) > 0:
             goal_list.append(g)
             
+    return goal_list
+            
 def match_portfolio_with_lumpsum_goal(portfolio_items, goal_list, asset_type):
     goals_done = []
     for g in goal_list:
@@ -102,7 +105,8 @@ def match_portfolio_with_lumpsum_goal(portfolio_items, goal_list, asset_type):
             for p in portfolio_items:
                 if p.lumpsum > 0:
                     if p.sip == 0:
-                        p.update(goal=g)
+                        p.goal=g
+                        p.save()
                         portfolio_index.append(p)
                     else:
                         kwargs = {}
@@ -111,7 +115,6 @@ def match_portfolio_with_lumpsum_goal(portfolio_items, goal_list, asset_type):
                         kwargs[constants.LUMPSUM] = p.lumpsum
                         kwargs['sum_invested'] = p.lumpsum
                         p_new, created = PortfolioItem.objects.update_or_create(portfolio_id=p.portfolio.id, goal=g, fund_id=p.fund.id, defaults=kwargs)
-                        p.update(lumpsum = 0)
                         foi = FundOrderItem.objects.get(portfolio_item=p, orderdetail__is_lumpsum=True)
                         foi_new = FundOrderItem.objects.create(portfolio_item=p_new,
                                                               order_amount=p.lumpsum,
@@ -125,7 +128,12 @@ def match_portfolio_with_lumpsum_goal(portfolio_items, goal_list, asset_type):
                                                               bse_transaction_id=foi.bse_transaction_id)
                         order_detail = foi.orderdetail_set.all()[0]
                         order_detail.fund_order_items.add(foi_new)
-                        foi.update(agreed_lumpsum=0, order_amount=0)
+                        p.sum_invested -= p.lumpsum 
+                        p.lumpsum = 0
+                        p.save()
+                        foi.agreed_lumpsum=0
+                        foi.order_amount=0
+                        foi.save()
             for p in portfolio_index:
                 portfolio_items.remove(p)
             goals_done.append(g)
@@ -149,7 +157,8 @@ def match_portfolio_with_goal(portfolio_items, goals, asset_type):
         direct_allocation = None
         for p in portfolio_items:
             if p.sip == goal_sip and p.lumpsum == goal_lumpsum:
-                p.update(goal=g)
+                p.goal=g
+                p.save()
                 direct_allocation = p
                 break
         
@@ -160,7 +169,8 @@ def match_portfolio_with_goal(portfolio_items, goals, asset_type):
         
         for p in portfolio_items:
             if p.lumpsum <= goal_lumpsum and p.sip <= goal_sip:
-                p.update(goal=g)
+                p.goal=g
+                p.save()
                 goal_lumpsum -= p.lumpsum
                 goal_sip -= p.sip
         
@@ -184,7 +194,7 @@ def migrate_portfolio():
     
         portfolios = Portfolio.objects.filter(user=u, has_invested=True, is_deleted=False)
         for p in portfolios:
-            
+            print("Processing portfolio: " + str(p))
             goals = Goal.objects.filter(portfolio=p)
             if len(goals) > 1:
                 portfolio_items_elss = PortfolioItem.objects.filter(portfolio=p, broad_category_group=constants.FUND_MAP[constants.ELSS])
@@ -195,8 +205,11 @@ def migrate_portfolio():
                 portfolio_items_equity = PortfolioItem.objects.filter(portfolio=p, broad_category_group=constants.FUND_MAP[constants.EQUITY])
                 portfolio_items_debt = PortfolioItem.objects.filter(portfolio=p, broad_category_group=constants.FUND_MAP[constants.DEBT])
                 
-                match_portfolio_with_goal(portfolio_items_equity, goals, constants.EQUITY)                
-                match_portfolio_with_goal(portfolio_items_debt, goals, constants.DEBT)
+                list_equity = list(portfolio_items_equity)
+                list_debt = list(portfolio_items_debt)
+                
+                match_portfolio_with_goal(list_equity, goals, constants.EQUITY)                
+                match_portfolio_with_goal(list_debt, goals, constants.DEBT)
             else:
                 if len(goals) == 1:
                     p.portfolioitem_set.all().update(goal=goals[0])
@@ -205,12 +218,14 @@ def migrate_portfolio():
         print("Migrating orders for user: " + u.email)        
         orders = OrderDetail.objects.filter(user=u, is_lumpsum=True, fund_order_items__agreed_sip__gt=0)
         for o in orders:
-            portfolio_item = o.fund_order_items[0].portfolio_item
+            portfolio_item = o.fund_order_items.first().portfolio_item
             o_sip = OrderDetail.objects.filter(user=u, is_lumpsum=False, fund_order_items__portfolio_item=portfolio_item).order_by('created_at').first()
             if o_sip:
                 o.fund_order_items.update(agreed_sip=0)
-                o.add(o_sip.fund_order_items)
+                for foi in o_sip.fund_order_items.all():
+                    o.fund_order_items.add(foi)
                 o_sip.delete() 
+                o.fund_order_items.filter(agreed_lumpsum=0, agreed_sip=0).delete()
                 
         grouped_redeem_details = GroupedRedeemDetail.objects.filter(user=u)
         for group_redeem in grouped_redeem_details:
