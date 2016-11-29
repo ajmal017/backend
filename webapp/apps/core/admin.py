@@ -176,27 +176,26 @@ class GroupedRedeemDetailAdmin(admin.ModelAdmin):
     list_filter = ['redeem_status']
     list_display = ['user', 'redeem_status', 'id', 'redeem_detail_button']
     search_fields = ['user__email']
-    readonly_fields = ('user', 'list_of_redeem_details')
+    readonly_fields = ('user', 'list_of_redeem_items')
     exclude = ('redeem_details', )
     actions = None
 
-    def form_url(self, id, redeem_id):
+    def form_url(self, id, fund):
         """
         returns a url formed for a particular redeem detail
         :param id: id associated with a redeem_detail
         """
-        url = reverse("admin:core_redeemdetail_change", args=[id])
-        return mark_safe(u'<a href=%s target="_blank">%s</a>' % (url, redeem_id))
+        url = reverse("admin:core_fundredeemitem_change", args=[id])
+        return mark_safe(u'<a href=%s target="_blank">%s</a>' % (url, fund.legal_name))
 
-    def list_of_redeem_details(self, obj):
+    def list_of_redeem_items(self, obj):
         """
         returns list of redeem details related to a grouped redeemed detail
         :param obj: contains an instance to grouped redeem detail object
         """
-        for redeem_detail in obj.redeem_details.all():
-            return mark_safe(u"<br>".join([self.form_url(redeem_detail.id, redeem_detail.redeem_id) for redeem_detail in obj.redeem_details.all()]))
+        return mark_safe(u"<br>".join([self.form_url(redeem_item.id, redeem_item.portfolio_item.fund) for redeem_item in obj.fundredeemitem_set.all()]))
 
-    list_of_redeem_details.allow_tags = True
+    list_of_redeem_items.allow_tags = True
     form_url.allow_tags = True
 
     def has_delete_permission(self, request, obj=None):
@@ -358,8 +357,8 @@ class FundRedeemItemAdmin(admin.ModelAdmin):
     """
     defining list editable
     """
-    list_display = ['portfolio_item', 'redeem_amount', 'redeemid']
-    search_fields = ['portfolio_item__portfolio__user__email', 'portfolio_item__portfolio__user__phone_number']
+    list_display = ['portfolio_item', 'redeem_amount', 'redeemid', 'created_at', 'grouped_redeem']
+    search_fields = ['portfolio_item__portfolio__user__email', 'portfolio_item__portfolio__user__phone_number', 'grouped_redeem__id']
     readonly_fields = ('portfolio_item', )
 
     def has_delete_permission(self, request, obj=None):
@@ -369,7 +368,7 @@ class FundRedeemItemAdmin(admin.ModelAdmin):
         """
         returns the redeemid for each fundredeemtem
         """
-        return instance.redeemdetail_set.all()[0].redeem_id
+        return instance.id
 
 class PortfolioItemAdmin(admin.ModelAdmin):
     """

@@ -198,7 +198,8 @@ def migrate_portfolio():
                 match_portfolio_with_goal(portfolio_items_equity, goals, constants.EQUITY)                
                 match_portfolio_with_goal(portfolio_items_debt, goals, constants.DEBT)
             else:
-                p.portfolioitem_set.all().update(goal=goals[0])
+                if len(goals) == 1:
+                    p.portfolioitem_set.all().update(goal=goals[0])
                     
         
         print("Migrating orders for user: " + u.email)        
