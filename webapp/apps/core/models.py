@@ -794,7 +794,9 @@ class FundRedeemItem(TimeStampedModel):
         """
         Returns the date of redeem
         """
-        redeem_status = self.redeem_status
+        redeem_status = constants.PENDING
+        if self.grouped_redeem:
+            redeem_status = self.grouped_redeem.redeem_status
         if self.is_cancelled == True:
             return "Cancelled"
         elif redeem_status == constants.PENDING:

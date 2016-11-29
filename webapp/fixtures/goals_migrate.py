@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.db.models import Sum
 from webapp.apps import random_with_N_digits
 from profiles.models import User
-from core.models import Goal, OrderDetail
+from core.models import Goal, OrderDetail, GroupedRedeemDetail, FundRedeemItem
 from core.models import Portfolio, PortfolioItem, FundOrderItem
 from core.models import Answer
 from core.models import PlanAssestAllocation
@@ -200,7 +200,8 @@ def migrate_portfolio():
             else:
                 p.portfolioitem_set.all().update(goal=goals[0])
                     
-                
+        
+        print("Migrating orders for user: " + u.email)        
         orders = OrderDetail.objects.filter(user=u, is_lumpsum=True, fund_order_items__agreed_sip__gt=0)
         for o in orders:
             portfolio_item = o.fund_order_items[0].portfolio_item
@@ -209,5 +210,10 @@ def migrate_portfolio():
                 o.fund_order_items.update(agreed_sip=0)
                 o.add(o_sip.fund_order_items)
                 o_sip.delete() 
-    
-migrateAll()
+                
+        grouped_redeem_details = GroupedRedeemDetail.objects.filter(user=u)
+        for group_redeem in grouped_redeem_details:
+            redeem_details = group_redeem.redeem_details.all()
+            FundRedeemItem.objects.filter(redeemdetail__in=redeem_details).update(grouped_redeem=group_redeem)
+        
+#migrateAll()
