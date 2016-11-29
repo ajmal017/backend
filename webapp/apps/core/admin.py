@@ -321,8 +321,26 @@ class PortfolioAdmin(admin.ModelAdmin):
     list_display = ['user', 'has_invested', 'vault_completed']
     list_filter = ['has_invested']
     search_fields = ['user__email']
-    readonly_fields = ('elss_percentage', 'debt_percentage', 'equity_percentage','liquid_percentage', 'total_sum_invested', 'returns_value', 'returns_percentage')
+    readonly_fields = ('elss_percentage', 'debt_percentage', 'equity_percentage','liquid_percentage', 'total_sum_invested', 'returns_value', 'returns_percentage', 'list_of_goals')
     actions = None
+
+    def form_url(self, goal_id, category):
+        """
+        returns a url formed for a particular redeem detail
+        :param id: id associated with a redeem_detail
+        """
+        url = reverse("admin:core_fundredeemitem_change", args=[goal_id])
+        return mark_safe(u'<a href=%s target="_blank">%s</a>' % (url, category))
+
+    def list_of_goals(self, obj):
+        """
+        returns list of redeem details related to a grouped redeemed detail
+        :param obj: contains an instance to grouped redeem detail object
+        """
+        return mark_safe(u"<br>".join([self.form_url(goal.id, goal.category) for goal in obj.goal_set.all()]))
+
+    list_of_goals.allow_tags = True
+    form_url.allow_tags = True
 
     def has_delete_permission(self, request, obj=None):
         return False
@@ -375,7 +393,8 @@ class PortfolioItemAdmin(admin.ModelAdmin):
     defining list editable
     diasable the deletion option
     """
-    search_fields = ['portfolio__user__email', 'portfolio__user__phone_number']
+    list_display = ['portfolio__user', 'portfolio__id', 'goal', 'fund']
+    search_fields = ['portfolio__user__email', 'portfolio__user__phone_number', 'portfolio__id', 'goal__id']
     readonly_fields=('portfolio', 'sip', 'lumpsum', 'sum_invested', 'returns_value', 'returns_percentage', 'one_day_previous_portfolio_value', 'one_day_return')
     actions = None
 
@@ -519,7 +538,7 @@ class GoalAdmin(admin.ModelAdmin):
     """
     list_filter = [UserFilter, 'category']
     list_display = ['id', 'user', 'name', 'category', 'portfolio', 'created_at']
-    search_fields = ['category', 'user__email']
+    search_fields = ['category', 'user__email','portfolio__id']
     readonly_fields = ('user', 'name', 'category', 'portfolio', 'duration', 'asset_allocation')
     actions = None
 
