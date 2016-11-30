@@ -468,7 +468,7 @@ def get_plan_answers(user):
     return category_answers
 
 
-def format_porfolioitems(equity_funds, debt_funds, elss_funds, is_error, errors,liquid_funds):
+def format_porfolioitems(equity_funds, debt_funds, elss_funds, liquid_funds, is_error, errors):
     """
     :param equity_funds:the equity funds in user portfolio
     :param debt_funds:the debt funds in user portfolio
@@ -506,7 +506,7 @@ def get_portfolio_items(user_id, overall_allocation, sip_lumpsum_allocation):
     except models.Portfolio.DoesNotExist:
         equity_funds, debt_funds, elss_funds, is_error, errors,liquid_funds = create_portfolio_items(
             user_id, overall_allocation, sip_lumpsum_allocation)
-        return format_porfolioitems(equity_funds, debt_funds, elss_funds, is_error, errors,liquid_funds)
+        return format_porfolioitems(equity_funds, debt_funds, elss_funds, liquid_funds, is_error, errors)
 
     latest_answer_time = goals_helper.GoalBase.get_current_goals(portfolio.user).latest(
         constants.MODIFIED_AT).modified_at
@@ -514,19 +514,16 @@ def get_portfolio_items(user_id, overall_allocation, sip_lumpsum_allocation):
     if portfolio.user.rebuild_portfolio == True or latest_answer_time > portfolio_modified_time:
         equity_funds, debt_funds, elss_funds, is_error, errors,liquid_funds = create_portfolio_items(
             user_id, overall_allocation, sip_lumpsum_allocation)
-        return format_porfolioitems(equity_funds, debt_funds, elss_funds, is_error, errors,liquid_funds)
+        return format_porfolioitems(equity_funds, debt_funds, elss_funds, liquid_funds, is_error, errors)
     else:
-        equity_funds = get_recommended_schemes(user_id, constants.EQUITY)
-        debt_funds = get_recommended_schemes(user_id, constants.DEBT)
-        elss_funds = get_recommended_schemes(user_id, constants.ELSS)
-        liquid_funds = get_recommended_schemes(user_id, constants.LIQUID)
-        return format_porfolioitems(equity_funds, debt_funds, elss_funds, False, {},liquid_funds)
+        return get_recommended_schemes_per_goal(portfolio.user)
 
-def get_recommended_schemes_per_goal(user, goal):
+def get_recommended_schemes_per_goal(user, goal=None):
     equity_funds = get_recommended_schemes(user, constants.EQUITY, goal)
     debt_funds = get_recommended_schemes(user, constants.DEBT, goal)
     elss_funds = get_recommended_schemes(user, constants.ELSS, goal)
-    return format_porfolioitems(equity_funds, debt_funds, elss_funds, False, {})
+    liquid_funds = get_recommended_schemes(user, constants.LIQUID, goal)
+    return format_porfolioitems(equity_funds, debt_funds, elss_funds, liquid_funds, False, {})
 
 def get_portfolio_items_per_goal(user, overall_allocation, goal=None):
     """
@@ -566,11 +563,8 @@ def get_portfolio_items_per_goal(user, overall_allocation, goal=None):
         allocation, goal_summary, total_investment = get_sip_lumpsum_for_goal(user, goal)
         goal_data = {'allocation': allocation, 'summary': goal_summary, 'total_sum': total_investment}
         
-        equity_funds = get_recommended_schemes(user, constants.EQUITY, goal)
-        debt_funds = get_recommended_schemes(user, constants.DEBT, goal)
-        elss_funds = get_recommended_schemes(user, constants.ELSS, goal)
-        liquid_funds = get_recommended_schemes(user, constants.LIQUID)
-        goal_data.update(format_porfolioitems(equity_funds, debt_funds, elss_funds, False, {}, liquid_funds))
+        recommended_schemes, errors = get_recommended_schemes_per_goal(user, goal)
+        goal_data.update(recommended_schemes)
         goals_portfolio_items.append(goal_data)
 
     return {"goals_recommended_schemes":goals_portfolio_items}
