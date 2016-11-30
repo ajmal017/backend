@@ -290,7 +290,7 @@ class GoalRecommendedPortfolio(APIView):
         :param request:
         :return: overall allocation for a user and the recommended schemes for the user
         """
-        goal = goals_helper.GoalBase.get_current_goal(request.user, goal_type)
+        goal = goals_helper.GoalBase.get_current_goal(request.user, constants.MAP(goal_type))
         if not goal:
             return api_utils.response({constants.MESSAGE: constants.USER_GOAL_NOT_PRESENT},
                                       status.HTTP_400_BAD_REQUEST, constants.USER_GOAL_NOT_PRESENT)
@@ -747,7 +747,7 @@ class FundsDividedIntoCategoriesForGoal(APIView):
         """
         funds_divided = {}
         
-        goal = goals_helper.GoalBase.get_current_goal(request.user, goal_type)
+        goal = goals_helper.GoalBase.get_current_goal(request.user, constants.MAP(goal_type))
         if not goal:
             return api_utils.response({constants.MESSAGE: constants.USER_GOAL_NOT_PRESENT},
                                       status.HTTP_400_BAD_REQUEST, constants.USER_GOAL_NOT_PRESENT)
@@ -1649,7 +1649,7 @@ class GetCategorySchemesForGoal(APIView):
         :return:
         """
         
-        goal = goals_helper.GoalBase.get_current_goal(request.user, goal_type)
+        goal = goals_helper.GoalBase.get_current_goal(request.user, constants.MAP(goal_type))
         if not goal:
             return api_utils.response({constants.MESSAGE: constants.USER_GOAL_NOT_PRESENT},
                                       status.HTTP_400_BAD_REQUEST, constants.USER_GOAL_NOT_PRESENT)
@@ -1767,7 +1767,7 @@ class ChangeGoalPortfolio(APIView):
             return api_utils.response({constants.MESSAGE: constants.USER_PORTOFOLIO_NOT_PRESENT},
                                       status.HTTP_400_BAD_REQUEST, constants.USER_PORTOFOLIO_NOT_PRESENT)
 
-        goal = goals_helper.GoalBase.get_current_goal(request.user, goal_type)
+        goal = goals_helper.GoalBase.get_current_goal(request.user, constants.MAP(goal_type))
         if not goal:
             return api_utils.response({constants.MESSAGE: constants.USER_GOAL_NOT_PRESENT},
                                       status.HTTP_400_BAD_REQUEST, constants.USER_GOAL_NOT_PRESENT)
@@ -1849,7 +1849,7 @@ class FundsDistributionValidateForGoal(APIView):
             return api_utils.response({constants.MESSAGE: constants.USER_PORTOFOLIO_NOT_PRESENT},
                                       status.HTTP_400_BAD_REQUEST, constants.USER_PORTOFOLIO_NOT_PRESENT)
 
-        goal = goals_helper.GoalBase.get_current_goal(request.user, goal_type)
+        goal = goals_helper.GoalBase.get_current_goal(request.user, constants.MAP(goal_type))
         if not goal:
             return api_utils.response({constants.MESSAGE: constants.USER_GOAL_NOT_PRESENT},
                                       status.HTTP_400_BAD_REQUEST, constants.USER_GOAL_NOT_PRESENT)
