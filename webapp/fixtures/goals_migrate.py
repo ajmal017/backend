@@ -43,7 +43,7 @@ def get_category_answers(user, question_for, portfolio=None):
     category = question_for + "_allocation"
     try:
         category_allocation = getattr(PlanAssestAllocation.objects.get(user=user, portfolio=portfolio), category)
-        category_allocation[constants.LIQUID] = '0'
+        category_allocation.update({constants.LIQUID : '0'})
     except PlanAssestAllocation.DoesNotExist:
         category_allocation = constants.EMPTY_ALLOCATION
         

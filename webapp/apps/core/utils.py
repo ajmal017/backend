@@ -265,6 +265,9 @@ def make_allocation_dict(sip, lumpsum, allocation):
     :param allocation: allocation for a goal
     :return: allocation dict in format to be used by get_number_of_funds utility
     """
+    if not allocation.get(constants.LIQUID):
+        allocation.update({constants.LIQUID: '0'})
+        
     allocation_dict = {
         constants.EQUITY: {"lumpsum": lumpsum * int(allocation[constants.EQUITY]) / 100,
                            "sip": sip * int(allocation[constants.EQUITY]) / 100},
