@@ -1074,7 +1074,7 @@ class GroupedRedeemDetail(TimeStampedModel):
 
         # Makes sure all redeem details are marked cancelled when anyone changes redeem status to Cancelled state
         if self.redeem_status == 3:
-            for fund_redeem_item in self.fund_redeem_item_set.all():
+            for fund_redeem_item in self.fundredeemitem_set.all():
                 fund_redeem_item.is_cancelled = True
                 fund_redeem_item.save()
 
@@ -1251,7 +1251,7 @@ class ExchangeRate(models.Model):
     value = models.CharField(max_length=100)
 
 
-class FolioNumber(models.Model):
+class FolioNumber(TimeStampedModel):
     """
     Model to store folio number of funds
     """

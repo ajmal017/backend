@@ -561,13 +561,13 @@ def get_portfolio_items_per_goal(user, overall_allocation, goal=None):
     
     for goal in goals:
         allocation, goal_summary, total_investment = get_sip_lumpsum_for_goal(user, goal)
-        goal_data = {'allocation': allocation, 'summary': goal_summary, 'total_sum': total_investment}
+        goal_data = {'allocation': allocation, 'goal_summary': goal_summary, 'total_sum': total_investment}
         
         recommended_schemes, errors = get_recommended_schemes_per_goal(user, goal)
         goal_data.update(recommended_schemes)
         goals_portfolio_items.append(goal_data)
 
-    return {"goals_recommended_schemes":goals_portfolio_items}
+    return {"goals_recommended_schemes":goals_portfolio_items}, None
 
 def create_portfolio_items(user_id, overall_allocation, sip_lumpsum_allocation, goal=None):
     """
@@ -3615,13 +3615,13 @@ def process_redeem_request(user, data):
     
     redeem_items = []
     for goal_data in data:
-        goal = goals_helper.GoalBase.get_goal(user, goal_data.goal_id)
+        goal = goals_helper.GoalBase.get_goal(user, goal_data['goal_id'])
         if goal:
-            redeem_items += redeem_helper.RedeemHelper.generate_redeem_for_goal(goal, goal_data.all_units, goal_data.amount)
+            redeem_items += redeem_helper.RedeemHelper.generate_redeem_for_goal(goal, goal_data['all_units'], goal_data['amount'])
     
-    if len(redeem_items > 0):
+    if len(redeem_items) > 0:
         grouped_redeem_detail = models.GroupedRedeemDetail.objects.create(user=user)
-        grouped_redeem_detail.fund_redeem_item_set.set(redeem_items)
+        grouped_redeem_detail.fundredeemitem_set.set(redeem_items)
         return grouped_redeem_detail
     
     return None

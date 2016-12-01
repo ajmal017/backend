@@ -216,16 +216,18 @@ class GoalBase(ABC):
             elss_lumpsum = round((lumpsum_amount * float(allocation[constants.ELSS])) / 100)
             elss_sip = round((sip_amount * float(allocation[constants.ELSS])) / 100)
 
+        liquid_percentage = 0
         if allocation.get(constants.LIQUID) and float(allocation[constants.LIQUID]):
+            liquid_percentage = float(allocation[constants.LIQUID])
             liquid_lumpsum += round((lumpsum_amount * float(allocation[constants.LIQUID])) / 100)
             liquid_sip += round((sip_amount * float(allocation[constants.LIQUID])) / 100)
             
         equity_lumpsum, debt_lumpsum, equity_sip, debt_sip = self.calculate_asset_allocation(lumpsum_amount, sip_amount, float(allocation[constants.EQUITY]), float(allocation[constants.DEBT]))
 
-        return {constants.EQUITY: {constants.LUMPSUM: equity_lumpsum, constants.SIP: equity_sip},
-                constants.DEBT: {constants.LUMPSUM: debt_lumpsum, constants.SIP: debt_sip},
-                constants.ELSS: {constants.LUMPSUM: elss_lumpsum, constants.SIP: elss_sip},
-                constants.LIQUID: {constants.LUMPSUM: liquid_lumpsum, constants.SIP: liquid_sip}} 
+        return {constants.EQUITY: {constants.LUMPSUM: equity_lumpsum, constants.SIP: equity_sip, 'percentage': float(allocation[constants.EQUITY])},
+                constants.DEBT: {constants.LUMPSUM: debt_lumpsum, constants.SIP: debt_sip, 'percentage': float(allocation[constants.DEBT])},
+                constants.ELSS: {constants.LUMPSUM: elss_lumpsum, constants.SIP: elss_sip, 'percentage': float(allocation[constants.ELSS])},
+                constants.LIQUID: {constants.LUMPSUM: liquid_lumpsum, constants.SIP: liquid_sip, 'percentage': liquid_percentage}} 
 
     def get_expected_corpus(self):
         term = self.get_duration()
