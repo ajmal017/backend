@@ -1,0 +1,1 @@
+{"grow_sip": 0, "monthly_investment": 6000, "retirement_age": 60, "floating_sip": false, "current_age": 38, "allocation": {"debt": "35", "equity": "65", "elss": "0"}, "goal_name":"RetirementTest"}

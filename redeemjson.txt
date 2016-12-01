@@ -1,0 +1,1 @@
+{"data": [{"goal_id":18, "amount":[{"fund_id": 42, "redeem_amount": 50000}, {"fund_id":50, "redeem_amount":10000}], "all_units": []},{"goal_id":20, "amount":[{"fund_id": 44, "redeem_amount": 11000}], "all_units": [{"fund_id":15}]}, {"goal_id":16, "amount":[], "all_units":[{"fund_id":42}, {"fund_id":50}]}]}
