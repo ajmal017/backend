@@ -3603,7 +3603,7 @@ def process_redeem_request(user, data):
     
     if len(redeem_items) > 0:
         grouped_redeem_detail = models.GroupedRedeemDetail.objects.create(user=user)
-        grouped_redeem_detail.fund_redeem_item_set.set(redeem_items)
+        grouped_redeem_detail.fundredeemitem_set.set(redeem_items)
         return grouped_redeem_detail
     
     return None

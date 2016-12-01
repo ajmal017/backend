@@ -1241,7 +1241,7 @@ class ExchangeRate(models.Model):
     value = models.CharField(max_length=100)
 
 
-class FolioNumber(models.Model):
+class FolioNumber(TimeStampedModel):
     """
     Model to store folio number of funds
     """
