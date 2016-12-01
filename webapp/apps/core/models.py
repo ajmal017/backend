@@ -241,7 +241,10 @@ class Question(TimeStampedModel):
         (constants.WEDDING, 'Save for Wedding'),
         (constants.OTHER_EVENT, 'Other Events'),
         (constants.INVEST, 'Invest'),
-        (constants.LIQUID_GOAL, 'Liquid')
+        (constants.LIQUID_GOAL, 'Liquid'),
+        (constants.AUTO_MOBILE, 'Auto Mobile'),
+        (constants.VACATION, 'Vacation'),
+        (constants.JEWELLERY, 'Jewellery')
     )
 
     question_id = models.CharField(max_length=254, blank=True)
@@ -444,7 +447,10 @@ class Goal(TimeStampedModel):
         (constants.WEDDING, 'Save for Wedding'),
         (constants.OTHER_EVENT, 'Other Events'),
         (constants.INVEST, 'Invest'),
-        (constants.LIQUID_GOAL, 'liquid')
+        (constants.LIQUID_GOAL, 'liquid'),
+        (constants.AUTO_MOBILE, 'Auto Mobile'),
+        (constants.VACATION, 'Vacation'),
+        (constants.JEWELLERY, 'Jewellery')
     )
 
     user = models.ForeignKey(profile_models.User, related_name="goal_user")
@@ -592,6 +598,10 @@ class PlanAssestAllocation(TimeStampedModel):
     wedding_allocation = HStoreField(blank=True, null=True)
     event_allocation = HStoreField(blank=True, null=True)
     invest_allocation = HStoreField(blank=True, null=True)
+    liquid_allocation = HStoreField(blank=True, null=True)
+    automobile_allocation = HStoreField(blank=True, null=True)
+    vacation_allocation = HStoreField(blank=True, null=True)
+    jewellery_allocation = HStoreField(blank=True, null=True)
     portfolio = models.ForeignKey(Portfolio, null=True, blank=True, default=None)
 
     def __str__(self):

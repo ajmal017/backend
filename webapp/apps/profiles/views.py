@@ -263,6 +263,10 @@ class Register(APIView):
                                        "wedding": core_utils.get_category_answers(user, "wedding"),
                                        "property": core_utils.get_category_answers(user, "property"),
                                        "event": core_utils.get_category_answers(user, "event"),
+                                       "liquid": core_utils.get_category_answers(user, "liquid"),
+                                        "automobile": core_utils.get_category_answers(user, "automobile"),
+                                        "vacation": core_utils.get_category_answers(user, "vacation"),
+                                        "jewellery": core_utils.get_category_answers(user, "jewellery")
                                        },headers=headers)
         else:
             return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(serializer.errors))
@@ -337,7 +341,11 @@ class Login(APIView):
                                                "education": core_utils.get_category_answers(user, "education"),
                                                "wedding": core_utils.get_category_answers(user, "wedding"),
                                                "property": core_utils.get_category_answers(user, "property"),
-                                               "event": core_utils.get_category_answers(user, "event")},
+                                               "event": core_utils.get_category_answers(user, "event"),
+                                               "liquid": core_utils.get_category_answers(user, "liquid"),
+                                               "automobile": core_utils.get_category_answers(user, "automobile"),
+                                               "vacation": core_utils.get_category_answers(user, "vacation"),
+                                               "jewellery": core_utils.get_category_answers(user, "jewellery")},
                                                 headers=headers)
                 else:
                     login_error = constants.LOGIN_ERROR_5
@@ -370,7 +378,8 @@ class ProfileCompleteness(APIView):
         
         user = request.user
         if user:
-            data = {"assess": core_utils.get_assess_answer(user), "plan": core_utils.get_plan_answers(user),
+            data = {"assess": core_utils.get_assess_answer(user), 
+                    "plan": core_utils.get_plan_answers(user),
                     "retirement": core_utils.get_category_answers(user, "retirement"),
                     "tax": core_utils.get_category_answers(user, "tax"),
                     "invest": core_utils.get_category_answers(user, "invest"),
@@ -378,6 +387,10 @@ class ProfileCompleteness(APIView):
                     "wedding": core_utils.get_category_answers(user, "wedding"),
                     "property": core_utils.get_category_answers(user, "property"),
                     "event": core_utils.get_category_answers(user, "event"),
+                    "liquid": core_utils.get_category_answers(user, "liquid"),
+                    "automobile": core_utils.get_category_answers(user, "automobile"),
+                    "vacation": core_utils.get_category_answers(user, "vacation"),
+                    "jewellery": core_utils.get_category_answers(user, "jewellery"),
                     "risk_score":user.risk_score
                     }
 
@@ -1805,7 +1818,12 @@ class GoogleLogin(APIView):
                                                     "education": core_utils.get_category_answers(user, "education"),
                                                     "wedding": core_utils.get_category_answers(user, "wedding"),
                                                     "property": core_utils.get_category_answers(user, "property"),
-                                                    "event": core_utils.get_category_answers(user, "event")},
+                                                    "event": core_utils.get_category_answers(user, "event"),
+                                                    "liquid": core_utils.get_category_answers(user, "liquid"),
+                                                   "automobile": core_utils.get_category_answers(user, "automobile"),
+                                                   "vacation": core_utils.get_category_answers(user, "vacation"),
+                                                   "jewellery": core_utils.get_category_answers(user, "jewellery")
+                                                    },
                                                     "user_status":user_status
                                                    },headers=headers)
                     else:
@@ -1893,6 +1911,10 @@ class GoogleRegister(APIView):
                                                        "wedding": core_utils.get_category_answers(user, "wedding"),
                                                        "property": core_utils.get_category_answers(user, "property"),
                                                        "event": core_utils.get_category_answers(user, "event"),
+                                                       "liquid": core_utils.get_category_answers(user, "liquid"),
+                                                       "automobile": core_utils.get_category_answers(user, "automobile"),
+                                                       "vacation": core_utils.get_category_answers(user, "vacation"),
+                                                       "jewellery": core_utils.get_category_answers(user, "jewellery")
                                                        },headers=headers)
                     else:
                         return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(serializer.errors))
@@ -1979,6 +2001,10 @@ class GoogleRegisterExistingUser(APIView):
                                                            "wedding": core_utils.get_category_answers(user, "wedding"),
                                                            "property": core_utils.get_category_answers(user, "property"),
                                                            "event": core_utils.get_category_answers(user, "event"),
+                                                           "liquid": core_utils.get_category_answers(user, "liquid"),
+                                                           "automobile": core_utils.get_category_answers(user, "automobile"),
+                                                           "vacation": core_utils.get_category_answers(user, "vacation"),
+                                                           "jewellery": core_utils.get_category_answers(user, "jewellery")
                                                            },headers=headers)
                               
                         else:

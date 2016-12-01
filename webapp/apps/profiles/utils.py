@@ -53,6 +53,7 @@ def get_answers(user_id):
     user_tax_answers, user_retirement_answers, user_property_answers = [], [], []
     user_education_answers, user_wedding_answers, user_event_answers = [], [], []
     user_assess_answers, user_investment_answers, user_plan_answers = [], [], []
+    user_liquid_answers,user_automobile_answers , user_vaction_answers , user_jewellery_answers = [], [],[],[]
     for answer in core_models.Answer.objects.filter(user_id=user_id).select_related('question'):
         #  filters the answers by the user and loops through each answer checking its category(question_for)
         #  according to the category append the answer in the respective list(user_tax_answers,user_event_answers, etc)
@@ -74,10 +75,21 @@ def get_answers(user_id):
             user_investment_answers = append_list(answer, user_investment_answers)
         elif answer.question.question_for == constants.PLAN:
             user_plan_answers = append_list(answer, user_plan_answers)
+        elif answer.question.question_for == constants.LIQUID_GOAL:
+            user_liquid_answers = append_list(answer, user_liquid_answers)
+        elif answer.question.question_for == constants.AUTO_MOBILE:
+            user_automobile_answers = append_list(answer, user_automobile_answers)
+        elif answer.question.question_for == constants.VACATION:
+            user_vaction_answers = append_list(answer, user_vaction_answers)
+        elif answer.question.question_for == constants.JEWELLERY:
+            user_jewellery_answers = append_list(answer, user_jewellery_answers)
     #  make a dictionary with keys 'tax','retirement'....'event' and value as respective list.
     user_answers = {'tax': user_tax_answers, 'retirement': user_retirement_answers, 'property': user_property_answers,
                     'education': user_education_answers, 'wedding': user_wedding_answers, 'event': user_event_answers,
-                    'assess': user_assess_answers, 'investment': user_investment_answers, 'plan': user_plan_answers}
+                    'assess': user_assess_answers, 'investment': user_investment_answers, 'plan': user_plan_answers,
+                    'liquid':user_liquid_answers, 'automobile':user_automobile_answers,'vacation':user_vaction_answers,
+                    'jewellery':user_jewellery_answers
+                    }
     return user_answers
 
 
@@ -121,7 +133,11 @@ def get_assets(user):
                         'education': user_asset_allocation.education_allocation,
                         'wedding': user_asset_allocation.wedding_allocation,
                         'event': user_asset_allocation.event_allocation,
-                        'invest': user_asset_allocation.invest_allocation
+                        'invest': user_asset_allocation.invest_allocation,
+                        'liquid':user_asset_allocation.liquid_allocation,
+                        'automobile':user_asset_allocation.automobile_allocation,
+                        'vacation':user_asset_allocation.vacation_allocation,
+                        'jewellery':user_asset_allocation.jewellery_allocation
                         }
     return asset_allocation
 

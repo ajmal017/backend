@@ -176,6 +176,18 @@ class GenericGoal(GoalBase):
 
     def get_default_goalname(self, goal_type):
         return constants.CATEGORY_CHOICE_REVERSE[goal_type]
+    
+    def get_answer_value(self, key, value):
+        option_id = None
+        if key == "education_location":
+            option_id = value
+        if key == "education_field":
+            option_id = value
+        if key == "vacation_location":
+            option_id = value
+        if key == "wedding_location":
+            option_id = value
+        return value, option_id
 
 class TaxGoal(GoalBase):
     def __init__(self, goal_object=None):
@@ -330,7 +342,7 @@ class LiquidGoal(GoalBase):
         return corpus
 
     def get_default_goalname(self, goal_type):
-        return "LIQUID"
+        return "LIQ"
 
     def get_allocation(self, data):
         return constants.LIQUID_ALLOCATION

@@ -7,7 +7,7 @@ from . import models
 from profiles.utils import is_investable
 
 admin.site.register(models.RiskProfile)
-admin.site.register(models.LiquidFunds)
+
 
 class OpinionsInline(admin.StackedInline):
     """
@@ -497,7 +497,7 @@ class PlanAssestAllocationAdmin(admin.ModelAdmin):
     """
     disbale the option of deleting
     """
-    readonly_fields = ('user', 'retirement_allocation', 'tax_allocation', 'property_allocation', 'education_allocation', 'wedding_allocation', 'event_allocation', 'invest_allocation', 'portfolio')
+    readonly_fields = ('user', 'retirement_allocation', 'tax_allocation', 'property_allocation', 'education_allocation', 'wedding_allocation', 'event_allocation', 'invest_allocation','liquid_allocation','automobile_allocation','vacation_allocation','jewellery_allocation', 'portfolio')
     actions = None
 
     def has_delete_permission(self, request, obj=None):
@@ -553,3 +553,4 @@ admin.site.register(models.PlanAssestAllocation, PlanAssestAllocationAdmin)
 admin.site.register(models.UserEmail, UserEmailAdmin)
 admin.site.register(models.FundVendorInfo, FundVendorInfoAdmin)
 admin.site.register(models.Goal, GoalAdmin)
+admin.site.register(models.LiquidFunds,LiquidFundsAdmin)

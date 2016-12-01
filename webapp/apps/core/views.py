@@ -475,6 +475,10 @@ class RetirementAnswer(APIView):
         :param request:
         :return:
         """
+        request.data['pre_tax_annual_income']=100000
+        request.data['monthly_expense']=60
+        request.data['amount_saved']=500000
+        
         serializer = serializers.RetirementSerializer(data=request.data)
         if serializer.is_valid():
             goal_object = goals_helper.RetirementGoal()
@@ -495,12 +499,22 @@ class GenericGoalAnswer(APIView):
 
     def post(self, request, type):
         """
-
         :param request:
         :param type: the category for which answers ar being stored
         :return: a success or error message
         """
-        serializer = serializers.GenericGoalSerializer(data=request.data)
+        if type == constants.EDUCATION_TYPE:
+            serializer = serializers.EducationGoalSerializer(data=request.data)
+        elif type == constants.PROPERTY_TYPE:
+            serializer = serializers.PropertyGoalSerializer(data=request.data)
+        elif type == constants.AUTO_MOBILE_TYPE:
+            serializer = serializers.AutomobileGoalSerializer(data=request.data)
+        elif type == constants.VACATION_TYPE:
+            serializer = serializers.VacationGoalSerializer(data=request.data)
+        elif type == constants.WEDDING_TYPE:
+            serializer = serializers.WeddingGoalSerializer(data=request.data)
+        else: 
+            serializer = serializers.GenericGoalSerializer(data=request.data)
         if serializer.is_valid():
             goal_object = goals_helper.GenericGoal()
             is_error, errors = goal_object.create_or_update_goal(request.user, serializer.data, type, request.data.get('goal_name')) 
@@ -1434,9 +1448,6 @@ class ChangePortfolio(APIView):
         :return:
         """
         # check if a portfolio of user for which he has not invested is present. If not send an error message
-        #print(request.data)
-        #request.data['liquid'] = [27,49,53]
-
         try:
             user_portfolio = models.Portfolio.objects.get(user=request.user, has_invested=False)
         except models.Portfolio.DoesNotExist:
@@ -1519,7 +1530,7 @@ class DashboardVersionTwo(APIView):
         # query all fund_order_items of a user
         all_investments_of_user = models.FundOrderItem.objects.filter(
             portfolio_item__portfolio__user=request.user, is_cancelled=False)
-
+        
         # for real and transient dashboard
         if all_investments_of_user:
             # for real dashboard
@@ -1538,7 +1549,6 @@ class DashboardVersionTwo(APIView):
                 transaction_fund_map, today_portfolio, portfolios_to_be_considered = \
                     utils.club_investment_redeem_together(transactions_to_be_considered, [])
                 is_transient_dashboard = True
-
             # utility to get the json response for the api and change user flag
             portfolio_overview = utils.get_dashboard_version_two(
                 transaction_fund_map, today_portfolio, portfolios_to_be_considered, is_transient_dashboard)
@@ -1652,7 +1662,7 @@ class PortfolioDetailsVersionTwo(APIView):
                     portfolio_item__portfolio=user_portfolios[0])
                 transaction_fund_map, today_portfolio, portfolios = utils.club_investment_redeem_together(
                     transactions_to_be_considered, [])
-
+            
             # utility to get the json response for the api
             return api_utils.response(utils.make_xirr_calculations_for_dashboard_version_two(
                 transaction_fund_map, constants.PORTFOLIO_DETAILS, False), status.HTTP_200_OK)
@@ -1661,6 +1671,7 @@ class PortfolioDetailsVersionTwo(APIView):
         portfolio_items = models.PortfolioItem.objects.filter(
             portfolio__user=request.user, portfolio__has_invested=False, portfolio__is_deleted=False).select_related(
             'portfolio', 'fund')
+        
         if not portfolio_items:
             return api_utils.response({constants.MESSAGE: constants.USER_PORTOFOLIO_NOT_PRESENT},
                                       status.HTTP_400_BAD_REQUEST, constants.USER_PORTOFOLIO_NOT_PRESENT)

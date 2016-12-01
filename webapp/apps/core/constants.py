@@ -33,6 +33,15 @@ WEDDING = 'W'
 OTHER_EVENT = 'O'
 INVEST = 'I'
 LIQUID_GOAL = 'L'
+AUTO_MOBILE = 'AM'
+VACATION = 'V'
+JEWELLERY = 'J'
+
+EDUCATION_TYPE = "education"
+PROPERTY_TYPE = "property"
+AUTO_MOBILE_TYPE = "automobile"
+VACATION_TYPE = "vacation"
+WEDDING_TYPE = "wedding"
 
 MAP = {
     "invest": INVEST,
@@ -44,7 +53,10 @@ MAP = {
     "education": EDUCATION,
     "wedding": WEDDING,
     "event": OTHER_EVENT,
-    "liquid":LIQUID_GOAL
+    "liquid":LIQUID_GOAL,
+    "automobile":AUTO_MOBILE,
+    "vacation":VACATION,
+    "jewellery":JEWELLERY
 }
 
 
@@ -56,14 +68,18 @@ ASSET_ALLOCATION_MAP = {
     WEDDING: ['lumpsum', 'sip', 'WED', ['term'], None],
     OTHER_EVENT: ['lumpsum', 'sip', 'EVT', ['term'], None],
     INVEST: ['lumpsum', 'sip', 'INV', ['term'], 'grow_sip'],
-    LIQUID_GOAL: ['amount_invested', None, 'LIQ', None, None]
+    LIQUID_GOAL: ['amount_invested', None, 'LIQ', None, None],
+    AUTO_MOBILE: ['lumpsum','sip', 'AUT', ['term'], None],
+    VACATION: ['lumpsum','sip', 'VAC', ['term'], None],
+    JEWELLERY: ['lumpsum','sip', 'JEW', ['term'], None]
 }
 
-ALLOCATION_LIST = ['invest', 'tax', 'retirement', 'property', 'education', 'wedding', 'event','liquid']
+ALLOCATION_LIST = ['invest', 'tax', 'retirement', 'property', 'education', 'wedding', 'event','liquid','automobile','vacation','jewellery']
 
 EQUITY = "equity"
 DEBT = "debt"
 ELSS = "elss"
+LIQUID = "liquid"
 SIP = 'sip'
 LUMPSUM = 'lumpsum'
 SIP_COUNT = 'sip_count'
@@ -74,7 +90,7 @@ DASHBOARD = 'dashboard'
 RETIREMENT_ALLOCATION = "retirement_allocation"
 ALLOCATION = "allocation"
 GOAL_NAME = "goal_name"
-LIQUID = "liquid"
+
 
 NOT_IN_PORTFOLIO = 'not_in_portfolio'
 IN_PORTFOLIO = 'in_portfolio'
@@ -86,7 +102,7 @@ LIQUID_ALLOCATION = {"elss": "0", "debt": "0", "equity": "0",'liquid':'100'}
 
 TEST_API_URL = 'http://api.morningstar.com/service/mf/Price/mstarid/F0GBR06SDC?accesscode=jvon369domrbr3hcbivbdiorvkvjbb3a&startdate=2016-03-01&enddate=2016-03-04&format=json'
 
-ALLOCATION_PROPERTY_LIST = ["retirement", "tax", "property", "education", "wedding", "event", "invest","liquid"]
+ALLOCATION_PROPERTY_LIST = ["retirement", "tax", "property", "education", "wedding", "event", "invest","liquid","automobile","vacation","jewellery"]
 
 TAX_DEFAULT_TERM = 3
 LIQUID_DEFAULT_TERM = 3
@@ -238,6 +254,7 @@ FUND_NAME = 'fund_name'
 COMAPRED_FUND = 'compared_fund'
 DEBT_OTHER_DATA = 'debt_other_data'
 EQUITY_OTHER_DATA = 'equity_other_data'
+LIQUID_OTHER_DATA = 'liquid_other_data'
 FUND_TYPES_NOT_SAME = 'The fund types were not same'
 FUND_MANAGR_NAME_KEY = 'Name'
 
@@ -331,7 +348,11 @@ CATEGORY_CHOICE_REVERSE = {
     "E": "EDU1",
     "W": "WED1",
     "O": "EVT1",
-    "I": "SIP1"
+    "I": "SIP1",
+    "L": "LIQ",
+    "AM": "AUT",
+    "V": "VAC",
+    "J": "JEW"
 }
 FINASKUS_ID_PREFIX = "FAU0"
 IS_EMPTY = 'is_empty'
