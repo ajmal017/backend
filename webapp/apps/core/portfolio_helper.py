@@ -15,7 +15,7 @@ class PortfolioHelper(object):
         returns latest nav date for funds
         :return:the minimum date fron funds
         """
-        fund_order_items = models.FundOrderItem.objects.filter(portfolio_item=portfolio_item, order_detail__is_lumpsum=True, is_verified=True, is_cancelled=False)
+        fund_order_items = models.FundOrderItem.objects.filter(portfolio_item=portfolio_item, orderdetail__is_lumpsum=True, is_verified=True, is_cancelled=False)
 
         try:
             lumpsum_order = fund_order_items.filter(agreed_lumpsum__gt=0).first()

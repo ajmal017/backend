@@ -17,10 +17,10 @@ class RedeemHelper(object):
     @staticmethod
     def get_units_redeemed(portfolio_item):
         unit_redeemed__sum = models.FundRedeemItem.objects.filter(
-                                portfolio_item_id=portfolio_item.id, is_verified=True).aggregate(Sum('unit_redeemed'))['unit_redeemed__sum']
+                                portfolio_item__id=portfolio_item.id, is_verified=True).aggregate(Sum('unit_redeemed'))['unit_redeemed__sum']
 
         unverified_amount_redeemed__sum = models.FundRedeemItem.objects.filter(
-            portfolio_item_id=portfolio_item.id, is_verified=False, is_cancelled=False
+            portfolio_item__id=portfolio_item.id, is_verified=False, is_cancelled=False
         ).aggregate(Sum('redeem_amount'))['redeem_amount__sum']
 
         unverified_unit_redeemed = 0
@@ -41,15 +41,20 @@ class RedeemHelper(object):
         fund_redeem_items = []
         try:
             for amount_fund in amount_funds:
-                portfolio_item = models.PortfolioItem.objects.get(fund_id=amount_fund.fund_id, goal=goal)
+                portfolio_item = models.PortfolioItem.objects.get(fund_id=amount_fund['fund_id'], goal=goal)
                 previous_units_redeemed = RedeemHelper.get_units_redeemed(portfolio_item)
 
                 redeem_items = {}
                 # Redeem from lumpsum and then sip, use folio numbers from each fund order item 
-                redeem_amount = amount_fund.redeem_amount
+                redeem_amount = float(amount_fund['redeem_amount'])
                 
                 lumpsum_order, sip_order = portfolio_helper.PortfolioHelper.get_first_lumpsum_and_sip(portfolio_item)
-
+                folio_number = ""
+                if not lumpsum_order.folio_number or not sip_order.folio_number:
+                    folio_number = funds_helper.FundsHelper.get_folio_number(goal.user, portfolio_item.fund)
+                    lumpsum_order.folio_number = lumpsum_order.folio_number or folio_number
+                    sip_order.folio_number = sip_order.folio_number or folio_number
+                    
                 if lumpsum_order and lumpsum_order.unit_alloted > previous_units_redeemed:
                     nav = funds_helper.FundsHelper.get_current_nav(portfolio_item.fund.id)
                     lumpsum_value = (lumpsum_order.unit_alloted - previous_units_redeemed) * nav
@@ -68,7 +73,7 @@ class RedeemHelper(object):
                     fund_redeem_items.append(fund_redeem_item)
 
             for all_unit_fund in all_unit_funds:
-                portfolio_item = models.PortfolioItem.objects.get(fund_id=all_unit_fund.fund_id, goal=goal)
+                portfolio_item = models.PortfolioItem.objects.get(fund_id=all_unit_fund['fund_id'], goal=goal)
 
                 redeem_items = []
                 lumpsum_order, sip_order = portfolio_helper.PortfolioHelper.get_first_lumpsum_and_sip(portfolio_item)

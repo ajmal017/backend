@@ -299,6 +299,7 @@ class GoalRecommendedPortfolio(APIView):
         
         portfolio_items, errors = utils.get_portfolio_items_per_goal(request.user, overall_allocation, goal)
         if portfolio_items is not None:
+            overall_allocation.pop("summary")
             portfolio_items.update(overall_allocation)
             request.user.rebuild_portfolio = False
             request.user.save()
@@ -1307,12 +1308,13 @@ class GetInvestedFundReturn_v3(APIView):
                     if utils.find_if_not_eligible_for_display(fund_object, request.user):
                         invested_fund_return_new[index][constants.VALUE].remove(fund_object)
          
-            goal_data = {"goal_id": goal.id, "goal_name": goal.name, 
-                         "investment_date": goal.portfolio.investment_date.strftime('%d-%m-%y'),
-                         "funds": invested_fund_return_new}
-            goal_fund_data.append(goal_data)
+            if len(invested_fund_return_new[0][constants.VALUE]) > 0  or len(invested_fund_return_new[1][constants.VALUE]) > 0 or len(invested_fund_return_new[2][constants.VALUE]) > 0:
+                goal_data = {"goal_id": goal.id, "goal_name": goal.name, 
+                             "investment_date": goal.portfolio.investment_date.strftime('%d-%m-%y'),
+                             "funds": invested_fund_return_new}
+                goal_fund_data.append(goal_data)
                                                       
-        return api_utils.response(invested_fund_return_new, status.HTTP_200_OK)
+        return api_utils.response(goal_fund_data, status.HTTP_200_OK)
 
 class TransactionDetail(APIView):
     """

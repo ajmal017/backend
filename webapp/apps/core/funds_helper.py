@@ -102,3 +102,16 @@ class FundsHelper(object):
             fund_one_previous_date = latest_fund_nav_date - timedelta(days=1)
         one_previous_nav = models.HistoricalFundData.objects.get(fund_id=fund, date=fund_one_previous_date).nav
         return latest_fund_data_nav, latest_fund_nav_date, one_previous_nav
+    
+    @staticmethod
+    def get_folio_number(user, fund):
+        folio_number = ""
+        if fund.fund_house:
+            try:
+                f_numbers = models.FolioNumber.objects.filter(user=user, fund_house=fund.fund_house)
+                if f_numbers:
+                    folio_number = f_numbers.first().folio_number
+            except models.FolioNumber.DoesNotExist:
+                pass
+
+        return folio_number
