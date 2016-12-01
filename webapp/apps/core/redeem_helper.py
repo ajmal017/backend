@@ -24,7 +24,7 @@ class RedeemHelper(object):
         ).aggregate(Sum('redeem_amount'))['redeem_amount__sum']
 
         unverified_unit_redeemed = 0
-        if unverified_amount_redeemed__sum > 0:
+        if unverified_amount_redeemed__sum is not None and unverified_amount_redeemed__sum > 0:
             nav = funds_helper.FundsHelper.get_current_nav(portfolio_item.fund.id)
             if nav and nav > 0:
                 unverified_unit_redeemed = unverified_amount_redeemed__sum/nav
@@ -75,16 +75,16 @@ class RedeemHelper(object):
             for all_unit_fund in all_unit_funds:
                 portfolio_item = models.PortfolioItem.objects.get(fund_id=all_unit_fund['fund_id'], goal=goal)
 
-                redeem_items = []
+                redeem_items = {}
                 lumpsum_order, sip_order = portfolio_helper.PortfolioHelper.get_first_lumpsum_and_sip(portfolio_item)
 
                 if lumpsum_order and lumpsum_order.unit_alloted > lumpsum_order.units_redeemed:    
-                    redeem_items.append(lumpsum_order.folio_number)
+                    redeem_items[lumpsum_order.folio_number] = True
 
                 if sip_order:
-                    redeem_items.append(sip_order.folio_number)
+                    redeem_items[sip_order.folio_number] = True
                     
-                for folio_number in redeem_items:
+                for folio_number, value in redeem_items:
                     fund_redeem_item = models.FundRedeemItem.objects.create(portfolio_item=portfolio_item,
                                                                     folio_number = folio_number, 
                                                                     unit_redeemed=0.0, is_all_units_redeemed=True)
