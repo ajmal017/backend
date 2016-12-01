@@ -153,7 +153,7 @@ class GoalBase(ABC):
         allocation = self.get_allocation(data)
         allocation_dict = utils.make_allocation_dict(self.get_sip_amount(data), self.get_lumpsum_amount(data), allocation)
 
-        equity_sip, equity_lumpsum, debt_sip, debt_lumpsum, elss_sip, elss_lumpsum, is_error, errors,liquid_sip, liquid_lumpsum= \
+        equity_sip, equity_lumpsum, debt_sip, debt_lumpsum, elss_sip, elss_lumpsum, liquid_sip, liquid_lumpsum, is_error, errors= \
             utils.get_number_of_funds(allocation_dict)
         if is_error:
             return is_error, errors

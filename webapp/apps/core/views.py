@@ -1614,8 +1614,8 @@ class GetCategorySchemes(APIView):
         reset = request.query_params.get('reset')
         overall_allocation, sip_lumpsum_allocation, status_summary = utils.calculate_overall_allocation(request.user)
         number_of_equity_funds_by_sip, number_of_equity_funds_by_lumpsum, number_of_debt_funds_by_sip, \
-        number_of_debt_funds_by_lumpsum, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum, is_error, \
-        errors,number_of_liquid_funds_by_sip, number_of_liquid_funds_by_lumpsum = utils.get_number_of_funds(sip_lumpsum_allocation)
+        number_of_debt_funds_by_lumpsum, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum, number_of_liquid_funds_by_sip, number_of_liquid_funds_by_lumpsum,\
+        is_error, errors = utils.get_number_of_funds(sip_lumpsum_allocation)
         RANK_MAP = {
             constants.EQUITY: max(number_of_equity_funds_by_sip, number_of_equity_funds_by_lumpsum),
             constants.DEBT: max(number_of_debt_funds_by_sip, number_of_debt_funds_by_lumpsum),
@@ -1674,12 +1674,13 @@ class GetCategorySchemesForGoal(APIView):
         sip_lumpsum_allocation = utils.get_sip_lumpsum_for_goal(request.user, goal).allocation
         
         number_of_equity_funds_by_sip, number_of_equity_funds_by_lumpsum, number_of_debt_funds_by_sip, \
-        number_of_debt_funds_by_lumpsum, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum, is_error, \
-        errors = utils.get_number_of_funds(sip_lumpsum_allocation)
+        number_of_debt_funds_by_lumpsum, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum, \
+        number_of_liquid_funds_by_sip, number_of_liquid_funds_by_lumpsum,is_error, errors = utils.get_number_of_funds(sip_lumpsum_allocation)
         RANK_MAP = {
             constants.EQUITY: max(number_of_equity_funds_by_sip, number_of_equity_funds_by_lumpsum),
             constants.DEBT: max(number_of_debt_funds_by_sip, number_of_debt_funds_by_lumpsum),
-            constants.ELSS: max(number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum)
+            constants.ELSS: max(number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum),
+            constants.LIQUID: max(number_of_liquid_funds_by_sip, number_of_liquid_funds_by_lumpsum)
         }
 
         for category in constants.FUND_CATEGORY_LIST:
