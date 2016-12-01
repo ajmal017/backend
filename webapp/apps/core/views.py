@@ -551,15 +551,15 @@ class GenericGoalAnswer(APIView):
         :param type: the category for which answers ar being stored
         :return: a success or error message
         """
-        if type == constants.EDUCATION_TYPE:
+        if goal_type == constants.EDUCATION_TYPE:
             serializer = serializers.EducationGoalSerializer(data=request.data)
-        elif type == constants.PROPERTY_TYPE:
+        elif goal_type == constants.PROPERTY_TYPE:
             serializer = serializers.PropertyGoalSerializer(data=request.data)
-        elif type == constants.AUTO_MOBILE_TYPE:
+        elif goal_type == constants.AUTO_MOBILE_TYPE:
             serializer = serializers.AutomobileGoalSerializer(data=request.data)
-        elif type == constants.VACATION_TYPE:
+        elif goal_type == constants.VACATION_TYPE:
             serializer = serializers.VacationGoalSerializer(data=request.data)
-        elif type == constants.WEDDING_TYPE:
+        elif goal_type == constants.WEDDING_TYPE:
             serializer = serializers.WeddingGoalSerializer(data=request.data)
         else: 
             serializer = serializers.GenericGoalSerializer(data=request.data)
@@ -720,9 +720,8 @@ class FundsDividedIntoCategories(APIView):
         # function to find max allowed for each cases
         overall_allocation, sip_lumpsum_allocation, status_summary = utils.calculate_overall_allocation(request.user)
         number_of_equity_funds_by_sip, number_of_equity_funds_by_lumpsum, number_of_debt_funds_by_sip, \
-        number_of_debt_funds_by_lumpsum, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum, is_error, \
-        errors,number_of_liquid_funds_by_sip, number_of_liquid_funds_by_lumpsum = utils.get_number_of_funds(sip_lumpsum_allocation)
-
+        number_of_debt_funds_by_lumpsum, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum, \
+        number_of_liquid_funds_by_sip, number_of_liquid_funds_by_lumpsum,is_error,errors = utils.get_number_of_funds(sip_lumpsum_allocation)
         # serializes all categories of funds
         user_equity_fund = serializers.FundSerializerForFundDividedIntoCategory(user_equity_funds, many=True)
         equity_fund = serializers.FundSerializerForFundDividedIntoCategory(equity_funds, many=True)
