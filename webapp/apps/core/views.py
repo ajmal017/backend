@@ -1393,7 +1393,7 @@ class TransactionHistoryNew(APIView):
         latest_fund_order_item = []
         if portfolio_items:
             for portfolio_item in portfolio_items:
-                fund_order_items = portfolio_item.fundorderitem_set.filter(is_cancelled=False, sip_amount__gt=0).order_by('-created_at')
+                fund_order_items = portfolio_item.fundorderitem_set.filter(is_cancelled=False, agreed_sip__gt=0).order_by('-created_at')
                 for fund_order_item in fund_order_items:
                     if fund_order_item.is_future_sip_cancelled == False:
                         latest_fund_order_item.append(fund_order_item)
@@ -1450,7 +1450,7 @@ class TransactionHistory_v3(APIView):
         latest_fund_order_item = []
         if portfolio_items:
             for portfolio_item in portfolio_items:
-                fund_order_items = portfolio_item.fundorderitem_set.filter(is_cancelled=False, sip_amount__gt=0).order_by('-created_at')
+                fund_order_items = portfolio_item.fundorderitem_set.filter(is_cancelled=False, agreed_sip__gt=0).order_by('-created_at')
                 for fund_order_item in fund_order_items:
                     if fund_order_item.is_future_sip_cancelled == False:
                         latest_fund_order_item.append(fund_order_item)
