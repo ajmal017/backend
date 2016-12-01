@@ -5,6 +5,7 @@ from django.core.urlresolvers import reverse
 
 from . import models
 from profiles.utils import is_investable
+from core import goals_helper
 
 admin.site.register(models.RiskProfile)
 
@@ -63,7 +64,7 @@ class OrderDetailAdmin(admin.ModelAdmin):
     2. custom list display
     """
     list_filter = ['order_status', 'is_lumpsum', UserFilter]
-    list_display = ['user', 'order_id', 'order_status', 'created_at', 'bank_mandate', 'button3', 'button4', 'bank_mandate_button','button5']
+    list_display = ['user', 'order_id', 'order_status', 'is_lumpsum', 'created_at', 'bank_mandate', 'button3', 'button4', 'bank_mandate_button','button5']
     search_fields = ['order_id', 'user__email']
     readonly_fields = ('user', 'transaction', 'order_id', 'list_of_fund_order_items')
     exclude = ('fund_order_items', )
@@ -82,7 +83,7 @@ class OrderDetailAdmin(admin.ModelAdmin):
         returns list of fund_order_item related to a order detail
         :param obj: contains an instance to fund order item object
         """
-        return mark_safe(u"<br>".join([self.form_url(fund_order_item.id, fund_order_item.portfolio_item.fund.legal_name) for fund_order_item in obj.fund_order_items.all()]))
+        return mark_safe(u"<br>".join([self.form_url(fund_order_item.id, str(fund_order_item)) for fund_order_item in obj.fund_order_items.all()]))
 
     list_of_fund_order_items.allow_tags = True
     form_url.allow_tags = True
@@ -176,27 +177,26 @@ class GroupedRedeemDetailAdmin(admin.ModelAdmin):
     list_filter = ['redeem_status']
     list_display = ['user', 'redeem_status', 'id', 'redeem_detail_button']
     search_fields = ['user__email']
-    readonly_fields = ('user', 'list_of_redeem_details')
+    readonly_fields = ('user', 'list_of_redeem_items')
     exclude = ('redeem_details', )
     actions = None
 
-    def form_url(self, id, redeem_id):
+    def form_url(self, id, fund):
         """
         returns a url formed for a particular redeem detail
         :param id: id associated with a redeem_detail
         """
-        url = reverse("admin:core_redeemdetail_change", args=[id])
-        return mark_safe(u'<a href=%s target="_blank">%s</a>' % (url, redeem_id))
+        url = reverse("admin:core_fundredeemitem_change", args=[id])
+        return mark_safe(u'<a href=%s target="_blank">%s</a>' % (url, fund.legal_name))
 
-    def list_of_redeem_details(self, obj):
+    def list_of_redeem_items(self, obj):
         """
         returns list of redeem details related to a grouped redeemed detail
         :param obj: contains an instance to grouped redeem detail object
         """
-        for redeem_detail in obj.redeem_details.all():
-            return mark_safe(u"<br>".join([self.form_url(redeem_detail.id, redeem_detail.redeem_id) for redeem_detail in obj.redeem_details.all()]))
+        return mark_safe(u"<br>".join([self.form_url(redeem_item.id, redeem_item.portfolio_item.fund) for redeem_item in obj.fundredeemitem_set.all()]))
 
-    list_of_redeem_details.allow_tags = True
+    list_of_redeem_items.allow_tags = True
     form_url.allow_tags = True
 
     def has_delete_permission(self, request, obj=None):
@@ -289,7 +289,7 @@ class FundDataPointsChangeDailyAdmin(admin.ModelAdmin):
     disable the option of deleting fund data
     """
 
-    list_display = ('fund', 'aum')
+    list_display = ('fund', 'aum', 'day_end_nav', 'day_end_date')
     list_editable = ('aum',)
     readonly_fields=('fund',)
     actions = None
@@ -319,11 +319,29 @@ class PortfolioAdmin(admin.ModelAdmin):
     disable the deletion option
     make all amount of read only type
     """
-    list_display = ['user', 'has_invested', 'vault_completed']
+    list_display = ['id', 'user', 'has_invested', 'vault_completed']
     list_filter = ['has_invested']
     search_fields = ['user__email']
-    readonly_fields = ('elss_percentage', 'debt_percentage', 'equity_percentage','liquid_percentage', 'total_sum_invested', 'returns_value', 'returns_percentage')
+    readonly_fields = ('elss_percentage', 'debt_percentage', 'equity_percentage','liquid_percentage', 'total_sum_invested', 'returns_value', 'returns_percentage', 'list_of_goals')
     actions = None
+
+    def form_url(self, goal_id, category):
+        """
+        returns a url formed for a particular redeem detail
+        :param id: id associated with a redeem_detail
+        """
+        url = reverse("admin:core_goal_change", args=[goal_id])
+        return mark_safe(u'<a href=%s target="_blank">%s</a>' % (url, category))
+
+    def list_of_goals(self, obj):
+        """
+        returns list of redeem details related to a grouped redeemed detail
+        :param obj: contains an instance to grouped redeem detail object
+        """
+        return mark_safe(u"<br>".join([self.form_url(goal.id, goal.category) for goal in obj.goal_set.all()]))
+
+    list_of_goals.allow_tags = True
+    form_url.allow_tags = True
 
     def has_delete_permission(self, request, obj=None):
         return False
@@ -358,8 +376,8 @@ class FundRedeemItemAdmin(admin.ModelAdmin):
     """
     defining list editable
     """
-    list_display = ['portfolio_item', 'redeem_amount', 'redeemid']
-    search_fields = ['portfolio_item__portfolio__user__email', 'portfolio_item__portfolio__user__phone_number']
+    list_display = ['portfolio_item', 'redeem_amount', 'redeemid', 'created_at', 'grouped_redeem']
+    search_fields = ['portfolio_item__portfolio__user__email', 'portfolio_item__portfolio__user__phone_number', 'grouped_redeem__id']
     readonly_fields = ('portfolio_item', )
 
     def has_delete_permission(self, request, obj=None):
@@ -369,14 +387,15 @@ class FundRedeemItemAdmin(admin.ModelAdmin):
         """
         returns the redeemid for each fundredeemtem
         """
-        return instance.redeemdetail_set.all()[0].redeem_id
+        return instance.id
 
 class PortfolioItemAdmin(admin.ModelAdmin):
     """
     defining list editable
     diasable the deletion option
     """
-    search_fields = ['portfolio__user__email', 'portfolio__user__phone_number']
+    list_display = ['id', 'portfolio', 'goal', 'fund']
+    search_fields = ['portfolio__user__email', 'portfolio__user__phone_number', 'portfolio__id', 'goal__id']
     readonly_fields=('portfolio', 'sip', 'lumpsum', 'sum_invested', 'returns_value', 'returns_percentage', 'one_day_previous_portfolio_value', 'one_day_return')
     actions = None
 
@@ -520,9 +539,35 @@ class GoalAdmin(admin.ModelAdmin):
     """
     list_filter = [UserFilter, 'category']
     list_display = ['id', 'user', 'name', 'category', 'portfolio', 'created_at']
-    search_fields = ['category', 'user__email']
-    readonly_fields = ('user', 'name', 'category', 'portfolio', 'duration', 'asset_allocation')
+    search_fields = ['category', 'user__email','portfolio__id']
+    readonly_fields = ('user', 'name', 'category', 'portfolio', 'duration', 'asset_allocation', 'sip_amount', 'lumpsum_amount', 'list_of_portfolio_items')
     actions = None
+
+    def form_url(self, item_id, item):
+        """
+        returns a url formed for a particular redeem detail
+        :param id: id associated with a redeem_detail
+        """
+        url = reverse("admin:core_portfolioitem_change", args=[item_id])
+        return mark_safe(u'<a href=%s target="_blank">%s</a>' % (url, item))
+
+    def list_of_portfolio_items(self, obj):
+        """
+        returns list of redeem details related to a grouped redeemed detail
+        :param obj: contains an instance to grouped redeem detail object
+        """
+        return mark_safe(u"<br>".join([self.form_url(portfolio_item.id, portfolio_item) for portfolio_item in obj.portfolioitem_set.all()]))
+
+    def sip_amount(self, obj):
+        goal_object = goals_helper.GoalBase.get_goal_instance(obj)
+        return goal_object.get_sip_amount()
+    
+    def lumpsum_amount(self, obj):
+        goal_object = goals_helper.GoalBase.get_goal_instance(obj)
+        return goal_object.get_lumpsum_amount()
+
+    list_of_portfolio_items.allow_tags = True
+    form_url.allow_tags = True
 
     def has_delete_permission(self, request, obj=None):
         return False

@@ -1,10 +1,12 @@
 from rest_framework import serializers
+from django.db.models import Sum
+from webapp.apps import random_with_N_digits
 from profiles.models import User
-from core.models import Goal
-from core.models import Portfolio
+from core.models import Goal, OrderDetail, GroupedRedeemDetail, FundRedeemItem
+from core.models import Portfolio, PortfolioItem, FundOrderItem
 from core.models import Answer
 from core.models import PlanAssestAllocation
-from core import constants
+from core import constants, goals_helper
 from api import utils as api_utils
 from django.conf import settings
 import os
@@ -41,6 +43,7 @@ def get_category_answers(user, question_for, portfolio=None):
     category = question_for + "_allocation"
     try:
         category_allocation = getattr(PlanAssestAllocation.objects.get(user=user, portfolio=portfolio), category)
+        category_allocation.update({constants.LIQUID : '0'})
     except PlanAssestAllocation.DoesNotExist:
         category_allocation = constants.EMPTY_ALLOCATION
         
@@ -81,4 +84,152 @@ def migrateAll():
         except Exception as e:
             print('Error for user: ' + u.email + ' : ' + str(e))
 
-migrateAll()
+def get_goals_with_asset_type(goals, asset_type):
+    goal_list = []
+    for g in goals:
+        if float(g.asset_allocation[asset_type]) > 0:
+            goal_list.append(g)
+            
+    return goal_list
+            
+def match_portfolio_with_lumpsum_goal(portfolio_items, goal_list, asset_type):
+    goals_done = []
+    for g in goal_list:
+        goal_object = goals_helper.GoalBase.get_goal_instance(g)
+        allocation = goal_object.get_asset_allocation_amount()
+        goal_sip = allocation[asset_type][constants.SIP]
+        goal_lumpsum = allocation[asset_type][constants.LUMPSUM]
+        
+        if goal_lumpsum > 0 and goal_sip == 0:
+            portfolio_index = []
+            for p in portfolio_items:
+                if p.lumpsum > 0:
+                    if p.sip == 0:
+                        p.goal=g
+                        p.save()
+                        portfolio_index.append(p)
+                    else:
+                        kwargs = {}
+                        kwargs["broad_category_group"] = p.fund.type_of_fund
+                        kwargs[constants.SIP] = 0
+                        kwargs[constants.LUMPSUM] = p.lumpsum
+                        kwargs['sum_invested'] = p.lumpsum
+                        p_new, created = PortfolioItem.objects.update_or_create(portfolio_id=p.portfolio.id, goal=g, fund_id=p.fund.id, defaults=kwargs)
+                        foi = FundOrderItem.objects.get(portfolio_item=p, orderdetail__is_lumpsum=True)
+                        foi_new = FundOrderItem.objects.create(portfolio_item=p_new,
+                                                              order_amount=p.lumpsum,
+                                                              agreed_sip=0,
+                                                              agreed_lumpsum=p.lumpsum,
+                                                              internal_ref_no="FIN" + str(random_with_N_digits(7)),
+                                                              folio_number=foi.folio_number,
+                                                              allotment_date=foi.allotment_date,
+                                                              is_verified=foi.is_verified,
+                                                              unit_alloted=foi.unit_alloted,
+                                                              bse_transaction_id=foi.bse_transaction_id)
+                        order_detail = foi.orderdetail_set.all()[0]
+                        order_detail.fund_order_items.add(foi_new)
+                        p.sum_invested -= p.lumpsum 
+                        p.lumpsum = 0
+                        p.save()
+                        foi.agreed_lumpsum=0
+                        foi.order_amount=0
+                        foi.save()
+            for p in portfolio_index:
+                portfolio_items.remove(p)
+            goals_done.append(g)
+            continue
+    
+    return portfolio_items, goals_done
+
+def match_portfolio_with_goal(portfolio_items, goals, asset_type):
+    goal_list = get_goals_with_asset_type(goals, asset_type)
+    
+    portfolio_items, goals_done = match_portfolio_with_lumpsum_goal(portfolio_items, goal_list, asset_type)
+    for g in goal_list:
+        if g in goals_done:
+            continue
+        
+        goal_object = goals_helper.GoalBase.get_goal_instance(g)
+        allocation = goal_object.get_asset_allocation_amount()
+        goal_sip = allocation[asset_type][constants.SIP]
+        goal_lumpsum = allocation[asset_type][constants.LUMPSUM]
+
+        direct_allocation = None
+        for p in portfolio_items:
+            if p.sip == goal_sip and p.lumpsum == goal_lumpsum:
+                p.goal=g
+                p.save()
+                direct_allocation = p
+                break
+        
+        if direct_allocation:
+            portfolio_items.remove(direct_allocation)
+            goals_done.append(g)
+            continue
+        
+        for p in portfolio_items:
+            if p.lumpsum <= goal_lumpsum and p.sip <= goal_sip:
+                p.goal=g
+                p.save()
+                goal_lumpsum -= p.lumpsum
+                goal_sip -= p.sip
+        
+        if goal_sip <= 0 and goal_lumpsum <= 0:
+            goals_done.append(g)
+    
+    print("Goals Done: " + asset_type)
+    for g in goals_done:
+        print(str(g))
+    return goals_done
+
+def migrate_portfolio():
+    users = User.objects.all()
+    for u in users:
+        print("Migrating for user: " + u.email)
+        try:
+            p = Portfolio.objects.get(user=u, has_invested=False)
+            u.rebuild_portfolio = True
+        except:
+            pass
+    
+        portfolios = Portfolio.objects.filter(user=u, has_invested=True, is_deleted=False)
+        for p in portfolios:
+            print("Processing portfolio: " + str(p))
+            goals = Goal.objects.filter(portfolio=p)
+            if len(goals) > 1:
+                portfolio_items_elss = PortfolioItem.objects.filter(portfolio=p, broad_category_group=constants.FUND_MAP[constants.ELSS])
+                for g in goals:
+                    if g.category == constants.TAX_SAVING:
+                        portfolio_items_elss.update(goal=g)
+
+                portfolio_items_equity = PortfolioItem.objects.filter(portfolio=p, broad_category_group=constants.FUND_MAP[constants.EQUITY])
+                portfolio_items_debt = PortfolioItem.objects.filter(portfolio=p, broad_category_group=constants.FUND_MAP[constants.DEBT])
+                
+                list_equity = list(portfolio_items_equity)
+                list_debt = list(portfolio_items_debt)
+                
+                match_portfolio_with_goal(list_equity, goals, constants.EQUITY)                
+                match_portfolio_with_goal(list_debt, goals, constants.DEBT)
+            else:
+                if len(goals) == 1:
+                    p.portfolioitem_set.all().update(goal=goals[0])
+                    
+        
+        print("Migrating orders for user: " + u.email)        
+        orders = OrderDetail.objects.filter(user=u, is_lumpsum=True, fund_order_items__agreed_sip__gt=0)
+        for o in orders:
+            portfolio_item = o.fund_order_items.first().portfolio_item
+            o_sip = OrderDetail.objects.filter(user=u, is_lumpsum=False, fund_order_items__portfolio_item=portfolio_item).order_by('created_at').first()
+            if o_sip:
+                o.fund_order_items.update(agreed_sip=0)
+                for foi in o_sip.fund_order_items.all():
+                    o.fund_order_items.add(foi)
+                o_sip.delete() 
+                o.fund_order_items.filter(agreed_lumpsum=0, agreed_sip=0).delete()
+                
+        grouped_redeem_details = GroupedRedeemDetail.objects.filter(user=u)
+        for group_redeem in grouped_redeem_details:
+            redeem_details = group_redeem.redeem_details.all()
+            FundRedeemItem.objects.filter(redeemdetail__in=redeem_details).update(grouped_redeem=group_redeem)
+        
+#migrateAll()

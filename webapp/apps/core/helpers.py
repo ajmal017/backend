@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 
 def find_right_option(value):
     """
@@ -28,3 +29,20 @@ def percentage(dividend, divisor):
     :return: percentage rounded to two digits
     """
     return round(((dividend*100)/divisor), 1)
+
+def roundTo100(amount1, amount2):
+    amount1_remainder = amount1%100
+    if amount1_remainder < 50:
+        amount1 -= amount1_remainder
+        amount2 += amount1_remainder
+    else:
+        amount1 += (100 - amount1_remainder)
+        amount2 -= (100 - amount1_remainder)
+    return amount1, amount2
+
+def calculate_time_delta(date1, date2):
+    time_delta = relativedelta(date2, date1).months
+    date1 += relativedelta(months=time_delta)
+    time_delta += relativedelta(date2, date1).years * 12
+    
+    return time_delta

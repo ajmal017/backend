@@ -202,8 +202,9 @@ class GenerateBseOrderPipe(View):
         if request.user.is_superuser:
             order_detail = OrderDetail.objects.get(order_id=request.GET.get('order_id'))
             if order_detail.is_lumpsum == False:
-                if len(order_detail.fund_order_items) > 0:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
-                    order_detail = OrderDetail.objects.filter(is_lumpsum=True, fund_order_items__portfolio_item=order_detail.fund_order_items[0].portfolio_item).first()
+                fund_order_item = order_detail.fund_order_items.first()
+                if fund_order_item:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
+                    order_detail = OrderDetail.objects.filter(is_lumpsum=True, fund_order_items__portfolio_item=order_detail.fund_order_item.portfolio_item).first()
             if is_investable(order_detail.user):
                 exch_backend = helpers.get_exchange_vendor_helper().get_backend_instance()
                 order_vendor = order_detail.vendor
@@ -356,7 +357,7 @@ class NseOrder(View):
                         nse.upload_img(user_id=user_id, image_type="X")  # 'X' for Transaction type of image and 'A' for IIN Form
                 status_code = nse.purchase_trxn(user_id=user_id)
                 if status_code == nse_contants.RETURN_CODE_SUCCESS:
-                    current_transaction = Transaction.get(user_id=user_id, txn_status=0)
+                    current_transaction = Transaction.objects.get(user_id=user_id, txn_status=0)
                     payment_link = current_transaction.payment_link
                     return api_utils.response({"payment_link": payment_link})
                 else:

@@ -343,7 +343,6 @@ class RedeemSerializer(serializers.Serializer):
     fund_id = serializers.IntegerField(required=True)
     redeem_amount = serializers.FloatField(required=True)
 
-
 class AllUnitsSerializer(serializers.Serializer):
     """
     Inner serailizer for redeem all_units
@@ -351,6 +350,14 @@ class AllUnitsSerializer(serializers.Serializer):
 
     fund_id = serializers.IntegerField(required=True)
 
+class GoalRedeemSerializer_v3(serializers.Serializer):
+    """
+    Inner serailizer for redeem data
+    """
+    
+    goal_id = serializers.IntegerField(required=True)
+    amount = RedeemSerializer(many=True)
+    all_units = AllUnitsSerializer(many=True)
 
 class RedeemAddSerializer(serializers.Serializer):
     """
@@ -369,6 +376,11 @@ class NewRedeemAddSerializer(serializers.Serializer):
     data = RedeemSerializer(many=True)
     all_units = AllUnitsSerializer(many=True)
 
+class RedeemAddSerializer_v3(serializers.Serializer):
+    """
+    Investor Information Serializer used to display investor leader board ranking
+    """
+    data = GoalRedeemSerializer_v3(many=True)
 
 class FundOrderItemSerializer(serializers.ModelSerializer):
     """
@@ -386,8 +398,23 @@ class FundOrderItemSerializer(serializers.ModelSerializer):
         fields = ('id', 'fund_name', 'unit_alloted', 'allotment_date', 'is_verified', 'order_amount',
                   'transaction_date', 'fund_id')
 
+class FundOrderItemSerializer_v3(serializers.ModelSerializer):
+    """
+    Fund order item Serializer used to display fund order item detail
+    """
 
-class FundRedeemItemSerializer(serializers.ModelSerializer):
+    fund_name = serializers.CharField(source='portfolio_item.fund.fund_name')
+    fund_id = serializers.CharField(source='portfolio_item.fund.id')
+    transaction_date = serializers.DateField(source='get_transaction_date')
+    allotment_date = serializers.CharField(source='get_allotment_date')
+    unit_alloted = serializers.CharField(source='get_unit_alloted')
+
+    class Meta:
+        model = models.FundOrderItem
+        fields = ('id', 'fund_name', 'unit_alloted', 'allotment_date', 'is_verified', 'order_amount',
+                  'transaction_date', 'fund_id', 'folio_number')
+
+class FundRedeemItemSerializer_v3(serializers.ModelSerializer):
     """
     Fund order item Serializer used to display fund order item detail
     """
@@ -402,7 +429,7 @@ class FundRedeemItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.FundRedeemItem
         fields = ('id', 'fund_name', 'unit_alloted', 'allotment_date', 'is_verified', 'order_amount',
-                  'transaction_date', 'fund_id')
+                  'transaction_date', 'fund_id', 'folio_number')
 
 
 class RedeemDetailSerializer(serializers.ModelSerializer):
@@ -421,8 +448,6 @@ class RedeemDetailSerializer(serializers.ModelSerializer):
         model = models.RedeemDetail
         fields = ('id', 'fund_name', 'unit_alloted', 'allotment_date', 'is_verified', 'order_amount',
                   'transaction_date', 'fund_id')
-
-
 
 class FutureFundOrderItemSerializer(serializers.ModelSerializer):
     """

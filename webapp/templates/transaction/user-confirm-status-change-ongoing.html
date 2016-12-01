@@ -641,9 +641,7 @@ Congratulations!  Your investment order through FinAskus has been successfully p
        <li> {{order_details.portfolio_item.fund.legal_name}}
        {% if order_details.agreed_sip != 0 and order_details.agreed_lumpsum == 0 %}
         <ul> <li> SIP Rs {{ order_details.agreed_sip|floatformat:2 }} - 
-          {% if goal_len == 1 %}
-             {{sip_tenure}} years  - 
-          {% endif %}
+             {{order_details.portfolio_item.goal.duration}} years  - 
              {{ order_details.unit_alloted}} units allotted with NAV Rs {{nav_details|floatformat:2}} on {{order_details.allotment_date}}
                  </li> </ul>
        {% endif %}

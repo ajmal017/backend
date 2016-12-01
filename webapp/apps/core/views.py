@@ -30,7 +30,7 @@ from external_api import helpers as external_helpers
 
 from django.db.models import Count
 from external_api import utils as external_utils
-from core import goals_helper
+from core import goals_helper, funds_helper
 
 
 
@@ -278,7 +278,36 @@ class RiskProfile(APIView):
             return api_utils.response(serializer.data, status.HTTP_200_OK)
         return api_utils.response(serializer.errors, status.HTTP_404_NOT_FOUND, constants.RISK_PROFILES_ERROR)
 
+class GoalRecommendedPortfolio(APIView):
+    """
+    API to return the recommended portfolio for a user
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request, goal_type):
+        """
 
+        :param request:
+        :return: overall allocation for a user and the recommended schemes for the user
+        """
+        goal = goals_helper.GoalBase.get_current_goal(request.user, constants.MAP[goal_type])
+        if not goal:
+            return api_utils.response({constants.MESSAGE: constants.USER_GOAL_NOT_PRESENT},
+                                      status.HTTP_400_BAD_REQUEST, constants.USER_GOAL_NOT_PRESENT)
+
+        overall_allocation, sip_lumpsum_allocation, status_summary = utils.calculate_overall_allocation(request.user)
+        
+        portfolio_items, errors = utils.get_portfolio_items_per_goal(request.user, overall_allocation, goal)
+        if portfolio_items is not None:
+            portfolio_items.update(overall_allocation)
+            request.user.rebuild_portfolio = False
+            request.user.save()
+            msg=api_utils.response(portfolio_items, status.HTTP_200_OK)
+            return msg
+        else:
+            return api_utils.response({constants.MESSAGE: errors},
+                                      status.HTTP_400_BAD_REQUEST, api_utils.create_error_message(errors))
+    
 class RecommendedPortfolios(APIView):
     """
     API to return the recommended portfolio for a user
@@ -326,6 +355,25 @@ class ReviewCard(APIView):
             return api_utils.response({constants.MESSAGE: errors},
                                       status.HTTP_400_BAD_REQUEST, errors)
 
+class ReviewCart_v3(APIView):
+    """
+    API to return the goal summary
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        """
+
+        :param request:
+        :return: overall allocation for a user
+        """
+        overall_allocation, sip_lumpsum_allocation, status_summary = utils.calculate_overall_allocation(request.user)
+        portfolio_items, errors = utils.get_portfolio_items_per_goal(request.user.id, overall_allocation)
+        if portfolio_items is not None:
+            return api_utils.response(portfolio_items, status.HTTP_200_OK)
+        else:
+            return api_utils.response({constants.MESSAGE: errors},
+                                      status.HTTP_400_BAD_REQUEST, errors)
 
 class AssessAnswer(APIView):
     """
@@ -497,7 +545,7 @@ class GenericGoalAnswer(APIView):
     """
     permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request, type):
+    def post(self, request, goal_type):
         """
         :param request:
         :param type: the category for which answers ar being stored
@@ -517,7 +565,7 @@ class GenericGoalAnswer(APIView):
             serializer = serializers.GenericGoalSerializer(data=request.data)
         if serializer.is_valid():
             goal_object = goals_helper.GenericGoal()
-            is_error, errors = goal_object.create_or_update_goal(request.user, serializer.data, type, request.data.get('goal_name')) 
+            is_error, errors = goal_object.create_or_update_goal(request.user, serializer.data, goal_type, request.data.get('goal_name')) 
             if is_error:
                 return api_utils.response({constants.MESSAGE: errors}, status.HTTP_400_BAD_REQUEST,
                                           api_utils.create_error_message(errors))
@@ -698,7 +746,55 @@ class FundsDividedIntoCategories(APIView):
             return api_utils.response(funds_divided, status.HTTP_200_OK)
         return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(equity_fund.errors))
 
+class FundsDividedIntoCategoriesForGoal(APIView):
+    """
+    API to return funds divided into equity, elss and debt each having two subsections -
+    other recommended and those in user portfolio items
+    """
+    permission_classes = [permissions.IsAuthenticated]
 
+    def get(self, request, goal_type):
+        """
+        Returns the funds clubbed according to their type(elss, debt or equity)
+        :param request:
+        :return: serialized data of all funds
+        """
+        funds_divided = {}
+        
+        goal = goals_helper.GoalBase.get_current_goal(request.user, constants.MAP[goal_type])
+        if not goal:
+            return api_utils.response({constants.MESSAGE: constants.USER_GOAL_NOT_PRESENT},
+                                      status.HTTP_400_BAD_REQUEST, constants.USER_GOAL_NOT_PRESENT)
+
+        # get funds for each category via utility
+        equity_funds, debt_funds, elss_funds, user_equity_funds, user_debt_funds, user_elss_funds =\
+            utils.get_recommended_and_scheme_funds(request.user.id, goal)
+
+        # function to find max allowed for each cases
+        sip_lumpsum_allocation = utils.get_sip_lumpsum_for_goal(request.user, goal).allocation
+        number_of_equity_funds_by_sip, number_of_equity_funds_by_lumpsum, number_of_debt_funds_by_sip, \
+        number_of_debt_funds_by_lumpsum, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum, is_error, \
+        errors = utils.get_number_of_funds(sip_lumpsum_allocation)
+
+        # serializes all categories of funds
+        user_equity_fund = serializers.FundSerializerForFundDividedIntoCategory(user_equity_funds, many=True)
+        equity_fund = serializers.FundSerializerForFundDividedIntoCategory(equity_funds, many=True)
+        debt_fund = serializers.FundSerializerForFundDividedIntoCategory(debt_funds, many=True)
+        user_debt_fund = serializers.FundSerializerForFundDividedIntoCategory(user_debt_funds, many=True)
+        elss_fund = serializers.FundSerializerForFundDividedIntoCategory(elss_funds, many=True)
+        user_elss_fund = serializers.FundSerializerForFundDividedIntoCategory(user_elss_funds, many=True)
+        # if serializers are valid return funds_divided else return serializer errors
+        if equity_fund.is_valid and debt_fund.is_valid and elss_fund.is_valid and user_elss_fund.is_valid \
+            and user_debt_fund.is_valid and user_elss_fund.is_valid:
+            funds_divided[constants.EQUITY] = {constants.SCHEME: user_equity_fund.data, constants.OTHER_RECOMMENDED: equity_fund.data}
+            funds_divided[constants.DEBT] = {constants.SCHEME: user_debt_fund.data, constants.OTHER_RECOMMENDED: debt_fund.data}
+            funds_divided[constants.ELSS] = {constants.SCHEME: user_elss_fund.data, constants.OTHER_RECOMMENDED: elss_fund.data}
+            funds_divided["elss_max"] = max(number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum)
+            funds_divided["equity_max"] = max(number_of_equity_funds_by_sip, number_of_equity_funds_by_lumpsum)
+            funds_divided["debt_max"] = max(number_of_debt_funds_by_sip, number_of_debt_funds_by_lumpsum)
+            return api_utils.response(funds_divided, status.HTTP_200_OK)
+        return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(equity_fund.errors))
+    
 class FundsComparedData(APIView):
     """
     API o return data for fund comaprison.
@@ -741,8 +837,8 @@ class PortfolioPerformance(APIView):
                                       status.HTTP_400_BAD_REQUEST, constants.USER_PORTOFOLIO_NOT_PRESENT)
         portfolio_items = models.PortfolioItem.objects.filter(portfolio=portfolio).order_by('fund_id')
         portfolio_items_fund_ids = [portfolio_item.fund_id for portfolio_item in portfolio_items]
-        latest_date = utils.get_latest_date_funds_only()
-        latest_dashboard_date = utils.get_dashboard_change_date()
+        latest_date = funds_helper.FundsHelper.get_latest_nav_date_for_funds()
+        latest_dashboard_date = funds_helper.FundsHelper.get_dashboard_change_date()
         if latest_dashboard_date < latest_date:
             latest_date = latest_dashboard_date
         nav_dates = utils.get_dates_for_nav(latest_date)
@@ -935,7 +1031,7 @@ class PortfolioHistoricPerformance(APIView):
             return api_utils.response({constants.MESSAGE: constants.USER_PORTOFOLIO_NOT_PRESENT},
                                       status.HTTP_400_BAD_REQUEST, constants.USER_PORTOFOLIO_NOT_PRESENT)
         portfolio_funds = [portfolio_item.fund for portfolio_item in portfolio_items]
-        latest_date = utils.get_latest_date_funds_only()
+        latest_date = funds_helper.FundsHelper.get_latest_nav_date_for_funds()
         historic_data = {
             'five_year':
                 utils.get_portfolio_historic_data(utils.get_fund_historic_data(
@@ -1186,6 +1282,51 @@ class GetInvestedFundReturn(APIView):
                     invested_fund_return_new[index][constants.VALUE].remove(fund_object)
         return api_utils.response(invested_fund_return_new, status.HTTP_200_OK)
 
+class GetInvestedFundReturn_v3(APIView):
+    """
+    API to get fund name and return value
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        """
+
+        :param request:
+        :return:the return value of fund
+        """
+        user_goals = goals_helper.GoalBase.get_invested_goals(request.user)
+        if not user_goals:
+            api_utils.response({}, status.HTTP_400_BAD_REQUEST)
+        
+        goal_fund_data = []
+        for goal in user_goals:
+            equity_funds, debt_funds, elss_funds = [], [], []
+            for portfolio_item in goal.portfolioitem_set.all(): #TODO subquery for valid foi
+                fund_order_item_count = models.FundOrderItem.objects.filter(portfolio_item=portfolio_item, is_verified=True, is_cancelled=False).count()
+                if fund_order_item_count > 0:
+                    if portfolio_item.fund.type_of_fund == 'E':
+                        equity_funds.append(utils.get_fund_detail(portfolio_item))
+                    elif portfolio_item.fund.type_of_fund == 'D':
+                        debt_funds.append(utils.get_fund_detail(portfolio_item))
+                    elif portfolio_item.fund.type_of_fund == 'T':
+                        elss_funds.append(utils.get_fund_detail(portfolio_item))
+            
+            invested_fund_return = [{"key": constants.EQUITY, "value": equity_funds},
+                        {"key": constants.DEBT, "value": debt_funds},
+                        {"key": constants.ELSS, "value": elss_funds}]
+
+            invested_fund_return_new = copy.deepcopy(invested_fund_return)
+            for index in range(3):
+                for fund_object in invested_fund_return[index][constants.VALUE]:
+                    if utils.find_if_not_eligible_for_display(fund_object, request.user):
+                        invested_fund_return_new[index][constants.VALUE].remove(fund_object)
+         
+            goal_data = {"goal_id": goal.id, "goal_name": goal.name, 
+                         "investment_date": goal.portfolio.investment_date.strftime('%d-%m-%y'),
+                         "funds": invested_fund_return_new}
+            goal_fund_data.append(goal_data)
+                                                      
+        return api_utils.response(invested_fund_return_new, status.HTTP_200_OK)
 
 class TransactionDetail(APIView):
     """
@@ -1264,12 +1405,11 @@ class TransactionHistoryNew(APIView):
         latest_fund_order_item = []
         if portfolio_items:
             for portfolio_item in portfolio_items:
-                fund_order_items = portfolio_item.fundorderitem_set.filter(is_cancelled=False).order_by('-created_at')
+                fund_order_items = portfolio_item.fundorderitem_set.filter(is_cancelled=False, sip_amount__gt=0).order_by('-created_at')
                 for fund_order_item in fund_order_items:
-                    if fund_order_item.orderdetail_set.all().filter(is_lumpsum=False):
-                        if fund_order_item.is_future_sip_cancelled == False:
-                            latest_fund_order_item.append(fund_order_item)
-                        break
+                    if fund_order_item.is_future_sip_cancelled == False:
+                        latest_fund_order_item.append(fund_order_item)
+                    break
                     
             if len(latest_fund_order_item) > 0:
                 future_fund_order_item_serializer = serializers.FutureFundOrderItemSerializer(latest_fund_order_item, many=True)
@@ -1282,6 +1422,62 @@ class TransactionHistoryNew(APIView):
         sorted_txn_history = sorted(txn_history, key=lambda k: k['transaction_date'], reverse=True)
         return api_utils.response(sorted_txn_history, status.HTTP_200_OK)
 
+class TransactionHistory_v3(APIView):
+    """
+    API to get details of fund order item
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        """
+        :param request:
+        :return:the detail of fund order items
+        """
+        txn_history = []
+        order_details = models.OrderDetail.objects.filter(user=request.user)
+        fund_order_details = models.FundOrderItem.objects.filter(
+            orderdetail__in=order_details).exclude(order_amount=0).order_by('-created_at')
+        order_serializer = serializers.FundOrderItemSerializer_v3(fund_order_details, many=True)
+        if order_serializer.is_valid:
+            txn_history = order_serializer.data
+        else:
+            return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(order_serializer.errors))
+
+        redeem_details = models.FundRedeemItem.objects.filter(user=request.user).order_by('-created_at')
+        # fund_redeem_details = models.FundRedeemItem.objects.filter(redeemdetail__in=redeem_details).order_by('-created_at')
+        # redeem_serializer = serializers.FundRedeemItemSerializer(fund_redeem_details, many=True)
+        redeem_serializer = serializers.FundRedeemItemSerializer_v3(redeem_details, many=True)
+
+        if redeem_serializer.is_valid:
+            txn_history += redeem_serializer.data
+        else:
+            return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(redeem_serializer.errors))
+
+        # portfolio_items = models.PortfolioItem.objects.filter(
+        #     portfolio__user=request.user, portfolio__has_invested=True, portfolio__is_deleted=False)
+        fund_order_items_list = models.FundOrderItem.objects.filter(portfolio_item__portfolio__user=request.user,
+            portfolio_item__portfolio__has_invested=True, portfolio_item__portfolio__is_deleted=False, is_verified=True,
+            is_cancelled=False).distinct('portfolio_item').select_related('portfolio_item')
+        portfolio_items = [fund_order_item.portfolio_item for fund_order_item in fund_order_items_list]
+        latest_fund_order_item = []
+        if portfolio_items:
+            for portfolio_item in portfolio_items:
+                fund_order_items = portfolio_item.fundorderitem_set.filter(is_cancelled=False, sip_amount__gt=0).order_by('-created_at')
+                for fund_order_item in fund_order_items:
+                    if fund_order_item.is_future_sip_cancelled == False:
+                        latest_fund_order_item.append(fund_order_item)
+                    break
+                    
+            if len(latest_fund_order_item) > 0:
+                future_fund_order_item_serializer = serializers.FutureFundOrderItemSerializer(latest_fund_order_item, many=True)
+
+                if future_fund_order_item_serializer.is_valid:
+                    txn_history += future_fund_order_item_serializer.data
+                else:
+                    return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(future_fund_order_item_serializer.errors))
+
+        sorted_txn_history = sorted(txn_history, key=lambda k: k['transaction_date'], reverse=True)
+        return api_utils.response(sorted_txn_history, status.HTTP_200_OK)
 
 class FundRedeem(APIView):
     """
@@ -1314,6 +1510,31 @@ class FundRedeem(APIView):
             return api_utils.response({constants.MESSAGE: serializer.errors}, status.HTTP_400_BAD_REQUEST,
                                       generate_error_message(serializer.errors))
 
+class GoalRedeem(APIView):
+    """
+    For this api the expected data structure is sent is
+    {"data": [{"goal_id": 1, "amount" : [{"fund_id": 3, "redeem_amount": 1300}], "all_units":[{"fund_id": 2}]}]}
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self,request):
+        """
+        :param request:
+        :return:
+        """
+        serializer = serializers.RedeemAddSerializer_v3(data=request.data)
+        if serializer.is_valid():
+            grouped_redeem_detail = utils.process_redeem_request(request.user, request.data.get('data', []))
+
+            if grouped_redeem_detail:
+                # Sends a email informing admin of a new groupredeem item creation
+                profiles_helpers.send_redeem_completed_email(grouped_redeem_detail, use_https=settings.USE_HTTPS)
+                return api_utils.response({constants.MESSAGE: "success"})
+            else:
+                return api_utils.response({}, status.HTTP_400_BAD_REQUEST)
+        else:
+            return api_utils.response({constants.MESSAGE: serializer.errors}, status.HTTP_400_BAD_REQUEST,
+                                      generate_error_message(serializer.errors))
 
 
 class DashboardPortfolioHistoricPerformance(APIView):
@@ -1429,6 +1650,64 @@ class GetCategorySchemes(APIView):
                 return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(
                     user_category_fund.errors))
 
+class GetCategorySchemesForGoal(APIView):
+    """
+    API to reset current portfolio items of a user
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, goal_type):
+        """
+        :param request:
+        :return:
+        """
+        
+        goal = goals_helper.GoalBase.get_current_goal(request.user, constants.MAP[goal_type])
+        if not goal:
+            return api_utils.response({constants.MESSAGE: constants.USER_GOAL_NOT_PRESENT},
+                                      status.HTTP_400_BAD_REQUEST, constants.USER_GOAL_NOT_PRESENT)
+
+        # get the category for which reset is being done
+        reset = request.query_params.get('reset')
+        sip_lumpsum_allocation = utils.get_sip_lumpsum_for_goal(request.user, goal).allocation
+        
+        number_of_equity_funds_by_sip, number_of_equity_funds_by_lumpsum, number_of_debt_funds_by_sip, \
+        number_of_debt_funds_by_lumpsum, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum, is_error, \
+        errors = utils.get_number_of_funds(sip_lumpsum_allocation)
+        RANK_MAP = {
+            constants.EQUITY: max(number_of_equity_funds_by_sip, number_of_equity_funds_by_lumpsum),
+            constants.DEBT: max(number_of_debt_funds_by_sip, number_of_debt_funds_by_lumpsum),
+            constants.ELSS: max(number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum)
+        }
+
+        for category in constants.FUND_CATEGORY_LIST:
+            if reset == category:
+                # serializes all categories of funds
+                if reset == constants.EQUITY and RANK_MAP[reset] == constants.MAX_NUMBER_EQUITY_FUNDS:
+                    
+                    user_category_fund_list = utils.recommendedPortfolio_equity(reset)
+                    
+                else:    
+                    user_category_fund_list = models.Fund.objects.filter(
+                        is_enabled=True, type_of_fund=constants.FUND_MAP[reset]).order_by("fund_rank")[:RANK_MAP[reset]]
+                user_category_fund_list_ids = [i.id for i in user_category_fund_list]
+                other_category_fund_list = models.Fund.objects.filter(
+                    type_of_fund=constants.FUND_MAP[reset]).exclude(
+                    id__in=user_category_fund_list_ids).exclude(is_enabled=False).order_by('fund_rank')
+
+                user_category_fund = serializers.FundSerializerForFundDividedIntoCategory(
+                    user_category_fund_list, many=True)
+                other_category_fund = serializers.FundSerializerForFundDividedIntoCategory(
+                    other_category_fund_list, many=True)
+
+                # if serializers are valid return funds_divided else return serializer errors
+                if user_category_fund.is_valid and other_category_fund.is_valid:
+                    funds_divided_by_category = {constants.SCHEME: user_category_fund.data,
+                                                 constants.OTHER_RECOMMENDED: other_category_fund.data}
+                    return api_utils.response(funds_divided_by_category, status.HTTP_200_OK)
+                return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(
+                    user_category_fund.errors))
 
 class ChangePortfolio(APIView):
     """
@@ -1475,6 +1754,56 @@ class ChangePortfolio(APIView):
         utils.change_portfolio(category_sip_lumpsum_map, user_portfolio, fund_id_map)
         return api_utils.response({constants.MESSAGE: constants.SUCCESS}, status.HTTP_200_OK)
 
+class ChangeGoalPortfolio(APIView):
+    """
+    API to change portfolio for swap funds
+
+    Receives three lists corresponding to fund ids user want to have in his portfolio for each category.
+    Based on the above three lists it deletes / replaces the funds in his portfolio.
+    The number of new funds can be equal to or less than(not zero for each category if initially not zero) the number of
+    funds originally present in his portfolio for each category but cannot be more than that.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, goal_type):
+        """
+        :param request:
+        :return:
+        """
+        # check if a portfolio of user for which he has not invested is present. If not send an error message
+        try:
+            user_portfolio = models.Portfolio.objects.get(user=request.user, has_invested=False)
+        except models.Portfolio.DoesNotExist:
+            return api_utils.response({constants.MESSAGE: constants.USER_PORTOFOLIO_NOT_PRESENT},
+                                      status.HTTP_400_BAD_REQUEST, constants.USER_PORTOFOLIO_NOT_PRESENT)
+
+        goal = goals_helper.GoalBase.get_current_goal(request.user, constants.MAP[goal_type])
+        if not goal:
+            return api_utils.response({constants.MESSAGE: constants.USER_GOAL_NOT_PRESENT},
+                                      status.HTTP_400_BAD_REQUEST, constants.USER_GOAL_NOT_PRESENT)
+
+        # if portfolio is present get ids of new funds user wants to keep from request
+        fund_id_map = {constants.EQUITY: [], constants.DEBT: [], constants.ELSS: []}
+        for category in constants.FUND_CATEGORY_LIST:
+            fund_id_map[category] = request.data.get(category)
+
+        
+        # calculate sip and lumpsum for each category based on old portfolio
+        category_sip_lumpsum_map = utils.calculate_sip_lumpsum_category_wise_for_a_portfolio(user_portfolio, goal)
+
+        if fund_id_map[constants.EQUITY]:
+            if category_sip_lumpsum_map[constants.EQUITY][constants.SIP] !=0:
+                defected_funds = utils.find_funds_with_sip_lower_than_minimum_sip(
+                    category_sip_lumpsum_map[constants.EQUITY][constants.SIP], category_sip_lumpsum_map[constants.EQUITY][constants.SIP_COUNT], fund_id_map[constants.EQUITY])
+
+                if defected_funds != '':
+                    # string_to_return = constants.CHECK_PORTFOLIO_DISTRIBUTION_MESSAGE.format(defected_funds)
+                    return api_utils.response({}, status.HTTP_400_BAD_REQUEST, defected_funds)
+
+        # add the new funds as portfolio items and allocate them sip and lumpsum based on category_sip_lumpsum_map
+        utils.change_portfolio(category_sip_lumpsum_map, user_portfolio, fund_id_map, goal)
+        return api_utils.response({constants.MESSAGE: constants.SUCCESS}, status.HTTP_200_OK)
 
 class FundsDistributionValidate(APIView):
     """
@@ -1511,6 +1840,45 @@ class FundsDistributionValidate(APIView):
                     return api_utils.response({'valid': False}, status.HTTP_400_BAD_REQUEST, defected_funds)
         return api_utils.response({'valid': True}, status.HTTP_200_OK)
 
+class FundsDistributionValidateForGoal(APIView):
+    """
+    API to check if funds distribution is valid.
+    The sip allotted to each fund should be more than or equal to its minimum sip amount
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, goal_type):
+        """
+        :param request:
+        :return:
+        """
+
+        # check if a portfolio of user for which he has not invested is present. If not send an error message
+        try:
+            user_portfolio = models.Portfolio.objects.get(user=request.user, has_invested=False)
+        except models.Portfolio.DoesNotExist:
+            return api_utils.response({constants.MESSAGE: constants.USER_PORTOFOLIO_NOT_PRESENT},
+                                      status.HTTP_400_BAD_REQUEST, constants.USER_PORTOFOLIO_NOT_PRESENT)
+
+        goal = goals_helper.GoalBase.get_current_goal(request.user, constants.MAP[goal_type])
+        if not goal:
+            return api_utils.response({constants.MESSAGE: constants.USER_GOAL_NOT_PRESENT},
+                                      status.HTTP_400_BAD_REQUEST, constants.USER_GOAL_NOT_PRESENT)
+
+        # ids of funds selected by user
+        equity_funds = request.data.get(constants.EQUITY)
+
+        # calculate sip and lumpsum for each category based on old portfolio
+        category_sip_lumpsum_map = utils.calculate_sip_lumpsum_category_wise_for_a_portfolio(user_portfolio, goal)
+        if equity_funds:
+            if category_sip_lumpsum_map[constants.EQUITY][constants.SIP] !=0:
+                defected_funds = utils.find_funds_with_sip_lower_than_minimum_sip(
+                    category_sip_lumpsum_map[constants.EQUITY][constants.SIP], category_sip_lumpsum_map[constants.EQUITY][constants.SIP_COUNT], equity_funds)
+
+                if defected_funds != '':
+                    # string_to_return = constants.CHECK_PORTFOLIO_DISTRIBUTION_MESSAGE.format(defected_funds)
+                    return api_utils.response({'valid': False}, status.HTTP_400_BAD_REQUEST, defected_funds)
+        return api_utils.response({'valid': True}, status.HTTP_200_OK)
 
 class DashboardVersionTwo(APIView):
     """
@@ -1694,7 +2062,7 @@ class PortfolioTracker(APIView):
         weekends = [1, 7]
         # read https://docs.djangoproject.com/en/dev/ref/models/querysets/#week-day for more details
         user_performances = models.PortfolioPerformance.objects.filter(
-            user=request.user, date__lte=utils.get_dashboard_change_date()
+            user=request.user, date__lte=funds_helper.FundsHelper.get_dashboard_change_date()
         ).exclude(date__week_day__in=weekends).order_by('date')
         if user_performances:
             for user_performance in user_performances:
@@ -1716,7 +2084,7 @@ class PortfolioTracker(APIView):
                 virtual_invested_sip += portfolio_item.sip
                 portfolio_funds.append(portfolio_item.fund)
 
-            latest_date = utils.get_dashboard_change_date()
+            latest_date = funds_helper.FundsHelper.get_dashboard_change_date()
             historic_performance, dates = utils.get_portfolio_historic_data(utils.get_fund_historic_data_tracker(
                 portfolio_funds, user_portfolio.modified_at.date(), latest_date), portfolio_items, True)
 

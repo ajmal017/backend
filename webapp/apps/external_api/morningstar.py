@@ -414,13 +414,14 @@ class MorningStarBackend(BaseFundBackend):
                 end_date = last_date
             url = utils.generate_url_for_historical_data(index_mstar_id, start_date, end_date)
             json_data = self._get_data(url)
-            for data in json_data[constants.DATA][constants.API][constants.RAW_DATA]:
-                index_mstar_id = json_data[constants.DATA][constants.ID]
-                index = core_models.Indices.objects.get(mstar_id=index_mstar_id)
-                date_of_nav = data[constants.HISTORICAL_DATA_MAP[constants.DATE]]
-                nav = data[constants.HISTORICAL_DATA_MAP[constants.NAV]]
-                core_models.HistoricalIndexData.objects.update_or_create(index=index, date=date_of_nav,
-                                                                         defaults={constants.NAV: nav})
+            if json_data.get(constants.DATA):
+                for data in json_data[constants.DATA][constants.API][constants.RAW_DATA]:
+                    index_mstar_id = json_data[constants.DATA][constants.ID]
+                    index = core_models.Indices.objects.get(mstar_id=index_mstar_id)
+                    date_of_nav = data[constants.HISTORICAL_DATA_MAP[constants.DATE]]
+                    nav = data[constants.HISTORICAL_DATA_MAP[constants.NAV]]
+                    core_models.HistoricalIndexData.objects.update_or_create(index=index, date=date_of_nav,
+                                                                             defaults={constants.NAV: nav})
             start_date = end_date
 
     # NOTE - deprecated
