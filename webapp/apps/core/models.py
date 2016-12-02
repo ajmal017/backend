@@ -829,9 +829,23 @@ class FundRedeemItem(TimeStampedModel):
         
         if not self.invested_redeem_amount or self.invested_redeem_amount == 0:
             if self.unit_redeemed and self.unit_redeemed > 0:
+                
+                fund_order_items_list = []
+                try:
+                    lumpsum_fund_order_item = FundOrderItem.objects.get(portfolio_item=self.portfolio_item, is_verified=True, 
+                                                                is_cancelled=False, folio_number=self.folio_number, 
+                                                                agreed_lumpsum__gt=0, unit_alloted__gt=F('units_redeemed'))
+                    
+                    if lumpsum_fund_order_item:
+                        fund_order_items_list.append(lumpsum_fund_order_item)
+                except:
+                    pass
+                                                                
                 fund_order_items = FundOrderItem.objects.filter(portfolio_item=self.portfolio_item, is_verified=True, 
                                                                 is_cancelled=False, folio_number=self.folio_number, 
-                                                                unit_alloted__gt=F('units_redeemed')).order_by('allotment_date')
+                                                                agreed_lumpsum=0, agreed_sip__gt=0, unit_alloted__gt=F('units_redeemed')).order_by('allotment_date')
+                fund_order_items_list.extend(fund_order_items)
+                
                 units_redeemed = self.unit_redeemed
                 
                 for foi in fund_order_items:

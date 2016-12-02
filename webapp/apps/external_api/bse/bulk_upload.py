@@ -3,6 +3,7 @@ from profiles import models as profile_models
 from profiles.utils import is_investable
 from profiles import constants as profile_constants
 from core import models
+from core import redeem_helper
 
 from collections import OrderedDict
 import os
@@ -92,10 +93,18 @@ def generate_redeem_pipe_file(user_id, grouped_redeem):
             folio_number = redeem_items[i].folio_number
             
         redeem_value = str(redeem_items[i].redeem_amount)
+        redeem_units = ""
+        min_redemption_flag = cons.Redeem_MIN_redemption_Flag_N
         all_units = cons.Redeem_All_Units
         if redeem_items[i].is_all_units_redeemed:
             redeem_value = ""
-            all_units = "Y"
+            redeem_units = redeem_helper.RedeemHelper.get_redeemable_units(redeem_items[i].portfolio_item)
+            if redeem_units and redeem_units < 50:
+                min_redemption_flag = cons.Redeem_MIN_redemption_Flag_Y
+            elif not redeem_units:
+                redeem_units = ""
+            #all_units = "Y"
+            
         bulk_redeem_dict = OrderedDict([('SCHEME CODE', neft_code if item.redeem_amount < 200000 else rgts_code),
                                        ('Purchase / Redeem', cons.Redeem_Purchase),
                                        ('Buy Sell Type', cons.Redeem_Buy_Type),
@@ -108,10 +117,10 @@ def generate_redeem_pipe_file(user_id, grouped_redeem):
                                        ('Sub Broker ARN Code', ''),
                                        ('EUIN Number', cons.Redeem_EUIN_Number),
                                        ('EUIN Declaration', cons.Redeem_EUIN_declaration),
-                                       ('MIN redemption flag', cons.Redeem_MIN_redemption_Flag),
+                                       ('MIN redemption flag', min_redemption_flag),
                                        ('DPC Flag', cons.Redeem_DPC_Flag),  # TODO:
                                        ('All Units', all_units),
-                                       ('Redemption Units', '')])  # TODO:
+                                       ('Redemption Units', str(redeem_units))])  # TODO:
         outfile.write("|".join(bulk_redeem_dict.values()))
         if i < len(redeem_items)-1:
             outfile.write("\r")

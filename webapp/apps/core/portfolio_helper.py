@@ -1,4 +1,5 @@
 import logging
+from django.db.models import F
 from core import models
 
 
@@ -40,3 +41,4 @@ class PortfolioHelper(object):
         transactions.append(redeem_items)
         
         return transactions
+    
