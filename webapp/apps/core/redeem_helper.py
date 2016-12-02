@@ -16,13 +16,21 @@ class RedeemHelper(object):
         super(RedeemHelper, self).__init__()
 
     @staticmethod
-    def get_units_redeemed(portfolio_item):
-        unit_redeemed__sum = models.FundRedeemItem.objects.filter(
+    def get_units_redeemed(portfolio_item, folio_number=None):
+        if folio_number:
+            unit_redeemed__sum = models.FundRedeemItem.objects.filter(
+                                portfolio_item__id=portfolio_item.id, is_verified=True, folio_number=folio_number).aggregate(Sum('unit_redeemed'))['unit_redeemed__sum']
+            unverified_amount_redeemed__sum = models.FundRedeemItem.objects.filter(
+                portfolio_item__id=portfolio_item.id, is_verified=False, is_cancelled=False, folio_number=folio_number
+            ).aggregate(Sum('redeem_amount'))['redeem_amount__sum']
+        else:
+            unit_redeemed__sum = models.FundRedeemItem.objects.filter(
                                 portfolio_item__id=portfolio_item.id, is_verified=True).aggregate(Sum('unit_redeemed'))['unit_redeemed__sum']
+            unverified_amount_redeemed__sum = models.FundRedeemItem.objects.filter(
+                portfolio_item__id=portfolio_item.id, is_verified=False, is_cancelled=False
+            ).aggregate(Sum('redeem_amount'))['redeem_amount__sum']
+            
 
-        unverified_amount_redeemed__sum = models.FundRedeemItem.objects.filter(
-            portfolio_item__id=portfolio_item.id, is_verified=False, is_cancelled=False
-        ).aggregate(Sum('redeem_amount'))['redeem_amount__sum']
 
         if unit_redeemed__sum is None:
             unit_redeemed__sum = 0
@@ -35,13 +43,20 @@ class RedeemHelper(object):
         return unit_redeemed__sum + unverified_unit_redeemed
     
     @staticmethod
-    def get_redeemable_units(portfolio_item):
-        unit_alloted_sum = models.FundOrderItem.objects.filter(portfolio_item=portfolio_item, is_cancelled=False, is_verified=True, unit_alloted__gt=F('units_redeemed'),
+    def get_redeemable_units(portfolio_item, folio_number=None):
+        if folio_number:
+            unit_alloted_sum = models.FundOrderItem.objects.filter(portfolio_item=portfolio_item, is_cancelled=False, is_verified=True, 
+                                                               unit_alloted__gt=F('units_redeemed'), folio_number=folio_number
                                             ).aggregate(Sum('unit_alloted'))['unit_alloted__sum']
+        else:
+            unit_alloted_sum = models.FundOrderItem.objects.filter(portfolio_item=portfolio_item, is_cancelled=False, is_verified=True, 
+                                                               unit_alloted__gt=F('units_redeemed')
+                                            ).aggregate(Sum('unit_alloted'))['unit_alloted__sum']
+
         if not unit_alloted_sum:
             unit_alloted_sum = 0
             
-        unit_redeemed_sum = RedeemHelper.get_units_redeemed(portfolio_item)
+        unit_redeemed_sum = RedeemHelper.get_units_redeemed(portfolio_item, folio_number)
         
         return (unit_alloted_sum - unit_redeemed_sum)
 

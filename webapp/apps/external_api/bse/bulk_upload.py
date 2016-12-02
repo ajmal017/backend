@@ -76,17 +76,17 @@ def generate_redeem_pipe_file(user_id, grouped_redeem):
     redeem_pipe_file_name = "redeem_pipe" + timestamp + ".txt"
     outfile = open(output_path + redeem_pipe_file_name, "w")
     
-    redeem_items = grouped_redeem.fund_redeem_item_set.all()
+    redeem_items = grouped_redeem.fundredeemitem_set.all()
     user = profile_models.User.objects.get(id=user_id)
     
     for i, item in enumerate(redeem_items):
 
         neft_code = ''
-        if item.fund.bse_neft_scheme_code:
-            neft_code = item.fund.bse_neft_scheme_code
+        if item.portfolio_item.fund.bse_neft_scheme_code:
+            neft_code = item.portfolio_item.fund.bse_neft_scheme_code
         rgts_code = ""
-        if item.fund.bse_rgts_scheme_code:
-            rgts_code = item.fund.bse_rgts_scheme_code
+        if item.portfolio_item.fund.bse_rgts_scheme_code:
+            rgts_code = item.portfolio_item.fund.bse_rgts_scheme_code
 
         folio_number = ""
         if redeem_items[i].folio_number:
@@ -98,7 +98,7 @@ def generate_redeem_pipe_file(user_id, grouped_redeem):
         all_units = cons.Redeem_All_Units
         if redeem_items[i].is_all_units_redeemed:
             redeem_value = ""
-            redeem_units = redeem_helper.RedeemHelper.get_redeemable_units(redeem_items[i].portfolio_item)
+            redeem_units = redeem_helper.RedeemHelper.get_redeemable_units(redeem_items[i].portfolio_item, folio_number)
             if redeem_units and redeem_units < 50:
                 min_redemption_flag = cons.Redeem_MIN_redemption_Flag_Y
             elif not redeem_units:
