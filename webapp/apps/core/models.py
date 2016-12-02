@@ -782,7 +782,7 @@ class FundRedeemItem(TimeStampedModel):
     folio_number = models.CharField(max_length=100, null=True, blank=True, default=None)
 
     def __str__(self):
-        return str(self.portfolio_item.fund.legal_name)
+        return str(self.portfolio_item.fund.legal_name) + " " + str(self.portfolio_item.id) 
 
     def get_transaction_date(self):
         """
@@ -844,11 +844,12 @@ class FundRedeemItem(TimeStampedModel):
                 fund_order_items = FundOrderItem.objects.filter(portfolio_item=self.portfolio_item, is_verified=True, 
                                                                 is_cancelled=False, folio_number=self.folio_number, 
                                                                 agreed_lumpsum=0, agreed_sip__gt=0, unit_alloted__gt=F('units_redeemed')).order_by('allotment_date')
+
                 fund_order_items_list.extend(fund_order_items)
                 
                 units_redeemed = self.unit_redeemed
                 
-                for foi in fund_order_items:
+                for foi in fund_order_items_list:
                     fund_order_units_redeemed = min(foi.unit_alloted - foi.units_redeemed, units_redeemed)
                     nav = funds_helper.FundsHelper.get_current_nav(self.portfolio_item.fund_id, foi.allotment_date)
                     invested_redeem_amount += (fund_order_units_redeemed * nav)

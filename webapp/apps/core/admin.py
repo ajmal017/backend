@@ -181,20 +181,20 @@ class GroupedRedeemDetailAdmin(admin.ModelAdmin):
     exclude = ('redeem_details', )
     actions = None
 
-    def form_url(self, id, fund):
+    def form_url(self, redeem_id, redeem_item):
         """
         returns a url formed for a particular redeem detail
         :param id: id associated with a redeem_detail
         """
-        url = reverse("admin:core_fundredeemitem_change", args=[id])
-        return mark_safe(u'<a href=%s target="_blank">%s</a>' % (url, fund.legal_name))
+        url = reverse("admin:core_fundredeemitem_change", args=[redeem_id])
+        return mark_safe(u'<a href=%s target="_blank">%s</a>' % (url, redeem_item))
 
     def list_of_redeem_items(self, obj):
         """
         returns list of redeem details related to a grouped redeemed detail
         :param obj: contains an instance to grouped redeem detail object
         """
-        return mark_safe(u"<br>".join([self.form_url(redeem_item.id, redeem_item.portfolio_item.fund) for redeem_item in obj.fundredeemitem_set.all()]))
+        return mark_safe(u"<br>".join([self.form_url(redeem_item.id, redeem_item) for redeem_item in obj.fundredeemitem_set.all()]))
 
     list_of_redeem_items.allow_tags = True
     form_url.allow_tags = True
@@ -404,7 +404,7 @@ class PortfolioItemAdmin(admin.ModelAdmin):
         returns a url formed for a particular redeem detail
         :param id: id associated with a redeem_detail
         """
-        url = reverse("admin:core_goal_change", args=[foi_id])
+        url = reverse("admin:core_fundorderitem_change", args=[foi_id])
         return mark_safe(u'<a href=%s target="_blank">%s</a>' % (url, foi))
 
     def list_of_fund_order_items(self, obj):
