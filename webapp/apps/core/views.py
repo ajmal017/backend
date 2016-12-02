@@ -1431,7 +1431,7 @@ class TransactionHistory_v3(APIView):
         else:
             return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(order_serializer.errors))
 
-        redeem_details = models.FundRedeemItem.objects.filter(user=request.user).order_by('-created_at')
+        redeem_details = models.FundRedeemItem.objects.filter(portfolio_item__portfolio__user=request.user).order_by('-created_at')
         # fund_redeem_details = models.FundRedeemItem.objects.filter(redeemdetail__in=redeem_details).order_by('-created_at')
         # redeem_serializer = serializers.FundRedeemItemSerializer(fund_redeem_details, many=True)
         redeem_serializer = serializers.FundRedeemItemSerializer_v3(redeem_details, many=True)
