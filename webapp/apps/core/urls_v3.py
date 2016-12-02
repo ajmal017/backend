@@ -25,7 +25,7 @@ urlpatterns = [
     url(r'^popular/funds/get/$', views.PopularFunds.as_view(), name='get-popular-funds'),
     url(r'^portfolio/historic/performance/', views.PortfolioHistoricPerformance.as_view(),
         name='portfolio-historic-performance'),
-    url(r'^transaction/history/$', views.TransactionHistoryNew.as_view(), name='transaction-history-new'),
+    url(r'^transaction/history/$', views.TransactionHistory_v3.as_view(), name='transaction-history-new'),
     url(r'^invested/fund/get/$', views.GetInvestedFundReturn_v3.as_view(), name='fund-return'),
     url(r'^fund/redeem/add/new/$', views.FundRedeem.as_view(), name='fund_redeem_add'),
     url(r'^goal/redeem/add/new/$', views.GoalRedeem.as_view(), name='goal_redeem_add'),

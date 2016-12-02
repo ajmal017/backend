@@ -95,7 +95,10 @@ class RedeemHelper(object):
                  
                 if redeem_amount > 0:
                     if sip_order:
-                        redeem_items[sip_order.folio_number] += redeem_amount 
+                        if redeem_items.get(sip_order.folio_number):
+                            redeem_items[sip_order.folio_number] += redeem_amount
+                        else:
+                            redeem_items[sip_order.folio_number] = redeem_amount
 
                 # TODO : invested_redeem_amount
                 for folio_number in redeem_items:

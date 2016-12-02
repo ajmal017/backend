@@ -1129,7 +1129,10 @@ class FundOrderItem(TimeStampedModel):
             return "In Process"
         elif order_status == constants.CANCELLED:
             return "Cancelled"
-        return str(self.allotment_date.strftime("%d-%m-%y"))
+        if self.allotment_date:
+            return str(self.allotment_date.strftime("%d-%m-%y"))
+        else:
+            return "In Process"
 
     def get_unit_alloted(self):
         """

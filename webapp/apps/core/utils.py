@@ -1824,7 +1824,7 @@ def calculate_financial_goal_status(asset_class_overview, portfolios_to_be_consi
     """
     from core import goals_helper
     
-    total_debt, total_equity, total_elss,total_liquid = 0, 0, 0
+    total_debt, total_equity, total_elss,total_liquid = 0, 0, 0, 0
     goal_map = {
         constants.RETIREMENT: [[], 0], constants.TAX_SAVING: [[], 0], constants.BUY_PROPERTY: [[], 0],
         constants.EDUCATION: [[], 0], constants.WEDDING: [[], 0], constants.OTHER_EVENT: [[], 0],
