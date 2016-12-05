@@ -759,7 +759,7 @@ class FundsDividedIntoCategoriesForGoal(APIView):
             utils.get_recommended_and_scheme_funds(request.user.id, goal)
 
         # function to find max allowed for each cases
-        sip_lumpsum_allocation = utils.get_sip_lumpsum_for_goal(request.user, goal).allocation
+        sip_lumpsum_allocation = utils.get_sip_lumpsum_for_goal(request.user, goal)[0]
         number_of_equity_funds_by_sip, number_of_equity_funds_by_lumpsum, number_of_debt_funds_by_sip, \
         number_of_debt_funds_by_lumpsum, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum, \
         number_of_liquid_funds_by_sip, number_of_liquid_funds_by_lumpsum, is_error, \
@@ -1664,15 +1664,17 @@ class GetCategorySchemesForGoal(APIView):
 
         # get the category for which reset is being done
         reset = request.query_params.get('reset')
-        sip_lumpsum_allocation = utils.get_sip_lumpsum_for_goal(request.user, goal).allocation
+        sip_lumpsum_allocation = utils.get_sip_lumpsum_for_goal(request.user, goal)[0]
         
         number_of_equity_funds_by_sip, number_of_equity_funds_by_lumpsum, number_of_debt_funds_by_sip, \
-        number_of_debt_funds_by_lumpsum, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum, is_error, \
-        errors = utils.get_number_of_funds(sip_lumpsum_allocation)
+        number_of_debt_funds_by_lumpsum, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum, \
+        number_of_liquid_funds_by_sip, number_of_liquid_funds_by_lumpsum, \
+        is_error, errors = utils.get_number_of_funds(sip_lumpsum_allocation)
         RANK_MAP = {
             constants.EQUITY: max(number_of_equity_funds_by_sip, number_of_equity_funds_by_lumpsum),
             constants.DEBT: max(number_of_debt_funds_by_sip, number_of_debt_funds_by_lumpsum),
-            constants.ELSS: max(number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum)
+            constants.ELSS: max(number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum),
+            constants.LIQUID: max(number_of_liquid_funds_by_sip, number_of_liquid_funds_by_lumpsum)
         }
 
         for category in constants.FUND_CATEGORY_LIST:
