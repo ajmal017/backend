@@ -707,8 +707,8 @@ class FundsDividedIntoCategories(APIView):
         # function to find max allowed for each cases
         overall_allocation, sip_lumpsum_allocation, status_summary = utils.calculate_overall_allocation(request.user)
         number_of_equity_funds_by_sip, number_of_equity_funds_by_lumpsum, number_of_debt_funds_by_sip, \
-        number_of_debt_funds_by_lumpsum, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum, is_error, \
-        errors,number_of_liquid_funds_by_sip, number_of_liquid_funds_by_lumpsum = utils.get_number_of_funds(sip_lumpsum_allocation)
+        number_of_debt_funds_by_lumpsum, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum, \
+        number_of_liquid_funds_by_sip, number_of_liquid_funds_by_lumpsum, is_error, errors = utils.get_number_of_funds(sip_lumpsum_allocation)
 
         # serializes all categories of funds
         user_equity_fund = serializers.FundSerializerForFundDividedIntoCategory(user_equity_funds, many=True)
@@ -754,13 +754,15 @@ class FundsDividedIntoCategoriesForGoal(APIView):
                                       status.HTTP_400_BAD_REQUEST, constants.USER_GOAL_NOT_PRESENT)
 
         # get funds for each category via utility
-        equity_funds, debt_funds, elss_funds, user_equity_funds, user_debt_funds, user_elss_funds =\
+        equity_funds, debt_funds, elss_funds, user_equity_funds, user_debt_funds, user_elss_funds, \
+        liquid_funds, user_liquid_funds =\
             utils.get_recommended_and_scheme_funds(request.user.id, goal)
 
         # function to find max allowed for each cases
         sip_lumpsum_allocation = utils.get_sip_lumpsum_for_goal(request.user, goal).allocation
         number_of_equity_funds_by_sip, number_of_equity_funds_by_lumpsum, number_of_debt_funds_by_sip, \
-        number_of_debt_funds_by_lumpsum, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum, is_error, \
+        number_of_debt_funds_by_lumpsum, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum, \
+        number_of_liquid_funds_by_sip, number_of_liquid_funds_by_lumpsum, is_error, \
         errors = utils.get_number_of_funds(sip_lumpsum_allocation)
 
         # serializes all categories of funds
@@ -770,15 +772,19 @@ class FundsDividedIntoCategoriesForGoal(APIView):
         user_debt_fund = serializers.FundSerializerForFundDividedIntoCategory(user_debt_funds, many=True)
         elss_fund = serializers.FundSerializerForFundDividedIntoCategory(elss_funds, many=True)
         user_elss_fund = serializers.FundSerializerForFundDividedIntoCategory(user_elss_funds, many=True)
+        liquid_fund = serializers.FundSerializerForFundDividedIntoCategory(liquid_funds, many=True)
+        user_liquid_fund = serializers.FundSerializerForFundDividedIntoCategory(user_liquid_funds, many=True)
         # if serializers are valid return funds_divided else return serializer errors
-        if equity_fund.is_valid and debt_fund.is_valid and elss_fund.is_valid and user_elss_fund.is_valid \
-            and user_debt_fund.is_valid and user_elss_fund.is_valid:
+        if equity_fund.is_valid and debt_fund.is_valid and elss_fund.is_valid and liquid_fund.is_valid and user_elss_fund.is_valid \
+            and user_debt_fund.is_valid and user_elss_fund.is_valid and user_liquid_fund.is_valid:
             funds_divided[constants.EQUITY] = {constants.SCHEME: user_equity_fund.data, constants.OTHER_RECOMMENDED: equity_fund.data}
             funds_divided[constants.DEBT] = {constants.SCHEME: user_debt_fund.data, constants.OTHER_RECOMMENDED: debt_fund.data}
             funds_divided[constants.ELSS] = {constants.SCHEME: user_elss_fund.data, constants.OTHER_RECOMMENDED: elss_fund.data}
+            funds_divided[constants.LIQUID] = {constants.SCHEME: user_liquid_fund.data, constants.OTHER_RECOMMENDED: liquid_fund.data}
             funds_divided["elss_max"] = max(number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum)
             funds_divided["equity_max"] = max(number_of_equity_funds_by_sip, number_of_equity_funds_by_lumpsum)
             funds_divided["debt_max"] = max(number_of_debt_funds_by_sip, number_of_debt_funds_by_lumpsum)
+            funds_divided["liquid_max"] = max(number_of_liquid_funds_by_sip, number_of_liquid_funds_by_lumpsum)
             return api_utils.response(funds_divided, status.HTTP_200_OK)
         return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(equity_fund.errors))
     
@@ -1601,8 +1607,8 @@ class GetCategorySchemes(APIView):
         reset = request.query_params.get('reset')
         overall_allocation, sip_lumpsum_allocation, status_summary = utils.calculate_overall_allocation(request.user)
         number_of_equity_funds_by_sip, number_of_equity_funds_by_lumpsum, number_of_debt_funds_by_sip, \
-        number_of_debt_funds_by_lumpsum, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum, is_error, \
-        errors,number_of_liquid_funds_by_sip, number_of_liquid_funds_by_lumpsum = utils.get_number_of_funds(sip_lumpsum_allocation)
+        number_of_debt_funds_by_lumpsum, number_of_elss_funds_by_sip, number_of_elss_funds_by_lumpsum, \
+        number_of_liquid_funds_by_sip, number_of_liquid_funds_by_lumpsum, is_error, errors = utils.get_number_of_funds(sip_lumpsum_allocation)
         RANK_MAP = {
             constants.EQUITY: max(number_of_equity_funds_by_sip, number_of_equity_funds_by_lumpsum),
             constants.DEBT: max(number_of_debt_funds_by_sip, number_of_debt_funds_by_lumpsum),
