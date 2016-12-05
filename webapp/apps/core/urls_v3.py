@@ -48,6 +48,8 @@ urlpatterns = [
     
     url(r'^transaction/complete/$', views.TransactionComplete.as_view(), name='transaction-complete'),
     url(r'^liquid/new/response/add/$', views.LiquidAnswer.as_view(), name='liquid-new-answers-add'),
+    url(r'^sip/cancellation/add/$', views.SipCancellation.as_view(), name='sip-cancellation'), 
+    url(r'^sip/cancellation/admin/$', views.SipCancellation_admin.as_view(), name='sip-cancellation'),
 
     # ===================  DEPRECATED APIS =========================================================================
 

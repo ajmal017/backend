@@ -61,6 +61,85 @@ def generate_order_pipe_file(user_id, order_detail):
     return output_path + bulk_order_pipe_file_name
 
 
+
+
+def generate_sip_cancellation_pipe_file(user,portfolio_item):
+    """
+    This function generates a pipe separated file for sip cancellation
+    param : user_id 
+            portfolio_item
+    """
+    base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps/external_api', '')
+    output_path = base_dir + '/webapp/static/'
+    sip_cancellation_pipe_file = "sip_cancellation_" + str(portfolio_item.id) + "_.txt"
+    outfile = open(output_path + sip_cancellation_pipe_file, "w")
+    
+    fund_id = ""
+    start_date = ""
+    if portfolio_item.fund.id:
+        fund_id = portfolio_item.fund.id
+        start_date = models.get_valid_start_date(fund_id).strftime("%d/%m/%Y")
+    try:
+        fund_order_items = models.FundOrderItem.objects.filter(portfolio_item=portfolio_item)
+    except:
+        fund_order_items = []
+    try:
+        investor_info = profile_models.InvestorInfo.objects.get(user=user)
+        applicant_name = investor_info.applicant_name
+    except:
+        applicant_name = ""
+        
+    neft_code = ''
+    if portfolio_item.fund.bse_neft_scheme_code:
+        neft_code = portfolio_item.fund.bse_neft_scheme_code
+    rgts_code = ""
+    if portfolio_item.fund.bse_rgts_scheme_code:
+        rgts_code = portfolio_item.fund.bse_rgts_scheme_code
+        
+    for i,fund_order_item in enumerate(fund_order_items):  
+        if fund_order_item and fund_order_item.is_future_sip_cancelled is True and fund_order_item.agreed_sip > 0:
+            try:
+                order_detail = models.OrderDetail.objects.get(fund_order_items=fund_order_item)
+                bank_mandate = order_detail.bank_mandate
+            except:
+                bank_mandate = None
+            mandate_id = ""
+            if bank_mandate and bank_mandate.mandate_reg_no:
+                mandate_id = bank_mandate.mandate_reg_no
+                
+            bulk_order_dict = OrderedDict([('STATUS', cons.XSIP_CANCELLATION_STATUS),
+                                           ('MEMBERCODE',cons.MEMBER_CODE),
+                                           ('CLIENT CODE ',str(user.finaskus_id)),
+                                           ('CLIENT NAME ',str(applicant_name)),
+                                           ('INTERNAL REF NO',fund_order_item.internal_ref_no if fund_order_item.internal_ref_no else ""),
+                                           ('XSIP REGN NO ',portfolio_item.xsip_reg_no if portfolio_item.xsip_reg_no else "" ), 
+                                           ('XSIP REGN DATE',portfolio_item.xsip_reg_date if portfolio_item.xsip_reg_date else ""),
+                                           ('AMC NAME',str(portfolio_item.fund.amc_code)),
+                                           ('RTA SCHEME CODE',neft_code if fund_order_item.agreed_sip < 200000 else rgts_code),
+                                           ('SCHEME NAME',str(portfolio_item.fund.legal_name)),
+                                           ('FREQUENCY TYPE',cons.Frequency_Type),
+                                           ('START DATE',start_date),
+                                           ('END DATE',''),
+                                           ('INSTALLMENT AMOUNT',str(fund_order_item.agreed_sip)),
+                                           ('BROKERAGE',cons.Brokerage_money),
+                                           ('ENTRYBY',''),
+                                           ('BSE MANDATE ID',mandate_id), 
+                                           ('DPC Flag',cons.XSIP_CANCELLATION_DPC_FLAG),
+                                           ('DP Trans',cons.DP_TXN_MODE),
+                                           ('SUBBR CODE',''),
+                                           ('EUIN No',cons.Order_EUIN_Number),
+                                           ('EUIN DECL',cons.Order_EUIN_declaration), 
+                                           ('First Order Today', cons.First_Order_Today)])  # TODO:
+            
+            outfile.write("|".join(bulk_order_dict.values()))
+            if i < len(fund_order_items) - 1:
+                outfile.write("\r")
+            bulk_order_dict.clear()
+    outfile.close()
+    return output_path + sip_cancellation_pipe_file
+    
+        
+
 def generate_redeem_pipe_file(user_id, grouped_redeem):
     """
     This function generates a pipe separated file for redeem.

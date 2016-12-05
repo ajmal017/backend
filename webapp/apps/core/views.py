@@ -31,6 +31,7 @@ from external_api import helpers as external_helpers
 from django.db.models import Count
 from external_api import utils as external_utils
 from core import goals_helper, funds_helper
+from external_api.bse import bulk_upload 
 
 
 
@@ -1274,9 +1275,8 @@ class GetInvestedFundReturn(APIView):
                                 {"key": constants.ELSS, "value": elss_funds},
                                 {"key": constants.LIQUID, "value": liquid_funds}
                                 ]
-
         invested_fund_return_new = copy.deepcopy(invested_fund_return)
-        for index in range(3):
+        for index in range(4):
             for fund_object in invested_fund_return[index][constants.VALUE]:
                 if utils.find_if_not_eligible_for_display(fund_object, request.user):
                     invested_fund_return_new[index][constants.VALUE].remove(fund_object)
@@ -1296,11 +1296,11 @@ class GetInvestedFundReturn_v3(APIView):
         """
         user_goals = goals_helper.GoalBase.get_invested_goals(request.user)
         if not user_goals:
-            api_utils.response({}, status.HTTP_400_BAD_REQUEST)
+            return api_utils.response({}, status.HTTP_400_BAD_REQUEST)
         
         goal_fund_data = []
         for goal in user_goals:
-            equity_funds, debt_funds, elss_funds = [], [], []
+            equity_funds, debt_funds, elss_funds,liquid_funds = [], [], [],[]
             for portfolio_item in goal.portfolioitem_set.all(): #TODO subquery for valid foi
                 fund_order_item_count = models.FundOrderItem.objects.filter(portfolio_item=portfolio_item, is_verified=True, is_cancelled=False).count()
                 if fund_order_item_count > 0:
@@ -1310,18 +1310,22 @@ class GetInvestedFundReturn_v3(APIView):
                         debt_funds.append(utils.get_fund_detail(portfolio_item))
                     elif portfolio_item.fund.type_of_fund == 'T':
                         elss_funds.append(utils.get_fund_detail(portfolio_item))
+                    elif portfolio_item.fund.type_of_fund == 'L':
+                        liquid_funds.append(utils.get_fund_detail(portfolio_item))
             
             invested_fund_return = [{"key": constants.EQUITY, "value": equity_funds},
-                        {"key": constants.DEBT, "value": debt_funds},
-                        {"key": constants.ELSS, "value": elss_funds}]
+                                    {"key": constants.DEBT, "value": debt_funds},
+                                    {"key": constants.ELSS, "value": elss_funds},
+                                    {"key": constants.LIQUID, "value": liquid_funds}
+                                    ]
 
             invested_fund_return_new = copy.deepcopy(invested_fund_return)
-            for index in range(3):
+            for index in range(4):
                 for fund_object in invested_fund_return[index][constants.VALUE]:
                     if utils.find_if_not_eligible_for_display(fund_object, request.user):
                         invested_fund_return_new[index][constants.VALUE].remove(fund_object)
          
-            if len(invested_fund_return_new[0][constants.VALUE]) > 0  or len(invested_fund_return_new[1][constants.VALUE]) > 0 or len(invested_fund_return_new[2][constants.VALUE]) > 0:
+            if len(invested_fund_return_new[0][constants.VALUE]) > 0  or len(invested_fund_return_new[1][constants.VALUE]) > 0 or len(invested_fund_return_new[2][constants.VALUE]) > 0 or len(invested_fund_return_new[3][constants.VALUE]) > 0:
                 goal_data = {"goal_id": goal.id, "goal_name": goal.name, 
                              "investment_date": goal.portfolio.investment_date.strftime('%d-%m-%y'),
                              "funds": invested_fund_return_new}
@@ -1479,6 +1483,39 @@ class TransactionHistory_v3(APIView):
 
         sorted_txn_history = sorted(txn_history, key=lambda k: k['transaction_date'], reverse=True)
         return api_utils.response(sorted_txn_history, status.HTTP_200_OK)
+
+
+class SipCancellation(APIView):
+    """
+    For this api the expected data structure is sent is
+    {"funds": [{"fund_id": 27, "goal_id": 107},{"fund_id": 53, "goal_id": 108}]}
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self,request):
+        """
+        :param request:
+        :return:
+        """
+        #data = {"funds": [{"fund_id": 27, "goal_id": 107},{"fund_id": 53, "goal_id": 108}]}
+        serializer = serializers.SipCancellationSerializer(data=request.data)
+        if serializer.is_valid():
+            # process funds in all_units
+            for i in request.data.get('funds', []):
+                fund_order_items = models.FundOrderItem.objects.filter(
+                                   portfolio_item__fund_id=i['fund_id'], portfolio_item__goal_id=i['goal_id'], portfolio_item__portfolio__user_id=request.user.id, is_verified=True
+                                   )
+                for fund_order_item in fund_order_items:
+                    # for each fund order item BSE sip cancellation query
+                    if fund_order_item.is_future_sip_cancelled == False and fund_order_item.agreed_sip > 0:
+                        fund_order_item.is_future_sip_cancelled = True
+                        fund_order_item.save()
+                
+            return api_utils.response({constants.MESSAGE: "success"})
+        else:
+            return api_utils.response({constants.MESSAGE: serializer.errors}, status.HTTP_400_BAD_REQUEST,
+                                      generate_error_message(serializer.errors))
+
 
 class FundRedeem(APIView):
     """
@@ -2135,4 +2172,40 @@ class TransactionComplete(View):
             return HttpResponse(external_constants.FORBIDDEN_ERROR, status=403)     
             
              
+
+class SipCancellation_admin(View):
+    
+    def get(self,request):
+        """
+        :return:
+        """
+        if request.user.is_superuser:
+            try:
+                portfolio_item = models.PortfolioItem.objects.get(id=request.GET.get('portfolio_id'))
+            except models.PortfolioItem.DoesNotExist:
+                portfolio_item = None
+            
+            if portfolio_item is not None:
+                user = portfolio_item.portfolio.user
+                exch_backend = external_helpers.get_exchange_vendor_helper().get_backend_instance()
+                if exch_backend:
+                    error, output_file = exch_backend.create_xsip_cancellation(user, portfolio_item)
+                    #error , output_file = bulk_upload.generate_sip_cancellation_pipe_file(user,portfolio_item)    
+                    if output_file:
+                        output_file = output_file.split('/')[-1]
+                        prefix = 'webapp'
+                        my_file_path = prefix + external_constants.STATIC + output_file
+                        my_file = open(my_file_path, "rb")
+                        content_type = 'text/plain'
+                        response = HttpResponse(my_file, content_type=content_type, status=200)
+                        response['Content-Disposition'] = 'attachment;filename=%s' % str(portfolio_item.id) + '_portfolioitem.txt'
+                        my_file.close()
+                        return response 
+                    else:
+                        return HttpResponse("Error at creating the file")                 
+            else:
+                return HttpResponse("Portfolio item details not found")
+        else:
+            return HttpResponse(external_constants.FORBIDDEN_ERROR, status=403)  
+        
     

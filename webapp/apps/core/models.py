@@ -486,6 +486,8 @@ class PortfolioItem(TimeStampedModel):
     one_day_return = models.FloatField(null=True, blank=True, default=0.00)
     investment_date = models.DateField(blank=True, null=True)
     sip_date = models.DateField(blank=True, null=True)
+    xsip_reg_no = models.CharField(max_length=100, null=True, blank=True)
+    xsip_reg_date = models.DateField(blank=True, null=True)
 
     class Meta:
         unique_together = (('portfolio', 'fund', 'goal'),)

@@ -21,8 +21,9 @@ class FundsHelper(object):
     
         historical_fund_objects_by_max_date = models.Fund.objects.annotate(max_date=Max('historicalfunddata__date'))
         for historical_fund_object in historical_fund_objects_by_max_date:
-            if historical_fund_object.max_date < minimum_date:
-                minimum_date = historical_fund_object.max_date
+            if historical_fund_object.max_date is not None:
+                if historical_fund_object.max_date < minimum_date:
+                    minimum_date = historical_fund_object.max_date
         return minimum_date
 
     @staticmethod

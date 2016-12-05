@@ -394,15 +394,27 @@ class PortfolioItemAdmin(admin.ModelAdmin):
     defining list editable
     diasable the deletion option
     """
-    list_display = ['id', 'portfolio', 'goal', 'fund']
+    list_display = ['id', 'portfolio', 'goal', 'fund','sip_cancellation']
     search_fields = ['portfolio__user__email', 'portfolio__user__phone_number', 'portfolio__id', 'goal__id']
-    readonly_fields=('portfolio', 'sip', 'lumpsum', 'sum_invested', 'returns_value', 'returns_percentage', 'one_day_previous_portfolio_value', 'one_day_return')
+    readonly_fields=('portfolio', 'sip', 'lumpsum', 'sum_invested', 'returns_value', 'returns_percentage', 'one_day_previous_portfolio_value', 'one_day_return','xsip_reg_no')
     actions = None
 
     def has_delete_permission(self, request, obj=None):
         return False
 
 
+    def sip_cancellation(self, obj):
+        """
+        :param obj: an obj of user Admin
+        :return: a button
+        """
+
+        return mark_safe('<input type="button" class="sip_cancellation" value="Cancell Future Sip">')
+    sip_cancellation.short_description = 'Cancell Future Sip'
+    sip_cancellation.allow_tags = True 
+     
+     
+     
 class FolioNumberAdmin(admin.ModelAdmin):
     """
     defining search fields
