@@ -1495,7 +1495,7 @@ class TransactionHistory_v3(APIView):
 class SipCancellation(APIView):
     """
     For this api the expected data structure is sent is
-    {"funds": [{"fund_id": 27, "goal_id": 107},{"fund_id": 53, "goal_id": 108}]}
+    {"data": [{"goal_id":2,"cancel_sips":[{"fund_id": 2},{"fund_id": 3}]}]}
     """
     permission_classes = [permissions.IsAuthenticated]
 
@@ -1507,18 +1507,10 @@ class SipCancellation(APIView):
         #data = {"funds": [{"fund_id": 27, "goal_id": 107},{"fund_id": 53, "goal_id": 108}]}
         serializer = serializers.SipCancellationSerializer(data=request.data)
         if serializer.is_valid():
-            # process funds in all_units
-            for i in request.data.get('funds', []):
-                fund_order_items = models.FundOrderItem.objects.filter(
-                                   portfolio_item__fund_id=i['fund_id'], portfolio_item__goal_id=i['goal_id'], portfolio_item__portfolio__user_id=request.user.id, is_verified=True
-                                   )
-                for fund_order_item in fund_order_items:
-                    # for each fund order item BSE sip cancellation query
-                    if fund_order_item.is_future_sip_cancelled == False and fund_order_item.agreed_sip > 0:
-                        fund_order_item.is_future_sip_cancelled = True
-                        fund_order_item.save()
-                
-            return api_utils.response({constants.MESSAGE: "success"})
+            if utils.xsip_cancel_by_funds(request.data.get('data', []), request.user):
+                return api_utils.response({constants.MESSAGE: "success"})
+            else:
+                return api_utils.response({constants.MESSAGE: "Failed to update"})
         else:
             return api_utils.response({constants.MESSAGE: serializer.errors}, status.HTTP_400_BAD_REQUEST,
                                       generate_error_message(serializer.errors))
@@ -1527,7 +1519,7 @@ class SipCancellation(APIView):
 class FundRedeem(APIView):
     """
     For this api the expected data structure is sent is
-    {"data": [{"fund_id": 3, "redeem_amount": 1300}], "all_units":[{"fund_id": 2}]}
+    {"data": [{"fund_id": 3, "redeem_amount": 1300}], "all_units":[{"fund_id": 2}],"funds":[{"fund_id": 27, "goal_id": 107}]}
     """
     permission_classes = [permissions.IsAuthenticated]
 
@@ -1547,7 +1539,6 @@ class FundRedeem(APIView):
             # creates groupedredeemdetail with redeem details created above added
             grouped_redeem_detail = models.GroupedRedeemDetail.objects.create(user=request.user)
             grouped_redeem_detail.redeem_details.add(*redeem_detail_list)
-
             # Sends a email informing admin of a new groupredeem item creation
             profiles_helpers.send_redeem_completed_email(grouped_redeem_detail, use_https=settings.USE_HTTPS)
             return api_utils.response({constants.MESSAGE: "success"})
@@ -1558,7 +1549,7 @@ class FundRedeem(APIView):
 class GoalRedeem(APIView):
     """
     For this api the expected data structure is sent is
-    {"data": [{"goal_id": 1, "amount" : [{"fund_id": 3, "redeem_amount": 1300}], "all_units":[{"fund_id": 2}]}]}
+    {"data": [{"goal_id": 1, "amount" : [{"fund_id": 3, "redeem_amount": 1300}], "all_units":[{"fund_id": 2}], "cancel_sips":[{"fund_id": 2},{"fund_id": 3}]}]}
     """
     permission_classes = [permissions.IsAuthenticated]
 
@@ -1572,6 +1563,8 @@ class GoalRedeem(APIView):
             grouped_redeem_detail = utils.process_redeem_request(request.user, request.data.get('data', []))
 
             if grouped_redeem_detail:
+                
+                utils.xsip_cancel_by_funds(request.data.get('data', []), request.user)
                 # Sends a email informing admin of a new groupredeem item creation
                 profiles_helpers.send_redeem_completed_email(grouped_redeem_detail, use_https=settings.USE_HTTPS)
                 return api_utils.response({constants.MESSAGE: "success"})

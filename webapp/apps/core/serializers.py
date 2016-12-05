@@ -349,6 +349,13 @@ class AllUnitsSerializer(serializers.Serializer):
     """
 
     fund_id = serializers.IntegerField(required=True)
+    
+class CancelSipsSerializer(serializers.Serializer):
+    """
+    Inner serailizer for redeem all_units
+    """
+
+    fund_id = serializers.IntegerField(required=True)
 
 class GoalRedeemSerializer_v3(serializers.Serializer):
     """
@@ -358,6 +365,7 @@ class GoalRedeemSerializer_v3(serializers.Serializer):
     goal_id = serializers.IntegerField(required=True)
     amount = RedeemSerializer(many=True)
     all_units = AllUnitsSerializer(many=True)
+    cancel_sips =CancelSipsSerializer(many=True)
 
 class RedeemAddSerializer(serializers.Serializer):
     """
@@ -367,6 +375,12 @@ class RedeemAddSerializer(serializers.Serializer):
     data = RedeemSerializer(many=True)
     total_amount = serializers.FloatField(required=True)
 
+class SipFundsSerializer(serializers.Serializer):
+    """
+    Inner serailizer for redeem all_units
+    """
+    cancel_sips = CancelSipsSerializer(many=True)
+    goal_id = serializers.IntegerField(required=True)
 
 class NewRedeemAddSerializer(serializers.Serializer):
     """
@@ -375,20 +389,12 @@ class NewRedeemAddSerializer(serializers.Serializer):
 
     data = RedeemSerializer(many=True)
     all_units = AllUnitsSerializer(many=True)
-
-
-class SipFundsSerializer(serializers.Serializer):
-    """
-    Inner serailizer for redeem all_units
-    """
-    fund_id = serializers.IntegerField(required=True)
-    goal_id = serializers.IntegerField(required=True)
     
 class SipCancellationSerializer(serializers.Serializer):
     """
     Investor Information Serializer used to display investor leader board ranking
     """
-    funds = SipFundsSerializer(many=True)
+    data = SipFundsSerializer(many=True)
 
 class RedeemAddSerializer_v3(serializers.Serializer):
     """

@@ -3698,6 +3698,19 @@ def add_redeem_details_by_units(all_units, user, redeem_detail_list):
     return redeem_detail_list
 
 
+def xsip_cancel_by_funds(funds, user):
+    
+    for fund in funds:
+        for i in fund['cancel_sips']:
+            fund_order_items = models.FundOrderItem.objects.filter(
+                                portfolio_item__fund_id=i['fund_id'], portfolio_item__goal_id=fund['goal_id'], portfolio_item__portfolio__user_id=user.id, is_verified=True
+                                       )
+            for fund_order_item in fund_order_items:
+                if fund_order_item.is_future_sip_cancelled == False and fund_order_item.agreed_sip > 0:
+                    fund_order_item.is_future_sip_cancelled = True
+                    fund_order_item.save()
+    return True
+
 def get_xirr_value_from_dashboard_response(dashboard_response):
     """
     :param dashboard_respons:
