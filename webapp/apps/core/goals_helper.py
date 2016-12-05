@@ -260,7 +260,7 @@ class GoalBase(ABC):
         # virtual portfolio
         if not self.goal_object.portfolio.has_invested:
             for portfolio_item in self.goal_object.portfolioitem_set.all():
-                portfolio_item.set_values()
+                portfolio_item.set_values(latest_date)
                 investment_value += portfolio_item.returns_value
                 invested_amount += portfolio_item.sum_invested
                 asset_values[constants.FUND_MAP_REVERSE[portfolio_item.fund.type_of_fund]] += portfolio_item.returns_value
