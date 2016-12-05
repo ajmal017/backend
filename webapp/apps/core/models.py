@@ -134,13 +134,16 @@ def order_detail_transaction_mail_send(order_detail):
         
 
 
-def get_valid_start_date(fund_id, send_date=date.today()):
+def get_valid_start_date(fund_id, send_date=None):
     """
     generates valid start date for a prticular fund
     :param fund_id: id of a particular fund
     :param send_date: base date to be used as base date for finding valid start date
     :return: next valid start date
     """
+    if send_date is None:
+        send_date = date.today()
+        
     sip_dates = Fund.objects.get(id=fund_id).sip_dates
     sip_dates.sort()
     next_month = (send_date + timedelta(33))

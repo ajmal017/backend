@@ -1735,7 +1735,7 @@ class ChangePortfolio(APIView):
         # if portfolio is present get ids of new funds user wants to keep from request
         fund_id_map = {constants.EQUITY: [], constants.DEBT: [], constants.ELSS: [],constants.LIQUID: []}
         for category in constants.FUND_CATEGORY_LIST:
-            fund_id_map[category] = request.data.get(category)
+            fund_id_map[category] = request.data.get(category) or []
 
         # calculate sip and lumpsum for each category based on old portfolio
         category_sip_lumpsum_map = utils.calculate_sip_lumpsum_category_wise_for_a_portfolio(user_portfolio)
@@ -1785,7 +1785,7 @@ class ChangeGoalPortfolio(APIView):
         # if portfolio is present get ids of new funds user wants to keep from request
         fund_id_map = {constants.EQUITY: [], constants.DEBT: [], constants.ELSS: []}
         for category in constants.FUND_CATEGORY_LIST:
-            fund_id_map[category] = request.data.get(category)
+            fund_id_map[category] = request.data.get(category) or []
 
         
         # calculate sip and lumpsum for each category based on old portfolio
