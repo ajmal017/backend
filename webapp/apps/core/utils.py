@@ -1840,7 +1840,8 @@ def calculate_financial_goal_status(asset_class_overview, portfolios_to_be_consi
     """
     from core import goals_helper
     
-    total_debt, total_equity, total_elss,total_liquid = 0, 0, 0,0
+    total_debt, total_equity, total_elss,total_liquid = 0, 0, 0, 0
+
     goal_map = {
         constants.RETIREMENT: [[], 0], constants.TAX_SAVING: [[], 0], constants.BUY_PROPERTY: [[], 0],
         constants.EDUCATION: [[], 0], constants.WEDDING: [[], 0], constants.OTHER_EVENT: [[], 0],
@@ -3617,7 +3618,8 @@ def process_redeem_request(user, data):
     for goal_data in data:
         goal = goals_helper.GoalBase.get_goal(user, goal_data['goal_id'])
         if goal:
-            redeem_items += redeem_helper.RedeemHelper.generate_redeem_for_goal(goal, goal_data['all_units'], goal_data['amount'])
+            goal_redeem_items = redeem_helper.RedeemHelper.generate_redeem_for_goal(goal, goal_data['all_units'], goal_data['amount'])
+            redeem_items.extend(goal_redeem_items)
     
     if len(redeem_items) > 0:
         grouped_redeem_detail = models.GroupedRedeemDetail.objects.create(user=user)

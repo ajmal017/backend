@@ -134,13 +134,16 @@ def order_detail_transaction_mail_send(order_detail):
         
 
 
-def get_valid_start_date(fund_id, send_date=date.today()):
+def get_valid_start_date(fund_id, send_date=None):
     """
     generates valid start date for a prticular fund
     :param fund_id: id of a particular fund
     :param send_date: base date to be used as base date for finding valid start date
     :return: next valid start date
     """
+    if send_date is None:
+        send_date = date.today()
+        
     sip_dates = Fund.objects.get(id=fund_id).sip_dates
     sip_dates.sort()
     next_month = (send_date + timedelta(33))
@@ -794,7 +797,7 @@ class FundRedeemItem(TimeStampedModel):
     folio_number = models.CharField(max_length=100, null=True, blank=True, default=None)
 
     def __str__(self):
-        return str(self.portfolio_item.fund.legal_name)
+        return str(self.portfolio_item.fund.legal_name) + " " + str(self.portfolio_item.id) 
 
     def get_transaction_date(self):
         """
@@ -841,12 +844,27 @@ class FundRedeemItem(TimeStampedModel):
         
         if not self.invested_redeem_amount or self.invested_redeem_amount == 0:
             if self.unit_redeemed and self.unit_redeemed > 0:
+                
+                fund_order_items_list = []
+                try:
+                    lumpsum_fund_order_item = FundOrderItem.objects.get(portfolio_item=self.portfolio_item, is_verified=True, 
+                                                                is_cancelled=False, folio_number=self.folio_number, 
+                                                                agreed_lumpsum__gt=0, unit_alloted__gt=F('units_redeemed'))
+                    
+                    if lumpsum_fund_order_item:
+                        fund_order_items_list.append(lumpsum_fund_order_item)
+                except:
+                    pass
+                                                                
                 fund_order_items = FundOrderItem.objects.filter(portfolio_item=self.portfolio_item, is_verified=True, 
                                                                 is_cancelled=False, folio_number=self.folio_number, 
-                                                                unit_alloted__gt=F('units_redeemed')).order_by('allotment_date')
+                                                                agreed_lumpsum=0, agreed_sip__gt=0, unit_alloted__gt=F('units_redeemed')).order_by('allotment_date')
+
+                fund_order_items_list.extend(fund_order_items)
+                
                 units_redeemed = self.unit_redeemed
                 
-                for foi in fund_order_items:
+                for foi in fund_order_items_list:
                     fund_order_units_redeemed = min(foi.unit_alloted - foi.units_redeemed, units_redeemed)
                     nav = funds_helper.FundsHelper.get_current_nav(self.portfolio_item.fund_id, foi.allotment_date)
                     invested_redeem_amount += (fund_order_units_redeemed * nav)
@@ -1126,7 +1144,10 @@ class FundOrderItem(TimeStampedModel):
             return "In Process"
         elif order_status == constants.CANCELLED:
             return "Cancelled"
-        return str(self.allotment_date.strftime("%d-%m-%y"))
+        if self.allotment_date:
+            return str(self.allotment_date.strftime("%d-%m-%y"))
+        else:
+            return "In Process"
 
     def get_unit_alloted(self):
         """

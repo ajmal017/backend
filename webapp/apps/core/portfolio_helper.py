@@ -1,4 +1,5 @@
 import logging
+from django.db.models import F
 from core import models
 
 
@@ -36,7 +37,8 @@ class PortfolioHelper(object):
         order_items = models.FundOrderItem.objects.filter(portfolio_item=portfolio_item, is_cancelled=False).order_by("created_at")
         redeem_items = models.FundRedeemItem.objects.filter(portfolio_item=portfolio_item, is_cancelled=False).order_by("created_at")
         
-        transactions.append(order_items)
-        transactions.append(redeem_items)
+        transactions.extend(order_items)
+        transactions.extend(redeem_items)
         
         return transactions
+    

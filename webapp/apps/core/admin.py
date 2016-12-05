@@ -181,20 +181,20 @@ class GroupedRedeemDetailAdmin(admin.ModelAdmin):
     exclude = ('redeem_details', )
     actions = None
 
-    def form_url(self, id, fund):
+    def form_url(self, redeem_id, redeem_item):
         """
         returns a url formed for a particular redeem detail
         :param id: id associated with a redeem_detail
         """
-        url = reverse("admin:core_fundredeemitem_change", args=[id])
-        return mark_safe(u'<a href=%s target="_blank">%s</a>' % (url, fund.legal_name))
+        url = reverse("admin:core_fundredeemitem_change", args=[redeem_id])
+        return mark_safe(u'<a href=%s target="_blank">%s</a>' % (url, redeem_item))
 
     def list_of_redeem_items(self, obj):
         """
         returns list of redeem details related to a grouped redeemed detail
         :param obj: contains an instance to grouped redeem detail object
         """
-        return mark_safe(u"<br>".join([self.form_url(redeem_item.id, redeem_item.portfolio_item.fund) for redeem_item in obj.fundredeemitem_set.all()]))
+        return mark_safe(u"<br>".join([self.form_url(redeem_item.id, redeem_item) for redeem_item in obj.fundredeemitem_set.all()]))
 
     list_of_redeem_items.allow_tags = True
     form_url.allow_tags = True
@@ -358,7 +358,7 @@ class FundOrderItemAdmin(admin.ModelAdmin):
     """
     defining list editable
     """
-    list_display = ['portfolio_item', 'order_amount', 'created_at', 'allotment_date', 'orderid']
+    list_display = ['portfolio_item', 'order_amount', 'is_sip', 'created_at', 'allotment_date', 'orderid']
     list_editable = ['allotment_date']
     search_fields = ['portfolio_item__portfolio__user__email', 'portfolio_item__portfolio__user__phone_number']
     readonly_fields = ('portfolio_item', )
@@ -396,8 +396,45 @@ class PortfolioItemAdmin(admin.ModelAdmin):
     """
     list_display = ['id', 'portfolio', 'goal', 'fund','sip_cancellation']
     search_fields = ['portfolio__user__email', 'portfolio__user__phone_number', 'portfolio__id', 'goal__id']
-    readonly_fields=('portfolio', 'sip', 'lumpsum', 'sum_invested', 'returns_value', 'returns_percentage', 'one_day_previous_portfolio_value', 'one_day_return','xsip_reg_no')
+    readonly_fields=('portfolio', 'sip', 'lumpsum', 'sum_invested', 'returns_value', 'returns_percentage', 'one_day_previous_portfolio_value', 'one_day_return', 'list_of_fund_order_items', 'list_of_fund_redeem_items','xsip_reg_no')
+
     actions = None
+
+    def form_url_foi(self, foi_id, foi):
+        """
+        returns a url formed for a particular redeem detail
+        :param id: id associated with a redeem_detail
+        """
+        url = reverse("admin:core_fundorderitem_change", args=[foi_id])
+        return mark_safe(u'<a href=%s target="_blank">%s</a>' % (url, foi))
+
+    def list_of_fund_order_items(self, obj):
+        """
+        returns list of redeem details related to a grouped redeemed detail
+        :param obj: contains an instance to grouped redeem detail object
+        """
+        return mark_safe(u"<br>".join([self.form_url_foi(foi.id, foi) for foi in obj.fundorderitem_set.all()]))
+
+    list_of_fund_order_items.allow_tags = True
+    form_url_foi.allow_tags = True
+
+    def form_url(self, redeem_id, legal_name):
+        """
+        returns a url formed for a particular fund_order_item
+        :param id: id associated with a fund_order_item
+        """
+        url = reverse("admin:core_fundredeemitem_change", args=[redeem_id])
+        return mark_safe(u'<a href=%s target="_blank">%s</a>' % (url, legal_name))
+
+    def list_of_fund_redeem_items(self, obj):
+        """
+        returns list of fund_order_item related to a order detail
+        :param obj: contains an instance to fund order item object
+        """
+        return mark_safe(u"<br>".join([self.form_url(fund_redeem_item.id, fund_redeem_item.portfolio_item.fund.legal_name) for fund_redeem_item in obj.fundredeemitem_set.all()]))
+
+    list_of_fund_redeem_items.allow_tags = True
+    form_url.allow_tags = True
 
     def has_delete_permission(self, request, obj=None):
         return False
