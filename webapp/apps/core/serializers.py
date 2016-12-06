@@ -178,6 +178,10 @@ class RetirementSerializer(serializers.Serializer):
     floating_sip = serializers.BooleanField(required=True)
     grow_sip = serializers.IntegerField(required=True)
     allocation = serializers.DictField(required=True)
+    monthly_income = serializers.IntegerField(required=False)
+    monthly_expense = serializers.IntegerField(required=False)
+    amount_saved = serializers.IntegerField(required=False)
+    choice = serializers.CharField(required=False)
 
 
 class InvestSerializer(serializers.Serializer):
@@ -225,8 +229,74 @@ class GenericGoalSerializer(serializers.Serializer):
     sip = serializers.IntegerField(required=True)
     lumpsum = serializers.IntegerField(required=True)
     allocation = serializers.DictField(required=True)
-
-
+    
+class EducationGoalSerializer(serializers.Serializer):
+    """
+    Serializer for generic goal post api
+    """
+    corpus = serializers.IntegerField(required=True)
+    term = serializers.IntegerField(required=True)
+    sip = serializers.IntegerField(required=True)
+    lumpsum = serializers.IntegerField(required=True)
+    allocation = serializers.DictField(required=True)
+    location = serializers.CharField(required=False)
+    field = serializers.CharField(required=False)
+    amount_saved = serializers.IntegerField(required=False)
+    choice = serializers.CharField(required=False)
+    
+class PropertyGoalSerializer(serializers.Serializer):
+    """
+    Serializer for generic goal post api
+    """
+    corpus = serializers.IntegerField(required=True)
+    term = serializers.IntegerField(required=True)
+    sip = serializers.IntegerField(required=True)
+    lumpsum = serializers.IntegerField(required=True)
+    allocation = serializers.DictField(required=True)
+    current_price_of_property = serializers.IntegerField(required=False)
+    prop_of_purchase_cost = serializers.IntegerField(required=False)
+    amount_saved = serializers.IntegerField(required=False)
+    
+class AutomobileGoalSerializer(serializers.Serializer):
+    """
+    Serializer for generic goal post api
+    """
+    corpus = serializers.IntegerField(required=True)
+    term = serializers.IntegerField(required=True)
+    sip = serializers.IntegerField(required=True)
+    lumpsum = serializers.IntegerField(required=True)
+    allocation = serializers.DictField(required=True)
+    on_road_cost = serializers.IntegerField(required=False)
+    amount_saved = serializers.IntegerField(required=False)
+    
+class VacationGoalSerializer(serializers.Serializer):
+    """
+    Serializer for generic goal post api
+    """
+    corpus = serializers.IntegerField(required=True)
+    term = serializers.IntegerField(required=True)
+    sip = serializers.IntegerField(required=True)
+    lumpsum = serializers.IntegerField(required=True)
+    allocation = serializers.DictField(required=True)
+    number_of_members = serializers.IntegerField(required=False)
+    number_of_days = serializers.IntegerField(required=False)
+    location = serializers.CharField(required=False)
+    amount_saved = serializers.IntegerField(required=False)
+    
+class WeddingGoalSerializer(serializers.Serializer):
+    """
+    Serializer for generic goal post api
+    """
+    corpus = serializers.IntegerField(required=True)
+    term = serializers.IntegerField(required=True)
+    sip = serializers.IntegerField(required=True)
+    lumpsum = serializers.IntegerField(required=True)
+    allocation = serializers.DictField(required=True)
+    expected_people = serializers.IntegerField(required=False)
+    location = serializers.CharField(required=False)
+    sharing_percentage = serializers.IntegerField(required=False)
+    amount_saved = serializers.IntegerField(required=False)
+    
 class FundSerializerForFundDividedIntoCategory(serializers.ModelSerializer):
     """
     Fund serializer for fund divided by category api
@@ -281,6 +351,13 @@ class AllUnitsSerializer(serializers.Serializer):
     """
 
     fund_id = serializers.IntegerField(required=True)
+    
+class CancelSipsSerializer(serializers.Serializer):
+    """
+    Inner serailizer for redeem all_units
+    """
+
+    fund_id = serializers.IntegerField(required=True)
 
 class GoalRedeemSerializer_v3(serializers.Serializer):
     """
@@ -290,6 +367,7 @@ class GoalRedeemSerializer_v3(serializers.Serializer):
     goal_id = serializers.IntegerField(required=True)
     amount = RedeemSerializer(many=True)
     all_units = AllUnitsSerializer(many=True)
+    cancel_sips =CancelSipsSerializer(many=True)
 
 class RedeemAddSerializer(serializers.Serializer):
     """
@@ -299,6 +377,12 @@ class RedeemAddSerializer(serializers.Serializer):
     data = RedeemSerializer(many=True)
     total_amount = serializers.FloatField(required=True)
 
+class SipFundsSerializer(serializers.Serializer):
+    """
+    Inner serailizer for redeem all_units
+    """
+    cancel_sips = CancelSipsSerializer(many=True)
+    goal_id = serializers.IntegerField(required=True)
 
 class NewRedeemAddSerializer(serializers.Serializer):
     """
@@ -307,6 +391,12 @@ class NewRedeemAddSerializer(serializers.Serializer):
 
     data = RedeemSerializer(many=True)
     all_units = AllUnitsSerializer(many=True)
+    
+class SipCancellationSerializer(serializers.Serializer):
+    """
+    Investor Information Serializer used to display investor leader board ranking
+    """
+    data = SipFundsSerializer(many=True)
 
 class RedeemAddSerializer_v3(serializers.Serializer):
     """

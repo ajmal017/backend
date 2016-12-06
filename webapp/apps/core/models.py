@@ -238,7 +238,10 @@ class Question(TimeStampedModel):
         (constants.WEDDING, 'Save for Wedding'),
         (constants.OTHER_EVENT, 'Other Events'),
         (constants.INVEST, 'Invest'),
-        (constants.LIQUID_GOAL, 'Liquid')
+        (constants.LIQUID_GOAL, 'Liquid'),
+        (constants.AUTO_MOBILE, 'Auto Mobile'),
+        (constants.VACATION, 'Vacation'),
+        (constants.JEWELLERY, 'Jewellery')
     )
 
     question_id = models.CharField(max_length=254, blank=True)
@@ -441,7 +444,10 @@ class Goal(TimeStampedModel):
         (constants.WEDDING, 'Save for Wedding'),
         (constants.OTHER_EVENT, 'Other Events'),
         (constants.INVEST, 'Invest'),
-        (constants.LIQUID_GOAL, 'liquid')
+        (constants.LIQUID_GOAL, 'liquid'),
+        (constants.AUTO_MOBILE, 'Auto Mobile'),
+        (constants.VACATION, 'Vacation'),
+        (constants.JEWELLERY, 'Jewellery')
     )
 
     user = models.ForeignKey(profile_models.User, related_name="goal_user")
@@ -483,6 +489,8 @@ class PortfolioItem(TimeStampedModel):
     one_day_return = models.FloatField(null=True, blank=True, default=0.00)
     investment_date = models.DateField(blank=True, null=True)
     sip_date = models.DateField(blank=True, null=True)
+    xsip_reg_no = models.CharField(max_length=100, null=True, blank=True)
+    xsip_reg_date = models.DateField(blank=True, null=True)
 
     class Meta:
         unique_together = (('portfolio', 'fund', 'goal'),)
@@ -595,6 +603,10 @@ class PlanAssestAllocation(TimeStampedModel):
     wedding_allocation = HStoreField(blank=True, null=True)
     event_allocation = HStoreField(blank=True, null=True)
     invest_allocation = HStoreField(blank=True, null=True)
+    liquid_allocation = HStoreField(blank=True, null=True)
+    automobile_allocation = HStoreField(blank=True, null=True)
+    vacation_allocation = HStoreField(blank=True, null=True)
+    jewellery_allocation = HStoreField(blank=True, null=True)
     portfolio = models.ForeignKey(Portfolio, null=True, blank=True, default=None)
 
     def __str__(self):

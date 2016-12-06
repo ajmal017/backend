@@ -96,3 +96,6 @@ class ExchangeBackend(ABC):
 
     def create_xsip_order(self, user_id, order_detail):
         return NotImplementedError
+    
+    def create_xsip_cancellation(self,user,portfolio_item):
+        return NotImplementedError

@@ -18,5 +18,33 @@
  {"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Sell All your Mutual Fund Holdings", "option_id": "op1", "is_deleted": "False", "question": "63", "metadata": "{}", "weight": "2.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 100},
  {"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Sell part of your Mutual fund Holdings", "option_id": "op2", "is_deleted": "False", "question": "63", "metadata": "{}", "weight": "6.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 101},
  {"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Do Nothing", "option_id": "op3", "is_deleted": "False", "question": "63", "metadata": "{}", "weight": "8.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 102},
- {"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Add to your Mutual Fund Holdings", "option_id": "op4", "is_deleted": "False", "question": "63", "metadata": "{}", "weight": "10.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 103}
+ {"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Add to your Mutual Fund Holdings", "option_id": "op4", "is_deleted": "False", "question": "63", "metadata": "{}", "weight": "10.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 103},
+
+{"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "India", "option_id": "op1", "is_deleted": "False", "question": "80", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 104},
+{"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Abroad", "option_id": "op2", "is_deleted": "False", "question": "80", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 105},
+
+{"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "4-yr Engineering Grad", "option_id": "op1", "is_deleted": "False", "question": "81", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 106},
+{"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "2-yr Engineering Masters", "option_id": "op2", "is_deleted": "False", "question": "81", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 107},
+{"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "4-yr Medicine", "option_id": "op3", "is_deleted": "False", "question": "81", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 108},
+{"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "2-yr MBA", "option_id": "op4", "is_deleted": "False", "question": "81", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 109},
+{"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "1-yr MBA", "option_id": "op5", "is_deleted": "False", "question": "81", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 110},
+{"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Commerce Grad", "option_id": "op6", "is_deleted": "False", "question": "81", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 111},
+{"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Arts Grad", "option_id": "op7", "is_deleted": "False", "question": "81", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 112},
+{"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Other 2-year course", "option_id": "op8", "is_deleted": "False", "question": "81", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 113},
+{"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Other 4-year course", "option_id": "op9", "is_deleted": "False", "question": "81", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 114},
+
+{"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Domestic", "option_id": "op1", "is_deleted": "False", "question": "93", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 115},
+{"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "International", "option_id": "op2", "is_deleted": "False", "question": "93", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 116},
+
+{"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Locally", "option_id": "op1", "is_deleted": "False", "question": "96", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 117},
+{"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Outstation", "option_id": "op2", "is_deleted": "False", "question": "96", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 118},
+
+{"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Budget", "option_id": "op1", "is_deleted": "False", "question": "99", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 119},
+{"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Comfortable", "option_id": "op2", "is_deleted": "False", "question": "99", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 120},
+{"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Luxury", "option_id": "op3", "is_deleted": "False", "question": "99", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 121},
+
+{"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Budget", "option_id": "op1", "is_deleted": "False", "question": "100", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 122},
+{"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Comfortable", "option_id": "op2", "is_deleted": "False", "question": "100", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 123},
+{"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Luxury", "option_id": "op3", "is_deleted": "False", "question": "100", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 124}
+
 ]

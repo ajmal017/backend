@@ -314,7 +314,6 @@ def calculate_overall_allocation(user):
     from core import goals_helper #TODO
     
     goals = goals_helper.GoalBase.get_current_goals(user) 
-
     summary, status_summary = [], []
     total_equity, total_debt, total_elss,total_liquid = 0, 0, 0,0
     elss_lumpsum, elss_sip, debt_lumpsum, debt_sip, equity_lumpsum, equity_sip,liquid_lumpsum,liquid_sip = 0, 0, 0, 0, 0, 0,0,0
@@ -336,6 +335,7 @@ def calculate_overall_allocation(user):
         equity_sip += allocation[constants.EQUITY][constants.SIP]
         liquid_lumpsum += allocation[constants.LIQUID][constants.LUMPSUM]
         liquid_sip += allocation[constants.LIQUID][constants.SIP]
+
         
         category_summary = {"goal": goal.name, "corpus": round(corpus, 2), "sip": sip_amount,
                             "lumpsum": lumpsum_amount, "term": term}
@@ -343,13 +343,13 @@ def calculate_overall_allocation(user):
         goal_status.update({'investment_till_date': ''})
         summary.append(category_summary)
         status_summary.append(goal_status)
-
     total_equity += equity_lumpsum + equity_sip * 12
     total_debt += debt_lumpsum + debt_sip * 12
     total_elss += elss_lumpsum + elss_sip * 12
     total_liquid += liquid_lumpsum + liquid_sip * 12
-    
+
     total_investment = total_equity + total_elss + total_debt + total_liquid # total investment by user in all categories
+    
     overall_allocation = {constants.EQUITY: {"percentage": helpers.percentage(total_equity, total_investment),
                                              "amount": total_equity},
                           constants.DEBT: {"percentage": helpers.percentage(total_debt, total_investment),
@@ -1156,6 +1156,22 @@ def get_compared_data(fund_ids):
                     constants.YIELD_TO_MATURITY: round(funds_debt_data_points[index].yield_to_maturity, 2)})
             return True, {constants.COMAPRED_FUND: compared_fund, constants.DEBT_OTHER_DATA: category_other_data,
                           constants.EQUITY_OTHER_DATA: constants.EMPTY_lIST_FOR_DATA}
+        elif fund_types[0] == constants.FUND_MAP[constants.LIQUID]:
+            funds_debt_data_points = models.LiquidFunds.objects.filter(fund__id__in=fund_ids).order_by('fund__id')
+            fund_data_points_monthly = models.FundDataPointsChangeMonthly.objects.filter(
+                fund__id__in=fund_ids).order_by('fund__id')
+            fund_data_points_daily = models.FundDataPointsChangeDaily.objects.filter(fund__id__in=fund_ids).order_by(
+                'fund__id')
+            for index, fund in enumerate(funds):
+                category_other_data.append({
+                    constants.ID: fund.id, constants.FUND_NAME: fund.fund_name,
+                    constants.AUM: calculate_aum_in_string(round(fund_data_points_daily[index].aum), 0),
+                    constants.CREDIT_QUALITY: funds_debt_data_points[index].average_credit_quality,
+                    constants.MAX_DEFERRED_LOAD: fund_data_points_monthly[index].max_deferred_load,
+                    constants.AVERAGE_MATURITY: funds_debt_data_points[index].average_maturity,
+                    constants.YIELD_TO_MATURITY: round(funds_debt_data_points[index].yield_to_maturity, 2)})
+            return True, {constants.COMAPRED_FUND: compared_fund, constants.LIQUID_OTHER_DATA: category_other_data,
+                          constants.EQUITY_OTHER_DATA: constants.EMPTY_lIST_FOR_DATA}
         else:
             funds_equity_data_points = models.EquityFunds.objects.filter(fund__id__in=fund_ids).order_by('fund__id')
             fund_data_points_daily = models.FundDataPointsChangeDaily.objects.filter(fund__id__in=fund_ids).order_by(
@@ -1248,7 +1264,7 @@ def next_working_day(date):
         return date + timedelta(days=2)
     elif date.isoweekday() == 7:
         return date + timedelta(days=1)
-
+     
 
 def get_annualized_returns(nav_list):
     """
@@ -1825,10 +1841,12 @@ def calculate_financial_goal_status(asset_class_overview, portfolios_to_be_consi
     from core import goals_helper
     
     total_debt, total_equity, total_elss,total_liquid = 0, 0, 0, 0
+
     goal_map = {
         constants.RETIREMENT: [[], 0], constants.TAX_SAVING: [[], 0], constants.BUY_PROPERTY: [[], 0],
         constants.EDUCATION: [[], 0], constants.WEDDING: [[], 0], constants.OTHER_EVENT: [[], 0],
-        constants.INVEST: [[], 0]
+        constants.INVEST: [[], 0],constants.LIQUID_GOAL: [[], 0],constants.AUTO_MOBILE: [[], 0],
+        constants.VACATION: [[], 0],constants.JEWELLERY: [[], 0]
     }
 
     for portfolio in portfolios_to_be_considered:
@@ -2482,8 +2500,9 @@ def get_latest_date():
 
     historical_fund_objects_by_max_date = models.Fund.objects.annotate(max_date=Max('historicalfunddata__date'))
     for historical_fund_object in historical_fund_objects_by_max_date:
-        if historical_fund_object.max_date < minimum_date:
-            minimum_date = historical_fund_object.max_date
+        if historical_fund_object.max_date is not None:
+            if historical_fund_object.max_date < minimum_date:
+                minimum_date = historical_fund_object.max_date
 
     historical_indices_objects_by_max_date = models.Indices.objects.annotate(max_date=Max('historicalindexdata__date'))
     for historical_index_object in historical_indices_objects_by_max_date:
@@ -2496,6 +2515,7 @@ def get_latest_date():
         if historical_category_object.date < minimum_date:
             minimum_date = historical_category_object.date
     return minimum_date
+
 
 def get_start_date(funds, index, end_date):
     """
@@ -2563,7 +2583,6 @@ def club_investment_redeem_together(all_investments_of_user, all_redeem_of_user)
     """
     amount_invested_fund_map, distinct_dates, today_portfolio = {}, set(), False
     portfolios_to_be_considered = []
-
     # club the investments
     for investment in all_investments_of_user:
         try:
@@ -3678,6 +3697,18 @@ def add_redeem_details_by_units(all_units, user, redeem_detail_list):
 
     return redeem_detail_list
 
+
+def xsip_cancel_by_goals(goals, user):
+    
+    for goal in goals:
+        for i in goal['cancel_sips']:
+            fund_order_items = models.FundOrderItem.objects.filter(
+                                portfolio_item__fund_id=i['fund_id'], portfolio_item__goal_id=goal['goal_id'], portfolio_item__portfolio__user_id=user.id)
+            for fund_order_item in fund_order_items:
+                if fund_order_item.is_future_sip_cancelled == False and fund_order_item.agreed_sip > 0:
+                    fund_order_item.is_future_sip_cancelled = True
+                    fund_order_item.save()
+    return True
 
 def get_xirr_value_from_dashboard_response(dashboard_response):
     """

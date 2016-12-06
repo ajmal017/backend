@@ -21,6 +21,7 @@ from profiles import utils as pr_utils
 
 from profiles import models as pr_models
 from payment import constants as payment_constant
+from core import models as core_models
 
 import time
 
@@ -512,4 +513,39 @@ class GenerateMandatePdf(View):
             return HttpResponse(payment_constant.CANNOT_GENERATE_FILE, status=404)
         else:
             # non-admin is trying to access the file. Prevent access.
+            return HttpResponse(constants.FORBIDDEN_ERROR, status=403)
+        
+class SipCancellation_admin(View):
+    
+    def get(self,request):
+        """
+        :return:
+        """
+        if request.user.is_superuser:
+            try:
+                portfolio_item = core_models.PortfolioItem.objects.get(id=request.GET.get('portfolio_id'))
+            except core_models.PortfolioItem.DoesNotExist:
+                portfolio_item = None
+            
+            if portfolio_item is not None:
+                user = portfolio_item.portfolio.user
+                exch_backend = helpers.get_exchange_vendor_helper().get_backend_instance()
+                if exch_backend:
+                    error, output_file = exch_backend.create_xsip_cancellation(user, portfolio_item)
+                    #error , output_file = bulk_upload.generate_sip_cancellation_pipe_file(user,portfolio_item)    
+                    if output_file:
+                        output_file = output_file.split('/')[-1]
+                        prefix = 'webapp'
+                        my_file_path = prefix + constants.STATIC + output_file
+                        my_file = open(my_file_path, "rb")
+                        content_type = 'text/plain'
+                        response = HttpResponse(my_file, content_type=content_type, status=200)
+                        response['Content-Disposition'] = 'attachment;filename=%s' % str(portfolio_item.id) + '_portfolioitem.txt'
+                        my_file.close()
+                        return response 
+                    else:
+                        return HttpResponse("Error at creating the file")                 
+            else:
+                return HttpResponse("Portfolio item details not found")
+        else:
             return HttpResponse(constants.FORBIDDEN_ERROR, status=403)

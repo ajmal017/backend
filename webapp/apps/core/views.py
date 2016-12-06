@@ -31,6 +31,7 @@ from external_api import helpers as external_helpers
 from django.db.models import Count
 from external_api import utils as external_utils
 from core import goals_helper, funds_helper
+from external_api.bse import bulk_upload 
 
 
 
@@ -536,6 +537,127 @@ class RetirementAnswer(APIView):
                                   generate_error_message(serializer.errors))
 
 
+class EducationAnswer(APIView):
+    """
+    Save retirement data
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        API to save answer for a particular question
+        :param request:
+        :return:
+        """
+        serializer = serializers.EducationGoalSerializer(data=request.data)
+        if serializer.is_valid():
+            goal_object = goals_helper.EducationGoal()
+            is_error, errors = goal_object.create_or_update_goal(request.user, serializer.data, None, request.data.get('goal_name')) 
+            if is_error:
+                return api_utils.response({constants.MESSAGE: errors}, status.HTTP_400_BAD_REQUEST,
+                                          api_utils.create_error_message(errors))
+            return api_utils.response({"message": "success"}, status.HTTP_200_OK)
+        return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
+                                  generate_error_message(serializer.errors))
+
+
+class PropertyAnswer(APIView):
+    """
+    Save retirement data
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        API to save answer for a particular question
+        :param request:
+        :return:
+        """
+        serializer = serializers.PropertyGoalSerializer(data=request.data)
+        if serializer.is_valid():
+            goal_object = goals_helper.PropertyGoal()
+            is_error, errors = goal_object.create_or_update_goal(request.user, serializer.data, None, request.data.get('goal_name')) 
+            if is_error:
+                return api_utils.response({constants.MESSAGE: errors}, status.HTTP_400_BAD_REQUEST,
+                                          api_utils.create_error_message(errors))
+            return api_utils.response({"message": "success"}, status.HTTP_200_OK)
+        return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
+                                  generate_error_message(serializer.errors))
+
+
+
+class AutomobileAnswer(APIView):
+    """
+    Save retirement data
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        API to save answer for a particular question
+        :param request:
+        :return:
+        """
+        serializer = serializers.AutomobileGoalSerializer(data=request.data)
+        if serializer.is_valid():
+            goal_object = goals_helper.AutomobileGoal()
+            is_error, errors = goal_object.create_or_update_goal(request.user, serializer.data, None, request.data.get('goal_name')) 
+            if is_error:
+                return api_utils.response({constants.MESSAGE: errors}, status.HTTP_400_BAD_REQUEST,
+                                          api_utils.create_error_message(errors))
+            return api_utils.response({"message": "success"}, status.HTTP_200_OK)
+        return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
+                                  generate_error_message(serializer.errors))
+
+
+
+class VacationAnswer(APIView):
+    """
+    Save retirement data
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        API to save answer for a particular question
+        :param request:
+        :return:
+        """
+        serializer = serializers.VacationGoalSerializer(data=request.data)
+        if serializer.is_valid():
+            goal_object = goals_helper.VacationGoal()
+            is_error, errors = goal_object.create_or_update_goal(request.user, serializer.data, None, request.data.get('goal_name')) 
+            if is_error:
+                return api_utils.response({constants.MESSAGE: errors}, status.HTTP_400_BAD_REQUEST,
+                                          api_utils.create_error_message(errors))
+            return api_utils.response({"message": "success"}, status.HTTP_200_OK)
+        return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
+                                  generate_error_message(serializer.errors))
+
+
+class WeddingAnswer(APIView):
+    """
+    Save retirement data
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        API to save answer for a particular question
+        :param request:
+        :return:
+        """
+        serializer = serializers.WeddingGoalSerializer(data=request.data)
+        if serializer.is_valid():
+            goal_object = goals_helper.WeddingGoal()
+            is_error, errors = goal_object.create_or_update_goal(request.user, serializer.data, None, request.data.get('goal_name')) 
+            if is_error:
+                return api_utils.response({constants.MESSAGE: errors}, status.HTTP_400_BAD_REQUEST,
+                                          api_utils.create_error_message(errors))
+            return api_utils.response({"message": "success"}, status.HTTP_200_OK)
+        return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
+                                  generate_error_message(serializer.errors))
+
 class GenericGoalAnswer(APIView):
     """
     Save generic goal data
@@ -544,7 +666,6 @@ class GenericGoalAnswer(APIView):
 
     def post(self, request, goal_type):
         """
-
         :param request:
         :param type: the category for which answers ar being stored
         :return: a success or error message
@@ -1267,9 +1388,8 @@ class GetInvestedFundReturn(APIView):
                                 {"key": constants.ELSS, "value": elss_funds},
                                 {"key": constants.LIQUID, "value": liquid_funds}
                                 ]
-
         invested_fund_return_new = copy.deepcopy(invested_fund_return)
-        for index in range(3):
+        for index in range(4):
             for fund_object in invested_fund_return[index][constants.VALUE]:
                 if utils.find_if_not_eligible_for_display(fund_object, request.user):
                     invested_fund_return_new[index][constants.VALUE].remove(fund_object)
@@ -1289,11 +1409,11 @@ class GetInvestedFundReturn_v3(APIView):
         """
         user_goals = goals_helper.GoalBase.get_invested_goals(request.user)
         if not user_goals:
-            api_utils.response({}, status.HTTP_400_BAD_REQUEST)
+            return api_utils.response({}, status.HTTP_400_BAD_REQUEST)
         
         goal_fund_data = []
         for goal in user_goals:
-            equity_funds, debt_funds, elss_funds = [], [], []
+            equity_funds, debt_funds, elss_funds,liquid_funds = [], [], [],[]
             for portfolio_item in goal.portfolioitem_set.all(): #TODO subquery for valid foi
                 fund_order_item_count = models.FundOrderItem.objects.filter(portfolio_item=portfolio_item, is_verified=True, is_cancelled=False).count()
                 if fund_order_item_count > 0:
@@ -1303,18 +1423,22 @@ class GetInvestedFundReturn_v3(APIView):
                         debt_funds.append(utils.get_fund_detail(portfolio_item))
                     elif portfolio_item.fund.type_of_fund == 'T':
                         elss_funds.append(utils.get_fund_detail(portfolio_item))
+                    elif portfolio_item.fund.type_of_fund == 'L':
+                        liquid_funds.append(utils.get_fund_detail(portfolio_item))
             
             invested_fund_return = [{"key": constants.EQUITY, "value": equity_funds},
-                        {"key": constants.DEBT, "value": debt_funds},
-                        {"key": constants.ELSS, "value": elss_funds}]
+                                    {"key": constants.DEBT, "value": debt_funds},
+                                    {"key": constants.ELSS, "value": elss_funds},
+                                    {"key": constants.LIQUID, "value": liquid_funds}
+                                    ]
 
             invested_fund_return_new = copy.deepcopy(invested_fund_return)
-            for index in range(3):
+            for index in range(4):
                 for fund_object in invested_fund_return[index][constants.VALUE]:
                     if utils.find_if_not_eligible_for_display(fund_object, request.user):
                         invested_fund_return_new[index][constants.VALUE].remove(fund_object)
          
-            if len(invested_fund_return_new[0][constants.VALUE]) > 0  or len(invested_fund_return_new[1][constants.VALUE]) > 0 or len(invested_fund_return_new[2][constants.VALUE]) > 0:
+            if len(invested_fund_return_new[0][constants.VALUE]) > 0  or len(invested_fund_return_new[1][constants.VALUE]) > 0 or len(invested_fund_return_new[2][constants.VALUE]) > 0 or len(invested_fund_return_new[3][constants.VALUE]) > 0:
                 goal_data = {"goal_id": goal.id, "goal_name": goal.name, 
                              "investment_date": goal.portfolio.investment_date.strftime('%d-%m-%y'),
                              "funds": invested_fund_return_new}
@@ -1473,10 +1597,35 @@ class TransactionHistory_v3(APIView):
         sorted_txn_history = sorted(txn_history, key=lambda k: k['transaction_date'], reverse=True)
         return api_utils.response(sorted_txn_history, status.HTTP_200_OK)
 
+
+class SipCancellation(APIView):
+    """
+    For this api the expected data structure is sent is
+    {"data": [{"goal_id":2,"cancel_sips":[{"fund_id": 2},{"fund_id": 3}]}]}
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self,request):
+        """
+        :param request:
+        :return:
+        """
+        #data = {"funds": [{"fund_id": 27, "goal_id": 107},{"fund_id": 53, "goal_id": 108}]}
+        serializer = serializers.SipCancellationSerializer(data=request.data)
+        if serializer.is_valid():
+            if utils.xsip_cancel_by_goals(request.data.get('data', []), request.user):
+                return api_utils.response({constants.MESSAGE: "success"})
+            else:
+                return api_utils.response({constants.MESSAGE: "Failed to update"})
+        else:
+            return api_utils.response({constants.MESSAGE: serializer.errors}, status.HTTP_400_BAD_REQUEST,
+                                      generate_error_message(serializer.errors))
+
+
 class FundRedeem(APIView):
     """
     For this api the expected data structure is sent is
-    {"data": [{"fund_id": 3, "redeem_amount": 1300}], "all_units":[{"fund_id": 2}]}
+    {"data": [{"fund_id": 3, "redeem_amount": 1300}], "all_units":[{"fund_id": 2}],"funds":[{"fund_id": 27, "goal_id": 107}]}
     """
     permission_classes = [permissions.IsAuthenticated]
 
@@ -1496,7 +1645,6 @@ class FundRedeem(APIView):
             # creates groupedredeemdetail with redeem details created above added
             grouped_redeem_detail = models.GroupedRedeemDetail.objects.create(user=request.user)
             grouped_redeem_detail.redeem_details.add(*redeem_detail_list)
-
             # Sends a email informing admin of a new groupredeem item creation
             profiles_helpers.send_redeem_completed_email(grouped_redeem_detail, use_https=settings.USE_HTTPS)
             return api_utils.response({constants.MESSAGE: "success"})
@@ -1507,7 +1655,7 @@ class FundRedeem(APIView):
 class GoalRedeem(APIView):
     """
     For this api the expected data structure is sent is
-    {"data": [{"goal_id": 1, "amount" : [{"fund_id": 3, "redeem_amount": 1300}], "all_units":[{"fund_id": 2}]}]}
+    {"data": [{"goal_id": 1, "amount" : [{"fund_id": 3, "redeem_amount": 1300}], "all_units":[{"fund_id": 2}], "cancel_sips":[{"fund_id": 2},{"fund_id": 3}]}]}
     """
     permission_classes = [permissions.IsAuthenticated]
 
@@ -1521,6 +1669,8 @@ class GoalRedeem(APIView):
             grouped_redeem_detail = utils.process_redeem_request(request.user, request.data.get('data', []))
 
             if grouped_redeem_detail:
+                
+                utils.xsip_cancel_by_goals(request.data.get('data', []), request.user)
                 # Sends a email informing admin of a new groupredeem item creation
                 profiles_helpers.send_redeem_completed_email(grouped_redeem_detail, use_https=settings.USE_HTTPS)
                 return api_utils.response({constants.MESSAGE: "success"})
@@ -1723,9 +1873,6 @@ class ChangePortfolio(APIView):
         :return:
         """
         # check if a portfolio of user for which he has not invested is present. If not send an error message
-        #print(request.data)
-        #request.data['liquid'] = [27,49,53]
-
         try:
             user_portfolio = models.Portfolio.objects.get(user=request.user, has_invested=False)
         except models.Portfolio.DoesNotExist:
@@ -1897,7 +2044,7 @@ class DashboardVersionTwo(APIView):
         # query all fund_order_items of a user
         all_investments_of_user = models.FundOrderItem.objects.filter(
             portfolio_item__portfolio__user=request.user, is_cancelled=False)
-
+        
         # for real and transient dashboard
         if all_investments_of_user:
             # for real dashboard
@@ -1916,7 +2063,6 @@ class DashboardVersionTwo(APIView):
                 transaction_fund_map, today_portfolio, portfolios_to_be_considered = \
                     utils.club_investment_redeem_together(transactions_to_be_considered, [])
                 is_transient_dashboard = True
-
             # utility to get the json response for the api and change user flag
             portfolio_overview = utils.get_dashboard_version_two(
                 transaction_fund_map, today_portfolio, portfolios_to_be_considered, is_transient_dashboard)
@@ -2030,7 +2176,7 @@ class PortfolioDetailsVersionTwo(APIView):
                     portfolio_item__portfolio=user_portfolios[0])
                 transaction_fund_map, today_portfolio, portfolios = utils.club_investment_redeem_together(
                     transactions_to_be_considered, [])
-
+            
             # utility to get the json response for the api
             return api_utils.response(utils.make_xirr_calculations_for_dashboard_version_two(
                 transaction_fund_map, constants.PORTFOLIO_DETAILS, False), status.HTTP_200_OK)
@@ -2039,6 +2185,7 @@ class PortfolioDetailsVersionTwo(APIView):
         portfolio_items = models.PortfolioItem.objects.filter(
             portfolio__user=request.user, portfolio__has_invested=False, portfolio__is_deleted=False).select_related(
             'portfolio', 'fund')
+        
         if not portfolio_items:
             return api_utils.response({constants.MESSAGE: constants.USER_PORTOFOLIO_NOT_PRESENT},
                                       status.HTTP_400_BAD_REQUEST, constants.USER_PORTOFOLIO_NOT_PRESENT)
@@ -2132,4 +2279,7 @@ class TransactionComplete(View):
             return HttpResponse(external_constants.FORBIDDEN_ERROR, status=403)     
             
              
+
+  
+        
     

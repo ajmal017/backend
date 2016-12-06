@@ -8,7 +8,7 @@ from profiles.utils import is_investable
 from core import goals_helper
 
 admin.site.register(models.RiskProfile)
-admin.site.register(models.LiquidFunds)
+
 
 class OpinionsInline(admin.StackedInline):
     """
@@ -394,9 +394,10 @@ class PortfolioItemAdmin(admin.ModelAdmin):
     defining list editable
     diasable the deletion option
     """
-    list_display = ['id', 'portfolio', 'goal', 'fund']
+    list_display = ['id', 'portfolio', 'goal', 'fund','sip_cancellation']
     search_fields = ['portfolio__user__email', 'portfolio__user__phone_number', 'portfolio__id', 'goal__id']
-    readonly_fields=('portfolio', 'sip', 'lumpsum', 'sum_invested', 'returns_value', 'returns_percentage', 'one_day_previous_portfolio_value', 'one_day_return', 'list_of_fund_order_items', 'list_of_fund_redeem_items')
+    readonly_fields=('portfolio', 'sip', 'lumpsum', 'sum_invested', 'returns_value', 'returns_percentage', 'one_day_previous_portfolio_value', 'one_day_return', 'list_of_fund_order_items', 'list_of_fund_redeem_items','xsip_reg_no')
+
     actions = None
 
     def form_url_foi(self, foi_id, foi):
@@ -439,6 +440,18 @@ class PortfolioItemAdmin(admin.ModelAdmin):
         return False
 
 
+    def sip_cancellation(self, obj):
+        """
+        :param obj: an obj of user Admin
+        :return: a button
+        """
+
+        return mark_safe('<input type="button" class="sip_cancellation" value="Cancell Future Sip">')
+    sip_cancellation.short_description = 'Cancell Future Sip'
+    sip_cancellation.allow_tags = True 
+     
+     
+     
 class FolioNumberAdmin(admin.ModelAdmin):
     """
     defining search fields
@@ -552,7 +565,7 @@ class PlanAssestAllocationAdmin(admin.ModelAdmin):
     """
     disbale the option of deleting
     """
-    readonly_fields = ('user', 'retirement_allocation', 'tax_allocation', 'property_allocation', 'education_allocation', 'wedding_allocation', 'event_allocation', 'invest_allocation', 'portfolio')
+    readonly_fields = ('user', 'retirement_allocation', 'tax_allocation', 'property_allocation', 'education_allocation', 'wedding_allocation', 'event_allocation', 'invest_allocation','liquid_allocation','automobile_allocation','vacation_allocation','jewellery_allocation', 'portfolio')
     actions = None
 
     def has_delete_permission(self, request, obj=None):
@@ -634,3 +647,4 @@ admin.site.register(models.PlanAssestAllocation, PlanAssestAllocationAdmin)
 admin.site.register(models.UserEmail, UserEmailAdmin)
 admin.site.register(models.FundVendorInfo, FundVendorInfoAdmin)
 admin.site.register(models.Goal, GoalAdmin)
+admin.site.register(models.LiquidFunds,LiquidFundsAdmin)
