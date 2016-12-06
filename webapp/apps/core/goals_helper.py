@@ -51,9 +51,19 @@ class GoalBase(ABC):
             return RetirementGoal(goal_object)
         elif goal_object.category == constants.LIQUID_GOAL:
             return LiquidGoal(goal_object)
+        elif goal_object.category == constants.EDUCATION:
+            return EducationGoal(goal_object)
+        elif goal_object.category == constants.BUY_PROPERTY:
+            return PropertyGoal(goal_object)
+        elif goal_object.category == constants.AUTO_MOBILE:
+            return AutomobileGoal(goal_object)
+        elif goal_object.category == constants.VACATION:
+            return VacationGoal(goal_object)
+        elif goal_object.category == constants.WEDDING:
+            return WeddingGoal(goal_object)
         else:
             return GenericGoal(goal_object)
-
+        
     @staticmethod        
     def calculate_asset_allocation(lumpsum_amount, sip_amount, equity_allocation, debt_allocation):
         lumpsum_equity, lumpsum_debt, sip_equity, sip_debt = 0, 0, 0, 0
@@ -292,15 +302,69 @@ class GenericGoal(GoalBase):
     
     def get_answer_value(self, key, value):
         option_id = None
-        if key == "education_location":
-            option_id = value
-        if key == "education_field":
-            option_id = value
-        if key == "vacation_location":
-            option_id = value
-        if key == "wedding_location":
+        if key == "location":
             option_id = value
         return value, option_id
+    
+    
+class EducationGoal(GenericGoal):
+    def __init__(self, goal_object=None):
+        super(EducationGoal, self).__init__(goal_object)
+        
+    def create_or_update_goal(self, user, data, goal_type, goal_name=""):
+        return super(EducationGoal, self).create_or_update_goal(user, data, constants.EDUCATION_TYPE, goal_name)
+    
+    def get_default_goalname(self, goal_type):
+        return "EDU"
+    
+    def get_answer_value(self, key, value):
+        option_id = None
+        if key == "location" or key == "field" or key == "choice":
+            option_id = value
+        return value, option_id
+    
+class PropertyGoal(GenericGoal):
+    def __init__(self, goal_object=None):
+        super(PropertyGoal, self).__init__(goal_object)
+        
+    def create_or_update_goal(self, user, data, goal_type, goal_name=""):
+        return super(PropertyGoal, self).create_or_update_goal(user, data, constants.PROPERTY_TYPE, goal_name)
+    
+    def get_default_goalname(self, goal_type):
+        return "PRO"
+    
+
+class AutomobileGoal(GenericGoal):
+    def __init__(self, goal_object=None):
+        super(AutomobileGoal, self).__init__(goal_object)
+        
+    def create_or_update_goal(self, user, data, goal_type, goal_name=""):
+        return super(AutomobileGoal, self).create_or_update_goal(user, data, constants.AUTO_MOBILE_TYPE, goal_name)
+    
+    def get_default_goalname(self, goal_type):
+        return "AUT"
+
+
+class VacationGoal(GenericGoal):
+    def __init__(self, goal_object=None):
+        super(VacationGoal, self).__init__(goal_object)
+        
+    def create_or_update_goal(self, user, data, goal_type, goal_name=""):
+        return super(VacationGoal, self).create_or_update_goal(user, data, constants.VACATION_TYPE, goal_name)
+    
+    def get_default_goalname(self, goal_type):
+        return "VAC"
+
+class WeddingGoal(GenericGoal):
+    def __init__(self, goal_object=None):
+        super(VacationGoal, self).__init__(goal_object)
+        
+    def create_or_update_goal(self, user, data, goal_type, goal_name=""):
+        return super(VacationGoal, self).create_or_update_goal(user, data, constants.WEDDING_TYPE, goal_name)
+    
+    def get_default_goalname(self, goal_type):
+        return "WED"
+
 
 class TaxGoal(GoalBase):
     def __init__(self, goal_object=None):
@@ -409,6 +473,8 @@ class RetirementGoal(GoalBase):
         option_id = None
         if key == "floating_sip":
             option_id = "op1" if value else "op2"
+        if key == "choice":
+            option_id = value
         return value, option_id
 
     def get_default_goalname(self, goal_type):
@@ -440,12 +506,6 @@ class LiquidGoal(GoalBase):
     def create_or_update_goal(self, user, data, goal_type, goal_name=""):
         return super(LiquidGoal, self).create_or_update_goal(user, data, constants.LIQUID_GOAL, goal_name)
 
-    def get_answer_value(self, key, value):
-        option_id = None
-        if key == "estimate_needed":
-            option_id = "op1" if value else "op2"
-
-        return value, option_id
 
     def get_default_term(self):
         return constants.LIQUID_DEFAULT_TERM

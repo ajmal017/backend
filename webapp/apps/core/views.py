@@ -525,10 +525,6 @@ class RetirementAnswer(APIView):
         :param request:
         :return:
         """
-        request.data['pre_tax_annual_income']=100000
-        request.data['monthly_expense']=60
-        request.data['amount_saved']=500000
-        
         serializer = serializers.RetirementSerializer(data=request.data)
         if serializer.is_valid():
             goal_object = goals_helper.RetirementGoal()
@@ -540,6 +536,127 @@ class RetirementAnswer(APIView):
         return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
                                   generate_error_message(serializer.errors))
 
+
+class EducationAnswer(APIView):
+    """
+    Save retirement data
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        API to save answer for a particular question
+        :param request:
+        :return:
+        """
+        serializer = serializers.EducationGoalSerializer(data=request.data)
+        if serializer.is_valid():
+            goal_object = goals_helper.EducationGoal()
+            is_error, errors = goal_object.create_or_update_goal(request.user, serializer.data, None, request.data.get('goal_name')) 
+            if is_error:
+                return api_utils.response({constants.MESSAGE: errors}, status.HTTP_400_BAD_REQUEST,
+                                          api_utils.create_error_message(errors))
+            return api_utils.response({"message": "success"}, status.HTTP_200_OK)
+        return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
+                                  generate_error_message(serializer.errors))
+
+
+class PropertyAnswer(APIView):
+    """
+    Save retirement data
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        API to save answer for a particular question
+        :param request:
+        :return:
+        """
+        serializer = serializers.PropertyGoalSerializer(data=request.data)
+        if serializer.is_valid():
+            goal_object = goals_helper.PropertyGoal()
+            is_error, errors = goal_object.create_or_update_goal(request.user, serializer.data, None, request.data.get('goal_name')) 
+            if is_error:
+                return api_utils.response({constants.MESSAGE: errors}, status.HTTP_400_BAD_REQUEST,
+                                          api_utils.create_error_message(errors))
+            return api_utils.response({"message": "success"}, status.HTTP_200_OK)
+        return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
+                                  generate_error_message(serializer.errors))
+
+
+
+class AutomobileAnswer(APIView):
+    """
+    Save retirement data
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        API to save answer for a particular question
+        :param request:
+        :return:
+        """
+        serializer = serializers.AutomobileGoalSerializer(data=request.data)
+        if serializer.is_valid():
+            goal_object = goals_helper.AutomobileGoal()
+            is_error, errors = goal_object.create_or_update_goal(request.user, serializer.data, None, request.data.get('goal_name')) 
+            if is_error:
+                return api_utils.response({constants.MESSAGE: errors}, status.HTTP_400_BAD_REQUEST,
+                                          api_utils.create_error_message(errors))
+            return api_utils.response({"message": "success"}, status.HTTP_200_OK)
+        return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
+                                  generate_error_message(serializer.errors))
+
+
+
+class VacationAnswer(APIView):
+    """
+    Save retirement data
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        API to save answer for a particular question
+        :param request:
+        :return:
+        """
+        serializer = serializers.VacationGoalSerializer(data=request.data)
+        if serializer.is_valid():
+            goal_object = goals_helper.VacationGoal()
+            is_error, errors = goal_object.create_or_update_goal(request.user, serializer.data, None, request.data.get('goal_name')) 
+            if is_error:
+                return api_utils.response({constants.MESSAGE: errors}, status.HTTP_400_BAD_REQUEST,
+                                          api_utils.create_error_message(errors))
+            return api_utils.response({"message": "success"}, status.HTTP_200_OK)
+        return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
+                                  generate_error_message(serializer.errors))
+
+
+class WeddingAnswer(APIView):
+    """
+    Save retirement data
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        API to save answer for a particular question
+        :param request:
+        :return:
+        """
+        serializer = serializers.WeddingGoalSerializer(data=request.data)
+        if serializer.is_valid():
+            goal_object = goals_helper.WeddingGoal()
+            is_error, errors = goal_object.create_or_update_goal(request.user, serializer.data, None, request.data.get('goal_name')) 
+            if is_error:
+                return api_utils.response({constants.MESSAGE: errors}, status.HTTP_400_BAD_REQUEST,
+                                          api_utils.create_error_message(errors))
+            return api_utils.response({"message": "success"}, status.HTTP_200_OK)
+        return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
+                                  generate_error_message(serializer.errors))
 
 class GenericGoalAnswer(APIView):
     """
@@ -553,18 +670,7 @@ class GenericGoalAnswer(APIView):
         :param type: the category for which answers ar being stored
         :return: a success or error message
         """
-        if goal_type == constants.EDUCATION_TYPE:
-            serializer = serializers.EducationGoalSerializer(data=request.data)
-        elif goal_type == constants.PROPERTY_TYPE:
-            serializer = serializers.PropertyGoalSerializer(data=request.data)
-        elif goal_type == constants.AUTO_MOBILE_TYPE:
-            serializer = serializers.AutomobileGoalSerializer(data=request.data)
-        elif goal_type == constants.VACATION_TYPE:
-            serializer = serializers.VacationGoalSerializer(data=request.data)
-        elif goal_type == constants.WEDDING_TYPE:
-            serializer = serializers.WeddingGoalSerializer(data=request.data)
-        else: 
-            serializer = serializers.GenericGoalSerializer(data=request.data)
+        serializer = serializers.GenericGoalSerializer(data=request.data)
         if serializer.is_valid():
             goal_object = goals_helper.GenericGoal()
             is_error, errors = goal_object.create_or_update_goal(request.user, serializer.data, goal_type, request.data.get('goal_name')) 
@@ -1507,7 +1613,7 @@ class SipCancellation(APIView):
         #data = {"funds": [{"fund_id": 27, "goal_id": 107},{"fund_id": 53, "goal_id": 108}]}
         serializer = serializers.SipCancellationSerializer(data=request.data)
         if serializer.is_valid():
-            if utils.xsip_cancel_by_funds(request.data.get('data', []), request.user):
+            if utils.xsip_cancel_by_goals(request.data.get('data', []), request.user):
                 return api_utils.response({constants.MESSAGE: "success"})
             else:
                 return api_utils.response({constants.MESSAGE: "Failed to update"})
@@ -1564,7 +1670,7 @@ class GoalRedeem(APIView):
 
             if grouped_redeem_detail:
                 
-                utils.xsip_cancel_by_funds(request.data.get('data', []), request.user)
+                utils.xsip_cancel_by_goals(request.data.get('data', []), request.user)
                 # Sends a email informing admin of a new groupredeem item creation
                 profiles_helpers.send_redeem_completed_email(grouped_redeem_detail, use_https=settings.USE_HTTPS)
                 return api_utils.response({constants.MESSAGE: "success"})
@@ -2174,39 +2280,6 @@ class TransactionComplete(View):
             
              
 
-class SipCancellation_admin(View):
-    
-    def get(self,request):
-        """
-        :return:
-        """
-        if request.user.is_superuser:
-            try:
-                portfolio_item = models.PortfolioItem.objects.get(id=request.GET.get('portfolio_id'))
-            except models.PortfolioItem.DoesNotExist:
-                portfolio_item = None
-            
-            if portfolio_item is not None:
-                user = portfolio_item.portfolio.user
-                exch_backend = external_helpers.get_exchange_vendor_helper().get_backend_instance()
-                if exch_backend:
-                    error, output_file = exch_backend.create_xsip_cancellation(user, portfolio_item)
-                    #error , output_file = bulk_upload.generate_sip_cancellation_pipe_file(user,portfolio_item)    
-                    if output_file:
-                        output_file = output_file.split('/')[-1]
-                        prefix = 'webapp'
-                        my_file_path = prefix + external_constants.STATIC + output_file
-                        my_file = open(my_file_path, "rb")
-                        content_type = 'text/plain'
-                        response = HttpResponse(my_file, content_type=content_type, status=200)
-                        response['Content-Disposition'] = 'attachment;filename=%s' % str(portfolio_item.id) + '_portfolioitem.txt'
-                        my_file.close()
-                        return response 
-                    else:
-                        return HttpResponse("Error at creating the file")                 
-            else:
-                return HttpResponse("Portfolio item details not found")
-        else:
-            return HttpResponse(external_constants.FORBIDDEN_ERROR, status=403)  
+  
         
     

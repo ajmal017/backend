@@ -10,6 +10,11 @@ urlpatterns = [
     url(r'^assess/new/response/add/$', views.AssessAnswer_v3.as_view(), name='assess-new-answers-add'),
     url(r'^assess/new/response/$', views.AssessAnswer_Unregistered_User_v3.as_view(), name='assess-new-answers-unregister-add'),
     url(r'^retirement/new/response/add/$', views.RetirementAnswer.as_view(), name='retirement-new-answers-add'),
+    url(r'^education/new/response/add/$', views.EducationAnswer.as_view(), name='education-new-answers-add'),
+    url(r'^property/new/response/add/$', views.PropertyAnswer.as_view(), name='property-new-answers-add'),
+    url(r'^automobile/new/response/add/$', views.AutomobileAnswer.as_view(), name='automobile-new-answers-add'),
+    url(r'^vacation/new/response/add/$', views.VacationAnswer.as_view(), name='vacation-new-answers-add'),
+    url(r'^wedding/new/response/add/$', views.WeddingAnswer.as_view(), name='wedding-new-answers-add'),
     url(r'^invest/new/response/add/$', views.InvestAnswer.as_view(), name='invest-new-answers-add'),
     url(r'^tax/new/response/add/$', views.TaxAnswer.as_view(), name='tax-new-answers-add'),
     url(r'^(?P<goal_type>^[a-z]+)/new/response/add/$', views.GenericGoalAnswer.as_view(), name='generic-answers-add'),
@@ -49,7 +54,7 @@ urlpatterns = [
     url(r'^transaction/complete/$', views.TransactionComplete.as_view(), name='transaction-complete'),
     url(r'^liquid/new/response/add/$', views.LiquidAnswer.as_view(), name='liquid-new-answers-add'),
     url(r'^sip/cancellation/add/$', views.SipCancellation.as_view(), name='sip-cancellation'), 
-    url(r'^sip/cancellation/admin/$', views.SipCancellation_admin.as_view(), name='sip-cancellation'),
+    
 
     # ===================  DEPRECATED APIS =========================================================================
 

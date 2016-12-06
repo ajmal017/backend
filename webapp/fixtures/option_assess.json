@@ -37,5 +37,14 @@
 {"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "International", "option_id": "op2", "is_deleted": "False", "question": "93", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 116},
 
 {"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Locally", "option_id": "op1", "is_deleted": "False", "question": "96", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 117},
-{"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Outstation", "option_id": "op2", "is_deleted": "False", "question": "96", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 118}
+{"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Outstation", "option_id": "op2", "is_deleted": "False", "question": "96", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 118},
+
+{"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Budget", "option_id": "op1", "is_deleted": "False", "question": "99", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 119},
+{"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Comfortable", "option_id": "op2", "is_deleted": "False", "question": "99", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 120},
+{"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Luxury", "option_id": "op3", "is_deleted": "False", "question": "99", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 121},
+
+{"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Budget", "option_id": "op1", "is_deleted": "False", "question": "100", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 122},
+{"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Comfortable", "option_id": "op2", "is_deleted": "False", "question": "100", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 123},
+{"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Luxury", "option_id": "op3", "is_deleted": "False", "question": "100", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 124}
+
 ]

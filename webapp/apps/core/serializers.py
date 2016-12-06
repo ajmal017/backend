@@ -178,9 +178,10 @@ class RetirementSerializer(serializers.Serializer):
     floating_sip = serializers.BooleanField(required=True)
     grow_sip = serializers.IntegerField(required=True)
     allocation = serializers.DictField(required=True)
-    pre_tax_annual_income = serializers.IntegerField(required=False)
+    monthly_income = serializers.IntegerField(required=False)
     monthly_expense = serializers.IntegerField(required=False)
     amount_saved = serializers.IntegerField(required=False)
+    choice = serializers.CharField(required=False)
 
 
 class InvestSerializer(serializers.Serializer):
@@ -238,9 +239,10 @@ class EducationGoalSerializer(serializers.Serializer):
     sip = serializers.IntegerField(required=True)
     lumpsum = serializers.IntegerField(required=True)
     allocation = serializers.DictField(required=True)
-    education_location = serializers.CharField(required=False)
-    education_field = serializers.CharField(required=False)
+    location = serializers.CharField(required=False)
+    field = serializers.CharField(required=False)
     amount_saved = serializers.IntegerField(required=False)
+    choice = serializers.CharField(required=False)
     
 class PropertyGoalSerializer(serializers.Serializer):
     """
@@ -278,7 +280,7 @@ class VacationGoalSerializer(serializers.Serializer):
     allocation = serializers.DictField(required=True)
     number_of_members = serializers.IntegerField(required=False)
     number_of_days = serializers.IntegerField(required=False)
-    vacation_location = serializers.CharField(required=False)
+    location = serializers.CharField(required=False)
     amount_saved = serializers.IntegerField(required=False)
     
 class WeddingGoalSerializer(serializers.Serializer):
@@ -291,7 +293,7 @@ class WeddingGoalSerializer(serializers.Serializer):
     lumpsum = serializers.IntegerField(required=True)
     allocation = serializers.DictField(required=True)
     expected_people = serializers.IntegerField(required=False)
-    wedding_location = serializers.CharField(required=False)
+    location = serializers.CharField(required=False)
     sharing_percentage = serializers.IntegerField(required=False)
     amount_saved = serializers.IntegerField(required=False)
     

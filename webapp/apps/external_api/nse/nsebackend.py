@@ -185,7 +185,6 @@ class NSEBackend(ExchangeBackend):
 
     def purchase_trxn(self, user_id, order_detail, is_sip=False):
         """
-
         :param:
         :return:
         """
@@ -347,4 +346,7 @@ class NSEBackend(ExchangeBackend):
     
     def create_xsip_order(self, user_id, order_detail):
         return self.purchase_trxn(user_id, order_detail, is_sip=True), None
+    
+    def create_xsip_cancellation(self,user,portfolio_item):
+        return 
 
