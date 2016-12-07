@@ -15,6 +15,7 @@ urlpatterns = [
     url(r'^automobile/new/response/add/$', views.AutomobileAnswer.as_view(), name='automobile-new-answers-add'),
     url(r'^vacation/new/response/add/$', views.VacationAnswer.as_view(), name='vacation-new-answers-add'),
     url(r'^wedding/new/response/add/$', views.WeddingAnswer.as_view(), name='wedding-new-answers-add'),
+    url(r'^jewellery/new/response/add/$', views.JewelleryAnswer.as_view(), name='wedding-new-answers-add'),
     url(r'^invest/new/response/add/$', views.InvestAnswer.as_view(), name='invest-new-answers-add'),
     url(r'^tax/new/response/add/$', views.TaxAnswer.as_view(), name='tax-new-answers-add'),
     url(r'^(?P<goal_type>^[a-z]+)/new/response/add/$', views.GenericGoalAnswer.as_view(), name='generic-answers-add'),

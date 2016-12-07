@@ -181,7 +181,7 @@ class RetirementSerializer(serializers.Serializer):
     monthly_income = serializers.IntegerField(required=False)
     monthly_expense = serializers.IntegerField(required=False)
     amount_saved = serializers.IntegerField(required=False)
-    choice = serializers.CharField(required=False)
+    estimate_selection_type = serializers.CharField(required=False)
 
 
 class InvestSerializer(serializers.Serializer):
@@ -242,7 +242,7 @@ class EducationGoalSerializer(serializers.Serializer):
     location = serializers.CharField(required=False)
     field = serializers.CharField(required=False)
     amount_saved = serializers.IntegerField(required=False)
-    choice = serializers.CharField(required=False)
+    estimate_selection_type = serializers.CharField(required=False)
     
 class PropertyGoalSerializer(serializers.Serializer):
     """
@@ -256,6 +256,7 @@ class PropertyGoalSerializer(serializers.Serializer):
     current_price_of_property = serializers.IntegerField(required=False)
     prop_of_purchase_cost = serializers.IntegerField(required=False)
     amount_saved = serializers.IntegerField(required=False)
+    estimate_selection_type = serializers.CharField(required=False)
     
 class AutomobileGoalSerializer(serializers.Serializer):
     """
@@ -267,7 +268,9 @@ class AutomobileGoalSerializer(serializers.Serializer):
     lumpsum = serializers.IntegerField(required=True)
     allocation = serializers.DictField(required=True)
     on_road_cost = serializers.IntegerField(required=False)
+    prop_of_purchase_cost = serializers.IntegerField(required=False)
     amount_saved = serializers.IntegerField(required=False)
+    estimate_selection_type = serializers.CharField(required=False)
     
 class VacationGoalSerializer(serializers.Serializer):
     """
@@ -282,6 +285,7 @@ class VacationGoalSerializer(serializers.Serializer):
     number_of_days = serializers.IntegerField(required=False)
     location = serializers.CharField(required=False)
     amount_saved = serializers.IntegerField(required=False)
+    estimate_selection_type = serializers.CharField(required=False)
     
 class WeddingGoalSerializer(serializers.Serializer):
     """
@@ -296,6 +300,20 @@ class WeddingGoalSerializer(serializers.Serializer):
     location = serializers.CharField(required=False)
     sharing_percentage = serializers.IntegerField(required=False)
     amount_saved = serializers.IntegerField(required=False)
+    estimate_selection_type = serializers.CharField(required=False)
+    
+class JewelleryGoalSerializer(serializers.Serializer):
+    """
+    Serializer for generic goal post api
+    """
+    corpus = serializers.IntegerField(required=True)
+    term = serializers.IntegerField(required=True)
+    sip = serializers.IntegerField(required=True)
+    lumpsum = serializers.IntegerField(required=True)
+    allocation = serializers.DictField(required=True)
+    current_price = serializers.IntegerField(required=False)
+    amount_saved = serializers.IntegerField(required=False)
+    estimate_selection_type = serializers.CharField(required=False)
     
 class FundSerializerForFundDividedIntoCategory(serializers.ModelSerializer):
     """

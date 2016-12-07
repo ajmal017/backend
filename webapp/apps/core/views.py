@@ -573,6 +573,7 @@ class PropertyAnswer(APIView):
         :param request:
         :return:
         """
+        #data = {'allocation': {'elss': '0', 'equity': '50', 'debt': '50'}, 'corpus': 400000, 'lumpsum': 0, 'term': 4, 'sip': 6900,}
         serializer = serializers.PropertyGoalSerializer(data=request.data)
         if serializer.is_valid():
             goal_object = goals_helper.PropertyGoal()
@@ -657,6 +658,31 @@ class WeddingAnswer(APIView):
             return api_utils.response({"message": "success"}, status.HTTP_200_OK)
         return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
                                   generate_error_message(serializer.errors))
+
+class JewelleryAnswer(APIView):
+    """
+    Save retirement data
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        API to save answer for a particular question
+        :param request:
+        :return:
+        """
+        serializer = serializers.JewelleryGoalSerializer(data=request.data)
+        if serializer.is_valid():
+            goal_object = goals_helper.JewelleryGoal()
+            is_error, errors = goal_object.create_or_update_goal(request.user, serializer.data, None, request.data.get('goal_name')) 
+            if is_error:
+                return api_utils.response({constants.MESSAGE: errors}, status.HTTP_400_BAD_REQUEST,
+                                          api_utils.create_error_message(errors))
+            return api_utils.response({"message": "success"}, status.HTTP_200_OK)
+        return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
+                                  generate_error_message(serializer.errors))
+
+
 
 class GenericGoalAnswer(APIView):
     """
