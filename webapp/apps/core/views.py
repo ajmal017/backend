@@ -30,7 +30,7 @@ from external_api import helpers as external_helpers
 
 from django.db.models import Count
 from external_api import utils as external_utils
-from core import goals_helper, funds_helper
+from core import goals_helper, funds_helper, riskprofile_helper
 from external_api.bse import bulk_upload 
 
 
@@ -442,6 +442,23 @@ class AssessAnswer_Unregistered_User_v3(APIView):
                                   generate_error_message(serializer.errors))
 
 
+class ComputeAssetAllocationCategory(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        tenure = request.query_params.get('tenure', 0)
+        
+        risk_profile_helper = riskprofile_helper.RiskProfileHelper(request.user)
+        asset_allocation_category = risk_profile_helper.compute_risk_profile(tenure)
+
+        if tenure > 0:        
+            if asset_allocation_category is not None:
+                return api_utils.response({"message": "success","asset_allocation_category":asset_allocation_category}, status.HTTP_200_OK)
+            else:
+                return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
+                                  "Unable to calculate asset allocation category")
+        return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST, "Missing tenure")
+    
 class PlanAnswer(APIView):
     """
     Save plan data

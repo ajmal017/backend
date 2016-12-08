@@ -24,6 +24,7 @@ from . import models, constants, serializers, utils, helpers
 from api import utils as api_utils
 from core import utils as core_utils
 from core import models as core_models
+from core import constants as core_constants 
 from external_api import api
 from external_api import models as external_models
 from webapp.apps import generate_error_message, code_generator
@@ -345,7 +346,8 @@ class Login(APIView):
                                                "liquid": core_utils.get_category_answers(user, "liquid"),
                                                "automobile": core_utils.get_category_answers(user, "automobile"),
                                                "vacation": core_utils.get_category_answers(user, "vacation"),
-                                               "jewellery": core_utils.get_category_answers(user, "jewellery")},
+                                               "jewellery": core_utils.get_category_answers(user, "jewellery"),
+                                               "asset_allocation_tables": core_constants.asset_allocation_tables},
                                                 headers=headers)
                 else:
                     login_error = constants.LOGIN_ERROR_5
@@ -1822,7 +1824,8 @@ class GoogleLogin(APIView):
                                                     "liquid": core_utils.get_category_answers(user, "liquid"),
                                                    "automobile": core_utils.get_category_answers(user, "automobile"),
                                                    "vacation": core_utils.get_category_answers(user, "vacation"),
-                                                   "jewellery": core_utils.get_category_answers(user, "jewellery")
+                                                   "jewellery": core_utils.get_category_answers(user, "jewellery"),
+                                                   "asset_allocation_tables": core_constants.asset_allocation_tables
                                                     },
                                                     "user_status":user_status
                                                    },headers=headers)
@@ -1914,7 +1917,8 @@ class GoogleRegister(APIView):
                                                        "liquid": core_utils.get_category_answers(user, "liquid"),
                                                        "automobile": core_utils.get_category_answers(user, "automobile"),
                                                        "vacation": core_utils.get_category_answers(user, "vacation"),
-                                                       "jewellery": core_utils.get_category_answers(user, "jewellery")
+                                                       "jewellery": core_utils.get_category_answers(user, "jewellery"),
+                                                       "asset_allocation_tables": core_constants.asset_allocation_tables
                                                        },headers=headers)
                     else:
                         return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(serializer.errors))
@@ -2004,7 +2008,8 @@ class GoogleRegisterExistingUser(APIView):
                                                            "liquid": core_utils.get_category_answers(user, "liquid"),
                                                            "automobile": core_utils.get_category_answers(user, "automobile"),
                                                            "vacation": core_utils.get_category_answers(user, "vacation"),
-                                                           "jewellery": core_utils.get_category_answers(user, "jewellery")
+                                                           "jewellery": core_utils.get_category_answers(user, "jewellery"),
+                                                           "asset_allocation_tables": core_constants.asset_allocation_tables
                                                            },headers=headers)
                               
                         else:

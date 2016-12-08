@@ -388,3 +388,16 @@ FILTER_DATE_NOT_SELECTED = 0   # date not selected for filter
 FILTER_DATE_ONE_WEEK = 1  # date selected for one week
 FILTER_DATE_ONE_MONTH  = 2  # date selected for one month
 FILTER_DATE_THREE_MONTH = 3  # date selected for 3 month
+
+asset_allocation_tables = [{"sip_max" : 1999, "lumpsum_max" : 9999, "table" : {"A" : {"debt":100, "equity": 0}, "B" : {"debt":100, "equity": 0}, "C" : {"debt":0, "equity": 100}, "D" : {"debt":0, "equity": 100}, "E" : {"debt":0, "equity": 100} }},
+                           {"sip_max" : 2999, "lumpsum_max" : 14999, "table" : {"A" : {"debt":100, "equity": 0}, "B" : {"debt":100, "equity": 0}, "C" : {"debt":50, "equity": 50}, "D" : {"debt":50, "equity": 50}, "E" : {"debt":0, "equity": 100} }},
+                           {"sip_max" : 4999, "lumpsum_max" : 24999, "table" : {"A" : {"debt":100, "equity": 0}, "B" : {"debt":65, "equity": 35}, "C" : {"debt":50, "equity": 50}, "D" : {"debt":35, "equity": 65}, "E" : {"debt":0, "equity": 100} }},
+                           {"sip_max" : 199999, "lumpsum_max" : 999999, "table" : {"A" : {"debt":80, "equity": 20}, "B" : {"debt":65, "equity": 35}, "C" : {"debt":50, "equity": 50}, "D" : {"debt":35, "equity": 65}, "E" : {"debt":20, "equity": 80} }}]
+                           
+RISK_PROFILE_A = "A"
+RISK_PROFILE_B = "B"
+RISK_PROFILE_C = "C"
+RISK_PROFILE_D = "D"
+RISK_PROFILE_E = "E"
+RISK_PROFILE_ONLY_DEBT = "OnlyDebt"
+RISK_PROFILE_ONLY_EQUITY = "OnlyEquity"
