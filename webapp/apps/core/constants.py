@@ -42,6 +42,7 @@ PROPERTY_TYPE = "property"
 AUTO_MOBILE_TYPE = "automobile"
 VACATION_TYPE = "vacation"
 WEDDING_TYPE = "wedding"
+JEWELLERY_TYPE = "jewellery"
 
 MAP = {
     "invest": INVEST,
@@ -337,6 +338,7 @@ CORPUS = 'corpus'
 TERM = 'term'
 EXPECTD_VALUE = 'expected_value'
 GOAL_ANSWERS = 'goal_answers'
+FUND_DETAILS = 'fund_details'
 INVESTMENT_TILL_DATE = 'investment_till_date'
 PROGRESS = 'progress'
 FUND_ID_LIST = 'fund_id_list'

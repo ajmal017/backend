@@ -61,6 +61,8 @@ class GoalBase(ABC):
             return VacationGoal(goal_object)
         elif goal_object.category == constants.WEDDING:
             return WeddingGoal(goal_object)
+        elif goal_object.category == constants.JEWELLERY:
+            return JewelleryGoal(goal_object)
         else:
             return GenericGoal(goal_object)
         
@@ -302,7 +304,7 @@ class GenericGoal(GoalBase):
     
     def get_answer_value(self, key, value):
         option_id = None
-        if key == "location":
+        if key == "location" or key == "estimate_selection_type":
             option_id = value
         return value, option_id
     
@@ -319,7 +321,7 @@ class EducationGoal(GenericGoal):
     
     def get_answer_value(self, key, value):
         option_id = None
-        if key == "location" or key == "field" or key == "choice":
+        if key == "location" or key == "field" or key == "estimate_selection_type":
             option_id = value
         return value, option_id
     
@@ -364,6 +366,16 @@ class WeddingGoal(GenericGoal):
     
     def get_default_goalname(self, goal_type):
         return "WED"
+    
+class JewelleryGoal(GenericGoal):
+    def __init__(self, goal_object=None):
+        super(JewelleryGoal, self).__init__(goal_object)
+        
+    def create_or_update_goal(self, user, data, goal_type, goal_name=""):
+        return super(JewelleryGoal, self).create_or_update_goal(user, data, constants.JEWELLERY_TYPE, goal_name)
+    
+    def get_default_goalname(self, goal_type):
+        return "JEW"
 
 
 class TaxGoal(GoalBase):
