@@ -420,7 +420,8 @@ def generate_goals_data(goal):
         if answer.question.type == constants.TEXT:
             category_answers_result[answer.question.question_id] = int(answer.text)
         else:
-            answer_bool_converted = True if models.Option.objects.get(id=answer.option_id).option_id == "op1" else False
+            #answer_bool_converted = True if models.Option.objects.get(id=answer.option_id).option_id == "op1" else False
+            answer_bool_converted = models.Option.objects.get(id=answer.option_id).option_id
             category_answers_result[answer.question.question_id] = answer_bool_converted
     
     return category_answers_result
@@ -1848,7 +1849,6 @@ def calculate_financial_goal_status(asset_class_overview, portfolios_to_be_consi
         constants.INVEST: [[], 0],constants.LIQUID_GOAL: [[], 0],constants.AUTO_MOBILE: [[], 0],
         constants.VACATION: [[], 0],constants.JEWELLERY: [[], 0]
     }
-
     for portfolio in portfolios_to_be_considered:
         if portfolio.has_invested == False:
             goals = goals_helper.GoalBase.get_current_goals(portfolio.user)
@@ -1861,7 +1861,8 @@ def calculate_financial_goal_status(asset_class_overview, portfolios_to_be_consi
             corpus, term = goal_object.get_expected_corpus()
 
             investment_till_date_object = goal_object.get_investment_till_date()
-
+        
+            scheme_data = generate_scheme_data(goal)
             goal_data = generate_goals_data(goal)
         
             goal_map[goal.category][0].append({
@@ -1873,15 +1874,33 @@ def calculate_financial_goal_status(asset_class_overview, portfolios_to_be_consi
                 constants.ELSS: investment_till_date_object[constants.ELSS],
                 constants.LIQUID: investment_till_date_object[constants.LIQUID],
                 constants.DATE: portfolio.modified_at.date() + relativedelta(years=int(term)),
-                constants.GOAL_ANSWERS: goal_data
+                constants.GOAL_ANSWERS: goal_data,
+                constants.FUND_DETAILS:scheme_data
             })
             total_debt += investment_till_date_object[constants.DEBT]
             total_equity += investment_till_date_object[constants.EQUITY]
             total_elss += investment_till_date_object[constants.ELSS]
-            total_liquid += investment_till_date_object[constants.LIQUID]
-     
+            total_liquid += investment_till_date_object[constants.LIQUID] 
     return make_financial_goal_response(goal_map, total_equity, total_debt, total_elss,total_liquid, asset_class_overview)   
 
+def generate_scheme_data(goal):
+    portfolio_items = models.PortfolioItem.objects.filter(goal = goal)
+    scheme_data = {"equity":[],"debt":[],"elss":[],"liquid":[]}
+    future_sip_cancelled = False         
+    for portfolio_item in portfolio_items:
+        try:
+            fund_order_item = models.FundOrderItem.objects.filter(portfolio_item=portfolio_item).latest('created_at')
+            future_sip_cancelled = fund_order_item.is_future_sip_cancelled
+        except:
+            future_sip_cancelled = False
+        scheme_data[constants.FUND_MAP_REVERSE[portfolio_item.fund.type_of_fund]].append({
+                                "scheme_name":portfolio_item.fund.legal_name,
+                                "scheme_id":portfolio_item.fund.id,
+                                "agreed_sip":portfolio_item.sip,
+                                "agreed_lumpsum":portfolio_item.lumpsum,
+                                "future_sip_cancelled":future_sip_cancelled     
+                                  })
+    return scheme_data
 
 def make_financial_goal_response(goal_map, total_equity_invested, total_debt_invested, total_elss_invested, 
                                  total_liquid_invested, asset_class_overview):
@@ -1919,7 +1938,8 @@ def make_financial_goal_response(goal_map, total_equity_invested, total_debt_inv
                     constants.DATE: category_individual_goal.get(constants.DATE),
                     constants.GOAL: calculate_aum_in_string(round(category_individual_goal.get(
                         constants.EXPECTD_VALUE))), constants.PROGRESS: progress,
-                    constants.GOAL_ANSWERS: category_individual_goal.get(constants.GOAL_ANSWERS)
+                    constants.GOAL_ANSWERS: category_individual_goal.get(constants.GOAL_ANSWERS),
+                    constants.FUND_DETAILS:category_individual_goal.get(constants.FUND_DETAILS)
                 }
                 financial_goal_list.append(goal_status)
                 goal_map[category][1] += 1
@@ -3209,7 +3229,6 @@ def get_dashboard_version_two(transaction_fund_map, today_portfolio, portfolios_
 
     financial_goal_status = calculate_financial_goal_status(asset_class_overview, portfolios_to_be_considered)
 
-    
     return {constants.FINANCIAL_GOAL_STATUS: financial_goal_status,
             constants.ASSET_CLASS_OVERVIEW: asset_class_overview, 
             constants.PORTFOLIO_OVERVIEW: portfolio_overview,

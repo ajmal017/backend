@@ -485,7 +485,7 @@ class RetirementGoal(GoalBase):
         option_id = None
         if key == "floating_sip":
             option_id = "op1" if value else "op2"
-        if key == "choice":
+        if key == "estimate_selection_type":
             option_id = value
         return value, option_id
 

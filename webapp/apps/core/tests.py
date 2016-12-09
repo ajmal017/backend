@@ -8,64 +8,11 @@ from rest_framework import status
 from rest_framework.test import APITestCase, APIRequestFactory, force_authenticate, APISimpleTestCase
 
 from profiles.models import User
-from core.views import AssessQuestion, AssessAnswer, RiskProfile, Question
+from core.views import AssessAnswer, RiskProfile,DashboardVersionTwo
 from core import models
+from django.conf import settings
 
 import json
-
-class RiskProfileTests(APISimpleTestCase):
-
-    allow_database_queries = True
-
-    def setUp(self):
-        self.factory = APIRequestFactory()
-        self.user, created = User.objects.get_or_create(email='username@email.com', password='password')
-
-    def test_1001_get_risk_profile(self):
-        """
-        Ensure RiskProfile get is working and authenticated user is not required
-        """
-        view = RiskProfile.as_view()
-        request = self.factory.get(reverse('api_urls:core_urls:risk-profile'))
-        # force_authenticate(request, user=self.user)
-        response = view(request)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['status_code'], 200)
-
-    def test_1002_get_assess_questions(self):
-        """
-        Ensure Assess Get api is working and authenticated user is not required
-        """
-        view = AssessQuestion.as_view()
-        request = self.factory.get(reverse('api_urls:core_urls:assess-questions-list'))
-        # force_authenticate(request, user=self.user)
-        response = view(request)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['status_code'], 200)
-
-    def test_1003_get_questions_unauthenticated(self):
-        """
-        Ensure only authenticated user can access question-list apis
-        """
-        view = Question.as_view()
-        type = "plan"
-        request = self.factory.get(reverse('api_urls:core_urls:questions-list', kwargs={"type": type}))
-        # force_authenticate(request, user=self.user)
-        response = view(request, type)
-        self.assertEqual(response.status_code, 401)
-
-    def test_1004_get_questions(self):
-        """
-        Ensure get questions are working only for authenticated user
-        """
-        view = Question.as_view()
-        for type in ["plan", "tax", "retirement", "property", "education", "event", "wedding"]:
-            request = self.factory.get(reverse('api_urls:core_urls:questions-list', kwargs={"type": type}))
-            force_authenticate(request, user=self.user)
-            response = view(request, type)
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.data['status_code'], 200)
-
 
 class PostTest(APISimpleTestCase):
 
@@ -99,19 +46,18 @@ class PostTest(APISimpleTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['status_code'], 200)
 
-    def test_1002_check_answer(self):
-        """
-        Ensure get questions are working only for authenticated user
-        """
-        view = Question.as_view()
-        type = "plan"
-        request = self.factory.get(reverse('api_urls:core_urls:questions-list', kwargs={"type": type}))
-        force_authenticate(request, user=self.user)
-        response = view(request, type)
+  
+
+
+class DashboardVersionTwoTest(APISimpleTestCase):
+    allow_database_queries = True
+    def test_dashboard(self):
+        factory = APIRequestFactory()
+        view = DashboardVersionTwo.as_view()
+        data={}
+        user = User.objects.get(email='jp@gmail.com')
+        request = factory.get(settings.BASE_URL+reverse('api_urls:core_urls:dashboard-v2'),data=data)
+        force_authenticate(request, user=user)
+        response = view(request)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['response'][0]['user_answer'], [{'metadata': None, 'answer': '2'}])
-        self.assertEqual(response.data['response'][1]['user_answer'], [{'metadata': None, 'answer': 'nice work'}])
-        self.assertEqual(response.data['response'][2]['user_answer'], [{'metadata': {'order': '1'}, 'answer': 'wedding 11'}])
-
-
 
