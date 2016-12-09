@@ -30,8 +30,9 @@ from external_api import helpers as external_helpers
 
 from django.db.models import Count
 from external_api import utils as external_utils
-from core import goals_helper, funds_helper, riskprofile_helper
+from core import goals_helper, funds_helper, riskprofile_helper,goalestimate_helper
 from external_api.bse import bulk_upload 
+
 
 
 
@@ -576,8 +577,8 @@ class EducationAnswer(APIView):
             return api_utils.response({"message": "success"}, status.HTTP_200_OK)
         return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
                                   generate_error_message(serializer.errors))
-
-
+        
+    
 class PropertyAnswer(APIView):
     """
     Save retirement data
@@ -2322,7 +2323,118 @@ class TransactionComplete(View):
             return HttpResponse(external_constants.FORBIDDEN_ERROR, status=403)     
             
              
+class EducationGoalEstimate(APIView):
+    """
+    Return Education Estimation
+    """
+    permission_classes = [permissions.IsAuthenticated]
 
+    def post(self, request):
+        
+        #data = {"term":11,"location":"op1","field":"op4","amount_saved":500000}
+        #user = profile_models.User.objects.get(email='jp@gmail.com')
+        serializer = serializers.EducationGoalEstimateSerializer(data=request.data)
+        if serializer.is_valid():
+            
+            goal_object = goals_helper.EducationGoal()
+            
+            estimation= goal_object.calculate_goal_estimation(serializer.data,request.user)
+            
+            return api_utils.response({"message": "success","goal_estimation":estimation},status.HTTP_200_OK)
+            
+        return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
+                                  generate_error_message(serializer.errors))
   
         
+class RetirementGoalEstimate(APIView):
+    """
+    Return Education Estimation
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        
+        #data = {"term":24,"monthly_income":100000,"monthly_expense":50000,"amount_saved":500000,"current_age":36,"retirement_age":60}
+        #user = profile_models.User.objects.get(email='jp@gmail.com')
+        serializer = serializers.RetirementGoalEstimateSerializer(data=request.data)
+        if serializer.is_valid():
+            
+            goal_object = goals_helper.RetirementGoal()
+            
+            estimation= goal_object.calculate_goal_estimation(serializer.data,request.user)
+            return api_utils.response({"message": "success","goal_estimation":estimation},status.HTTP_200_OK)
+            
+        return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
+                                  generate_error_message(serializer.errors))
+    
+
+class PropertyGoalEstimate(APIView):
+    """
+    Return Education Estimation
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        
+        #data = {"term":6,"current_price":20000000,"prop_of_purchase_cost":30,"amount_saved":2500000}
+        #user = profile_models.User.objects.get(email='jp@gmail.com')
+        serializer = serializers.PropertyGoalEstimateSerializer(data=request.data)
+        if serializer.is_valid():
+            
+            goal_object = goals_helper.PropertyGoal()
+            
+            estimation= goal_object.calculate_goal_estimation(serializer.data,request.user)
+            return api_utils.response({"message": "success","goal_estimation":estimation},status.HTTP_200_OK)
+            
+        return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
+                                  generate_error_message(serializer.errors))
+    
+
+class AutomobileGoalEstimate(APIView):
+    """
+    Return Education Estimation
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        
+        #data = {"term":4,"current_price":800000,"prop_of_purchase_cost":30,"amount_saved":100000}
+        #user = profile_models.User.objects.get(email='jp@gmail.com')
+        serializer = serializers.PropertyGoalEstimateSerializer(data=request.data)
+        if serializer.is_valid():
+            
+            goal_object = goals_helper.AutomobileGoal()
+            
+            estimation= goal_object.calculate_goal_estimation(serializer.data,request.user)
+            print(estimation)
+            return api_utils.response({"message": "success","goal_estimation":estimation},status.HTTP_200_OK)
+            
+        return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
+                                  generate_error_message(serializer.errors))
+    
+    
+    
+class VacationGoalEstimate(APIView):
+    """
+    Return Education Estimation
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        
+        #data = {"term":3,"number_of_members":4,"number_of_days":6,"location":"op2","amount_saved":50000}
+        #user = profile_models.User.objects.get(email='jp@gmail.com')
+        serializer = serializers.VacationGoalEstimateSerializer(data=request.data)
+        if serializer.is_valid():
+            
+            goal_object = goals_helper.VacationGoal()
+            
+            estimation= goal_object.calculate_goal_estimation(serializer.data,request.user)
+            print(estimation)
+            return api_utils.response({"message": "success","goal_estimation":estimation},status.HTTP_200_OK)
+            
+        return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
+                                  generate_error_message(serializer.errors))
+    
+      
     

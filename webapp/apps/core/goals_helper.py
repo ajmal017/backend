@@ -5,6 +5,9 @@ import logging
 from core import models
 from core import utils, helpers
 from core import serializers, constants
+import math
+from django.db.models import Avg, Max, Sum, Q
+
 
 
 
@@ -291,6 +294,12 @@ class GoalBase(ABC):
                         constants.LIQUID: asset_values[constants.LIQUID],
                         constants.INVESTED_VALUE: invested_amount, constants.CURRENT_VALUE: investment_value}
         return return_value
+    
+    def calculate_goal_estimation(self,data,user):
+        return self.calculate_balance_corpus_required(data,user)
+    
+    def calculate_balance_corpus_required(self,data,user):
+        return None 
         
 class GenericGoal(GoalBase):
     def __init__(self, goal_object=None):
@@ -308,6 +317,34 @@ class GenericGoal(GoalBase):
             option_id = value
         return value, option_id
     
+    def calculate_goal_estimation(self,data,user):
+        return super(GenericGoal, self).calculate_goal_estimation(data,user)
+    
+    def calculate_balance_corpus_required(self,data,user):
+        """
+        calculate the amount required for current and future
+        """ 
+        estimation_data = []
+        for estimate in constants.ESTIMATION_TYPE:
+            balance_corpus_required = 0
+            
+            future_value_for_goal = self.calculate_future_value(data['current_price'],constants.INFLATION_PERCENTAGE["op1"]/100,data['term'])
+            amount_self_funded = round(future_value_for_goal * data['prop_of_purchase_cost']/100)
+            amount_budgeted_for_goal = round(future_value_for_goal*constants.GENERIC_ESTIMATE_PERCENTAGE[estimate]/100)
+            total_amount_required = round(amount_self_funded +amount_budgeted_for_goal)
+            
+            alrady_saved_corpus = self.calculate_future_value(data['amount_saved'],constants.RETURN_ON_EXIST_INVEST_PERCENTAGE/100,data['term'])
+            
+            if alrady_saved_corpus < total_amount_required:
+                balance_corpus_required = total_amount_required - alrady_saved_corpus
+            
+            estimation_data.append({estimate:balance_corpus_required})
+            
+        return estimation_data
+        
+    def calculate_future_value(self,current_value,inflation,term):
+        return round(current_value * math.pow((1+inflation),term))
+        
     
 class EducationGoal(GenericGoal):
     def __init__(self, goal_object=None):
@@ -325,6 +362,35 @@ class EducationGoal(GenericGoal):
             option_id = value
         return value, option_id
     
+    def calculate_goal_estimation(self,data,user):
+        return super(EducationGoal, self).calculate_goal_estimation(data,user)
+    
+    def calculate_balance_corpus_required(self,data,user):
+        """
+        calculate the amount required for current and future
+        """ 
+        estimation_data = []
+        for estimate in constants.ESTIMATION_TYPE:
+            
+            amount_required_current_value =  round((constants.EDUCATION_ESTIMATE_PERCENTAGE[estimate] * \
+                                             constants.EDUCATION_COST_ESTIMATE[data['field']][data['location']] )/100)   
+     
+            
+            amount_required_future_value = round(amount_required_current_value * \
+                                           math.pow((1+ (constants.INFLATION_PERCENTAGE[data['location']])/100),data['term']))
+            
+            already_saved_corpus = round(data['amount_saved']* math.pow((1+(constants.RETURN_ON_EXIST_INVEST_PERCENTAGE/100)),data['term']))
+            
+            if already_saved_corpus > amount_required_future_value:
+                balance_corpus_required = 0
+            else:
+                balance_corpus_required = amount_required_future_value - already_saved_corpus
+            
+            estimation_data.append({estimate:balance_corpus_required})
+            
+        return estimation_data
+    
+    
 class PropertyGoal(GenericGoal):
     def __init__(self, goal_object=None):
         super(PropertyGoal, self).__init__(goal_object)
@@ -335,7 +401,10 @@ class PropertyGoal(GenericGoal):
     def get_default_goalname(self, goal_type):
         return "PRO"
     
-
+    def calculate_goal_estimation(self,data,user):
+        return super(PropertyGoal, self).calculate_goal_estimation(data,user) 
+     
+     
 class AutomobileGoal(GenericGoal):
     def __init__(self, goal_object=None):
         super(AutomobileGoal, self).__init__(goal_object)
@@ -345,6 +414,9 @@ class AutomobileGoal(GenericGoal):
     
     def get_default_goalname(self, goal_type):
         return "AUT"
+    
+    def calculate_goal_estimation(self,data,user):
+        return super(AutomobileGoal, self).calculate_goal_estimation(data,user)
 
 
 class VacationGoal(GenericGoal):
@@ -356,6 +428,37 @@ class VacationGoal(GenericGoal):
     
     def get_default_goalname(self, goal_type):
         return "VAC"
+    
+    def calculate_goal_estimation(self,data,user):
+        return super(VacationGoal, self).calculate_goal_estimation(data,user)
+    
+    def calculate_balance_corpus_required(self,data,user):
+        """
+        calculate the amount required for current and future
+        """ 
+        estimation_data = []
+        for estimate in constants.ESTIMATION_TYPE:
+            balance_corpus_required = 0
+            
+            number_of_rooms_required = math.trunc((data['number_of_members']/3) + 0.5)
+            travel_cost = data['number_of_members'] * constants.VACATION_TRAVEL_COST[data['location']][estimate]
+            hotel_cost = number_of_rooms_required * data['number_of_days'] * constants.VACATION_HOTEL_COST[data['location']][estimate]
+            total_cost = travel_cost + hotel_cost
+            other_cost = total_cost/2
+            total_cost += other_cost
+            
+            required_corpus = self.calculate_future_value(total_cost,constants.INFLATION_PERCENTAGE[data['location']]/100,data['term'])
+            already_saved_corpus = self.calculate_future_value(data['amount_saved'],constants.RETURN_ON_EXIST_INVEST_PERCENTAGE/100,data['term'])
+            
+            if already_saved_corpus < required_corpus:
+                balance_corpus_required = required_corpus - already_saved_corpus
+            
+            estimation_data.append({estimate:balance_corpus_required})
+            
+        return estimation_data
+        
+    def calculate_future_value(self,current_value,inflation,term):
+        return round(current_value * math.pow((1+inflation),term))
 
 class WeddingGoal(GenericGoal):
     def __init__(self, goal_object=None):
@@ -491,6 +594,45 @@ class RetirementGoal(GoalBase):
 
     def get_default_goalname(self, goal_type):
         return "RET"
+    
+    def calculate_goal_estimation(self,data,user):
+        return super(RetirementGoal, self).calculate_goal_estimation(data,user)
+    
+    def calculate_balance_corpus_required(self,data,user):
+        """
+        calculate the amount required for current and future
+        """ 
+        estimation_data = []
+        for estimate in constants.ESTIMATION_TYPE:
+            balance_corpus_required = 0
+            annual_income = data['monthly_income']*12
+            
+            total_income_at_retirement = round(annual_income * (math.pow((1+constants.INFLATION_PERCENTAGE["op1"]/100),data['term'])))
+            total_expense_at_retirement = round(total_income_at_retirement * constants.RETIREMENT_ESTIMATE_PERCENTAGE[estimate]/100)
+            
+            assess_answer = utils.get_assess_answer(user)
+            gender = assess_answer["A7"]
+            
+            if data['retirement_age'] < 61:
+                life_expectency = 80 if gender == 'op1' else (85)
+            else:
+                life_expectency = int(data['retirement_age']) + 20
+                
+            life_expectency_post_retirement = max(life_expectency-data['retirement_age'],20)
+            inflation_adjust_returns = round((1+constants.RETURN_ON_EXIST_INVEST_PERCENTAGE/100)/(1+constants.INFLATION_PERCENTAGE["op1"]/100)-1 , 4)
+            corpus_required_for_retirement = round(total_expense_at_retirement * ((1- math.pow((1+inflation_adjust_returns),(-life_expectency_post_retirement)))/inflation_adjust_returns))
+            
+            investments_already_made = data.get("amount_saved",0)
+            
+            already_saved_corpus = round(investments_already_made * math.pow(1+constants.RETURN_ON_EXIST_INVEST_PERCENTAGE/100,data['term']))
+            
+            if already_saved_corpus < corpus_required_for_retirement:
+                balance_corpus_required = corpus_required_for_retirement - already_saved_corpus
+            
+            estimation_data.append({estimate:balance_corpus_required})
+            
+        return estimation_data
+    
     
     
 class LiquidGoal(GoalBase):

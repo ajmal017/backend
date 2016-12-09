@@ -401,3 +401,81 @@ RISK_PROFILE_D = "D"
 RISK_PROFILE_E = "E"
 RISK_PROFILE_ONLY_DEBT = "OnlyDebt"
 RISK_PROFILE_ONLY_EQUITY = "OnlyEquity"
+
+
+FOUR_YEAR_ENGINEERING_GRAD = "op1"
+TWO_YEAR_ENGINEERING_MASTER = "op2"
+FOUR_YEAR_MEDICINE = "op3"
+TWO_YEAR_MBA = "op4"
+ONE_YEAR_MBA = "op5"
+COMMERCE_GRAD = "op6"
+ARTS_GRAD = "op7"
+OTHER_TWO_YEAR_COURSE = "op8"
+OTHER_FOUR_YEAR_COURSE = "op9"
+
+INDIA = "op1"
+ABROAD = "op2"
+
+EDUCATION_COST_ESTIMATE = {
+                           FOUR_YEAR_ENGINEERING_GRAD:{INDIA: 1000000,ABROAD:10000000},
+                           TWO_YEAR_ENGINEERING_MASTER:{INDIA: 600000,ABROAD:5000000},
+                           FOUR_YEAR_MEDICINE:{INDIA: 1500000,ABROAD:12000000},
+                           TWO_YEAR_MBA:{INDIA: 2500000,ABROAD:15000000},
+                           ONE_YEAR_MBA:{INDIA: 3000000,ABROAD:9000000},
+                           COMMERCE_GRAD:{INDIA: 300000,ABROAD:10000000},
+                           ARTS_GRAD:{INDIA: 300000,ABROAD:10000000},
+                           OTHER_TWO_YEAR_COURSE:{INDIA: 200000,ABROAD:5000000},
+                           OTHER_FOUR_YEAR_COURSE:{INDIA: 400000,ABROAD:10000000}
+                           }
+
+BUDGET = "budget"
+COMFORTABLE = "comfortable"
+LUXURY = "luxury"
+
+EDUCATION_ESTIMATE_PERCENTAGE = {
+                BUDGET:80,
+                COMFORTABLE:100,
+                LUXURY :120                        
+                }
+
+RETIREMENT_ESTIMATE_PERCENTAGE = {
+                BUDGET:40,
+                COMFORTABLE:50,
+                LUXURY :60                        
+                }
+
+GENERIC_ESTIMATE_PERCENTAGE = {
+                BUDGET:5,
+                COMFORTABLE:10,
+                LUXURY :15                        
+                }
+
+ESTIMATION_TYPE = [BUDGET,COMFORTABLE,LUXURY]
+
+INFLATION_PERCENTAGE = {
+             INDIA : 6,
+             ABROAD : 2
+             }
+
+RETURN_ON_EXIST_INVEST_PERCENTAGE = 8
+EDUCATION_SIP_AMOUNT = 7600
+
+VACATION_TRAVEL_COST = {
+                        INDIA:{BUDGET:3000,COMFORTABLE:8000,LUXURY:12000},
+                        ABROAD:{BUDGET:30000,COMFORTABLE:50000,LUXURY:75000}
+                        }
+VACATION_HOTEL_COST = {
+                       INDIA:{BUDGET:3000,COMFORTABLE:5000,LUXURY:8000},
+                       ABROAD:{BUDGET:4000,COMFORTABLE:7000,LUXURY:10000}
+                       }
+
+
+EDUCATION_ALLOCATION = {
+                        "sip_range_1":[{"debt":100,"equity":0},{"debt":100,"equity":0},{"debt":0,"equity":100},{"debt":0,"equity":100},{"debt":0,"equity":100},{"debt":0,"equity":100},{"debt":0,"equity":100}],
+                        "sip_range_2":[{"debt":100,"equity":0},{"debt":100,"equity":0},{"debt":100,"equity":0},{"debt":0,"equity":100},{"debt":0,"equity":100},{"debt":0,"equity":100},{"debt":0,"equity":100}],
+                        "sip_range_3":[{"debt":100,"equity":0},{"debt":100,"equity":0},{"debt":100,"equity":0},{"debt":50,"equity":50},{"debt":0,"equity":100},{"debt":0,"equity":100},{"debt":0,"equity":100}],
+                        "sip_range_4":[{"debt":100,"equity":0},{"debt":100,"equity":0},{"debt":65,"equity":35},{"debt":50,"equity":50},{"debt":35,"equity":65},{"debt":0,"equity":100},{"debt":0,"equity":100}],
+                        "sip_range_5":[{"debt":100,"equity":0},{"debt":80,"equity":20},{"debt":65,"equity":35},{"debt":50,"equity":50},{"debt":35,"equity":65},{"debt":20,"equity":80},{"debt":0,"equity":100}]
+                        }
+
+
