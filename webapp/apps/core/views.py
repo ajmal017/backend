@@ -2351,7 +2351,7 @@ class RetirementGoalEstimate(APIView):
     Return Retirement Estimation
     data = {monthly_income":100000,"monthly_expense":50000,"amount_saved":500000,"current_age":36,"retirement_age":60}
     """
-    #permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         data = json.loads(request.GET['data'])

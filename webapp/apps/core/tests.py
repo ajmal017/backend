@@ -76,7 +76,7 @@ class RetirementGoalEstimate_Test(APISimpleTestCase):
     def test(self):
         factory = APIRequestFactory()
         view = views.RetirementGoalEstimate.as_view()
-        data = {"term":24,"monthly_income":100000,"monthly_expense":50000,"amount_saved":500000,"current_age":36,"retirement_age":60}
+        data = {"monthly_income":100000,"monthly_expense":50000,"amount_saved":500000,"current_age":36,"retirement_age":60}
         user = User.objects.get(email='jp@gmail.com')
         request = factory.get(settings.BASE_URL+reverse('api_urls_v3:core_urls:retirement-goal-estimate'),data=data)
         force_authenticate(request, user=user)
