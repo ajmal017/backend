@@ -446,7 +446,7 @@ class ComputeAssetAllocationCategory(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        tenure = request.query_params.get('tenure', 0)
+        tenure = int(request.query_params.get('tenure', 0))
         
         risk_profile_helper = riskprofile_helper.RiskProfileHelper(request.user)
         asset_allocation_category = risk_profile_helper.compute_risk_profile(tenure)
