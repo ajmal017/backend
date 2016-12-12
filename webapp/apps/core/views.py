@@ -30,7 +30,7 @@ from external_api import helpers as external_helpers
 
 from django.db.models import Count
 from external_api import utils as external_utils
-from core import goals_helper, funds_helper, riskprofile_helper,goalestimate_helper
+from core import goals_helper, funds_helper, riskprofile_helper
 from external_api.bse import bulk_upload 
 
 
