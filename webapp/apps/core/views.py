@@ -2450,4 +2450,46 @@ class WeddingGoalEstimate(APIView):
         return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
                                   generate_error_message(serializer.errors))
     
-        
+ 
+ 
+class JewelleryGoalEstimate(APIView):
+    """
+    Return Jewellery Estimation
+    data = {"term":5,"cuurent_price":1000000,"amount_saved":100000}
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        data = json.loads(request.GET['data'])
+        serializer = serializers.JewelleryGoalEstimateSerializer(data=data)
+        if serializer.is_valid():
+            
+            goal_object = goals_helper.JewelleryGoal()
+            
+            estimation= goal_object.calculate_goal_estimation(serializer.data,request.user)
+            return api_utils.response({"message": "success","goal_estimation":estimation},status.HTTP_200_OK)
+            
+        return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
+                                  generate_error_message(serializer.errors))
+    
+class TaxGoalEstimate(APIView):
+    """
+    Return Jewellery Estimation
+    data = {"pff":148000,"insurance":0,"loan":0,"elss":0}
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        data = json.loads(request.GET['data'])
+        serializer = serializers.TaxGoalEstimateSerializer(data=data)
+        if serializer.is_valid():
+            
+            goal_object = goals_helper.TaxGoal()
+            
+            estimation= goal_object.calculate_goal_estimation(serializer.data,request.user)
+            return api_utils.response({"message": "success","goal_estimation":estimation},status.HTTP_200_OK)
+            
+        return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
+                                  generate_error_message(serializer.errors))
+    
+                

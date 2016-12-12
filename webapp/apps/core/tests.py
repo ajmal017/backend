@@ -130,4 +130,29 @@ class WeddingGoalEstimate_Test(APISimpleTestCase):
         force_authenticate(request, user=user)
         response = view(request)
         self.assertEqual(response.status_code, 200)
+        
+class JewelleryGoalEstimate_Test(APISimpleTestCase):
+    allow_database_queries = True
+    def test(self):
+        factory = APIRequestFactory()
+        view = views.JewelleryGoalEstimate.as_view()
+        data = {"term":5,"current_price":1000000,"amount_saved":100000}
+        user = User.objects.get(email='jp@gmail.com')
+        request = factory.get(settings.BASE_URL+reverse('api_urls_v3:core_urls:jewellery-goal-estimate')+'?data='+json.dumps(data))
+        force_authenticate(request, user=user)
+        response = view(request)
+        self.assertEqual(response.status_code, 200)
+        
+class TaxGoalEstimate_Test(APISimpleTestCase):
+    allow_database_queries = True
+    def test(self):
+        factory = APIRequestFactory()
+        view = views.TaxGoalEstimate.as_view()
+        data = {"pff":148000,"insurance":0,"loan":0,"elss":0}
+        user = User.objects.get(email='jp@gmail.com')
+        request = factory.get(settings.BASE_URL+reverse('api_urls_v3:core_urls:tax-goal-estimate')+'?data='+json.dumps(data))
+        force_authenticate(request, user=user)
+        response = view(request)
+        self.assertEqual(response.status_code, 200)
+
 

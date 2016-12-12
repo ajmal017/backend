@@ -62,6 +62,8 @@ urlpatterns = [
     url(r'^goal/automobile/estimate/$', views.AutomobileGoalEstimate.as_view(), name='automobile-goal-estimate'),
     url(r'^goal/vacation/estimate/$', views.VacationGoalEstimate.as_view(), name='vacation-goal-estimate'),
     url(r'^goal/wedding/estimate/$', views.WeddingGoalEstimate.as_view(), name='wedding-goal-estimate'),
+    url(r'^goal/jewellery/estimate/$', views.JewelleryGoalEstimate.as_view(), name='jewellery-goal-estimate'),
+    url(r'^goal/tax/estimate/$', views.TaxGoalEstimate.as_view(), name='tax-goal-estimate'),
 
     
 

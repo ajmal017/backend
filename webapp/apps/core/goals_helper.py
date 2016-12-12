@@ -519,6 +519,32 @@ class JewelleryGoal(GenericGoal):
     
     def get_default_goalname(self, goal_type):
         return "JEW"
+    
+    def calculate_goal_estimation(self,data,user):
+        return super(JewelleryGoal, self).calculate_goal_estimation(data,user)
+    
+    def calculate_balance_corpus_required(self,data,user):
+        """
+        calculate the amount required for current and future
+        """ 
+        estimation_data = []
+        for estimate in constants.ESTIMATION_TYPE:
+            balance_corpus_required = 0
+            
+            future_jewellery_value = self.calculate_future_value(data['current_price'],constants.INFLATION_PERCENTAGE["op1"]/100,data['term'])
+            base_amount = round(future_jewellery_value * (constants.JEWELLERY_ESTIMATE_PERCENTAGE[estimate]/100))
+            delta_amount = round(base_amount * (constants.JEWELLERY_ESTIMATE_PERCENTAGE[estimate]/100 - 1))
+            amount_required = base_amount + delta_amount
+            
+            already_saved_corpus = self.calculate_future_value(data['amount_saved'], constants.RETURN_ON_EXIST_INVEST_PERCENTAGE/100, data['term'])
+            if already_saved_corpus < amount_required:
+                balance_corpus_required = amount_required - already_saved_corpus
+            estimation_data.append({"estimate_type":estimate,"corpus":balance_corpus_required}) 
+        return estimation_data
+        
+    def calculate_future_value(self,current_value,inflation,term):
+        return round(current_value * math.pow((1+inflation),term))
+    
 
 
 class TaxGoal(GoalBase):
@@ -573,7 +599,24 @@ class TaxGoal(GoalBase):
 
     def get_allocation(self, data):
         return constants.TAX_ALLOCATION
-
+    
+    def calculate_goal_estimation(self,data,user):
+        return super(TaxGoal, self).calculate_goal_estimation(data,user)
+    
+    def calculate_balance_corpus_required(self,data,user):
+        """
+        calculate the amount required for current and future
+        """ 
+        estimation_data = []
+        
+        total_investment = round(data['pff']+ data['loan']+data['insurance']+ data['elss'])
+        further_eligibility = max(150000 - total_investment,0)
+        potential_tax_benfit = round(further_eligibility * 30.9/100)
+        
+        estimation_data.append({"further_eligibility":further_eligibility,"potential_tax_benfit":potential_tax_benfit}) 
+        return estimation_data
+        
+    
 class QuickInvestGoal(GoalBase):
     def __init__(self, goal_object=None):
         super(QuickInvestGoal, self).__init__(goal_object)
@@ -674,8 +717,6 @@ class RetirementGoal(GoalBase):
             estimation_data.append({"estimate_type":estimate,"corpus":balance_corpus_required})
             
         return estimation_data
-    
-    
     
 class LiquidGoal(GoalBase):
     def __init__(self, goal_object=None):

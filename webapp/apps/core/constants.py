@@ -450,6 +450,12 @@ GENERIC_ESTIMATE_PERCENTAGE = {
                 LUXURY :15                        
                 }
 
+JEWELLERY_ESTIMATE_PERCENTAGE = {
+                BUDGET:80,
+                COMFORTABLE:100,
+                LUXURY :120                        
+                }
+
 ESTIMATION_TYPE = [BUDGET,COMFORTABLE,LUXURY]
 
 INFLATION_PERCENTAGE = {
