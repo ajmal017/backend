@@ -66,7 +66,7 @@ class EducationGoalEstimate_Test(APISimpleTestCase):
         view = views.EducationGoalEstimate.as_view()
         data = {"term":11,"location":"op1","field":"op4","amount_saved":500000}
         user = User.objects.get(email='jp@gmail.com')
-        request = factory.get(settings.BASE_URL+reverse('api_urls_v3:core_urls:education-goal-estimate'),data=data)
+        request = factory.get(settings.BASE_URL+reverse('api_urls_v3:core_urls:education-goal-estimate'),'?data='+json.dumps(data))
         force_authenticate(request, user=user)
         response = view(request)
         self.assertEqual(response.status_code, 200)
@@ -78,7 +78,7 @@ class RetirementGoalEstimate_Test(APISimpleTestCase):
         view = views.RetirementGoalEstimate.as_view()
         data = {"monthly_income":100000,"monthly_expense":50000,"amount_saved":500000,"current_age":36,"retirement_age":60}
         user = User.objects.get(email='jp@gmail.com')
-        request = factory.get(settings.BASE_URL+reverse('api_urls_v3:core_urls:retirement-goal-estimate'),data=data)
+        request = factory.get(settings.BASE_URL+reverse('api_urls_v3:core_urls:retirement-goal-estimate')+'?data='+json.dumps(data))
         force_authenticate(request, user=user)
         response = view(request)
         self.assertEqual(response.status_code, 200)
@@ -90,7 +90,7 @@ class PropertyGoalEstimate_Test(APISimpleTestCase):
         view = views.PropertyGoalEstimate.as_view()
         data = {"term":6,"current_price":20000000,"prop_of_purchase_cost":30,"amount_saved":2500000}
         user = User.objects.get(email='jp@gmail.com')
-        request = factory.get(settings.BASE_URL+reverse('api_urls_v3:core_urls:property-goal-estimate'),data=data)
+        request = factory.get(settings.BASE_URL+reverse('api_urls_v3:core_urls:property-goal-estimate')+'?data='+json.dumps(data))
         force_authenticate(request, user=user)
         response = view(request)
         self.assertEqual(response.status_code, 200)
@@ -102,7 +102,7 @@ class AutomobileGoalEstimate_Test(APISimpleTestCase):
         view = views.AutomobileGoalEstimate.as_view()
         data = {"term":6,"current_price":20000000,"prop_of_purchase_cost":30,"amount_saved":2500000}
         user = User.objects.get(email='jp@gmail.com')
-        request = factory.get(settings.BASE_URL+reverse('api_urls_v3:core_urls:automobile-goal-estimate'),data=data)
+        request = factory.get(settings.BASE_URL+reverse('api_urls_v3:core_urls:automobile-goal-estimate')+'?data='+json.dumps(data))
         force_authenticate(request, user=user)
         response = view(request)
         self.assertEqual(response.status_code, 200)
@@ -114,7 +114,7 @@ class VacationGoalEstimate_Test(APISimpleTestCase):
         view = views.VacationGoalEstimate.as_view()
         data = {"term":3,"number_of_members":4,"number_of_days":6,"location":"op2","amount_saved":50000}
         user = User.objects.get(email='jp@gmail.com')
-        request = factory.get(settings.BASE_URL+reverse('api_urls_v3:core_urls:vacation-goal-estimate'),data=data)
+        request = factory.get(settings.BASE_URL+reverse('api_urls_v3:core_urls:vacation-goal-estimate')+'?data='+json.dumps(data))
         force_authenticate(request, user=user)
         response = view(request)
         self.assertEqual(response.status_code, 200)
@@ -126,7 +126,7 @@ class WeddingGoalEstimate_Test(APISimpleTestCase):
         view = views.WeddingGoalEstimate.as_view()
         data = {"term":7,"expected_people":200,"sharing_percenatge":100,"location":"op2","amount_saved":300000}
         user = User.objects.get(email='jp@gmail.com')
-        request = factory.get(settings.BASE_URL+reverse('api_urls_v3:core_urls:wedding-goal-estimate'),data=data)
+        request = factory.get(settings.BASE_URL+reverse('api_urls_v3:core_urls:wedding-goal-estimate')+'?data='+json.dumps(data))
         force_authenticate(request, user=user)
         response = view(request)
         self.assertEqual(response.status_code, 200)
