@@ -2414,7 +2414,7 @@ class VacationGoalEstimate(APIView):
     Return Vacation Estimation
     data = {"term":3,"number_of_members":4,"number_of_days":6,"location":"op2","amount_saved":50000}
     """
-    #permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         data = json.loads(request.GET['data'])
