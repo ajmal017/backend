@@ -56,6 +56,12 @@ urlpatterns = [
     url(r'^liquid/new/response/add/$', views.LiquidAnswer.as_view(), name='liquid-new-answers-add'),
     url(r'^sip/cancellation/add/$', views.SipCancellation.as_view(), name='sip-cancellation'), 
     url(r'^assetallocation/category/compute/$', views.ComputeAssetAllocationCategory.as_view(), name='sip-cancellation'),
+    url(r'^education/goal/estimate/$', views.EducationGoalEstimate.as_view(), name='education-goal-estimate'),
+    url(r'^retirement/goal/estimate/$', views.RetirementGoalEstimate.as_view(), name='retirement-goal-estimate'),
+    url(r'^property/goal/estimate/$', views.PropertyGoalEstimate.as_view(), name='property-goal-estimate'),
+    url(r'^automobile/goal/estimate/$', views.AutomobileGoalEstimate.as_view(), name='automobile-goal-estimate'),
+    url(r'^vacation/goal/estimate/$', views.VacationGoalEstimate.as_view(), name='vacation-goal-estimate'),
+    
 
     # ===================  DEPRECATED APIS =========================================================================
 

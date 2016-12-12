@@ -253,7 +253,7 @@ class PropertyGoalSerializer(serializers.Serializer):
     sip = serializers.IntegerField(required=True)
     lumpsum = serializers.IntegerField(required=True)
     allocation = serializers.DictField(required=True)
-    current_price_of_property = serializers.IntegerField(required=False)
+    current_price = serializers.IntegerField(required=False)
     prop_of_purchase_cost = serializers.IntegerField(required=False)
     amount_saved = serializers.IntegerField(required=False)
     estimate_selection_type = serializers.CharField(required=False)
@@ -267,7 +267,7 @@ class AutomobileGoalSerializer(serializers.Serializer):
     sip = serializers.IntegerField(required=True)
     lumpsum = serializers.IntegerField(required=True)
     allocation = serializers.DictField(required=True)
-    on_road_cost = serializers.IntegerField(required=False)
+    current_price = serializers.IntegerField(required=False)
     prop_of_purchase_cost = serializers.IntegerField(required=False)
     amount_saved = serializers.IntegerField(required=False)
     estimate_selection_type = serializers.CharField(required=False)
@@ -314,6 +314,48 @@ class JewelleryGoalSerializer(serializers.Serializer):
     current_price = serializers.IntegerField(required=False)
     amount_saved = serializers.IntegerField(required=False)
     estimate_selection_type = serializers.CharField(required=False)
+    
+class EducationGoalEstimateSerializer(serializers.Serializer):
+    """
+    serilazers for education goal estimate
+    """
+    term = serializers.IntegerField(required=True)
+    location = serializers.CharField(required=True)
+    field = serializers.CharField(required=True)
+    amount_saved = serializers.IntegerField(required=True)
+    
+class RetirementGoalEstimateSerializer(serializers.Serializer):
+    """
+    serilazers for education goal estimate
+    """
+    term = serializers.IntegerField(required=False)
+    current_age = serializers.IntegerField(required=True)
+    retirement_age = serializers.IntegerField(required=True)
+    monthly_income = serializers.IntegerField(required=True)
+    monthly_expense = serializers.IntegerField(required=False)
+    amount_saved = serializers.IntegerField(required=True)
+    
+    
+class PropertyGoalEstimateSerializer(serializers.Serializer):
+    """
+    serilazers for education goal estimate
+    """
+    term = serializers.IntegerField(required=True)
+    current_price = serializers.IntegerField(required=True)
+    prop_of_purchase_cost = serializers.IntegerField(required=True)
+    amount_saved = serializers.IntegerField(required=True)
+    
+class VacationGoalEstimateSerializer(serializers.Serializer):
+    """
+    serilazers for education goal estimate
+    """
+    term = serializers.IntegerField(required=True)
+    number_of_members = serializers.IntegerField(required=True)
+    number_of_days = serializers.IntegerField(required=True)
+    amount_saved = serializers.IntegerField(required=True)
+    location = serializers.CharField(required=True)
+    
+    
     
 class FundSerializerForFundDividedIntoCategory(serializers.ModelSerializer):
     """
