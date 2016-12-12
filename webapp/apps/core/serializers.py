@@ -328,7 +328,6 @@ class RetirementGoalEstimateSerializer(serializers.Serializer):
     """
     serilazers for education goal estimate
     """
-    term = serializers.IntegerField(required=False)
     current_age = serializers.IntegerField(required=True)
     retirement_age = serializers.IntegerField(required=True)
     monthly_income = serializers.IntegerField(required=True)
@@ -336,7 +335,7 @@ class RetirementGoalEstimateSerializer(serializers.Serializer):
     amount_saved = serializers.IntegerField(required=True)
     
     
-class PropertyGoalEstimateSerializer(serializers.Serializer):
+class GenericGoalEstimateSerializer(serializers.Serializer):
     """
     serilazers for education goal estimate
     """
@@ -352,6 +351,17 @@ class VacationGoalEstimateSerializer(serializers.Serializer):
     term = serializers.IntegerField(required=True)
     number_of_members = serializers.IntegerField(required=True)
     number_of_days = serializers.IntegerField(required=True)
+    amount_saved = serializers.IntegerField(required=True)
+    location = serializers.CharField(required=True)
+    
+
+class WeddingGoalEstimateSerializer(serializers.Serializer):
+    """
+    serilazers for education goal estimate
+    """
+    term = serializers.IntegerField(required=True)
+    expected_people = serializers.IntegerField(required=True)
+    sharing_percenatge = serializers.IntegerField(required=True)
     amount_saved = serializers.IntegerField(required=True)
     location = serializers.CharField(required=True)
     
