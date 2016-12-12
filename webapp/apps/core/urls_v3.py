@@ -62,6 +62,7 @@ urlpatterns = [
     url(r'^goal/automobile/estimate/$', views.AutomobileGoalEstimate.as_view(), name='automobile-goal-estimate'),
     url(r'^goal/vacation/estimate/$', views.VacationGoalEstimate.as_view(), name='vacation-goal-estimate'),
     url(r'^goal/wedding/estimate/$', views.WeddingGoalEstimate.as_view(), name='wedding-goal-estimate'),
+
     
 
     # ===================  DEPRECATED APIS =========================================================================

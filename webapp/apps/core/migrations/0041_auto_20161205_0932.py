@@ -21,10 +21,5 @@ class Migration(migrations.Migration):
             model_name='portfolioitem',
             name='xsip_reg_no',
             field=models.CharField(blank=True, max_length=100, null=True),
-        ),
-        migrations.AlterField(
-            model_name='fund',
-            name='image_url',
-            field=models.ImageField(blank=True, max_length=700, null=True, upload_to='fund/image/'),
-        ),
+        )
     ]
