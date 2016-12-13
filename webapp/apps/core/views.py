@@ -2433,7 +2433,7 @@ class VacationGoalEstimate(APIView):
 class WeddingGoalEstimate(APIView):
     """
     Return Wedding Estimation
-    data = {"term":7,"expected_people":200,"sharing_percenatge":100,"location":"op2","amount_saved":300000}
+    data = {"term":7,"expected_people":200,"sharing_percentage":100,"location":"op2","amount_saved":300000}
     """
     permission_classes = [permissions.IsAuthenticated]
 
