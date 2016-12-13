@@ -232,7 +232,7 @@ class GenericGoalSerializer(serializers.Serializer):
     
 class EducationGoalSerializer(serializers.Serializer):
     """
-    Serializer for generic goal post api
+    Serializer for education goal post api
     """
     corpus = serializers.IntegerField(required=True)
     term = serializers.IntegerField(required=True)
@@ -246,7 +246,7 @@ class EducationGoalSerializer(serializers.Serializer):
     
 class PropertyGoalSerializer(serializers.Serializer):
     """
-    Serializer for generic goal post api
+    Serializer for property goal post api
     """
     corpus = serializers.IntegerField(required=True)
     term = serializers.IntegerField(required=True)
@@ -260,7 +260,7 @@ class PropertyGoalSerializer(serializers.Serializer):
     
 class AutomobileGoalSerializer(serializers.Serializer):
     """
-    Serializer for generic goal post api
+    Serializer for automobile goal post api
     """
     corpus = serializers.IntegerField(required=True)
     term = serializers.IntegerField(required=True)
@@ -274,7 +274,7 @@ class AutomobileGoalSerializer(serializers.Serializer):
     
 class VacationGoalSerializer(serializers.Serializer):
     """
-    Serializer for generic goal post api
+    Serializer for vacation goal post api
     """
     corpus = serializers.IntegerField(required=True)
     term = serializers.IntegerField(required=True)
@@ -289,7 +289,7 @@ class VacationGoalSerializer(serializers.Serializer):
     
 class WeddingGoalSerializer(serializers.Serializer):
     """
-    Serializer for generic goal post api
+    Serializer for wedding goal post api
     """
     corpus = serializers.IntegerField(required=True)
     term = serializers.IntegerField(required=True)
@@ -304,7 +304,7 @@ class WeddingGoalSerializer(serializers.Serializer):
     
 class JewelleryGoalSerializer(serializers.Serializer):
     """
-    Serializer for generic goal post api
+    Serializer for jewellery goal post api
     """
     corpus = serializers.IntegerField(required=True)
     term = serializers.IntegerField(required=True)
@@ -326,9 +326,8 @@ class EducationGoalEstimateSerializer(serializers.Serializer):
     
 class RetirementGoalEstimateSerializer(serializers.Serializer):
     """
-    serilazers for education goal estimate
+    serilazers for retirement goal estimate
     """
-    term = serializers.IntegerField(required=False)
     current_age = serializers.IntegerField(required=True)
     retirement_age = serializers.IntegerField(required=True)
     monthly_income = serializers.IntegerField(required=True)
@@ -336,9 +335,9 @@ class RetirementGoalEstimateSerializer(serializers.Serializer):
     amount_saved = serializers.IntegerField(required=True)
     
     
-class PropertyGoalEstimateSerializer(serializers.Serializer):
+class GenericGoalEstimateSerializer(serializers.Serializer):
     """
-    serilazers for education goal estimate
+    serilazers for generic goal estimate
     """
     term = serializers.IntegerField(required=True)
     current_price = serializers.IntegerField(required=True)
@@ -347,7 +346,7 @@ class PropertyGoalEstimateSerializer(serializers.Serializer):
     
 class VacationGoalEstimateSerializer(serializers.Serializer):
     """
-    serilazers for education goal estimate
+    serilazers for vacation goal estimate
     """
     term = serializers.IntegerField(required=True)
     number_of_members = serializers.IntegerField(required=True)
@@ -355,7 +354,36 @@ class VacationGoalEstimateSerializer(serializers.Serializer):
     amount_saved = serializers.IntegerField(required=True)
     location = serializers.CharField(required=True)
     
+
+class WeddingGoalEstimateSerializer(serializers.Serializer):
+    """
+    serilazers for wedding goal estimate
+    """
+    term = serializers.IntegerField(required=True)
+    expected_people = serializers.IntegerField(required=True)
+    sharing_percenatge = serializers.IntegerField(required=True)
+    amount_saved = serializers.IntegerField(required=True)
+    location = serializers.CharField(required=True)
     
+    
+class JewelleryGoalEstimateSerializer(serializers.Serializer):
+    """
+    serilazers for Jewellery goal estimate
+    """
+    term = serializers.IntegerField(required=True)
+    current_price =serializers.IntegerField(required=True) 
+    amount_saved = serializers.IntegerField(required=True)
+    
+class TaxGoalEstimateSerializer(serializers.Serializer):
+    """
+    Serializer for tax post api
+    """
+    pff = serializers.IntegerField(required=True)
+    insurance = serializers.IntegerField(required=True)
+    loan = serializers.IntegerField(required=True)
+    elss = serializers.IntegerField(required=True)
+
+
     
 class FundSerializerForFundDividedIntoCategory(serializers.ModelSerializer):
     """

@@ -338,7 +338,7 @@ class GenericGoal(GoalBase):
             if alrady_saved_corpus < total_amount_required:
                 balance_corpus_required = total_amount_required - alrady_saved_corpus
             
-            estimation_data.append({estimate:balance_corpus_required})
+            estimation_data.append({"estimate_type":estimate,"corpus":balance_corpus_required})
             
         return estimation_data
         
@@ -386,7 +386,7 @@ class EducationGoal(GenericGoal):
             else:
                 balance_corpus_required = amount_required_future_value - already_saved_corpus
             
-            estimation_data.append({estimate:balance_corpus_required})
+            estimation_data.append({"estimate_type":estimate,"corpus":balance_corpus_required})
             
         return estimation_data
     
@@ -453,7 +453,7 @@ class VacationGoal(GenericGoal):
             if already_saved_corpus < required_corpus:
                 balance_corpus_required = required_corpus - already_saved_corpus
             
-            estimation_data.append({estimate:balance_corpus_required})
+            estimation_data.append({"estimate_type":estimate,"corpus":balance_corpus_required})
             
         return estimation_data
         
@@ -462,14 +462,54 @@ class VacationGoal(GenericGoal):
 
 class WeddingGoal(GenericGoal):
     def __init__(self, goal_object=None):
-        super(VacationGoal, self).__init__(goal_object)
+        super(WeddingGoal, self).__init__(goal_object)
         
     def create_or_update_goal(self, user, data, goal_type, goal_name=""):
-        return super(VacationGoal, self).create_or_update_goal(user, data, constants.WEDDING_TYPE, goal_name)
+        return super(WeddingGoal, self).create_or_update_goal(user, data, constants.WEDDING_TYPE, goal_name)
     
     def get_default_goalname(self, goal_type):
         return "WED"
     
+    def calculate_goal_estimation(self,data,user):
+        return super(WeddingGoal, self).calculate_goal_estimation(data,user)
+    
+    def calculate_balance_corpus_required(self,data,user):
+        """
+        calculate the amount required for current and future
+        """ 
+        estimation_data = []
+        for estimate in constants.ESTIMATION_TYPE:
+            balance_corpus_required = 0
+            travel_cost = 0
+            stay_cost = 0
+            
+            catering_cost = data['expected_people']*constants.WEDDING_EXPENSE['catering_cost'][estimate]
+            venue_cost = constants.WEDDING_EXPENSE['venue_cost'][estimate]
+            decor_cost = constants.WEDDING_EXPENSE['decor_cost'][estimate]
+            if data["location"] == constants.OUTSTATION:
+                travel_cost = constants.WEDDING_EXPENSE['travel_cost'][estimate]*constants.WEDDING_EXPENSE['no_of_family'][estimate]
+                stay_cost = constants.WEDDING_EXPENSE['stay_cost'][estimate]*constants.WEDDING_EXPENSE['no_of_family'][estimate]
+            clothing_cost = constants.WEDDING_EXPENSE['no_of_family'][estimate] * constants.WEDDING_EXPENSE['clothing_cost'][estimate]
+            bride_groom_cost = constants.WEDDING_EXPENSE['bride_groom_cost'][estimate]
+            
+            total_cost = round(catering_cost + venue_cost + decor_cost + travel_cost + stay_cost + clothing_cost + bride_groom_cost)
+            gifting_cost = round(total_cost/3)
+            total_cost += gifting_cost
+            
+            total_amount_required = self.calculate_future_value(total_cost*(data['sharing_percenatge']/100),constants.INFLATION_PERCENTAGE["op1"]/100,data['term'])
+            already_saved_corpus = self.calculate_future_value(data['amount_saved'],constants.RETURN_ON_EXIST_INVEST_PERCENTAGE/100,data['term'])
+            if already_saved_corpus < total_amount_required:
+                balance_corpus_required = total_amount_required - already_saved_corpus
+            
+            estimation_data.append({"estimate_type":estimate,"corpus":balance_corpus_required})
+            
+        return estimation_data
+        
+    def calculate_future_value(self,current_value,inflation,term):
+        return round(current_value * math.pow((1+inflation),term))
+    
+
+
 class JewelleryGoal(GenericGoal):
     def __init__(self, goal_object=None):
         super(JewelleryGoal, self).__init__(goal_object)
@@ -479,6 +519,32 @@ class JewelleryGoal(GenericGoal):
     
     def get_default_goalname(self, goal_type):
         return "JEW"
+    
+    def calculate_goal_estimation(self,data,user):
+        return super(JewelleryGoal, self).calculate_goal_estimation(data,user)
+    
+    def calculate_balance_corpus_required(self,data,user):
+        """
+        calculate the amount required for current and future
+        """ 
+        estimation_data = []
+        for estimate in constants.ESTIMATION_TYPE:
+            balance_corpus_required = 0
+            
+            future_jewellery_value = self.calculate_future_value(data['current_price'],constants.INFLATION_PERCENTAGE["op1"]/100,data['term'])
+            base_amount = round(future_jewellery_value * (constants.JEWELLERY_ESTIMATE_PERCENTAGE[estimate]/100))
+            delta_amount = round(base_amount * (constants.JEWELLERY_ESTIMATE_PERCENTAGE[estimate]/100 - 1))
+            amount_required = base_amount + delta_amount
+            
+            already_saved_corpus = self.calculate_future_value(data['amount_saved'], constants.RETURN_ON_EXIST_INVEST_PERCENTAGE/100, data['term'])
+            if already_saved_corpus < amount_required:
+                balance_corpus_required = amount_required - already_saved_corpus
+            estimation_data.append({"estimate_type":estimate,"corpus":balance_corpus_required}) 
+        return estimation_data
+        
+    def calculate_future_value(self,current_value,inflation,term):
+        return round(current_value * math.pow((1+inflation),term))
+    
 
 
 class TaxGoal(GoalBase):
@@ -533,7 +599,24 @@ class TaxGoal(GoalBase):
 
     def get_allocation(self, data):
         return constants.TAX_ALLOCATION
-
+    
+    def calculate_goal_estimation(self,data,user):
+        return super(TaxGoal, self).calculate_goal_estimation(data,user)
+    
+    def calculate_balance_corpus_required(self,data,user):
+        """
+        calculate the amount required for current and future
+        """ 
+        estimation_data = []
+        
+        total_investment = round(data['pff']+ data['loan']+data['insurance']+ data['elss'])
+        further_eligibility = max(150000 - total_investment,0)
+        potential_tax_benfit = round(further_eligibility * 30.9/100)
+        
+        estimation_data.append({"further_eligibility":further_eligibility,"potential_tax_benfit":potential_tax_benfit}) 
+        return estimation_data
+        
+    
 class QuickInvestGoal(GoalBase):
     def __init__(self, goal_object=None):
         super(QuickInvestGoal, self).__init__(goal_object)
@@ -605,9 +688,11 @@ class RetirementGoal(GoalBase):
         estimation_data = []
         for estimate in constants.ESTIMATION_TYPE:
             balance_corpus_required = 0
+            term = data['retirement_age'] - data['current_age']
+            
             annual_income = data['monthly_income']*12
             
-            total_income_at_retirement = round(annual_income * (math.pow((1+constants.INFLATION_PERCENTAGE["op1"]/100),data['term'])))
+            total_income_at_retirement = round(annual_income * (math.pow((1+constants.INFLATION_PERCENTAGE["op1"]/100),term)))
             total_expense_at_retirement = round(total_income_at_retirement * constants.RETIREMENT_ESTIMATE_PERCENTAGE[estimate]/100)
             
             assess_answer = utils.get_assess_answer(user)
@@ -624,16 +709,14 @@ class RetirementGoal(GoalBase):
             
             investments_already_made = data.get("amount_saved",0)
             
-            already_saved_corpus = round(investments_already_made * math.pow(1+constants.RETURN_ON_EXIST_INVEST_PERCENTAGE/100,data['term']))
+            already_saved_corpus = round(investments_already_made * math.pow(1+constants.RETURN_ON_EXIST_INVEST_PERCENTAGE/100,term))
             
             if already_saved_corpus < corpus_required_for_retirement:
                 balance_corpus_required = corpus_required_for_retirement - already_saved_corpus
             
-            estimation_data.append({estimate:balance_corpus_required})
+            estimation_data.append({"estimate_type":estimate,"corpus":balance_corpus_required})
             
         return estimation_data
-    
-    
     
 class LiquidGoal(GoalBase):
     def __init__(self, goal_object=None):

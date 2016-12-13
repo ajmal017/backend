@@ -450,6 +450,12 @@ GENERIC_ESTIMATE_PERCENTAGE = {
                 LUXURY :15                        
                 }
 
+JEWELLERY_ESTIMATE_PERCENTAGE = {
+                BUDGET:80,
+                COMFORTABLE:100,
+                LUXURY :120                        
+                }
+
 ESTIMATION_TYPE = [BUDGET,COMFORTABLE,LUXURY]
 
 INFLATION_PERCENTAGE = {
@@ -470,12 +476,17 @@ VACATION_HOTEL_COST = {
                        }
 
 
-EDUCATION_ALLOCATION = {
-                        "sip_range_1":[{"debt":100,"equity":0},{"debt":100,"equity":0},{"debt":0,"equity":100},{"debt":0,"equity":100},{"debt":0,"equity":100},{"debt":0,"equity":100},{"debt":0,"equity":100}],
-                        "sip_range_2":[{"debt":100,"equity":0},{"debt":100,"equity":0},{"debt":100,"equity":0},{"debt":0,"equity":100},{"debt":0,"equity":100},{"debt":0,"equity":100},{"debt":0,"equity":100}],
-                        "sip_range_3":[{"debt":100,"equity":0},{"debt":100,"equity":0},{"debt":100,"equity":0},{"debt":50,"equity":50},{"debt":0,"equity":100},{"debt":0,"equity":100},{"debt":0,"equity":100}],
-                        "sip_range_4":[{"debt":100,"equity":0},{"debt":100,"equity":0},{"debt":65,"equity":35},{"debt":50,"equity":50},{"debt":35,"equity":65},{"debt":0,"equity":100},{"debt":0,"equity":100}],
-                        "sip_range_5":[{"debt":100,"equity":0},{"debt":80,"equity":20},{"debt":65,"equity":35},{"debt":50,"equity":50},{"debt":35,"equity":65},{"debt":20,"equity":80},{"debt":0,"equity":100}]
-                        }
+LOCAL = "op1"
+OUTSTATION = "op2"
 
+WEDDING_EXPENSE = {
+                   "catering_cost":{BUDGET:400,COMFORTABLE:800,LUXURY:1500},
+                   "venue_cost":{BUDGET:50000,COMFORTABLE:150000,LUXURY:400000},
+                   "decor_cost":{BUDGET:100000,COMFORTABLE:200000,LUXURY:400000},
+                   "travel_cost":{BUDGET:3000,COMFORTABLE:5000,LUXURY:10000},
+                   "stay_cost":{BUDGET:1000,COMFORTABLE:2000,LUXURY:3000},
+                   "no_of_family":{BUDGET:10,COMFORTABLE:15,LUXURY:20},
+                   "clothing_cost":{BUDGET:10000,COMFORTABLE:15000,LUXURY:20000},
+                   "bride_groom_cost":{BUDGET:100000,COMFORTABLE:150000,LUXURY:250000}  
+                   }
 
