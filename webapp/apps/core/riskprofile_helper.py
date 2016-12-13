@@ -19,9 +19,11 @@ class RiskProfileHelper(object):
                        {"tenure": 100, "weight": 3}
                        ]
     
-    weight_to_risk_cat = {"0": constants.RISK_PROFILE_ONLY_DEBT, "1": constants.RISK_PROFILE_A, "2": constants.RISK_PROFILE_B,
-                          "3": constants.RISK_PROFILE_C, "4": constants.RISK_PROFILE_D,
-                          "5": constants.RISK_PROFILE_E, "6": constants.RISK_PROFILE_ONLY_EQUITY}
+    weight_to_risk_cat = [constants.RISK_PROFILE_ONLY_DEBT, constants.RISK_PROFILE_A, constants.RISK_PROFILE_B,
+                          constants.RISK_PROFILE_C, constants.RISK_PROFILE_D,
+                          constants.RISK_PROFILE_E, constants.RISK_PROFILE_ONLY_EQUITY]
+    
+    weight_to_risk_cat_len = len(weight_to_risk_cat)
     
     def __init__(self, user):
         super(RiskProfileHelper, self).__init__()
@@ -67,8 +69,8 @@ class RiskProfileHelper(object):
         net_code = risk_profile_code + tenure_code
 
         computed_risk_category = constants.RISK_PROFILE_ONLY_EQUITY
-        for code in self.weight_to_risk_cat:
-            if net_code <= int(code):
+        for code in range(self.weight_to_risk_cat_len):
+            if net_code <= code:
                 computed_risk_category = self.weight_to_risk_cat[code]
                 break
             
