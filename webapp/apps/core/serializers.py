@@ -362,7 +362,7 @@ class WeddingGoalEstimateSerializer(serializers.Serializer):
     """
     term = serializers.IntegerField(required=True)
     expected_people = serializers.IntegerField(required=True)
-    sharing_percenatge = serializers.IntegerField(required=True)
+    sharing_percentage = serializers.IntegerField(required=True)
     amount_saved = serializers.IntegerField(required=True)
     location = serializers.CharField(required=True)
     

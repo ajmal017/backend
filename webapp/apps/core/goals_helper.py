@@ -496,7 +496,7 @@ class WeddingGoal(GenericGoal):
             gifting_cost = round(total_cost/3)
             total_cost += gifting_cost
             
-            total_amount_required = self.calculate_future_value(total_cost*(data['sharing_percenatge']/100),constants.INFLATION_PERCENTAGE["op1"]/100,data['term'])
+            total_amount_required = self.calculate_future_value(total_cost*(data['sharing_percentage']/100),constants.INFLATION_PERCENTAGE["op1"]/100,data['term'])
             already_saved_corpus = self.calculate_future_value(data['amount_saved'],constants.RETURN_ON_EXIST_INVEST_PERCENTAGE/100,data['term'])
             if already_saved_corpus < total_amount_required:
                 balance_corpus_required = total_amount_required - already_saved_corpus
