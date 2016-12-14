@@ -71,7 +71,7 @@ class AssessAnswers_v3Test(APISimpleTestCase):
     def test_register(self):
         factory = APIRequestFactory()
         view = AssessAnswer_v3.as_view()
-        data={'A4': 'op2', 'A1': '35','A7': 'op2', 'A8': 'op2', 'A9': 'op2', 'A17': 'op2','A18': 'op2','A19': 'op2'}
+        data={'A4': 'op2', 'A1': '35','A7': 'op2', 'A8': 'op2,op1,op3', 'A9': 'op2', 'A17': 'op2','A18': 'op2','A19': 'op2'}
         user = models.User.objects.get(email='jp@gmail.com')
         request = factory.post(settings.BASE_URL+reverse('api_urls_v3:core_urls:assess-new-answers-add'),data=data)
         force_authenticate(request, user=user)

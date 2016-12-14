@@ -137,7 +137,7 @@ class AssessSerializer_v3(serializers.Serializer):
     
     
     A7 = serializers.CharField(max_length=3, required=True) 
-    A8 = serializers.CharField(max_length=3, required=True)
+    A8 = serializers.CharField(max_length=255, required=True)
     A9 = serializers.CharField(max_length=3, required=True)
     
     A10= serializers.CharField(max_length=3, required=False)
@@ -178,6 +178,7 @@ class RetirementSerializer(serializers.Serializer):
     floating_sip = serializers.BooleanField(required=True)
     grow_sip = serializers.IntegerField(required=True)
     allocation = serializers.DictField(required=True)
+    corpus = serializers.IntegerField(required=True)
     monthly_income = serializers.IntegerField(required=False)
     monthly_expense = serializers.IntegerField(required=False)
     amount_saved = serializers.IntegerField(required=False)
