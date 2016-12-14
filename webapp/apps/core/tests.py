@@ -185,7 +185,7 @@ class RetirementAnswer_test(APISimpleTestCase):
     def test(self):
         factory = APIRequestFactory()
         view = views.RetirementAnswer.as_view()
-        data={'current_age':26,'retirement_age':60,"monthly_investment":2100,"floating_sip":False,"grow_sip":0,"allocation":{'equity':50,'debt':50,'elss':0,'liquid':0},"corpus":500000}
+        data={'current_age':28,'retirement_age':60,"monthly_investment":2100,"floating_sip":False,"grow_sip":0,"allocation":{'equity':50,'debt':50,'elss':0,'liquid':0},"corpus":500000,"goal_plan_type":'op1'}
         user = User.objects.get(email='jp@gmail.com')
         request = factory.post(settings.BASE_URL+reverse('api_urls_v3:core_urls:retirement-new-answers-add'),data=data,format='json')
         force_authenticate(request, user=user)

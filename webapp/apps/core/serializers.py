@@ -179,10 +179,12 @@ class RetirementSerializer(serializers.Serializer):
     grow_sip = serializers.IntegerField(required=True)
     allocation = serializers.DictField(required=True)
     corpus = serializers.IntegerField(required=True)
+    goal_plan_type = serializers.CharField(required=True)
     monthly_income = serializers.IntegerField(required=False)
     monthly_expense = serializers.IntegerField(required=False)
     amount_saved = serializers.IntegerField(required=False)
     estimate_selection_type = serializers.CharField(required=False)
+   
 
 
 class InvestSerializer(serializers.Serializer):
@@ -244,6 +246,7 @@ class EducationGoalSerializer(serializers.Serializer):
     field = serializers.CharField(required=False)
     amount_saved = serializers.IntegerField(required=False)
     estimate_selection_type = serializers.CharField(required=False)
+    goal_plan_type = serializers.CharField(required=True)
     
 class PropertyGoalSerializer(serializers.Serializer):
     """
@@ -258,6 +261,7 @@ class PropertyGoalSerializer(serializers.Serializer):
     prop_of_purchase_cost = serializers.IntegerField(required=False)
     amount_saved = serializers.IntegerField(required=False)
     estimate_selection_type = serializers.CharField(required=False)
+    goal_plan_type = serializers.CharField(required=True)
     
 class AutomobileGoalSerializer(serializers.Serializer):
     """
@@ -272,6 +276,7 @@ class AutomobileGoalSerializer(serializers.Serializer):
     prop_of_purchase_cost = serializers.IntegerField(required=False)
     amount_saved = serializers.IntegerField(required=False)
     estimate_selection_type = serializers.CharField(required=False)
+    goal_plan_type = serializers.CharField(required=True)
     
 class VacationGoalSerializer(serializers.Serializer):
     """
@@ -287,6 +292,7 @@ class VacationGoalSerializer(serializers.Serializer):
     location = serializers.CharField(required=False)
     amount_saved = serializers.IntegerField(required=False)
     estimate_selection_type = serializers.CharField(required=False)
+    goal_plan_type = serializers.CharField(required=True)
     
 class WeddingGoalSerializer(serializers.Serializer):
     """
@@ -302,6 +308,7 @@ class WeddingGoalSerializer(serializers.Serializer):
     sharing_percentage = serializers.IntegerField(required=False)
     amount_saved = serializers.IntegerField(required=False)
     estimate_selection_type = serializers.CharField(required=False)
+    goal_plan_type = serializers.CharField(required=True)
     
 class JewelleryGoalSerializer(serializers.Serializer):
     """
@@ -315,6 +322,7 @@ class JewelleryGoalSerializer(serializers.Serializer):
     current_price = serializers.IntegerField(required=False)
     amount_saved = serializers.IntegerField(required=False)
     estimate_selection_type = serializers.CharField(required=False)
+    goal_plan_type = serializers.CharField(required=True)
     
 class EducationGoalEstimateSerializer(serializers.Serializer):
     """
