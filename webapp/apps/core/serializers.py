@@ -203,7 +203,7 @@ class TaxSerializer(serializers.Serializer):
     """
     Serializer for tax post api
     """
-    estimate_needed = serializers.BooleanField(required=True)
+    estimate_needed = serializers.CharField(required=True)
     pff = serializers.IntegerField(required=True)
     insurance = serializers.IntegerField(required=True)
     loan = serializers.IntegerField(required=True)

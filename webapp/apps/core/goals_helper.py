@@ -575,7 +575,7 @@ class TaxGoal(GoalBase):
     def get_answer_value(self, key, value):
         option_id = None
         if key == "estimate_needed":
-            option_id = "op1" if value else "op2"
+            option_id = value
 
         return value, option_id
 
