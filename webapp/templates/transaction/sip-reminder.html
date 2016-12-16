@@ -632,8 +632,8 @@
                             <span style="color:#555555"><span style="font-size:15px"><span style="font-family:trebuchet ms,lucida grande,lucida sans unicode,lucida sans,tahoma,sans-serif">
  {% if bank_details != None %}
     
-    Your bank account {{bank_account_number}} with {{bank_details.ifsc_code.name}}  will be debited on the
-    following dates towards your scheduled SIP investments with FinAskus, for Total Amount Rs. {{ total_sip|floatformat:2}} <br> <br>
+    Your bank account {{bank_account_number}} with {{bank_details.ifsc_code.name}}  will be debited <b> <i>one working day prior to the following dates 
+    </i></b> towards your scheduled SIP investments with FinAskus, for Total Amount Rs. {{ total_sip|floatformat:2}} <br> <br>
 
 {% endif %}
 
