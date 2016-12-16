@@ -87,7 +87,9 @@ def generate_order_pipe_file(user_id, order_detail,exch_backend):
                                       ('EUIN Number', cons.Order_EUIN_Number),
                                       ('EUIN Declaration', cons.Order_EUIN_declaration),
                                       ('DPC Flag', cons.Order_DPC_Flag),
-                                      ('First Order Today', cons.First_Order_Today), ])
+                                      ('First Order Today', cons.First_Order_Today),
+                                      ('ISIP Mandate', ''),
+                                      ('Sub-broker ARN', '') ])
         if int(agreed_sip) > 0:
             outfile.write("|".join(bulk_user_dict.values()))
             if i < len(order_items) - 1:

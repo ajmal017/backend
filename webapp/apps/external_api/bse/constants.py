@@ -469,6 +469,8 @@ Frequency_Type = "MONTHLY"
 Frequency_Allowed = "1"
 DP_TXN_MODE = "P"
 
+MANDATE_TYPE_XSIP = 'X'
+
 Order_Purchase = "P"
 Order_Buy_Type = "FRESH"
 Order_Demat = "P"
