@@ -374,6 +374,8 @@ class ReviewCart_v3(APIView):
         overall_allocation, sip_lumpsum_allocation, status_summary = utils.calculate_overall_allocation(request.user)
         portfolio_items, errors = utils.get_portfolio_items_per_goal(request.user.id, overall_allocation)
         if portfolio_items is not None:
+            portfolio_items['overall_allocation'] = overall_allocation['overall_allocation']
+            portfolio_items['overall_total_sum'] = overall_allocation['total_sum']
             return api_utils.response(portfolio_items, status.HTTP_200_OK)
         else:
             return api_utils.response({constants.MESSAGE: errors},
