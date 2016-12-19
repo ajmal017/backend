@@ -2469,7 +2469,8 @@ def get_fund_detail(portfolio_item):
                              'return_value': round(return_value, 2),
                              'is_enabled': get_is_enabled(portfolio_item),
                              'minimum_withdrawal': portfolio_item.fund.minimum_withdrawal,
-                             'minimum_balance': portfolio_item.fund.minimum_balance
+                             'minimum_balance': portfolio_item.fund.minimum_balance,
+                             'fund_category':portfolio_item.fund.category_name
                              }
     return portfolio_detail_dict
 
