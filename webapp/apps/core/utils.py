@@ -238,13 +238,26 @@ def calculate_risk_score(request,user=None):
     age = None
     for key, value in request.data.items():
         if key != "A1":
-            question = models.Question.objects.get(question_id=key)
-            option_selected = models.Option.objects.get(option_id=value, question__question_id=key)
-            total_denominator += question.weight
-            score += (option_selected.weight * question.weight)
-            if user and user is not None:
-                models.Answer.objects.update_or_create(
-                       question_id=question.id, user=user, defaults={'option': option_selected})
+            if key == "A8":
+                option_weight = []
+                question = models.Question.objects.get(question_id=key)
+                total_denominator += question.weight
+                values = value.split(",")
+                for val in values:
+                    option_selected = models.Option.objects.get(option_id=val, question__question_id=key)
+                    option_weight.append(option_selected.weight)
+                score += (max(option_weight)* question.weight)
+                if user and user is not None:
+                        models.Answer.objects.update_or_create(
+                           question_id=question.id, user=user, defaults={'text': value})
+            else:
+                question = models.Question.objects.get(question_id=key)
+                option_selected = models.Option.objects.get(option_id=value, question__question_id=key)
+                total_denominator += question.weight
+                score += (option_selected.weight * question.weight)
+                if user and user is not None:
+                    models.Answer.objects.update_or_create(
+                           question_id=question.id, user=user, defaults={'option': option_selected})
         else:
             age = int(value)
             value = helpers.find_right_option(int(value))
@@ -403,7 +416,10 @@ def get_assess_answer(user):
     if len(answers) == 0:
         return answers_object
     for answer in answers:
-        answers_object[answer.question.question_id] = answer.option.option_id
+        if answer.question.type == constants.RADIO:
+            answers_object[answer.question.question_id] = answer.option.option_id
+        else:
+            answers_object[answer.question.question_id] = answer.text 
     answers_object["A1"] = str(user.age)
     return answers_object
 

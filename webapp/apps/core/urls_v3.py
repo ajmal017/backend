@@ -7,6 +7,7 @@ urlpatterns = [
     url(r'^recommended/portfolios/$', views.RecommendedPortfolios.as_view(), name='recommended-portfolios'),
     url(r'^portfolio/goal/(?P<goal_type>[a-z]+)/recommended/$', views.GoalRecommendedPortfolio.as_view(), name='goal-recommended-portfolio'),
     url(r'^(?P<fund_id>^[0-9]+)/schema/fact-sheet/$', views.SchemaFactSheet.as_view(), name='schema-fact-sheet'),
+    url(r'^liquid/new/response/add/$', views.LiquidAnswer.as_view(), name='liquid-new-answers-add'),
     url(r'^assess/new/response/add/$', views.AssessAnswer_v3.as_view(), name='assess-new-answers-add'),
     url(r'^assess/new/response/$', views.AssessAnswer_Unregistered_User_v3.as_view(), name='assess-new-answers-unregister-add'),
     url(r'^retirement/new/response/add/$', views.RetirementAnswer.as_view(), name='retirement-new-answers-add'),
@@ -18,7 +19,6 @@ urlpatterns = [
     url(r'^jewellery/new/response/add/$', views.JewelleryAnswer.as_view(), name='wedding-new-answers-add'),
     url(r'^invest/new/response/add/$', views.InvestAnswer.as_view(), name='invest-new-answers-add'),
     url(r'^tax/new/response/add/$', views.TaxAnswer.as_view(), name='tax-new-answers-add'),
-    url(r'^(?P<goal_type>^[a-z]+)/new/response/add/$', views.GenericGoalAnswer.as_view(), name='generic-answers-add'),
     url(r'^save/email/$', views.SaveEmail.as_view(), name='save-email'),
     url(r'^funds/get/all/$', views.FundsDividedIntoCategories.as_view(), name='fund-get-all'),
     url(r'^funds/goal/(?P<goal_type>[a-z]+)/get/all/$', views.FundsDividedIntoCategoriesForGoal.as_view(), name='fund-get-all'),
@@ -53,7 +53,6 @@ urlpatterns = [
     url(r'^billdesk/fail/$', views.Billdesk.as_view(), name='billdesk-fail'),
     
     url(r'^transaction/complete/$', views.TransactionComplete.as_view(), name='transaction-complete'),
-    url(r'^liquid/new/response/add/$', views.LiquidAnswer.as_view(), name='liquid-new-answers-add'),
     url(r'^sip/cancellation/add/$', views.SipCancellation.as_view(), name='sip-cancellation'), 
     url(r'^assetallocation/category/compute/$', views.ComputeAssetAllocationCategory.as_view(), name='sip-cancellation'),
     url(r'^goal/education/estimate/$', views.EducationGoalEstimate.as_view(), name='education-goal-estimate'),
@@ -64,7 +63,7 @@ urlpatterns = [
     url(r'^goal/wedding/estimate/$', views.WeddingGoalEstimate.as_view(), name='wedding-goal-estimate'),
     url(r'^goal/jewellery/estimate/$', views.JewelleryGoalEstimate.as_view(), name='jewellery-goal-estimate'),
     url(r'^goal/tax/estimate/$', views.TaxGoalEstimate.as_view(), name='tax-goal-estimate'),
-
+    url(r'^(?P<goal_type>^[a-z]+)/new/response/add/$', views.GenericGoalAnswer.as_view(), name='generic-answers-add'),
     
 
     # ===================  DEPRECATED APIS =========================================================================

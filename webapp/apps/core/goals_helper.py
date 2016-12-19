@@ -313,7 +313,7 @@ class GenericGoal(GoalBase):
     
     def get_answer_value(self, key, value):
         option_id = None
-        if key == "location" or key == "estimate_selection_type":
+        if key == "location" or key == "estimate_selection_type" or key == "goal_plan_type":
             option_id = value
         return value, option_id
     
@@ -358,7 +358,7 @@ class EducationGoal(GenericGoal):
     
     def get_answer_value(self, key, value):
         option_id = None
-        if key == "location" or key == "field" or key == "estimate_selection_type":
+        if key == "location" or key == "field" or key == "estimate_selection_type" or key == "goal_plan_type":
             option_id = value
         return value, option_id
     
@@ -575,7 +575,7 @@ class TaxGoal(GoalBase):
     def get_answer_value(self, key, value):
         option_id = None
         if key == "estimate_needed":
-            option_id = "op1" if value else "op2"
+            option_id = value
 
         return value, option_id
 
@@ -671,7 +671,7 @@ class RetirementGoal(GoalBase):
         option_id = None
         if key == "floating_sip":
             option_id = "op1" if value else "op2"
-        if key == "estimate_selection_type":
+        if key == "estimate_selection_type" or key == "goal_plan_type":
             option_id = value
         return value, option_id
 

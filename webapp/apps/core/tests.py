@@ -154,5 +154,41 @@ class TaxGoalEstimate_Test(APISimpleTestCase):
         force_authenticate(request, user=user)
         response = view(request)
         self.assertEqual(response.status_code, 200)
+        
+class AssessAnswers_v3Test(APISimpleTestCase):
+    allow_database_queries = True
+    def test(self):
+        factory = APIRequestFactory()
+        view = views.AssessAnswer_v3.as_view()
+        data={'A4': 'op2', 'A1': '35','A7': 'op2', 'A8': 'op4', 'A9': 'op2', 'A17': 'op2','A18': 'op2','A19': 'op2'}
+        user = User.objects.get(email='jp@gmail.com')
+        request = factory.post(settings.BASE_URL+reverse('api_urls_v3:core_urls:assess-new-answers-add'),data=data)
+        force_authenticate(request, user=user)
+        response = view(request)
+        self.assertEqual(response.status_code, 200)
+        
+class LiquidAnswer_Test(APISimpleTestCase):
+    allow_database_queries = True
+    def test(self):
+        factory = APIRequestFactory()
+        view = views.LiquidAnswer.as_view()
+        data={'amount_invested':18000,'goal_name':'LIQUID'}
+        user = User.objects.get(email='jp@gmail.com')
+        request = factory.post(settings.BASE_URL+reverse('api_urls_v3:core_urls:liquid-new-answers-add'),data=data)
+        force_authenticate(request, user=user)
+        response = view(request)
+        self.assertEqual(response.status_code, 200)
 
+
+class RetirementAnswer_test(APISimpleTestCase):
+    allow_database_queries = True
+    def test(self):
+        factory = APIRequestFactory()
+        view = views.RetirementAnswer.as_view()
+        data={'current_age':28,'retirement_age':60,"monthly_investment":2100,"floating_sip":False,"grow_sip":0,"allocation":{'equity':50,'debt':50,'elss':0,'liquid':0},"corpus":500000,"goal_plan_type":'op1'}
+        user = User.objects.get(email='jp@gmail.com')
+        request = factory.post(settings.BASE_URL+reverse('api_urls_v3:core_urls:retirement-new-answers-add'),data=data,format='json')
+        force_authenticate(request, user=user)
+        response = view(request)
+        self.assertEqual(response.status_code, 200)
 
