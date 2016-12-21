@@ -875,6 +875,18 @@ class FundRedeemItem(TimeStampedModel):
                         break
         
         return invested_redeem_amount
+    
+    def get_nav(self):
+        """
+        Return the nav of the fund of allotment date
+        """
+        nav = None
+        try:
+            if self.redeem_date:
+                nav = HistoricalFundData.objects.get(date=self.redeem_date, fund_id=self.portfolio_item.fund).nav
+        except:
+            nav = None
+        return nav
                 
     def save(self, *args, **kwargs):
         """
