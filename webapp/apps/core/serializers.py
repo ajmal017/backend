@@ -527,11 +527,12 @@ class FundOrderItemSerializer_v3(serializers.ModelSerializer):
     transaction_date = serializers.DateField(source='get_transaction_date')
     allotment_date = serializers.CharField(source='get_allotment_date')
     unit_alloted = serializers.CharField(source='get_unit_alloted')
+    nav = serializers.FloatField(source='get_nav')
 
     class Meta:
         model = models.FundOrderItem
         fields = ('id', 'fund_name', 'unit_alloted', 'allotment_date', 'is_verified', 'order_amount',
-                  'transaction_date', 'fund_id', 'folio_number')
+                  'transaction_date', 'fund_id', 'folio_number','nav')
 
 class FundRedeemItemSerializer_v3(serializers.ModelSerializer):
     """

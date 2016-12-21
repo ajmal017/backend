@@ -1170,8 +1170,10 @@ class FundOrderItem(TimeStampedModel):
         """
         Return the nav of the fund of allotment data
         """
+        nav = None
         try:
-            nav = HistoricalFundData.objects.get(date=self.allotment_date, fund_id=self.portfolio_item.fund).nav
+            if self.allotment_date:
+                nav = HistoricalFundData.objects.get(date=self.allotment_date, fund_id=self.portfolio_item.fund).nav
         except:
             nav = None
         return nav
