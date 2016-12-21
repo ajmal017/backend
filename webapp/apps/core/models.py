@@ -1165,7 +1165,17 @@ class FundOrderItem(TimeStampedModel):
         Return the date of transaction of that item
         """
         return self.created_at.date()
-
+    
+    def get_nav(self):
+        """
+        Return the nav of the fund of allotment data
+        """
+        try:
+            nav = HistoricalFundData.objects.get(date=self.allotment_date, fund_id=self.portfolio_item.fund).nav
+        except:
+            nav = None
+        return nav
+    
     def save(self, *args, **kwargs):
         """
         creates a check while saving instance of model, if is_verified is True then unit must be alloted.

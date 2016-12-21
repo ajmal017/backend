@@ -580,6 +580,7 @@ class FutureFundOrderItemSerializer(serializers.ModelSerializer):
     unit_alloted = serializers.SerializerMethodField()
     order_amount = serializers.SerializerMethodField()
     is_verified = serializers.SerializerMethodField()
+    nav = serializers.FloatField(source='get_nav')
 
     def get_allotment_date(self, obj):
         """
@@ -613,8 +614,9 @@ class FutureFundOrderItemSerializer(serializers.ModelSerializer):
             return obj.next_allotment_date.strftime("%Y-%m-%d")
         else:
             return models.get_next_allotment_date_or_start_date(obj).strftime("%Y-%m-%d")
-
+    
+        
     class Meta:
         model = models.FundOrderItem
         fields = ('id', 'fund_name', 'unit_alloted', 'allotment_date', 'is_verified', 'order_amount',
-                  'transaction_date', 'fund_id')
+                  'transaction_date', 'fund_id','nav')
