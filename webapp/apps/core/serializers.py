@@ -545,11 +545,12 @@ class FundRedeemItemSerializer_v3(serializers.ModelSerializer):
     allotment_date = serializers.CharField(source='get_redeem_date')
     unit_alloted = serializers.CharField(source='get_unit_redeemed')
     order_amount = serializers.FloatField(source='get_redeem_amount')
+    nav = serializers.FloatField(source='get_nav')
 
     class Meta:
         model = models.FundRedeemItem
         fields = ('id', 'fund_name', 'unit_alloted', 'allotment_date', 'is_verified', 'order_amount',
-                  'transaction_date', 'fund_id', 'folio_number')
+                  'transaction_date', 'fund_id', 'folio_number','nav')
 
 
 class RedeemDetailSerializer(serializers.ModelSerializer):
