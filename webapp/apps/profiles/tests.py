@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase, APIRequestFactory, force_authenticate, APISimpleTestCase
 
 from profiles.models import User
-from profiles.views import UserInfo, Register, Login, ResetPassword
+from profiles.views import UserInfo, Register, Login, ResetPassword,ContactInfo
 from core.views import AssessAnswer,AssessAnswer_v3, AssessAnswer_Unregistered_User_v3
 from profiles import models
 from django.conf import settings
@@ -74,6 +74,18 @@ class AssessAnswers_v3Test(APISimpleTestCase):
         data={'A4': 'op2', 'A1': '35','A7': 'op2', 'A8': 'op2,op1,op3', 'A9': 'op2', 'A17': 'op2','A18': 'op2','A19': 'op2'}
         user = models.User.objects.get(email='jp@gmail.com')
         request = factory.post(settings.BASE_URL+reverse('api_urls_v3:core_urls:assess-new-answers-add'),data=data)
+        force_authenticate(request, user=user)
+        response = view(request)
+        self.assertEqual(response.status_code, 200)
+        
+class ContactInfo_v3Test(APISimpleTestCase):
+    allow_database_queries = True
+    def test(self):
+        factory = APIRequestFactory()
+        view = ContactInfo.as_view()
+        data = {'communication_address_type': 1, 'permanent_address': {'pincode': 560076, 'address_line_2': 'Bttms', 'address_line_1': 'Bttms', 'city': 'Bangalore', 'state': 'KARNATAKA'}, 'communication_address': {'pincode': 560076, 'address_line_2': 'Bttm', 'address_line_1': 'Bttm', 'city': 'Bangalore', 'state': 'KARNATAKA'}, 'email': 'jp@gmail.com', 'address_are_equal': False, 'phone_number': '8762731203'}        
+        user = models.User.objects.get(email='jp@gmail.com')
+        request = factory.post(settings.BASE_URL+reverse('api_urls:profiles_urls:investor-contact-info-add'),data=data,format='json')
         force_authenticate(request, user=user)
         response = view(request)
         self.assertEqual(response.status_code, 200)

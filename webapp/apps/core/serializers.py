@@ -527,11 +527,12 @@ class FundOrderItemSerializer_v3(serializers.ModelSerializer):
     transaction_date = serializers.DateField(source='get_transaction_date')
     allotment_date = serializers.CharField(source='get_allotment_date')
     unit_alloted = serializers.CharField(source='get_unit_alloted')
+    nav = serializers.FloatField(source='get_nav')
 
     class Meta:
         model = models.FundOrderItem
         fields = ('id', 'fund_name', 'unit_alloted', 'allotment_date', 'is_verified', 'order_amount',
-                  'transaction_date', 'fund_id', 'folio_number')
+                  'transaction_date', 'fund_id', 'folio_number','nav')
 
 class FundRedeemItemSerializer_v3(serializers.ModelSerializer):
     """
@@ -544,11 +545,12 @@ class FundRedeemItemSerializer_v3(serializers.ModelSerializer):
     allotment_date = serializers.CharField(source='get_redeem_date')
     unit_alloted = serializers.CharField(source='get_unit_redeemed')
     order_amount = serializers.FloatField(source='get_redeem_amount')
+    nav = serializers.FloatField(source='get_nav')
 
     class Meta:
         model = models.FundRedeemItem
         fields = ('id', 'fund_name', 'unit_alloted', 'allotment_date', 'is_verified', 'order_amount',
-                  'transaction_date', 'fund_id', 'folio_number')
+                  'transaction_date', 'fund_id', 'folio_number','nav')
 
 
 class RedeemDetailSerializer(serializers.ModelSerializer):
@@ -580,6 +582,7 @@ class FutureFundOrderItemSerializer(serializers.ModelSerializer):
     unit_alloted = serializers.SerializerMethodField()
     order_amount = serializers.SerializerMethodField()
     is_verified = serializers.SerializerMethodField()
+    nav = serializers.FloatField(source='get_nav')
 
     def get_allotment_date(self, obj):
         """
@@ -613,8 +616,9 @@ class FutureFundOrderItemSerializer(serializers.ModelSerializer):
             return obj.next_allotment_date.strftime("%Y-%m-%d")
         else:
             return models.get_next_allotment_date_or_start_date(obj).strftime("%Y-%m-%d")
-
+    
+        
     class Meta:
         model = models.FundOrderItem
         fields = ('id', 'fund_name', 'unit_alloted', 'allotment_date', 'is_verified', 'order_amount',
-                  'transaction_date', 'fund_id')
+                  'transaction_date', 'fund_id','nav')

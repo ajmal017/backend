@@ -145,8 +145,7 @@ class AddressSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Address
-
-
+        
 class AddressSkipSerializer(serializers.ModelSerializer):
     """
     Serializer for Address objects.
@@ -174,7 +173,8 @@ class ContactInfoSerializer(serializers.ModelSerializer):
         """
         model = models.ContactInfo
         fields = ('communication_address', 'permanent_address', 'address_are_equal', 'address_proof_type',
-                  'front_image', 'front_image_thumbnail', 'back_image', 'back_image_thumbnail', 'email', 'phone_number', 'communication_address_type' )
+                  'front_image', 'front_image_thumbnail', 'back_image', 'back_image_thumbnail', 'email', 'phone_number', 'communication_address_type',
+                  'permanent_front_image','permanent_front_image_thumbnail','permanent_back_image','permanent_back_image_thumbnail','permanent_address_proof_type' )
 
     def create(self, validated_data):
         """

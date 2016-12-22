@@ -111,7 +111,12 @@ DEFAULT_CONTACT_INFO = {
                         "address_are_equal": None,
                         "address_proof_type": None,
                         "front_image": None,
-                        "back_image": None
+                        "back_image": None,
+                        "permanent_front_image":None,
+                        "permanent_back_image":None,
+                        "permanent_address_proof_type":None,
+                        "permanent_back_image_thumbnail":None,
+                        "permanent_front_image_thumbnail":None
                         }
 
 RESEND_MAIL_SUCCESS = 'Email sent successfully!'

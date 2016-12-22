@@ -696,7 +696,9 @@ class RetirementGoal(GoalBase):
             total_expense_at_retirement = round(total_income_at_retirement * constants.RETIREMENT_ESTIMATE_PERCENTAGE[estimate]/100)
             
             assess_answer = utils.get_assess_answer(user)
-            gender = assess_answer["A7"]
+            gender = 'op1'
+            if assess_answer and assess_answer["A7"]:
+                gender = assess_answer["A7"]
             
             if data['retirement_age'] < 61:
                 life_expectency = 80 if gender == 'op1' else (85)

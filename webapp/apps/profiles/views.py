@@ -38,6 +38,7 @@ import warnings
 import logging
 import threading
 
+
 from django.core.files.base import ContentFile
 import urllib.request as urllib2
 
@@ -1037,6 +1038,7 @@ class ContactInfo(APIView):
             comm_addr = serializers.AddressSerializer(data=data)
         if comm_addr.is_valid():
             comm_obj = comm_addr.save()
+
         else:
             return api_utils.response({}, status.HTTP_400_BAD_REQUEST, generate_error_message(comm_addr.errors))
         if not request.data.get('address_are_equal'):
@@ -1050,6 +1052,7 @@ class ContactInfo(APIView):
                 perm_addr = serializers.AddressSerializer(data=data)
             if perm_addr.is_valid():
                 perm_obj = perm_addr.save()
+
             else:
                 return api_utils.response({}, status.HTTP_400_BAD_REQUEST, generate_error_message(perm_addr.errors))
             models.ContactInfo.objects.update_or_create(
@@ -1061,7 +1064,8 @@ class ContactInfo(APIView):
                                              "communication_address_type": request.data.get('communication_address_type', None)})
             utils.set_user_check_attributes(request.user, 'is_contact_info')
         else:
-            perm_obj = comm_obj
+            comm_obj_new = deepcopy(comm_obj)
+            perm_obj = comm_obj_new
             perm_obj.id = None
             perm_obj.save()
             models.ContactInfo.objects.update_or_create(

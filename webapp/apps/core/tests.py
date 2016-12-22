@@ -191,4 +191,28 @@ class RetirementAnswer_test(APISimpleTestCase):
         force_authenticate(request, user=user)
         response = view(request)
         self.assertEqual(response.status_code, 200)
+        
+class GetInvestedFundReturn_v3_Test(APISimpleTestCase):
+    allow_database_queries = True
+    def test(self):
+        factory = APIRequestFactory()
+        view = views.GetInvestedFundReturn_v3.as_view()
+        data={}
+        user = User.objects.get(email='jp@gmail.com')
+        request = factory.get(settings.BASE_URL+reverse('api_urls_v3:core_urls:fund-return'),data=data)
+        force_authenticate(request, user=user)
+        response = view(request)
+        self.assertEqual(response.status_code, 200)
+
+class TransactionHistory_v3_Test(APISimpleTestCase):
+    allow_database_queries = True
+    def test(self):
+        factory = APIRequestFactory()
+        view = views.TransactionHistory_v3.as_view()
+        data={}
+        user = User.objects.get(email='jp@gmail.com')
+        request = factory.get(settings.BASE_URL+reverse('api_urls_v3:core_urls:transaction-history-new'),data=data)
+        force_authenticate(request, user=user)
+        response = view(request)
+        self.assertEqual(response.status_code, 200)
 

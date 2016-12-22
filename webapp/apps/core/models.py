@@ -875,6 +875,18 @@ class FundRedeemItem(TimeStampedModel):
                         break
         
         return invested_redeem_amount
+    
+    def get_nav(self):
+        """
+        Return the nav of the fund of allotment date
+        """
+        nav = None
+        try:
+            if self.redeem_date:
+                nav = HistoricalFundData.objects.get(date=self.redeem_date, fund_id=self.portfolio_item.fund).nav
+        except:
+            nav = None
+        return nav
                 
     def save(self, *args, **kwargs):
         """
@@ -1165,7 +1177,19 @@ class FundOrderItem(TimeStampedModel):
         Return the date of transaction of that item
         """
         return self.created_at.date()
-
+    
+    def get_nav(self):
+        """
+        Return the nav of the fund of allotment data
+        """
+        nav = None
+        try:
+            if self.allotment_date:
+                nav = HistoricalFundData.objects.get(date=self.allotment_date, fund_id=self.portfolio_item.fund).nav
+        except:
+            nav = None
+        return nav
+    
     def save(self, *args, **kwargs):
         """
         creates a check while saving instance of model, if is_verified is True then unit must be alloted.
