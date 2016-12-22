@@ -641,6 +641,9 @@ def create_portfolio_items_per_goal(user, overall_allocation, portfolio_modified
     """
     from core import goals_helper
     
+    is_error = False
+    errors = None
+    
     kwargs = {}
     for key in overall_allocation['overall_allocation'].keys():
         kwargs[key + "_percentage"] = overall_allocation['overall_allocation'][key]['percentage']
