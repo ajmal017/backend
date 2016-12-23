@@ -808,12 +808,12 @@ class SaveImage(APIView):
             """
             if request.data.get('signature_data', None):
                 try:
-                    image_data = re.search(r'base64,(.*)', request.POST['signature_data']).group(1)
+                    image_data = re.search(r'base64,(.*)', request.data.get('signature_data','')).group(1)
                     signature_data = base64.b64decode(image_data)
                     signature_file = ContentFile(signature_data, 'signature.png')
                     request.user.signature = signature_file
                 except Exception as e:
-                    return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message([str(e)]))
+                    return api_utils.response({}, status.HTTP_404_NOT_FOUND, str(e))
             else:    
                 serializer = serializers.SaveSignatureSerializer(request.user, data=request.data)
                 if serializer.is_valid():
@@ -1692,10 +1692,20 @@ class VideoUpload(APIView):
         :param request:
         :return:
         """
+        thumbnail_file = None
+        if request.data.get('user_video_thumbnail_data', None):
+            try:
+                image_data = re.search(r'base64,(.*)', request.data.get('user_video_thumbnail_data','')).group(1)
+                thumbnail_data = base64.b64decode(image_data)
+                thumbnail_file = ContentFile(thumbnail_data, 'thumbnail.png')
+                request.data['user_video_thumbnail'] = thumbnail_file
+            except Exception as e:
+                return api_utils.response({}, status.HTTP_404_NOT_FOUND, str(e))
+
         serializer = serializers.SaveUserVideoSerializer(data=request.data)
         if serializer.is_valid():
             request.user.user_video = request.FILES.get("user_video", None)
-            request.user.user_video_thumbnail = request.FILES.get("user_video_thumbnail", None)
+            request.user.user_video_thumbnail = thumbnail_file or request.FILES.get("user_video_thumbnail", None)
             request.user.save()
             return api_utils.response({"message": constants.USER_VIDEO_SAVED,
                                        "user_video_thumbnail": request.user.user_video_thumbnail.url,
