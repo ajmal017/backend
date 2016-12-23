@@ -43,8 +43,9 @@ class PostTest(APISimpleTestCase):
                                     data=json.dumps(data), content_type="application/json")
         force_authenticate(request,  user=self.user)
         response = view(request, type)
+        self.assertEqual(response.data['status_code'], 500)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['status_code'], 200)
+        
 
   
 class DashboardVersionTwoTest(APISimpleTestCase):
@@ -58,6 +59,7 @@ class DashboardVersionTwoTest(APISimpleTestCase):
         force_authenticate(request, user=user)
         response = view(request)
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["status_code"],200)
         
 class EducationGoalEstimate_Test(APISimpleTestCase):
     allow_database_queries = True
@@ -66,10 +68,11 @@ class EducationGoalEstimate_Test(APISimpleTestCase):
         view = views.EducationGoalEstimate.as_view()
         data = {"term":11,"location":"op1","field":"op4","amount_saved":500000}
         user = User.objects.get(email='jp@gmail.com')
-        request = factory.get(settings.BASE_URL+reverse('api_urls_v3:core_urls:education-goal-estimate'),'?data='+json.dumps(data))
+        request = factory.get(settings.BASE_URL+reverse('api_urls_v3:core_urls:education-goal-estimate')+'?data='+json.dumps(data))
         force_authenticate(request, user=user)
         response = view(request)
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["status_code"],200)
         
 class RetirementGoalEstimate_Test(APISimpleTestCase):
     allow_database_queries = True
@@ -82,6 +85,8 @@ class RetirementGoalEstimate_Test(APISimpleTestCase):
         force_authenticate(request, user=user)
         response = view(request)
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["status_code"],200)
+        
         
 class PropertyGoalEstimate_Test(APISimpleTestCase):
     allow_database_queries = True
@@ -94,6 +99,8 @@ class PropertyGoalEstimate_Test(APISimpleTestCase):
         force_authenticate(request, user=user)
         response = view(request)
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["status_code"],200)
+        
         
 class AutomobileGoalEstimate_Test(APISimpleTestCase):
     allow_database_queries = True
@@ -106,6 +113,7 @@ class AutomobileGoalEstimate_Test(APISimpleTestCase):
         force_authenticate(request, user=user)
         response = view(request)
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["status_code"],200)
 
 class VacationGoalEstimate_Test(APISimpleTestCase):
     allow_database_queries = True
@@ -118,6 +126,7 @@ class VacationGoalEstimate_Test(APISimpleTestCase):
         force_authenticate(request, user=user)
         response = view(request)
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["status_code"],200)
         
 class WeddingGoalEstimate_Test(APISimpleTestCase):
     allow_database_queries = True
@@ -130,6 +139,7 @@ class WeddingGoalEstimate_Test(APISimpleTestCase):
         force_authenticate(request, user=user)
         response = view(request)
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["status_code"],200)
         
 class JewelleryGoalEstimate_Test(APISimpleTestCase):
     allow_database_queries = True
@@ -142,6 +152,7 @@ class JewelleryGoalEstimate_Test(APISimpleTestCase):
         force_authenticate(request, user=user)
         response = view(request)
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["status_code"],200)
         
 class TaxGoalEstimate_Test(APISimpleTestCase):
     allow_database_queries = True
@@ -154,6 +165,7 @@ class TaxGoalEstimate_Test(APISimpleTestCase):
         force_authenticate(request, user=user)
         response = view(request)
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["status_code"],200)
         
 class AssessAnswers_v3Test(APISimpleTestCase):
     allow_database_queries = True
@@ -166,6 +178,7 @@ class AssessAnswers_v3Test(APISimpleTestCase):
         force_authenticate(request, user=user)
         response = view(request)
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["status_code"],200)
         
 class LiquidAnswer_Test(APISimpleTestCase):
     allow_database_queries = True
@@ -178,6 +191,7 @@ class LiquidAnswer_Test(APISimpleTestCase):
         force_authenticate(request, user=user)
         response = view(request)
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["status_code"],200)
 
 
 class RetirementAnswer_test(APISimpleTestCase):
@@ -191,6 +205,8 @@ class RetirementAnswer_test(APISimpleTestCase):
         force_authenticate(request, user=user)
         response = view(request)
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["status_code"],200)
+        
         
 class GetInvestedFundReturn_v3_Test(APISimpleTestCase):
     allow_database_queries = True
@@ -203,6 +219,7 @@ class GetInvestedFundReturn_v3_Test(APISimpleTestCase):
         force_authenticate(request, user=user)
         response = view(request)
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["status_code"],200)
 
 class TransactionHistory_v3_Test(APISimpleTestCase):
     allow_database_queries = True
@@ -215,4 +232,5 @@ class TransactionHistory_v3_Test(APISimpleTestCase):
         force_authenticate(request, user=user)
         response = view(request)
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["status_code"],200)
 
