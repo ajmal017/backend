@@ -37,7 +37,8 @@ import logging
 import warnings
 import logging
 import threading
-
+import re
+import base64
 
 from django.core.files.base import ContentFile
 import urllib.request as urllib2
@@ -799,22 +800,33 @@ class SaveImage(APIView):
                 return api_utils.response({"message": constants.SUCCESS, "permanent_back_image": contact.permanent_back_image.url,"permanent_back_image_thumbnail": contact.permanent_back_image_thumbnail.url}, status.HTTP_200_OK)
             return api_utils.response({}, status.HTTP_400_BAD_REQUEST, generate_error_message(serializer.errors))
 
-        elif request.data.get('signature', None):
+        elif request.data.get('signature', None) or request.data.get('signature_data', None):
             """
             This method accepts a image file and updates the signature image.
 
             :return: 'Signature saved' response on successful image store.
             """
+            if request.data.get('signature_data', None):
+                try:
+                    image_data = re.search(r'base64,(.*)', request.data.get('signature_data','')).group(1)
+                    signature_data = base64.b64decode(image_data)
+                    signature_file = ContentFile(signature_data, 'signature.png')
+                    request.user.signature = signature_file
+                except Exception as e:
+                    return api_utils.response({}, status.HTTP_404_NOT_FOUND, str(e))
+            else:    
+                serializer = serializers.SaveSignatureSerializer(request.user, data=request.data)
+                if serializer.is_valid():
+                    request.user.signature = request.FILES.get('signature', None)
+                else:
+                    return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(serializer.errors))
+                
+            request.user.finaskus_id = core_utils.get_finaskus_id(request.user)
+            request.user.save()
+            helpers.send_vault_completion_email(request.user, request.user.email, use_https=settings.USE_HTTPS)
+            return api_utils.response({"message": constants.SIGNATURE_SAVED,
+                                       "signature": request.user.signature.url}, status.HTTP_200_OK)
 
-            serializer = serializers.SaveSignatureSerializer(request.user, data=request.data)
-            if serializer.is_valid():
-                request.user.signature = request.FILES.get('signature', None)
-                request.user.finaskus_id = core_utils.get_finaskus_id(request.user)
-                request.user.save()
-                helpers.send_vault_completion_email(request.user, request.user.email, use_https=settings.USE_HTTPS)
-                return api_utils.response({"message": constants.SIGNATURE_SAVED,
-                                           "signature": request.user.signature.url}, status.HTTP_200_OK)
-            return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(serializer.errors))
 
         elif request.data.get('nominee_signature', None):
             """
@@ -1680,10 +1692,20 @@ class VideoUpload(APIView):
         :param request:
         :return:
         """
+        thumbnail_file = None
+        if request.data.get('user_video_thumbnail_data', None):
+            try:
+                image_data = re.search(r'base64,(.*)', request.data.get('user_video_thumbnail_data','')).group(1)
+                thumbnail_data = base64.b64decode(image_data)
+                thumbnail_file = ContentFile(thumbnail_data, 'thumbnail.png')
+                request.data['user_video_thumbnail'] = thumbnail_file
+            except Exception as e:
+                return api_utils.response({}, status.HTTP_404_NOT_FOUND, str(e))
+
         serializer = serializers.SaveUserVideoSerializer(data=request.data)
         if serializer.is_valid():
             request.user.user_video = request.FILES.get("user_video", None)
-            request.user.user_video_thumbnail = request.FILES.get("user_video_thumbnail", None)
+            request.user.user_video_thumbnail = thumbnail_file or request.FILES.get("user_video_thumbnail", None)
             request.user.save()
             return api_utils.response({"message": constants.USER_VIDEO_SAVED,
                                        "user_video_thumbnail": request.user.user_video_thumbnail.url,
