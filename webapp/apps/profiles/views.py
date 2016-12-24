@@ -269,7 +269,8 @@ class Register(APIView):
                                        "liquid": core_utils.get_category_answers(user, "liquid"),
                                         "automobile": core_utils.get_category_answers(user, "automobile"),
                                         "vacation": core_utils.get_category_answers(user, "vacation"),
-                                        "jewellery": core_utils.get_category_answers(user, "jewellery")
+                                        "jewellery": core_utils.get_category_answers(user, "jewellery"),
+                                        "asset_allocation_tables": core_constants.asset_allocation_tables
                                        },headers=headers)
         else:
             return api_utils.response({}, status.HTTP_404_NOT_FOUND, generate_error_message(serializer.errors))
