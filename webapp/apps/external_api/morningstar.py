@@ -321,6 +321,43 @@ class MorningStarBackend(BaseFundBackend):
                 count += 1
             return count
 
+    def get_data_points_for_liquid(self):
+        """
+        to get data for data points for debt specific funds
+        :return:
+        """
+        json_data = self._get_data(constants.MORNING_STAR_LIQUID_API)
+        fields = {}
+        if json_data[constants.STATUS][constants.CODE] != 0:
+            return False
+        else:
+            logger = logging.getLogger('django.error')
+            count = 0
+            for fund in json_data[constants.DATA]:
+                does_exist = True
+                fund_object = core_models.Fund.objects.get(mstar_id=fund.get(constants.ID))
+                try:
+                    earlier_fund_data = core_models.DebtFunds.objects.get(fund_id=fund_object)
+                except core_models.LiquidFunds.DoesNotExist:
+                    earlier_fund_data = None
+                    does_exist = False
+                for field in constants.FIELDS_DATA_POINTS_LIQUID_API:
+                    if field == constants.NUMBER_OF_HOLDINGS_TOP_THREE_PORTFOLIOS:
+                        fields[field] = {constants.HOLDINGS: str(fund.get(constants.API).get(
+                            constants.DEBT_DATA_POINTS_MAP[field])[:3])}
+                    else:
+                        fields[field] = fund.get(constants.API).get(constants.LIQUID_DATA_POINTS_MAP[field])
+                    if fields[field] is None:
+                        if does_exist:
+                            fields[field] = getattr(earlier_fund_data, field)
+                        else:
+                            logger.error(helpers.generate_logger_message(field, fund))
+                        fields[field] = 0
+                fund_object = core_models.Fund.objects.get(mstar_id=fund.get(constants.ID))
+                core_models.LiquidFunds.objects.update_or_create(fund_id=fund_object.id, defaults=fields)
+                count += 1
+            return count
+
     # Note - deprecated
     def get_daily_nav_for_indices(self):
         """

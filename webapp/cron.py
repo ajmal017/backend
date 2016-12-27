@@ -205,5 +205,12 @@ def monthly_cron():
         is_error = True
         error_entry = str(e) + ' get_data_points_for_debt; '
         errors += error_entry
+    try:
+        generate_log_message(morningstar_object.get_data_points_for_liquid(), 'liquid', 10, monthly_logger)
+    except Exception as e:
+        is_error = True
+        error_entry = str(e) + ' get_data_points_for_liquid; '
+        errors += error_entry
+        
     if is_error:
         monthly_logger.info(errors)

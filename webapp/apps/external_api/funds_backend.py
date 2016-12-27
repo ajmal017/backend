@@ -37,3 +37,9 @@ class BaseFundBackend(object):
         receive data for debt model
         """
         raise NotImplementedError
+
+    def get_data_points_for_liquid(self):
+        """
+        receive data for debt model
+        """
+        raise NotImplementedError

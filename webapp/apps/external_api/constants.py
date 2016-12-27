@@ -34,6 +34,10 @@ MORNING_STAR_DEBT_API = "http://api.morningstar.com/v2/service/mf/y9lk27a9omrxsw
                         settings.MORNING_STAR_UNIVERSE_ID_DEBT + "?accesscode=" + settings.MORNING_STAR_ACCESS_CODE + \
                         "&format=json"
 
+MORNING_STAR_LIQUID_API = "http://api.morningstar.com/v2/service/mf/s4p99d2zzfal3tk4/universeid/" + \
+                        settings.MORNING_STAR_UNIVERSE_ID_LIQUID + "?accesscode=" + settings.MORNING_STAR_ACCESS_CODE + \
+                        "&format=json"
+
 HISTORICAL_DATA_API = 'http://api.morningstar.com/service/mf/DailyReturnIndex/MStarID/'
 
 INDICES_NAV_API = 'http://api.morningstar.com/v2/service/mf/c13k49f38raoyutj/universeid/'+ \
@@ -149,6 +153,10 @@ FIELDS_DATA_POINTS_DEBT_API = [NUMBER_OF_HOLDINGS_TOTAL, TOP_TEN_HOLDINGS, AVERA
                                YIELD_TO_MATURITY, NUMBER_OF_HOLDINGS_TOP_THREE_PORTFOLIOS, CREDIT_QUALITY_A,
                                CREDIT_QUALITY_AA, CREDIT_QUALITY_AAA, AVERAGE_CREDIT_QUALITY]
 
+FIELDS_DATA_POINTS_LIQUID_API = [NUMBER_OF_HOLDINGS_TOTAL, TOP_TEN_HOLDINGS, AVERAGE_MATURITY, MODIFIED_DURATION,
+                               YIELD_TO_MATURITY, NUMBER_OF_HOLDINGS_TOP_THREE_PORTFOLIOS, CREDIT_QUALITY_A,
+                               CREDIT_QUALITY_AA, CREDIT_QUALITY_AAA, AVERAGE_CREDIT_QUALITY]
+
 FUND_MAP = {
     ISIN : 'FSCBI-ISIN',
     MSTAR_ID: 'FSCBI-MStarID',
@@ -198,6 +206,19 @@ EQUITY_DATA_POINTS_MAP = {
 }
 
 DEBT_DATA_POINTS_MAP = {
+    NUMBER_OF_HOLDINGS_TOTAL: 'PSRP-NumberofHolding',
+    TOP_TEN_HOLDINGS: 'PSRP-AssetinTop10Holdings',
+    AVERAGE_MATURITY: 'PSRP-AverageEffMaturity',
+    MODIFIED_DURATION: 'PSRP-ModifiedDurationLong',
+    YIELD_TO_MATURITY: 'PS-YieldToMaturity',
+    NUMBER_OF_HOLDINGS_TOP_THREE_PORTFOLIOS: 'T10HV2-HoldingDetail',
+    CREDIT_QUALITY_A: 'CQBRP-CreditQualA',
+    CREDIT_QUALITY_AA: 'CQBRP-CreditQualAA',
+    CREDIT_QUALITY_AAA: 'CQBRP-CreditQualAAA',
+    AVERAGE_CREDIT_QUALITY: 'PSRP-AverageCreditQualityName'
+}
+
+LIQUID_DATA_POINTS_MAP = {
     NUMBER_OF_HOLDINGS_TOTAL: 'PSRP-NumberofHolding',
     TOP_TEN_HOLDINGS: 'PSRP-AssetinTop10Holdings',
     AVERAGE_MATURITY: 'PSRP-AverageEffMaturity',

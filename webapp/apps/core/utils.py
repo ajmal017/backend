@@ -2393,14 +2393,16 @@ def save_portfolio_snapshot(txn, exchange_vendor):
         folio_number_object = models.FolioNumber.objects.filter(user=txn.user, fund_house=portfolio_item.fund.fund_house).order_by('created_at').first()
         if folio_number_object:
             folio_number = folio_number_object.folio_number
-        order_item_lump = models.FundOrderItem.objects.create(portfolio_item=portfolio_item,
+            
+        if portfolio_item.lumpsum > 0:
+            order_item_lump = models.FundOrderItem.objects.create(portfolio_item=portfolio_item,
                                                               order_amount=portfolio_item.lumpsum,
                                                               agreed_sip=0,
                                                               agreed_lumpsum=portfolio_item.lumpsum,
                                                               internal_ref_no="FIN" + str(random_with_N_digits(7)),
                                                               folio_number=folio_number)
         
-        order_item_list.append(order_item_lump)
+            order_item_list.append(order_item_lump)
 
         if portfolio_item.sip != 0:
             order_item_sip = models.FundOrderItem.objects.create(portfolio_item=portfolio_item,
