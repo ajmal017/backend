@@ -440,8 +440,8 @@ EDUCATION_ESTIMATE_PERCENTAGE = {
 
 RETIREMENT_ESTIMATE_PERCENTAGE = {
                 BUDGET:40,
-                COMFORTABLE:50,
-                LUXURY :60                        
+                COMFORTABLE:60,
+                LUXURY :80                        
                 }
 
 GENERIC_ESTIMATE_PERCENTAGE = {
