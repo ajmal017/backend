@@ -41,6 +41,7 @@ import csv
 
 DUMMY_ANALYSIS = "A fund with top-of-mind recall in the large-cap category, this fund stayed true-to-label through three market cycles over the last 20 years. It has rarely slipped below four-five stars throughout its 20-year tenure. The fund typically holds about 35-40 stocks, striving to maintain adequate diversification across companies and sectors. It adopts a buy-hold approach, with the average holding period for individual stocks at around two years. The fund's investment style leans towards growth at a reasonable price. The fund selects stocks based on classic fundamental metrics such as high RoCE, good management and the ability to deliver sustainable earnings growth."
 
+morningstar_object = morningstar.MorningStarBackend()
 
 def read_csv_and_populate_fund_data(csv_file_name):
     """
@@ -75,4 +76,6 @@ def read_csv_and_populate_fund_data(csv_file_name):
 
 NON_MS_DATA_FOR_FUNDS = 'webapp/fixtures/liquid_funds.csv'  # replace it relevant csv file that you create. You can always  update these records via admin manually.
 read_csv_and_populate_fund_data(NON_MS_DATA_FOR_FUNDS)
+
+morningstar_object.get_data_points_for_liquid()
 
