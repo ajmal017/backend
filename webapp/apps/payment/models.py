@@ -68,7 +68,7 @@ class Transaction(TimeStampedModel):
     def __str__(self):
         return str(self.id) + " " + str(self.user) + " " + str(self.additional_info_1 )
 
-    def get_message(self):
+    def get_message(self,web=False):
         """
         :returns: A string to be hashed
         According to the documentation provided tries to recreate the string below
@@ -76,12 +76,15 @@ class Transaction(TimeStampedModel):
         FINASKUS|26|12011000051973|5.00|HDF|NA|NA|INR|DIRECT|R|finaskus|NA|NA|F|NA|NA|ARN-87554|BSE|LIQUID|RESIDENT-BSE-NA-L-NA-NA|20130706125634|http://219.64.14.241:100/billdesk_response.aspx
         """
         account_number = self.user.investorbankdetails.account_number
+        payment_return_url = bse_cons.PAYMENT_RU
+        if web:
+            payment_return_url = bse_cons.PAYMENT_RU_WEB
         # account_number = "NA"
         parts = [self.merchant_id, self.additional_info_1, account_number, str(self.txn_amount),
                  self.txt_bank_id, "NA", "NA", "INR", self.product_id, "R", "finaskus" , "NA", "NA", "F",
                  self.additional_info_2, self.additional_info_3, self.additional_info_4, self.additional_info_5,
                  self.additional_info_6, self.concated_additional_info(),
-                 utils.date_time_format(self.additional_info_8, self.txn_amount), bse_cons.PAYMENT_RU]
+                 utils.date_time_format(self.additional_info_8, self.txn_amount), payment_return_url]
         return "|".join(parts)
 
     def concated_additional_info(self):
@@ -96,20 +99,20 @@ class Transaction(TimeStampedModel):
                  self.additional_info_12, self.source_id]
         return "-".join(parts)
 
-    def hash(self):
+    def hash(self,web=False):
         """
 
         :return:hashed value
         """
-        code = self.get_message()
+        code = self.get_message(web)
         return utils.get_billdesk_checksum(code, settings.BILLDESK_SECRET_KEY)
 
-    def url_hashed(self):
+    def url_hashed(self,web=False):
         """
 
         :return: constant ru|hash value
         """
-        parts = [self.get_message(), self.hash()]
+        parts = [self.get_message(web), self.hash(web)]
         return "|".join(x for x in parts if x)
 
 

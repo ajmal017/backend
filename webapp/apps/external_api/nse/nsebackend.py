@@ -319,7 +319,7 @@ class NSEBackend(ExchangeBackend):
     def create_order(self, user_id, order_detail):
         return self.purchase_trxn(user_id, order_detail), None
 
-    def generate_payment_link(self, transaction):
+    def generate_payment_link(self, transaction,web=False):
         error_logger = logging.getLogger('django.error')
         core_utils.convert_to_investor(transaction, self.get_vendor(), inlinePayment=True)
         try:

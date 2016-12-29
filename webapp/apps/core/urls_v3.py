@@ -49,6 +49,7 @@ urlpatterns = [
     url(r'^portfolio/tracker/$', views.PortfolioTracker.as_view(), name='portfolio-tracker'),
 
     url(r'^billdesk/complete/$', views.BilldeskComplete.as_view(), name='billdesk-complete'),
+    url(r'^billdesk/complete/web/$', views.BilldeskCompleteWeb.as_view(), name='billdesk-complete-web'),
     url(r'^billdesk/success/$', views.Billdesk.as_view(), name='billdesk-success'),
     url(r'^billdesk/fail/$', views.Billdesk.as_view(), name='billdesk-fail'),
     

@@ -51,6 +51,9 @@ class TransactionString(APIView):
         if serializer.is_valid():
             # txt_bank_id = request.query_params.get('txt_bank_id')
             # product_id = request.query_params.get('product_id')
+            web = False
+            if request.query_params.get('web'):
+                web = True
             kwargs = {"txn_amount": request.query_params.get('txn_amount'),
                       "txt_bank_id": txt_bank_id,
                       "product_id": product_id,
@@ -60,7 +63,7 @@ class TransactionString(APIView):
                       "user_id": request.user.id,}
             billdesk = models.Transaction.objects.create(**kwargs)
             logger = logging.getLogger('django.info')
-            payment_link, error_status = active_exchange_backend.generate_payment_link(billdesk)
+            payment_link, error_status = active_exchange_backend.generate_payment_link(billdesk,web)
             if payment_link:
                 logger.info(payment_link)
                 return api_utils.response(payment_link)

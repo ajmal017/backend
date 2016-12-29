@@ -695,13 +695,8 @@ class RetirementGoal(GoalBase):
             total_income_at_retirement = round(annual_income * (math.pow((1+constants.INFLATION_PERCENTAGE["op1"]/100),term)))
             total_expense_at_retirement = round(total_income_at_retirement * constants.RETIREMENT_ESTIMATE_PERCENTAGE[estimate]/100)
             
-            assess_answer = utils.get_assess_answer(user)
-            gender = 'op1'
-            if assess_answer and assess_answer["A7"]:
-                gender = assess_answer["A7"]
-            
             if data['retirement_age'] < 61:
-                life_expectency = 80 if gender == 'op1' else (85)
+                life_expectency = 80 
             else:
                 life_expectency = int(data['retirement_age']) + 20
                 

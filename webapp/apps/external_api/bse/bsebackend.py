@@ -67,8 +67,8 @@ class BSEBackend(ExchangeBackend):
     def create_order(self, user_id, order_detail):
         return constants.RETURN_CODE_SUCCESS, bulk_upload.generate_order_pipe_file(user_id, order_detail)
     
-    def generate_payment_link(self, transaction):
-        return transaction.url_hashed(), constants.RETURN_CODE_SUCCESS 
+    def generate_payment_link(self, transaction,web=False):
+        return transaction.url_hashed(web), constants.RETURN_CODE_SUCCESS 
     
     def create_redeem(self, user_id, grouped_redeem):
         return constants.RETURN_CODE_SUCCESS, bulk_upload.generate_redeem_pipe_file(user_id, grouped_redeem)
