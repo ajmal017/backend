@@ -1146,6 +1146,82 @@ class BilldeskComplete(APIView):
             full_url = reverse("api_urls:core_urls:billdesk-fail") + "?" + query_params_string
             
         return HttpResponseRedirect(full_url)
+    
+    
+class BilldeskCompleteWeb(APIView):
+    """
+    API to return the goal summary
+    """
+    def create_query_params(self, dict):
+        """
+        :param dict:
+        :return:
+        """
+        qdict = QueryDict('',mutable=True)
+        qdict.update(dict)
+        return qdict.urlencode()
+
+    def post(self, request):
+        """
+        :param request:
+        :return: demo message
+        """
+        logger = logging.getLogger('django.info')
+        logger.info(request)
+        logger.info(request.data)
+        # msg =  [
+        # "FINASKUS|76|FIDB4397665607|86815116|00000002.00|IDB|NA|01|INR|DIRECT|NA|NA|NA|04-04-2016 18:56:23|0300|NA|NA|NA|ARN-87554|BSE-NA|LIQUID|RESIDENT-BSE-NA-L-NA-NA|1459776388435-2.00-0.00|NA|Y|C3742EAC9CEA6C9D086A1DD37CCDCB2FFA8DA23D197971A45720B90E1ECC5B72"
+        # ]
+        # msg = msg[0]
+        msg = request.data.get('msg',[])
+        order_id, ref_no, txn_amount, auth_status, txn_time  = billdesk.parse_billdesk_response(msg)
+        txn_time_dt = None
+        if txn_time:
+            try:
+                txn_time_dt = datetime.strptime(txn_time, '%d-%m-%Y %H:%M:%S')
+            except:
+                logger.info("Billdesk response: Error parsing transaction time: " + txn_time)
+        if billdesk.verify_billdesk_checksum(msg):
+            if auth_status == "0399":
+                txn = billdesk.update_transaction_failure(order_id, ref_no, float(txn_amount), auth_status, msg, txn_time_dt)
+                query_params = {"txn_amount" :txn_amount, "auth_status": auth_status, "order_id": ref_no,
+                                "message" : msg.split("|")[24],"api_status":"fail" 
+                                }
+                query_params_string = self.create_query_params(query_params)
+                #full_url = reverse("api_urls:core_urls:billdesk-fail") + "?" + query_params_string
+                full_url = "http://localhost:8000/#/dashboard?" + query_params_string 
+                
+            
+            elif auth_status == "0300":
+                txn = billdesk.update_transaction_success(order_id, ref_no, float(txn_amount), auth_status, msg, txn_time_dt)
+                active_exchange_vendor = external_helpers.get_exchange_vendor_helper().get_active_vendor()
+                utils.convert_to_investor(txn, active_exchange_vendor)
+                query_params = {"txn_amount" :txn_amount, "auth_status": auth_status, "order_id": ref_no,
+                                "message": "Payment successful","api_status":"success"}
+                query_params_string = self.create_query_params(query_params)
+                #full_url = reverse("api_urls:core_urls:billdesk-success") + "?" + query_params_string
+                full_url = "http://localhost:8000/#/dashboard?" + query_params_string 
+            
+            else:
+                txn = billdesk.update_transaction_ongoing(order_id, ref_no, float(txn_amount), auth_status, msg, txn_time_dt)
+                query_params = {"txn_amount" :txn_amount, "auth_status": auth_status, "order_id": ref_no,
+                                "message" : msg.split("|")[24] ,"api_status":"ongoing"
+                                }
+                query_params_string = self.create_query_params(query_params)
+                #full_url = reverse("api_urls:core_urls:billdesk-ongoing") + "?" + query_params_string
+                full_url = "http://localhost:8000/#/dashboard?" + query_params_string 
+                
+        else:
+            txn = billdesk.update_transaction_checksum_failure(order_id, ref_no, float(txn_amount), auth_status, msg, txn_time_dt)
+            query_params = {"txn_amount" :txn_amount, "auth_status": auth_status, "order_id": ref_no,
+                                "message" : msg.split("|")[24],"api_status":"fail"
+                                }
+            query_params_string = self.create_query_params(query_params)
+            #full_url = reverse("api_urls:core_urls:billdesk-fail") + "?" + query_params_string
+            full_url = "http://localhost:8000/#/dashboard?" + query_params_string 
+            
+        return HttpResponseRedirect(full_url)
+
 
 
 class Billdesk(APIView):
