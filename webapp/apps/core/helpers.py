@@ -28,6 +28,9 @@ def percentage(dividend, divisor):
     :param divisor: the divisor
     :return: percentage rounded to two digits
     """
+    if divisor == 0:
+        return 0
+    
     return round(((dividend*100)/divisor), 1)
 
 def roundTo100(amount1, amount2):

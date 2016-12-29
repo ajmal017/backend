@@ -73,6 +73,7 @@ def read_csv_and_populate_fund_data(csv_file_name):
                 fund.save()
 
 
+morningstar_object.get_data_points_for_funds()
 
 NON_MS_DATA_FOR_FUNDS = 'webapp/fixtures/liquid_funds.csv'  # replace it relevant csv file that you create. You can always  update these records via admin manually.
 read_csv_and_populate_fund_data(NON_MS_DATA_FOR_FUNDS)

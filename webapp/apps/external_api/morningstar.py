@@ -337,7 +337,7 @@ class MorningStarBackend(BaseFundBackend):
                 does_exist = True
                 fund_object = core_models.Fund.objects.get(mstar_id=fund.get(constants.ID))
                 try:
-                    earlier_fund_data = core_models.DebtFunds.objects.get(fund_id=fund_object)
+                    earlier_fund_data = core_models.LiquidFunds.objects.get(fund_id=fund_object)
                 except core_models.LiquidFunds.DoesNotExist:
                     earlier_fund_data = None
                     does_exist = False
