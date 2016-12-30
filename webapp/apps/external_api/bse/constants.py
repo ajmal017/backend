@@ -538,8 +538,8 @@ BSE_ORDER_WSDL = 'http://bsestarmfdemo.bseindia.com/MFOrderEntry/MFOrder.svc?sin
 BSE_ORDER_GET_PASSWORD_URL = 'http://bsestarmf.in/MFOrderEntry/getPassword'
 EXCHNAME_BSE = "B"
 
-PAYMENT_RU = "https://api.finaskus.com/v2.0/core/billdesk/complete/"
-PAYMENT_RU_WEB = "https://api.finaskus.com/v2.0/core/billdesk/complete/web/"
+PAYMENT_RU = "https://api.finaskus.com/v3.0/core/billdesk/complete/"
+PAYMENT_RU_WEB = "https://api.finaskus.com/v3.0/core/billdesk/complete/web/"
 
 BILLDESK_QUERY_URL = "https://www.billdesk.com/pgidsk/PGIQueryController"
 BILLDESK_QUERY_REQUEST_TYPE = "0122"
