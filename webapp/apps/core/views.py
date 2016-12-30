@@ -1189,7 +1189,7 @@ class BilldeskCompleteWeb(APIView):
                                 }
                 query_params_string = self.create_query_params(query_params)
                 #full_url = reverse("api_urls:core_urls:billdesk-fail") + "?" + query_params_string
-                full_url = "http://localhost:8000/#/investmentReturn?" + query_params_string 
+                full_url = constants.BILLDESK_COMPLETE_URL_WEB+ "?" + query_params_string 
                 
             
             elif auth_status == "0300":
@@ -1200,7 +1200,7 @@ class BilldeskCompleteWeb(APIView):
                                 "message": "Payment successful","api_status":"success"}
                 query_params_string = self.create_query_params(query_params)
                 #full_url = reverse("api_urls:core_urls:billdesk-success") + "?" + query_params_string
-                full_url = "http://localhost:8000/#/investmentReturn?" + query_params_string 
+                full_url = constants.BILLDESK_COMPLETE_URL_WEB+ "?" + query_params_string
             
             else:
                 txn = billdesk.update_transaction_ongoing(order_id, ref_no, float(txn_amount), auth_status, msg, txn_time_dt)
@@ -1209,7 +1209,7 @@ class BilldeskCompleteWeb(APIView):
                                 }
                 query_params_string = self.create_query_params(query_params)
                 #full_url = reverse("api_urls:core_urls:billdesk-ongoing") + "?" + query_params_string
-                full_url = "http://localhost:8000/#/investmentReturn?" + query_params_string 
+                full_url = constants.BILLDESK_COMPLETE_URL_WEB+ "?" + query_params_string
                 
         else:
             txn = billdesk.update_transaction_checksum_failure(order_id, ref_no, float(txn_amount), auth_status, msg, txn_time_dt)
@@ -1218,7 +1218,7 @@ class BilldeskCompleteWeb(APIView):
                                 }
             query_params_string = self.create_query_params(query_params)
             #full_url = reverse("api_urls:core_urls:billdesk-fail") + "?" + query_params_string
-            full_url = "http://localhost:8000/#/investmentReturn?" + query_params_string 
+            full_url = constants.BILLDESK_COMPLETE_URL_WEB+ "?" + query_params_string
             
         return HttpResponseRedirect(full_url)
 
