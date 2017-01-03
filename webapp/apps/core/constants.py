@@ -490,3 +490,4 @@ WEDDING_EXPENSE = {
                    "bride_groom_cost":{BUDGET:100000,COMFORTABLE:150000,LUXURY:250000}  
                    }
 
+BILLDESK_COMPLETE_URL_WEB = "http://localhost:8000/#/investmentReturn"
