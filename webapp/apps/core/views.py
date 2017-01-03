@@ -724,7 +724,11 @@ class GenericGoalAnswer(APIView):
         serializer = serializers.GenericGoalSerializer(data=request.data)
         if serializer.is_valid():
             goal_object = goals_helper.GenericGoal()
-            is_error, errors = goal_object.create_or_update_goal(request.user, serializer.data, goal_type, request.data.get('goal_name')) 
+            try:
+                is_error, errors = goal_object.create_or_update_goal(request.user, serializer.data, goal_type, request.data.get('goal_name')) 
+            except:
+                return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
+                                  "invalid goal")
             if is_error:
                 return api_utils.response({constants.MESSAGE: errors}, status.HTTP_400_BAD_REQUEST,
                                           api_utils.create_error_message(errors))
@@ -2061,8 +2065,12 @@ class ChangeGoalPortfolio(APIView):
         except models.Portfolio.DoesNotExist:
             return api_utils.response({constants.MESSAGE: constants.USER_PORTOFOLIO_NOT_PRESENT},
                                       status.HTTP_400_BAD_REQUEST, constants.USER_PORTOFOLIO_NOT_PRESENT)
-
-        goal = goals_helper.GoalBase.get_current_goal(request.user, constants.MAP[goal_type])
+        
+        try:
+            goal = goals_helper.GoalBase.get_current_goal(request.user, constants.MAP[goal_type])
+        except:
+            return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
+                                  "invalid goal")
         if not goal:
             return api_utils.response({constants.MESSAGE: constants.USER_GOAL_NOT_PRESENT},
                                       status.HTTP_400_BAD_REQUEST, constants.USER_GOAL_NOT_PRESENT)
