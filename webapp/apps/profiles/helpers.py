@@ -68,8 +68,12 @@ def convert_social_access_token(access_token):
     return responseJSON
 
 
-def convert_auth_to_access_token(auth_code):
-    data = {'grant_type':'authorization_code','code':auth_code,'client_id':settings.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY,'client_secret':settings.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET}
+def convert_auth_to_access_token(auth_code, is_web):
+    redirect_uri = ''
+    if is_web:
+        redirect_uri = 'postmessage'
+    data = {'grant_type':'authorization_code','code':auth_code,'client_id':settings.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY,'client_secret':settings.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET,
+            'redirect_uri':redirect_uri}
     response = requests.post(settings.GOOGLE_PLUS_AUTH_URL, data=data)
     responseJSON = response.json()
     if responseJSON.get('access_token'):     

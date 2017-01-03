@@ -1790,6 +1790,7 @@ class GoogleLogin(APIView):
         email = serializer.initial_data.get("email")
         
         auth_code = request.data['auth_code']
+        is_web = request.data.get('is_web', False)
         
 
         kwargs = {'email': email, 'access_token': ''}
@@ -1831,7 +1832,7 @@ class GoogleLogin(APIView):
             if user.is_active:
                 if user_status == constants.GOOGLE_LOGIN_EXIST_GOOGLE_USER:
                     
-                    access_token = helpers.convert_auth_to_access_token(auth_code)
+                    access_token = helpers.convert_auth_to_access_token(auth_code, is_web)
                     
                     if access_token is not None:
                         convert_token = helpers.convert_social_access_token(access_token)
@@ -1893,8 +1894,9 @@ class GoogleRegister(APIView):
         
         if phone_exist is None:     
             auth_code = request.POST.get('auth_code', False)
+            is_web = request.POST.get('is_web', False)
 
-            access_token = helpers.convert_auth_to_access_token(auth_code)
+            access_token = helpers.convert_auth_to_access_token(auth_code, is_web)
              
             if access_token is not None:
                 try:
@@ -1971,13 +1973,14 @@ class GoogleRegisterExistingUser(APIView):
         email = request.data['email']
         password = request.data['password']
         auth_code = request.POST.get('auth_code', False)
+        is_web = request.POST.get('is_web', False)
         
         logger = logging.getLogger('django.debug')
         logger.debug("Google account merge: User with email id" + email)
         
         user = utils.get_social_user(email)
         if user.check_password(password):
-            access_token = helpers.convert_auth_to_access_token(auth_code)
+            access_token = helpers.convert_auth_to_access_token(auth_code, is_web)
             
             if access_token is not None:
         
