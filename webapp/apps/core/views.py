@@ -1847,7 +1847,12 @@ class AnswerDelete(APIView):
         :return:
         """
         is_last_goal = True
-        current_goal = goals_helper.GoalBase.get_current_goal(request.user, constants.MAP[question_for])
+        try:
+            current_goal = goals_helper.GoalBase.get_current_goal(request.user, constants.MAP[question_for])
+        except:
+            return api_utils.response({"message": "error"}, status.HTTP_400_BAD_REQUEST,
+                                  "invalid goal")
+
         
         if current_goal:
             portfolio = current_goal.portfolio 
