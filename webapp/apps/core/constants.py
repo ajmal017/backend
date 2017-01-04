@@ -252,6 +252,7 @@ LIQUID_FUNDS_BY_SIP = 0
 
 ID = 'id'
 FUND_NAME = 'fund_name'
+FUND_RANK = 'fund_rank'
 COMAPRED_FUND = 'compared_fund'
 DEBT_OTHER_DATA = 'debt_other_data'
 EQUITY_OTHER_DATA = 'equity_other_data'
