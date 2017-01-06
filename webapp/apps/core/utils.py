@@ -348,6 +348,8 @@ def calculate_overall_allocation(user):
         equity_sip += allocation[constants.EQUITY][constants.SIP]
         liquid_lumpsum += allocation[constants.LIQUID][constants.LUMPSUM]
         liquid_sip += allocation[constants.LIQUID][constants.SIP]
+        elss_lumpsum += allocation[constants.ELSS][constants.LUMPSUM]
+        elss_sip += allocation[constants.ELSS][constants.SIP]
 
         
         category_summary = {"goal": goal.name, "corpus": round(corpus, 2), "sip": sip_amount,
