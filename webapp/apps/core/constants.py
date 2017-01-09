@@ -60,6 +60,20 @@ MAP = {
     "jewellery":JEWELLERY
 }
 
+GOAL_REVERSE_MAP = {
+    INVEST : "invest",
+    TAX_SAVING : "tax",
+    RETIREMENT : "retirement",
+    BUY_PROPERTY : "property",
+    EDUCATION : "education",
+    WEDDING : "wedding",
+    OTHER_EVENT : "event",
+    LIQUID_GOAL : "liquid",
+    AUTO_MOBILE : "automobile",
+    VACATION : "vacation",
+    JEWELLERY : "jewellery"
+}
+
 
 ASSET_ALLOCATION_MAP = {
     RETIREMENT: [None, 'monthly_investment', 'RET', ['current_age', 'retirement_age'], 'grow_sip'],
@@ -337,6 +351,7 @@ FINANCIAL_GOAL_STATUS = 'financial_goal_status'
 GOAL = 'goal'
 CORPUS = 'corpus'
 TERM = 'term'
+GOAL_TYPE = 'goal_type'
 EXPECTD_VALUE = 'expected_value'
 GOAL_ANSWERS = 'goal_answers'
 FUND_DETAILS = 'fund_details'

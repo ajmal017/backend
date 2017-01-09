@@ -1965,6 +1965,7 @@ def make_financial_goal_response(goal_map, total_equity_invested, total_debt_inv
                     
                 goal_status = {
                     constants.NAME: goal_name,
+                    constants.GOAL_TYPE: constants.GOAL_REVERSE_MAP[category], 
                     constants.INVESTED_VALUE: calculate_aum_in_string(round(category_individual_goal.get(
                         constants.INVESTED_VALUE))),
                     constants.EXPECTD_VALUE: calculate_aum_in_string(round(goal_current_value)),
