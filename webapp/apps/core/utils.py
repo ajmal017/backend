@@ -348,6 +348,8 @@ def calculate_overall_allocation(user):
         equity_sip += allocation[constants.EQUITY][constants.SIP]
         liquid_lumpsum += allocation[constants.LIQUID][constants.LUMPSUM]
         liquid_sip += allocation[constants.LIQUID][constants.SIP]
+        elss_lumpsum += allocation[constants.ELSS][constants.LUMPSUM]
+        elss_sip += allocation[constants.ELSS][constants.SIP]
 
         
         category_summary = {"goal": goal.name, "corpus": round(corpus, 2), "sip": sip_amount,
@@ -1154,7 +1156,8 @@ def get_compared_data(fund_ids):
         fund__id__in=fund_ids).order_by('fund__id')
     for index, fund in enumerate(funds):
         compared_fund.append(
-            {constants.ID: fund.id, constants.FUND_NAME: fund.fund_name,
+            {constants.ID: fund.id, constants.FUND_NAME: fund.fund_name,constants.FUND_RANK:fund.fund_rank,
+             constants.CATEGORY_NAME:fund.category_name,
              constants.RETURN_ONE_YEAR: round(funds_daily_change_data_points[index].return_one_year, 2),
              constants.RETURN_THREE_YEAR: round(funds_daily_change_data_points[index].return_three_year, 2),
              constants.RETURN_FIVE_YEAR: round(funds_daily_change_data_points[index].return_five_year, 2)})
@@ -1168,8 +1171,12 @@ def get_compared_data(fund_ids):
                 'fund__id')
             for index, fund in enumerate(funds):
                 category_other_data.append({
-                    constants.ID: fund.id, constants.FUND_NAME: fund.fund_name,
+                    constants.ID: fund.id, constants.FUND_NAME: fund.fund_name,constants.FUND_RANK:fund.fund_rank,
+                    constants.CATEGORY_NAME:fund.category_name,
+                    constants.STAR_RATING:fund_data_points_monthly[index].star_rating,
+                    constants.RISK:fund_data_points_monthly[index].risk,
                     constants.AUM: calculate_aum_in_string(round(fund_data_points_daily[index].aum), 0),
+                    constants.EXPENSE_RATIO: fund_data_points_monthly[index].expense_ratio,
                     constants.CREDIT_QUALITY: funds_debt_data_points[index].average_credit_quality,
                     constants.MAX_DEFERRED_LOAD: fund_data_points_monthly[index].max_deferred_load,
                     constants.AVERAGE_MATURITY: funds_debt_data_points[index].average_maturity,
@@ -1184,8 +1191,12 @@ def get_compared_data(fund_ids):
                 'fund__id')
             for index, fund in enumerate(funds):
                 category_other_data.append({
-                    constants.ID: fund.id, constants.FUND_NAME: fund.fund_name,
+                    constants.ID: fund.id, constants.FUND_NAME: fund.fund_name,constants.FUND_RANK:fund.fund_rank,
+                    constants.CATEGORY_NAME:fund.category_name,
+                    constants.STAR_RATING:fund_data_points_monthly[index].star_rating,
+                    constants.RISK:fund_data_points_monthly[index].risk,
                     constants.AUM: calculate_aum_in_string(round(fund_data_points_daily[index].aum), 0),
+                    constants.EXPENSE_RATIO: fund_data_points_monthly[index].expense_ratio,
                     constants.CREDIT_QUALITY: funds_debt_data_points[index].average_credit_quality,
                     constants.MAX_DEFERRED_LOAD: fund_data_points_monthly[index].max_deferred_load,
                     constants.AVERAGE_MATURITY: funds_debt_data_points[index].average_maturity,
@@ -1200,7 +1211,10 @@ def get_compared_data(fund_ids):
                 fund__id__in=fund_ids).order_by('fund__id')
             for index, fund in enumerate(funds):
                 category_other_data.append({
-                    constants.ID: fund.id, constants.FUND_NAME: fund.fund_name,
+                    constants.ID: fund.id, constants.FUND_NAME: fund.fund_name,constants.FUND_RANK:fund.fund_rank,
+                    constants.CATEGORY_NAME:fund.category_name,
+                    constants.STAR_RATING:fund_data_points_monthly[index].star_rating,
+                    constants.RISK:fund_data_points_monthly[index].risk,
                     constants.AUM: calculate_aum_in_string(round(fund_data_points_daily[index].aum), 0),
                     constants.EXPENSE_RATIO: fund_data_points_monthly[index].expense_ratio,
                     constants.MAX_DEFERRED_LOAD: fund_data_points_monthly[index].max_deferred_load,
