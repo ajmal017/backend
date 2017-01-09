@@ -344,7 +344,7 @@ class MorningStarBackend(BaseFundBackend):
                 for field in constants.FIELDS_DATA_POINTS_LIQUID_API:
                     if field == constants.NUMBER_OF_HOLDINGS_TOP_THREE_PORTFOLIOS:
                         fields[field] = {constants.HOLDINGS: str(fund.get(constants.API).get(
-                            constants.DEBT_DATA_POINTS_MAP[field])[:3])}
+                            constants.LIQUID_DATA_POINTS_MAP[field])[:3])}
                     else:
                         fields[field] = fund.get(constants.API).get(constants.LIQUID_DATA_POINTS_MAP[field])
                     if fields[field] is None:

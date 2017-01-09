@@ -1706,6 +1706,7 @@ class VideoUpload(APIView):
         serializer = serializers.SaveUserVideoSerializer(data=request.data)
         if serializer.is_valid():
             request.user.user_video = request.FILES.get("user_video", None)
+            request.user.user_video.name = "video.mp4"
             request.user.user_video_thumbnail = thumbnail_file or request.FILES.get("user_video_thumbnail", None)
             request.user.save()
             return api_utils.response({"message": constants.USER_VIDEO_SAVED,
@@ -1912,7 +1913,7 @@ class GoogleRegister(APIView):
                     user.phone_number = phone
                     user.email_verified = True
                       
-                    if request.data['image'] is not None:
+                    if request.data.get('image') is not None:
                         url = request.data['image']
                         ext = url.split('.')[-1]
                         user.image.save('{0}.{1}'.format('image', ext),ContentFile(urllib2.urlopen(url).read()),save=False)

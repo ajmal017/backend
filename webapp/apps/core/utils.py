@@ -2395,7 +2395,7 @@ def save_portfolio_snapshot(txn, exchange_vendor):
             folio_number = folio_number_object.folio_number
             
         if portfolio_item.lumpsum > 0:
-            order_item_lump = models.FundOrderItem.objects.create(portfolio_item=portfolio_item,
+            order_item_lump = models.FundOrderItem(portfolio_item=portfolio_item,
                                                               order_amount=portfolio_item.lumpsum,
                                                               agreed_sip=0,
                                                               agreed_lumpsum=portfolio_item.lumpsum,
@@ -2404,8 +2404,8 @@ def save_portfolio_snapshot(txn, exchange_vendor):
         
             order_item_list.append(order_item_lump)
 
-        if portfolio_item.sip != 0:
-            order_item_sip = models.FundOrderItem.objects.create(portfolio_item=portfolio_item,
+        if portfolio_item.sip > 0:
+            order_item_sip = models.FundOrderItem(portfolio_item=portfolio_item,
                                                                  order_amount=portfolio_item.sip,
                                                                  agreed_sip=portfolio_item.sip,
                                                                  agreed_lumpsum=0,
@@ -2413,7 +2413,8 @@ def save_portfolio_snapshot(txn, exchange_vendor):
                                                                  folio_number=folio_number)
             order_item_list.append(order_item_sip)
             
-
+    models.FundOrderItem.objects.bulk_create(order_item_list)
+    
     order_detail_lump = models.OrderDetail.objects.create(user=txn.user, order_status=0, transaction=txn,
                                                           is_lumpsum=True, vendor=exchange_vendor)
     order_detail_lump.fund_order_items.set(order_item_list)
