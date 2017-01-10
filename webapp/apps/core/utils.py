@@ -2430,6 +2430,8 @@ def save_portfolio_snapshot(txn, exchange_vendor):
             
     models.FundOrderItem.objects.bulk_create(order_item_list)
     
+    order_item_list = models.FundOrderItem.objects.filter(portfolio_item__portfolio__user=txn.user, orderdetail=None)
+        
     order_detail_lump = models.OrderDetail.objects.create(user=txn.user, order_status=0, transaction=txn,
                                                           is_lumpsum=True, vendor=exchange_vendor)
     order_detail_lump.fund_order_items.set(order_item_list)
