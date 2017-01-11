@@ -184,17 +184,30 @@ class GoalBase(ABC):
             goal_name = goal_serializer.validated_data.get("name")
             allocation = goal_serializer.validated_data.get('asset_allocation')
             duration = self.get_duration(data)
-
+            item_dict = dict(data.items())
             goal = self.get_current_goal(user, goal_type)
-            
             if goal:
-                goal.name = goal_name
-                goal.asset_allocation = allocation
-                goal.duration = duration
-                goal.save()
+                answers = goal.answer_set.all() 
+                if goal.name != goal_name or goal.asset_allocation != allocation or goal.duration != duration:
+                    goal.name = goal_name
+                    goal.asset_allocation = allocation
+                    goal.duration = duration
+                    goal.save()
+                else:
+                    for answer in answers:
+                        if answer.question.type == constants.TEXT:
+                            if item_dict.get(answer.question.question_id):
+                                if str(item_dict[answer.question.question_id]) != str(answer.text):
+                                    goal.save()
+                                    break
+                        else:
+                            if item_dict.get(answer.question.question_id):
+                                if str(item_dict[answer.question.question_id]) != str(answer.option.option_id):
+                                    goal.save()
+                                    break
+                        
             else:
-                goal = models.Goal.objects.create(user=user, category=goal_type, name=goal_name, asset_allocation=allocation, duration=duration)
-                            
+                goal = models.Goal.objects.create(user=user, category=goal_type, name=goal_name, asset_allocation=allocation, duration=duration)                
             for key, value in data.items():
                 value, option_id = self.get_answer_value(key, value)
                 if option_id:
@@ -203,10 +216,10 @@ class GoalBase(ABC):
                     defaults = {'option': option_selected}
                 else:
                     defaults = {'text': str(value)}
-
+                
                 question = models.Question.objects.get(question_id=key, question_for=goal_type)
                 models.Answer.objects.update_or_create(
-                        question_id=question.id, user=user, goal=goal, portfolio=None, defaults=defaults)
+                            question_id=question.id, user=user, goal=goal, portfolio=None, defaults=defaults)
 
         else:
             is_error = True
