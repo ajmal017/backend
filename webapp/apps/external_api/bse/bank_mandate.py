@@ -7,6 +7,7 @@ from datetime import datetime
 from subprocess import call
 from fdfgen import forge_fdf
 from external_api import constants as cons
+from external_api.bse import constants as bse_cons
 import os
 import time
 
@@ -18,19 +19,22 @@ def generate_bank_mandate_file(user_id, bank_mandate):
     :param user: The user for which the file is being generated
     :return: url of the generated pipe separated file of the bank mandate
     """
+    user = models.User.objects.get(id=user_id)
+    user_vendor = models.UserVendor.objects.get(user=user, vendor__name=bank_mandate.vendor.name)
     base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps/external_api', '')
     output_path = base_dir + '/webapp/static/'
     timestamp = time.strftime("%Y%m%d-%H%M%S")
-    bank_mandate_pipe_file_name = "bank_mandate_pipe" + timestamp + ".txt"
+    bank_mandate_pipe_file_name = "mandate_" + user_vendor.ucc + ".txt"
     outfile = open(output_path + bank_mandate_pipe_file_name, "w")
-    user = models.User.objects.get(id=user_id)
-    user_vendor = models.UserVendor.objects.get(user=user, vendor__name=bank_mandate.vendor.name)
+    
+    
 
     bank_mandate_dict = OrderedDict([('Member Code', cons.MEMBER_CODE),
                                      ('UCC', str(user_vendor.ucc)),
                                      ('Amount', str(bank_mandate.mandate_amount)),
                                      ('IFSC Code', bank_mandate.mandate_bank_details.ifsc_code.ifsc_code),
-                                     ('Account Number', bank_mandate.mandate_bank_details.account_number), ])
+                                     ('Account Number', bank_mandate.mandate_bank_details.account_number),
+                                     ('Mandate Type', bse_cons.MANDATE_TYPE_XSIP) ])
     outfile.write("|".join(bank_mandate_dict.values()))
     outfile.write("\r")
     outfile.close()
@@ -50,7 +54,7 @@ def generate_bank_mandate_pdf(user_id, bank_mandate):
 
     curr_date = datetime.now()
 
-    if not user.mandate_reg_no:
+    if not bank_mandate or not bank_mandate.mandate_reg_no:
         return None, "Mandate Registration Number Missing"
     
     mandate_dict = {
@@ -92,8 +96,8 @@ def generate_bank_mandate_pdf(user_id, bank_mandate):
 
     fields = [(key, value) for key, value in mandate_dict.items()]
     fdf = forge_fdf("", fields, [], [], [])
-    temp_file_name = "mandate_temp" + timestamp + ".fdf"
-    out_file_name = "mandate_out" + timestamp + ".pdf"
+    temp_file_name = str(user_vendor.ucc) + "_bank_mandate_file.fdf"
+    out_file_name = str(user_vendor.ucc) + "_bank_mandate_file.pdf"
     fdf_file = open(temp_file_name, "wb")
     fdf_file.write(fdf)
     fdf_file.close()

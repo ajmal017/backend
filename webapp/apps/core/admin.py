@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 from django.utils.safestring import mark_safe
 from django.core.urlresolvers import reverse
+from rangefilter.filter import DateRangeFilter
 
 from . import models
 from profiles.utils import is_investable
@@ -63,7 +64,7 @@ class OrderDetailAdmin(admin.ModelAdmin):
     1. custom filter
     2. custom list display
     """
-    list_filter = ['order_status', 'is_lumpsum', UserFilter]
+    list_filter = ['order_status', 'is_lumpsum', UserFilter, ('created_at', DateRangeFilter)]
     list_display = ['user', 'order_id', 'order_status', 'is_lumpsum', 'created_at', 'bank_mandate', 'button3', 'button4', 'bank_mandate_button','button5']
     search_fields = ['order_id', 'user__email']
     readonly_fields = ('user', 'transaction', 'order_id', 'list_of_fund_order_items')

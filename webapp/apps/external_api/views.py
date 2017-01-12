@@ -24,6 +24,8 @@ from payment import constants as payment_constant
 from core import models as core_models
 
 import time
+import os
+import csv
 
 class VerifiablePincode(APIView):
     """
@@ -425,7 +427,11 @@ class GenerateAOFTiff(View):
                     my_file_path = prefix + constants.STATIC + output_file
                     my_file = open(my_file_path, "rb")
                     content_type = 'image/tiff'
-                    download_name = user.id
+                    try:
+                        invest_info = pr_models.InvestorInfo.objects.get(user=user)
+                        download_name=invest_info.pan_number
+                    except:
+                        download_name = user.id
                     response = HttpResponse(my_file, content_type=content_type, status=200)
                     response['Content-Disposition'] = 'attachment;filename=%s' % download_name + ".tiff"
                     my_file.close()
@@ -547,5 +553,43 @@ class SipCancellation_admin(View):
                         return HttpResponse("Error at creating the file")                 
             else:
                 return HttpResponse("Portfolio item details not found")
+        else:
+            return HttpResponse(constants.FORBIDDEN_ERROR, status=403)
+
+class GenerateUserCsv(View):
+    """
+    An api to generate user information in csv format
+    """
+
+    def get(self, request):
+        """
+        Only admin user is allowed to access the private mandate PDF.
+
+        :param request: the email_id of the pertinent user is received from this.
+        :return: send the generated bank_mandate pdf
+        """
+
+        # makes sure that only superuser can access this file.
+
+        if request.user.is_superuser:
+            #users = pr_models.User.objects.filter(is_active=True).exclude(signature="")
+            users = pr_models.User.objects.filter(is_active=True)
+            
+            base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps', '')
+            output_path = base_dir + '/webapp/static/'
+            timestamp = time.strftime("%Y%m%d-%H%M%S")
+            user_csv_file = "user_detail_" + timestamp + ".csv"
+            output_file = output_path + user_csv_file
+            with open(output_file, "w") as output:
+                writer = csv.writer(output)
+                for user in users:
+                    writer.writerow([user.email,user.phone_number])  
+            
+            my_file = open(output_file, "rb")
+            content_type = 'text/csv'
+            response = HttpResponse(my_file, content_type=content_type, status=200)
+            response['Content-Disposition'] = 'attachment;filename=%s' % str(timestamp) + '_user_detail.csv'
+            my_file.close()
+            return response
         else:
             return HttpResponse(constants.FORBIDDEN_ERROR, status=403)

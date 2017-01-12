@@ -167,7 +167,7 @@ class BilldeskInformation(View):
                             core_utils.convert_to_investor(txn, active_exchange_vendor)
                             message = "successfully update the transaction"
                         else:
-                            message = "Invalid Request"
+                            message = "Invalid Request: " + str(response)
                         return HttpResponse(message)
                     else:
                         return HttpResponse("Invalid Request")

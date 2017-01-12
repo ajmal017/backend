@@ -23,4 +23,5 @@ urlpatterns = [
     url(r'^generate/bank/mandate/$', views.GenerateBankMandateRegistration.as_view(), name='generate_bank_mandate'),
     url(r'^nse/order/$', views.NseOrder.as_view(), name='nse_order'),
     url(r'^sip/cancellation/admin/$', views.SipCancellation_admin.as_view(), name='sip-cancellation'),
+    url(r'^generate/user/csv/$', views.GenerateUserCsv.as_view(), name='generate_user_csv')
 ]

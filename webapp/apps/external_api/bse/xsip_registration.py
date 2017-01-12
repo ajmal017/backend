@@ -7,7 +7,7 @@ from datetime import datetime
 import os, time
 
 
-def generate_order_pipe_file(user_id, order_detail):
+def generate_order_pipe_file(user_id, order_detail,exch_backend):
     """
     This function generates a pipe separated file for bulk order entry.
     :param order_items: list of order_items for that order_detail
@@ -17,13 +17,16 @@ def generate_order_pipe_file(user_id, order_detail):
     user = profile_models.User.objects.get(id=user_id)
     order_items = order_detail.fund_order_items.all()
     bank_mandate = order_detail.bank_mandate
+    
+    user_vendor = profile_models.UserVendor.objects.get(user=user, vendor__name=exch_backend.vendor_name)
     if not bank_mandate:
         return None
 
     base_dir = os.path.dirname(os.path.dirname(__file__)).replace('/webapp/apps/external_api', '')
     output_path = base_dir + '/webapp/static/'
     timestamp = time.strftime("%Y%m%d-%H%M%S")
-    bulk_user_pipe_file_name = "bulk_user_pipe" + timestamp + ".txt"
+    order_id = order_detail.order_id
+    bulk_user_pipe_file_name = order_id + "_xsip_" + user_vendor.ucc +".txt"
     outfile = open(output_path + bulk_user_pipe_file_name, "w")
     for i, item in enumerate(order_items):
         neft_code = ''
@@ -65,7 +68,7 @@ def generate_order_pipe_file(user_id, order_detail):
 
         bulk_user_dict = OrderedDict([('AMC Code', amc_code),
                                       ('SCHEME CODE', neft_code if item.order_amount < 200000 else rgts_code),
-                                      ('Client Code', str(user.finaskus_id)),
+                                      ('Client Code', str(user_vendor.ucc)),
                                       ('Internal Ref No.', internal_ref_no),
                                       ('Trans Mode ', cons.Accept_Mode),
                                       ('DP TXN Mode', cons.DP_TXN_MODE),
@@ -84,7 +87,9 @@ def generate_order_pipe_file(user_id, order_detail):
                                       ('EUIN Number', cons.Order_EUIN_Number),
                                       ('EUIN Declaration', cons.Order_EUIN_declaration),
                                       ('DPC Flag', cons.Order_DPC_Flag),
-                                      ('First Order Today', cons.First_Order_Today), ])
+                                      ('First Order Today', cons.First_Order_Today),
+                                      ('ISIP Mandate', ''),
+                                      ('Sub-broker ARN', '') ])
         if int(agreed_sip) > 0:
             outfile.write("|".join(bulk_user_dict.values()))
             if i < len(order_items) - 1:
