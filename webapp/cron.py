@@ -3,6 +3,7 @@ from django.db.models import Min
 from external_api import morningstar
 from core import utils, models
 from profiles import utils as profile_utils
+from core import funds_helper
 
 import logging
 from datetime import datetime, date
@@ -102,7 +103,7 @@ def daily_cron():
             inception_date = models.FundOrderItem.objects.filter(orderdetail__in=order_ids).aggregate(Min('allotment_date'))
             if inception_date["allotment_date__min"]:
                 count +=1
-                dashboard_date = utils.get_dashboard_change_date()
+                dashboard_date = funds_helper.FundsHelper.get_dashboard_change_date()
                 amount = utils.get_current_invested_value_date(
                     datetime(dashboard_date.year, dashboard_date.month, dashboard_date.day), user.user)
                 if inception_date["allotment_date__min"] == dashboard_date:
