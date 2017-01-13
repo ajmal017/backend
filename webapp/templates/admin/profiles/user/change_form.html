@@ -24,7 +24,7 @@
                     $.ajax({
                         type: 'post',
                         data: {"email" : email},
-                        url: "/v2.0/user/resend/verify/email/admin/",
+                        url: "/v3.0/user/resend/verify/email/admin/",
                         success: function(object) {
                             $(".loader").hide();
                             alert(object.response.message);
@@ -37,7 +37,7 @@
                     email = element.value;
                     console.log(email);
                     // this opens a new window for the download of the private resource.
-                    window.open("/v2.0/open/generate/investor/info/pdf/?email="+email);
+                    window.open("/v3.0/open/generate/investor/info/pdf/?email="+email);
                 });
 
                 $('#button_kyc_pdf').click(function(){
@@ -45,28 +45,28 @@
                     email = element.value;
                     console.log(email);
                     // this opens a new window for the download of the private resource.
-                    window.open("/v2.0/open/generate/kyc/info/pdf/?email="+email);
+                    window.open("/v3.0/open/generate/kyc/info/pdf/?email="+email);
                 });
 
                 $('#button_tiff').click(function(){
                     var element = document.getElementById("id_email");
                     email = element.value;
                     // this opens a new window for the download of the private resource.
-                    window.open("/v2.0/open/generate/bse/investor/tiff/?email="+email);
+                    window.open("/v3.0/open/generate/bse/investor/tiff/?email="+email);
                 });
 
                 $('#button_upload_tiff').click(function(){
                     var element = document.getElementById("id_email");
                     email = element.value;
                     // this opens a new window for the download of the private resource.
-                    window.open("/v2.0/open/upload/investor/tiff/?email="+email);
+                    window.open("/v3.0/open/upload/investor/tiff/?email="+email);
                 });
 
                 $('#bank_mandate_pdf').click(function(){
                     var element = document.getElementById("id_email");
                     email = element.value;
                     // this opens a new window for the download of the private resource.
-                    window.open("/v2.0/open/generate/bank/mandate/pdf?email="+email);
+                    window.open("/v3.0/open/generate/bank/mandate/pdf?email="+email);
                 });
             }
         </script>

@@ -1,6 +1,6 @@
 NO_DATA_FOUND = 'No Data Found'
 
-PAYMENT_RU = "https://api.finaskus.com/v2.0/core/billdesk/nse/complete/"
+PAYMENT_RU = "https://api.finaskus.com/v3.0/core/billdesk/nse/complete/"
 
 # XPATHS FOR READING NSE_RESPONSE FIELDS
 

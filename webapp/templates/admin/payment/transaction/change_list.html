@@ -8,7 +8,7 @@
             var allElems = $(this).parent().parent().children();
             transaction_id = allElems[1].innerText;
             // this opens a new window for the download of the private resource.
-            window.open("/v2.0/payment/billdesk/information/?transaction_id="+transaction_id);
+            window.open("/v3.0/payment/billdesk/information/?transaction_id="+transaction_id);
         });
     
      }
