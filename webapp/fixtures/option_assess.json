@@ -57,7 +57,7 @@
 
 {"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Budget", "option_id": "op1", "is_deleted": "False", "question": "104", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 131},
 {"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Comfortable", "option_id": "op2", "is_deleted": "False", "question": "104", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 132},
-{"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Luxury", "option_id": "op3", "is_deleted": "False", "question": "104", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 133},
+
 
 {"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Budget", "option_id": "op1", "is_deleted": "False", "question": "105", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 133},
 {"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Comfortable", "option_id": "op2", "is_deleted": "False", "question": "105", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 134},
@@ -91,5 +91,6 @@
 {"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Estimation", "option_id": "op2", "is_deleted": "False", "question": "115", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 154},
 
 {"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Manual", "option_id": "op1", "is_deleted": "False", "question": "116", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 155},
-{"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Estimation", "option_id": "op2", "is_deleted": "False", "question": "116", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 156}
+{"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Estimation", "option_id": "op2", "is_deleted": "False", "question": "116", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 156},
+{"model": "core.option", "fields": {"modified_at": "2016-11-07 06:28:41.695311", "text": "Luxury", "option_id": "op3", "is_deleted": "False", "question": "104", "metadata": "{}", "weight": "0.0", "created_at": "2016-11-07 06:28:41.695311"}, "pk": 157}
 ]

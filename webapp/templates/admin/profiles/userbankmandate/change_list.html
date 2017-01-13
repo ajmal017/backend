@@ -12,7 +12,7 @@
             $('.generate_mandate').click(function(){
                 var allElems = $(this).parent().parent().children();
                 id = allElems[0].innerText;
-                window.open("/v2.0/open/generate/bank/mandate/pdf?mandate_id="+id);
+                window.open("/v3.0/open/generate/bank/mandate/pdf?mandate_id="+id);
             });
         }
     </script>
