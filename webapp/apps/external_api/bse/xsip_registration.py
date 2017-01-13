@@ -55,16 +55,9 @@ def generate_order_pipe_file(user_id, order_detail,exch_backend):
             fund_id = item.portfolio_item.fund.id
             start_date = models.get_valid_start_date(fund_id).strftime("%d/%m/%Y")
 
-        fund_house = ""
         folio_number = ""
-        if item.portfolio_item.fund.fund_house:
-            fund_house = item.portfolio_item.fund.fund_house
-            try:
-                f_number = models.FolioNumber.objects.get(user=user, fund_house=fund_house).folio_number
-                if f_number:
-                    folio_number = f_number
-            except models.FolioNumber.DoesNotExist:
-                folio_number = ""
+        if item.folio_number:
+            folio_number = item.folio_number
 
         bulk_user_dict = OrderedDict([('AMC Code', amc_code),
                                       ('SCHEME CODE', neft_code if item.order_amount < 200000 else rgts_code),
