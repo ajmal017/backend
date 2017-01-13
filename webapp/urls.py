@@ -34,7 +34,7 @@ urlpatterns = [
     url(r'^5a91a426e461/474a/admin/', include(admin.site.urls)),
     url(r"^versionInfo", views.VersionInfo.as_view(), name="VersionInfo"),
 #    url(r"^v1.0/", views.DeprecateAPI.as_view(), name="DeprecateAPI"),
-    url(r"^v2.0/", include("api.urls", namespace='api_urls')),
+    url(r"^v2.0/", views.DeprecateAPI.as_view(), name="DeprecateAPI"),
     url(r"^v3.0/", include("api.urls_v3", namespace='api_urls_v3')),
     url(r"^v1.0/", views.DeprecateAPI.as_view(), name="DeprecateAPI"),
     url(r'^o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
