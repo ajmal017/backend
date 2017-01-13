@@ -389,6 +389,7 @@ class MorningStarBackend(BaseFundBackend):
         :param for_daily_nav: flag to determine if we use the function for setting daily nav
         :return:
         """
+        logger = logging.getLogger('django.error')
         fund_list = ''
         try:
             fund = core_models.Fund.objects.get(mstar_id=fund_mstar_id)
@@ -410,6 +411,8 @@ class MorningStarBackend(BaseFundBackend):
                 end_date = date.today()
             url = utils.generate_url_for_historical_data(fund_mstar_id, start_date, end_date)
             json_data = self._get_data(url)
+            if not json_data.get(constants.DATA):
+                logger.error("Missing historical data: " + str(fund_mstar_id) + " " + str(json_data))
             for data in json_data[constants.DATA][constants.API][constants.RAW_DATA]:
                 date_of_nav = data[constants.HISTORICAL_DATA_MAP[constants.DATE]]
                 nav = data[constants.HISTORICAL_DATA_MAP[constants.NAV]]
