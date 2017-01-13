@@ -106,6 +106,14 @@ class DebtFundSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.DebtFunds
         exclude = ('fund', 'id')
+        
+class LiquidFundSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Liquid funds
+    """
+    class Meta:
+        model = models.LiquidFunds
+        exclude = ('fund', 'id')
 
 
 class UserEmailSerializer(serializers.ModelSerializer):

@@ -1031,6 +1031,34 @@ def get_debt_portfolio(debt_data_points):
     return {constants.TOP: top_block_portfolio, constants.BOTTOM: bottom_block_portfolio}
 
 
+def get_liquid_portfolio(debt_data_points):
+    """
+    utility portfolio for debt funds
+    :param debt_data_points: data points from debt model
+    :return:
+    """
+    top_block_portfolio, bottom_block_portfolio = [], []
+    liquid_serializer = serializers.LiquidFundSerializer(debt_data_points).data
+    for field in constants.TOP_PORTFOLIO_LIQUID:
+        if field == constants.NUMBER_OF_HOLDINGS:
+            top_block_portfolio.append({constants.KEY: field,
+                                        constants.VALUE: round(liquid_serializer[constants.TOP_PORTFOLIO_MAP[field]])})
+        else:
+            top_block_portfolio.append({constants.KEY: field,
+                                        constants.VALUE: round(liquid_serializer[constants.TOP_PORTFOLIO_MAP[field]], 2)})
+    bottom_block_portfolio.append({constants.KEY: constants.TOP_THREE_HOLDING_PORTFOLIO,
+                                   constants.VALUE: round_holdings_to_two_decimals(ast.literal_eval(
+                                       liquid_serializer[constants.NUMBER_OF_HOLDINGS_TOP_THREE_PORTFOLIOS][
+                                           constants.HOLDINGS])[0:3])})
+    credit_quality_list = []
+    for credit_quality in constants.CREDIT_QUALITY_LIST:
+        credit_quality_list.append(
+            {constants.WEIGHTING: round(liquid_serializer[constants.CREDIT_QUALITY_MAP[credit_quality]], 2),
+             constants.KEY_NAME: credit_quality})
+    bottom_block_portfolio.append({constants.KEY: constants.CREDIT_QUALITY, constants.VALUE: credit_quality_list})
+    return {constants.TOP: top_block_portfolio, constants.BOTTOM: bottom_block_portfolio}
+
+
 def round_holdings_to_two_decimals(holding_list):
     """
     Rounds off weighting in holdings to two decimals
