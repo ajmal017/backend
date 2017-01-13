@@ -1133,7 +1133,7 @@ class BilldeskComplete(APIView):
                                 "message" : msg.split("|")[24] # as error message is the 24th pipe seperated in the string
                                 }
                 query_params_string = self.create_query_params(query_params)
-                full_url = reverse("api_urls:core_urls:billdesk-fail") + "?" + query_params_string
+                full_url = reverse("api_urls_v3:core_urls:billdesk-fail") + "?" + query_params_string
             
             elif auth_status == "0300":
                 txn = billdesk.update_transaction_success(order_id, ref_no, float(txn_amount), auth_status, msg, txn_time_dt)
@@ -1142,7 +1142,7 @@ class BilldeskComplete(APIView):
                 query_params = {"txn_amount" :txn_amount, "auth_status": auth_status, "order_id": ref_no,
                                 "message": "Payment successful"}
                 query_params_string = self.create_query_params(query_params)
-                full_url = reverse("api_urls:core_urls:billdesk-success") + "?" + query_params_string
+                full_url = reverse("api_urls_v3:core_urls:billdesk-success") + "?" + query_params_string
             
             else:
                 txn = billdesk.update_transaction_ongoing(order_id, ref_no, float(txn_amount), auth_status, msg, txn_time_dt)
@@ -1150,7 +1150,7 @@ class BilldeskComplete(APIView):
                                 "message" : msg.split("|")[24] # as error message is the 24th pipe seperated in the string
                                 }
                 query_params_string = self.create_query_params(query_params)
-                full_url = reverse("api_urls:core_urls:billdesk-ongoing") + "?" + query_params_string
+                full_url = reverse("api_urls_v3:core_urls:billdesk-ongoing") + "?" + query_params_string
                 
         else:
             txn = billdesk.update_transaction_checksum_failure(order_id, ref_no, float(txn_amount), auth_status, msg, txn_time_dt)
@@ -1158,7 +1158,7 @@ class BilldeskComplete(APIView):
                                 "message" : msg.split("|")[24] # as error message is the 24th pipe seperated in the string
                                 }
             query_params_string = self.create_query_params(query_params)
-            full_url = reverse("api_urls:core_urls:billdesk-fail") + "?" + query_params_string
+            full_url = reverse("api_urls_v3:core_urls:billdesk-fail") + "?" + query_params_string
             
         return HttpResponseRedirect(full_url)
     
