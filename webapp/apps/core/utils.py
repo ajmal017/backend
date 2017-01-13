@@ -1229,7 +1229,7 @@ def get_compared_data(fund_ids):
                     constants.MAX_DEFERRED_LOAD: fund_data_points_monthly[index].max_deferred_load,
                     constants.AVERAGE_MATURITY: funds_debt_data_points[index].average_maturity,
                     constants.YIELD_TO_MATURITY: round(funds_debt_data_points[index].yield_to_maturity, 2)})
-            return True, {constants.COMAPRED_FUND: compared_fund, constants.LIQUID_OTHER_DATA: category_other_data,
+            return True, {constants.COMAPRED_FUND: compared_fund, constants.DEBT_OTHER_DATA: category_other_data,
                           constants.EQUITY_OTHER_DATA: constants.EMPTY_lIST_FOR_DATA}
         else:
             funds_equity_data_points = models.EquityFunds.objects.filter(fund__id__in=fund_ids).order_by('fund__id')
