@@ -544,7 +544,7 @@ class JewelleryGoal(GenericGoal):
         for estimate in constants.ESTIMATION_TYPE:
             balance_corpus_required = 0
             
-            future_jewellery_value = self.calculate_future_value(data['current_price'],constants.INFLATION_PERCENTAGE["op1"]/100,data['term'])
+            future_jewellery_value = self.calculate_future_value(data['current_price'],constants.JEWELLERY_INFLATION_PERCENTAGE["op1"]/100,data['term'])
             base_amount = round(future_jewellery_value * (constants.JEWELLERY_ESTIMATE_PERCENTAGE[estimate]/100))
             delta_amount = round(base_amount * (constants.JEWELLERY_ESTIMATE_PERCENTAGE[estimate]/100 - 1))
             amount_required = base_amount + delta_amount

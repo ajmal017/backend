@@ -479,6 +479,11 @@ INFLATION_PERCENTAGE = {
              ABROAD : 2
              }
 
+JEWELLERY_INFLATION_PERCENTAGE = {
+             INDIA : 10,
+             ABROAD : 2
+             }
+
 RETURN_ON_EXIST_INVEST_PERCENTAGE = 8
 EDUCATION_SIP_AMOUNT = 7600
 
