@@ -837,6 +837,10 @@ class SchemaFactSheet(APIView):
             debt_data_points = models.DebtFunds.objects.get(fund=fund_id)
             fact_sheet[constants.PORTFOLIO] = utils.get_debt_portfolio(debt_data_points)
             return api_utils.response(fact_sheet, status.HTTP_200_OK)
+        elif fund.type_of_fund == constants.FUND_MAP[constants.LIQUID]:
+            liquid_data_points = models.LiquidFunds.objects.get(fund=fund_id)
+            fact_sheet[constants.PORTFOLIO] = utils.get_debt_portfolio(liquid_data_points)
+            return api_utils.response(fact_sheet, status.HTTP_200_OK)
         else:
             equity_data_points = models.EquityFunds.objects.get(fund=fund_id)
             sector_data_points = models.TopThreeSectors.objects.get(equity_fund_id=equity_data_points.id)
