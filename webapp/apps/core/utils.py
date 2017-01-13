@@ -2369,7 +2369,7 @@ def send_transaction_complete_email(txn, user, portfolio, order_detail_lumpsum,i
     applicant_name = investor_info_check(user)
 
     payment_completed = True if txn.txn_status == payment_models.Transaction.Status.Success else False
-    profiles_helpers.send_transaction_completed_email(order_detail_lumpsum,applicant_name,user.email,sip_tenure,goal_len,payment_completed, inlinePayment, use_https=settings.USE_HTTPS)
+    profiles_helpers.send_transaction_completed_email(order_detail_lumpsum,applicant_name,user.email,payment_completed, inlinePayment, use_https=settings.USE_HTTPS)
 
 def convert_to_investor(txn, exchange_vendor, inlinePayment=False):
     """
