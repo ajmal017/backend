@@ -1221,7 +1221,7 @@ class FundOrderItem(TimeStampedModel):
                 unit_alloted = round(self.order_amount / nav, 3)
                 self.unit_alloted = unit_alloted
                 self.is_verified = True
-                if not self.orderdetail_set.all()[0].is_lumpsum and not self.is_future_sip_cancelled:
+                if not self.agreed_sip > 0 and not self.is_future_sip_cancelled:
                     next_allotment_date = get_next_allotment_date_or_start_date(self)
                     self.next_allotment_date = next_allotment_date
 
