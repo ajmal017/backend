@@ -1128,7 +1128,10 @@ class BilldeskComplete(APIView):
                 logger.info("Billdesk response: Error parsing transaction time: " + txn_time)
         if billdesk.verify_billdesk_checksum(msg):
             if auth_status == "0399":
-                txn = billdesk.update_transaction_failure(order_id, ref_no, float(txn_amount), auth_status, msg, txn_time_dt)
+                try:
+                    txn = billdesk.update_transaction_failure(order_id, ref_no, float(txn_amount), auth_status, msg, txn_time_dt)
+                except Exception as e:
+                    logger.info(e)
                 query_params = {"txn_amount" :txn_amount, "auth_status": auth_status, "order_id": ref_no,
                                 "message" : msg.split("|")[24] # as error message is the 24th pipe seperated in the string
                                 }
@@ -1145,14 +1148,15 @@ class BilldeskComplete(APIView):
                 full_url = reverse("api_urls_v3:core_urls:billdesk-success") + "?" + query_params_string
             
             else:
-                txn = billdesk.update_transaction_ongoing(order_id, ref_no, float(txn_amount), auth_status, msg, txn_time_dt)
-                active_exchange_vendor = external_helpers.get_exchange_vendor_helper().get_active_vendor()
-                utils.convert_to_investor(txn, active_exchange_vendor)
+                try:
+                    txn = billdesk.update_transaction_ongoing(order_id, ref_no, float(txn_amount), auth_status, msg, txn_time_dt)
+                except Exception as e:
+                    logger.info(e)
                 query_params = {"txn_amount" :txn_amount, "auth_status": auth_status, "order_id": ref_no,
                                 "message" : msg.split("|")[24] # as error message is the 24th pipe seperated in the string
                                 }
                 query_params_string = self.create_query_params(query_params)
-                full_url = reverse("api_urls_v3:core_urls:billdesk-ongoing") + "?" + query_params_string
+                full_url = reverse("api_urls_v3:core_urls:billdesk-fail") + "?" + query_params_string
                 
         else:
             txn = billdesk.update_transaction_checksum_failure(order_id, ref_no, float(txn_amount), auth_status, msg, txn_time_dt)
