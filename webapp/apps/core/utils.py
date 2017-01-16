@@ -402,7 +402,7 @@ def get_sip_lumpsum_for_goal(user, goal):
     corpus, term = goal_object.get_expected_corpus()
 
     goal_summary = {"goal": goal.name, "corpus": round(corpus, 2), "sip": sip_amount,
-                        "lumpsum": lumpsum_amount, "term": term}
+                        "lumpsum": lumpsum_amount, "term": term,"goal_type":constants.GOAL_REVERSE_MAP[goal.category]}
 
     return allocation, goal_summary, total_annual_investment
 
