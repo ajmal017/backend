@@ -140,11 +140,11 @@ def generate_tiff(pdf_name, bank_cheque_image):
             # note it is width X height always, in real life too not just python.
             # portrait is 800 x 1,200 these are minimum dimensions.
             # landscape is 1,024 x 512 these are minimum dimensions.
-            if new_height < 1200:
-                size = constants.TIFF_LANDSCAPE_SIZE
-            else:
+            #if new_height < 1200:
+            #    size = constants.TIFF_LANDSCAPE_SIZE
+            #else:
                 # the given image is portrait
-                size = constants.TIFF_PORTRAIT_SIZE
+            #    size = constants.TIFF_PORTRAIT_SIZE
             resized_image = actual_image.resize(size, Image.ANTIALIAS)
         else:
             resized_image = actual_image

@@ -78,5 +78,11 @@ morningstar_object.get_data_points_for_funds()
 NON_MS_DATA_FOR_FUNDS = 'webapp/fixtures/liquid_funds.csv'  # replace it relevant csv file that you create. You can always  update these records via admin manually.
 read_csv_and_populate_fund_data(NON_MS_DATA_FOR_FUNDS)
 
+funds = models.Fund.objects.filter(type_of_fund='L')
+for fund in funds:
+        morningstar_object.get_historical_data_points(fund.mstar_id)
+        
+morningstar_object.get_data_points_for_fund_data_points_change_monthly()
+morningstar_object.get_data_points_for_fund_data_points_change_daily()
 morningstar_object.get_data_points_for_liquid()
 

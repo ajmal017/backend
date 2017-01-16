@@ -172,6 +172,7 @@ morningstar_object.get_data_points_for_fund_data_points_change_daily()
 morningstar_object.get_data_points_for_equity()
 morningstar_object.get_data_points_for_sectors()
 morningstar_object.get_data_points_for_debt()
+morningstar_object.get_data_points_for_liquid()
 
 # Now add the riskometer data via following lines
 fund_monthly_objects = models.FundDataPointsChangeMonthly.objects.all()

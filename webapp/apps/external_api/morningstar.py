@@ -413,11 +413,12 @@ class MorningStarBackend(BaseFundBackend):
             json_data = self._get_data(url)
             if not json_data.get(constants.DATA):
                 logger.error("Missing historical data: " + str(fund_mstar_id) + " " + str(json_data))
-            for data in json_data[constants.DATA][constants.API][constants.RAW_DATA]:
-                date_of_nav = data[constants.HISTORICAL_DATA_MAP[constants.DATE]]
-                nav = data[constants.HISTORICAL_DATA_MAP[constants.NAV]]
-                core_models.HistoricalFundData.objects.update_or_create(fund_id=fund, date=date_of_nav,
-                                                                        defaults={constants.NAV: nav})
+            else:
+                for data in json_data[constants.DATA][constants.API][constants.RAW_DATA]:
+                    date_of_nav = data[constants.HISTORICAL_DATA_MAP[constants.DATE]]
+                    nav = data[constants.HISTORICAL_DATA_MAP[constants.NAV]]
+                    core_models.HistoricalFundData.objects.update_or_create(fund_id=fund, date=date_of_nav,
+                                                                            defaults={constants.NAV: nav})
             start_date = end_date
             fund_list += str(fund_mstar_id + ' ' + str(end_date) + '\n')
 
