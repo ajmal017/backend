@@ -52,6 +52,7 @@ urlpatterns = [
     url(r'^billdesk/complete/web/$', views.BilldeskCompleteWeb.as_view(), name='billdesk-complete-web'),
     url(r'^billdesk/success/$', views.Billdesk.as_view(), name='billdesk-success'),
     url(r'^billdesk/fail/$', views.Billdesk.as_view(), name='billdesk-fail'),
+    url(r'^billdesk/ongoing/$', views.Billdesk.as_view(), name='billdesk-ongoing'),
     
     url(r'^transaction/complete/$', views.TransactionComplete.as_view(), name='transaction-complete'),
     url(r'^sip/cancellation/add/$', views.SipCancellation.as_view(), name='sip-cancellation'), 
