@@ -237,20 +237,31 @@ def calculate_risk_score(request,user=None):
     score = 0.0
     age = None
     for key, value in request.data.items():
-        if key != "A1":
-            if key == "A8":
-                option_weight = []
-                question = models.Question.objects.get(question_id=key)
-                total_denominator += question.weight
-                values = value.split(",")
-                for val in values:
-                    option_selected = models.Option.objects.get(option_id=val, question__question_id=key)
-                    option_weight.append(option_selected.weight)
-                score += (max(option_weight)* question.weight)
-                if user and user is not None:
+        if key not in ["A2","A3","A5","A6"]:  # These questions are no more using in v3.0 
+            if key != "A1":
+                if key == "A8":
+                    option_weight = []
+                    question = models.Question.objects.get(question_id=key)
+                    total_denominator += question.weight
+                    values = value.split(",")
+                    for val in values:
+                        option_selected = models.Option.objects.get(option_id=val, question__question_id=key)
+                        option_weight.append(option_selected.weight)
+                    score += (max(option_weight)* question.weight)
+                    if user and user is not None:
+                            models.Answer.objects.update_or_create(
+                               question_id=question.id, user=user, defaults={'text': value})
+                else:
+                    question = models.Question.objects.get(question_id=key)
+                    option_selected = models.Option.objects.get(option_id=value, question__question_id=key)
+                    total_denominator += question.weight
+                    score += (option_selected.weight * question.weight)
+                    if user and user is not None:
                         models.Answer.objects.update_or_create(
-                           question_id=question.id, user=user, defaults={'text': value})
+                               question_id=question.id, user=user, defaults={'option': option_selected})
             else:
+                age = int(value)
+                value = helpers.find_right_option(int(value))
                 question = models.Question.objects.get(question_id=key)
                 option_selected = models.Option.objects.get(option_id=value, question__question_id=key)
                 total_denominator += question.weight
@@ -258,16 +269,6 @@ def calculate_risk_score(request,user=None):
                 if user and user is not None:
                     models.Answer.objects.update_or_create(
                            question_id=question.id, user=user, defaults={'option': option_selected})
-        else:
-            age = int(value)
-            value = helpers.find_right_option(int(value))
-            question = models.Question.objects.get(question_id=key)
-            option_selected = models.Option.objects.get(option_id=value, question__question_id=key)
-            total_denominator += question.weight
-            score += (option_selected.weight * question.weight)
-            if user and user is not None:
-                models.Answer.objects.update_or_create(
-                       question_id=question.id, user=user, defaults={'option': option_selected})
     return age,round((score / total_denominator), 1)
 
 def make_allocation_dict(sip, lumpsum, allocation):
