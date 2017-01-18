@@ -1493,7 +1493,7 @@ def normalize_data(funds_value_list, index_value_list, category_value_list):
 
 
 def expected_corpus(year, monthly_sip, lumpsum, equity_asset_allocation, debt_asset_allocation, growth_rate=0.0,
-                    MONTHLY_EXPECTED_EQUITY=pow(1.12, 1/12)-1, MONTHLY_EXPECTED_DEBT=pow(1.08, 1/12)-1):
+                    MONTHLY_EXPECTED_EQUITY=pow(constants.RETURN_PERCENTAGE_EQUITY, 1/12)-1, MONTHLY_EXPECTED_DEBT=pow(constants.RETURN_PERCENTAGE_DEBT, 1/12)-1):
     """
     :param year:
     :param monthly_sip:
@@ -1535,7 +1535,7 @@ def calculate_end_of_year_sum(rate, pmt, current_year, growth_rate, lumpsum):
 
 
 def new_expected_corpus(sip, lumpsum, debt_asset_allocation, equity_asset_allocation, actual_term, term, growth_rate=0.0,
-                        monthly_expected_debt=pow(1.08, 1/12)-1, monthly_expected_equity=pow(1.12, 1/12)-1):
+                        monthly_expected_debt=pow(constants.RETURN_PERCENTAGE_DEBT, 1/12)-1, monthly_expected_equity=pow(constants.RETURN_PERCENTAGE_EQUITY, 1/12)-1):
     """
     :param type
     :param sip:
