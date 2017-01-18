@@ -261,4 +261,15 @@ class SchemaFactSheet_Test(APISimpleTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["status_code"],200)
 
-
+class DashboardVersionTwo_Test(APISimpleTestCase):
+    allow_database_queries = True
+    def test(self):
+        factory = APIRequestFactory()
+        view = views.DashboardVersionTwo.as_view()
+        data={}
+        user = User.objects.get(email='jp@gmail.com')
+        request = factory.get(settings.BASE_URL+reverse('api_urls_v3:core_urls:dashboard-v2'),data=data)
+        force_authenticate(request, user=user)
+        response = view(request)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["status_code"],200)
