@@ -237,20 +237,31 @@ def calculate_risk_score(request,user=None):
     score = 0.0
     age = None
     for key, value in request.data.items():
-        if key != "A1":
-            if key == "A8":
-                option_weight = []
-                question = models.Question.objects.get(question_id=key)
-                total_denominator += question.weight
-                values = value.split(",")
-                for val in values:
-                    option_selected = models.Option.objects.get(option_id=val, question__question_id=key)
-                    option_weight.append(option_selected.weight)
-                score += (max(option_weight)* question.weight)
-                if user and user is not None:
+        if key not in ["A2","A3","A5","A6"]:  # These questions are no more using in v3.0 
+            if key != "A1":
+                if key == "A8":
+                    option_weight = []
+                    question = models.Question.objects.get(question_id=key)
+                    total_denominator += question.weight
+                    values = value.split(",")
+                    for val in values:
+                        option_selected = models.Option.objects.get(option_id=val, question__question_id=key)
+                        option_weight.append(option_selected.weight)
+                    score += (max(option_weight)* question.weight)
+                    if user and user is not None:
+                            models.Answer.objects.update_or_create(
+                               question_id=question.id, user=user, defaults={'text': value})
+                else:
+                    question = models.Question.objects.get(question_id=key)
+                    option_selected = models.Option.objects.get(option_id=value, question__question_id=key)
+                    total_denominator += question.weight
+                    score += (option_selected.weight * question.weight)
+                    if user and user is not None:
                         models.Answer.objects.update_or_create(
-                           question_id=question.id, user=user, defaults={'text': value})
+                               question_id=question.id, user=user, defaults={'option': option_selected})
             else:
+                age = int(value)
+                value = helpers.find_right_option(int(value))
                 question = models.Question.objects.get(question_id=key)
                 option_selected = models.Option.objects.get(option_id=value, question__question_id=key)
                 total_denominator += question.weight
@@ -258,16 +269,6 @@ def calculate_risk_score(request,user=None):
                 if user and user is not None:
                     models.Answer.objects.update_or_create(
                            question_id=question.id, user=user, defaults={'option': option_selected})
-        else:
-            age = int(value)
-            value = helpers.find_right_option(int(value))
-            question = models.Question.objects.get(question_id=key)
-            option_selected = models.Option.objects.get(option_id=value, question__question_id=key)
-            total_denominator += question.weight
-            score += (option_selected.weight * question.weight)
-            if user and user is not None:
-                models.Answer.objects.update_or_create(
-                       question_id=question.id, user=user, defaults={'option': option_selected})
     return age,round((score / total_denominator), 1)
 
 def make_allocation_dict(sip, lumpsum, allocation):
@@ -1492,7 +1493,7 @@ def normalize_data(funds_value_list, index_value_list, category_value_list):
 
 
 def expected_corpus(year, monthly_sip, lumpsum, equity_asset_allocation, debt_asset_allocation, growth_rate=0.0,
-                    MONTHLY_EXPECTED_EQUITY=pow(1.12, 1/12)-1, MONTHLY_EXPECTED_DEBT=pow(1.08, 1/12)-1):
+                    MONTHLY_EXPECTED_EQUITY=pow(constants.RETURN_PERCENTAGE_EQUITY, 1/12)-1, MONTHLY_EXPECTED_DEBT=pow(constants.RETURN_PERCENTAGE_DEBT, 1/12)-1):
     """
     :param year:
     :param monthly_sip:
@@ -1534,7 +1535,7 @@ def calculate_end_of_year_sum(rate, pmt, current_year, growth_rate, lumpsum):
 
 
 def new_expected_corpus(sip, lumpsum, debt_asset_allocation, equity_asset_allocation, actual_term, term, growth_rate=0.0,
-                        monthly_expected_debt=pow(1.08, 1/12)-1, monthly_expected_equity=pow(1.12, 1/12)-1):
+                        monthly_expected_debt=pow(constants.RETURN_PERCENTAGE_DEBT, 1/12)-1, monthly_expected_equity=pow(constants.RETURN_PERCENTAGE_EQUITY, 1/12)-1):
     """
     :param type
     :param sip:
@@ -1925,7 +1926,13 @@ def calculate_financial_goal_status(asset_class_overview, portfolios_to_be_consi
         
             scheme_data = generate_scheme_data(goal)
             goal_data = generate_goals_data(goal)
-        
+            
+            if goal.portfolio and goal.portfolio.has_invested:
+                goal_date = goal.portfolio.investment_date
+            else:
+                goal_date = goal.created_at
+            
+            
             goal_map[goal.category][0].append({
                 constants.EXPECTD_VALUE: corpus,
                 constants.INVESTED_VALUE: investment_till_date_object[constants.INVESTED_VALUE],
@@ -1936,12 +1943,13 @@ def calculate_financial_goal_status(asset_class_overview, portfolios_to_be_consi
                 constants.LIQUID: investment_till_date_object[constants.LIQUID],
                 constants.DATE: portfolio.modified_at.date() + relativedelta(years=int(term)),
                 constants.GOAL_ANSWERS: goal_data,
-                constants.FUND_DETAILS:scheme_data
+                constants.FUND_DETAILS:scheme_data,
+                constants.GOAL_DATE:goal_date
             })
             total_debt += investment_till_date_object[constants.DEBT]
             total_equity += investment_till_date_object[constants.EQUITY]
             total_elss += investment_till_date_object[constants.ELSS]
-            total_liquid += investment_till_date_object[constants.LIQUID] 
+            total_liquid += investment_till_date_object[constants.LIQUID]
     return make_financial_goal_response(goal_map, total_equity, total_debt, total_elss,total_liquid, asset_class_overview)   
 
 def generate_scheme_data(goal):
@@ -2001,7 +2009,8 @@ def make_financial_goal_response(goal_map, total_equity_invested, total_debt_inv
                     constants.GOAL: calculate_aum_in_string(round(category_individual_goal.get(
                         constants.EXPECTD_VALUE))), constants.PROGRESS: progress,
                     constants.GOAL_ANSWERS: category_individual_goal.get(constants.GOAL_ANSWERS),
-                    constants.FUND_DETAILS:category_individual_goal.get(constants.FUND_DETAILS)
+                    constants.FUND_DETAILS:category_individual_goal.get(constants.FUND_DETAILS),
+                    constants.GOAL_DATE:category_individual_goal.get(constants.GOAL_DATE)
                 }
                 financial_goal_list.append(goal_status)
                 goal_map[category][1] += 1
@@ -3296,7 +3305,6 @@ def get_dashboard_version_two(transaction_fund_map, today_portfolio, portfolios_
                                                          is_transient_dashboard)
 
     financial_goal_status = calculate_financial_goal_status(asset_class_overview, portfolios_to_be_considered)
-
     return {constants.FINANCIAL_GOAL_STATUS: financial_goal_status,
             constants.ASSET_CLASS_OVERVIEW: asset_class_overview, 
             constants.PORTFOLIO_OVERVIEW: portfolio_overview,

@@ -766,7 +766,7 @@ class LiquidGoal(GoalBase):
         corpus = utils.new_expected_corpus(sip_amount, lumpsum_amount,
                              float(category_allocation[constants.LIQUID]) / 100,
                              float(category_allocation[constants.EQUITY]) / 100, term, term,
-                             growth / 100)
+                             growth / 100,pow(constants.RETURN_PERCENTAGE_LIQUID, 1/12)-1)
         return corpus, term
 
     def get_default_goalname(self, goal_type):

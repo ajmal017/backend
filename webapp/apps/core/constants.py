@@ -353,6 +353,7 @@ GOAL = 'goal'
 CORPUS = 'corpus'
 TERM = 'term'
 GOAL_TYPE = 'goal_type'
+GOAL_DATE = 'goal_date'
 EXPECTD_VALUE = 'expected_value'
 GOAL_ANSWERS = 'goal_answers'
 FUND_DETAILS = 'fund_details'
@@ -513,3 +514,8 @@ WEDDING_EXPENSE = {
                    }
 
 BILLDESK_COMPLETE_URL_WEB = "http://localhost:8000/#/investmentReturn"
+
+
+RETURN_PERCENTAGE_EQUITY = 1.15
+RETURN_PERCENTAGE_DEBT = 1.09
+RETURN_PERCENTAGE_LIQUID = 1.07
