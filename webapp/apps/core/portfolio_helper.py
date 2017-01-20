@@ -37,6 +37,10 @@ class PortfolioHelper(object):
         order_items = models.FundOrderItem.objects.filter(portfolio_item=portfolio_item, is_cancelled=False).order_by("created_at")
         redeem_items = models.FundRedeemItem.objects.filter(portfolio_item=portfolio_item, is_cancelled=False).order_by("created_at")
         
+        if order_items.filter(is_verified=True):
+            order_items = order_items.filter(is_verified=True)
+            redeem_items = redeem_items.filter(is_verified=True)
+            
         transactions.extend(order_items)
         transactions.extend(redeem_items)
         

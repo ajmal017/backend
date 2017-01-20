@@ -537,7 +537,7 @@ class PortfolioItem(TimeStampedModel):
             time_since_invest = months + (1 if days >= 0 else 0)
             duration_date = investment_date + relativedelta(months=months, days=days)
             time_since_invest += relativedelta(date.today(), duration_date).years * 12
-            invested_sip_count = float(self.lumpsum) + (float(self.sip) * time_since_invest)
+            invested_sip_count = time_since_invest
 
         try:
             fund_nav_on_investment = HistoricalFundData.objects.get(fund_id=self.fund, date=investment_date).nav
