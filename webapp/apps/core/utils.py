@@ -1931,8 +1931,7 @@ def calculate_financial_goal_status(asset_class_overview, portfolios_to_be_consi
                 goal_date = goal.portfolio.investment_date
             else:
                 goal_date = goal.created_at
-            
-            
+
             goal_map[goal.category][0].append({
                 constants.EXPECTD_VALUE: corpus,
                 constants.INVESTED_VALUE: investment_till_date_object[constants.INVESTED_VALUE],
@@ -2004,10 +2003,10 @@ def make_financial_goal_response(goal_map, total_equity_invested, total_debt_inv
                     constants.GOAL_TYPE: constants.GOAL_REVERSE_MAP[category], 
                     constants.INVESTED_VALUE: calculate_aum_in_string(round(category_individual_goal.get(
                         constants.INVESTED_VALUE))),
-                    constants.EXPECTD_VALUE: calculate_aum_in_string(round(goal_current_value)),
+                    constants.EXPECTD_VALUE: calculate_aum_in_string(round(goal_current_value),4),
                     constants.DATE: category_individual_goal.get(constants.DATE),
                     constants.GOAL: calculate_aum_in_string(round(category_individual_goal.get(
-                        constants.EXPECTD_VALUE))), constants.PROGRESS: progress,
+                        constants.EXPECTD_VALUE)),4), constants.PROGRESS: progress,
                     constants.GOAL_ANSWERS: category_individual_goal.get(constants.GOAL_ANSWERS),
                     constants.FUND_DETAILS:category_individual_goal.get(constants.FUND_DETAILS),
                     constants.GOAL_DATE:category_individual_goal.get(constants.GOAL_DATE)
