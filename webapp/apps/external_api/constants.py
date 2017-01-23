@@ -38,7 +38,7 @@ MORNING_STAR_LIQUID_API = "http://api.morningstar.com/v2/service/mf/s4p99d2zzfal
                         settings.MORNING_STAR_UNIVERSE_ID_LIQUID + "?accesscode=" + settings.MORNING_STAR_ACCESS_CODE + \
                         "&format=json"
 
-HISTORICAL_DATA_API = 'http://api.morningstar.com/service/mf/DailyReturnIndex/MStarID/'
+HISTORICAL_DATA_API = 'http://api.morningstar.com/service/mf/Price/MStarID/'
 
 INDICES_NAV_API = 'http://api.morningstar.com/v2/service/mf/c13k49f38raoyutj/universeid/'+ \
                      settings.MORNING_STAR_UNIVERSE_ID_INDICES + '?accesscode=' + settings.MORNING_STAR_ACCESS_CODE +\
