@@ -44,6 +44,17 @@ def read_csv_and_populate_pin_code_model():
                 entries.add(key)
 
 
+def generate_url_for_historical_fund_data(mstar_id, start_date, end_date):
+    """
+    generates a url for historical data
+    :param mstar_id: the mstar id of fund for which url is to be constructed
+    :param start_date: the start date from which we need historical data
+    :param end_date: the end date till which we need historical data
+    :return:
+    """
+    return constants.HISTORICAL_FUND_DATA_API + mstar_id + constants.ACCESS_CODE + settings.MORNING_STAR_ACCESS_CODE + \
+           constants.START_DATE + str(start_date) + constants.END_DATE + str(end_date) + constants.FREQUENCY
+
 def generate_url_for_historical_data(mstar_id, start_date, end_date):
     """
     generates a url for historical data
@@ -54,7 +65,6 @@ def generate_url_for_historical_data(mstar_id, start_date, end_date):
     """
     return constants.HISTORICAL_DATA_API + mstar_id + constants.ACCESS_CODE + settings.MORNING_STAR_ACCESS_CODE + \
            constants.START_DATE + str(start_date) + constants.END_DATE + str(end_date) + constants.FREQUENCY
-
 
 def generate_url_for_category_history(category_id, start_date, end_date):
     """
