@@ -231,6 +231,7 @@ class Register(APIView):
             return api_utils.response({"message": constants.SIGNUP_ERROR, "signup_error": result}, status.HTTP_404_NOT_FOUND,
                                       constants.PHONE_EXISTS)
         if serializer.is_valid():
+            is_web = request.data.get('is_web', False)
             if flag:
                 username = serializer.validated_data.get("email")
                 user = models.User.objects.create_user(email=email, username=username, password=password, phone_number=phone)
@@ -252,7 +253,7 @@ class Register(APIView):
             applicant_name = investor_info_check(request.user)
             
             helpers.send_verify_email(user, applicant_name, code, use_https=settings.USE_HTTPS)
-            access_token = helpers.get_access_token(user, password)
+            access_token = helpers.get_access_token(user, password, is_web)
             bearer_token = access_token['access_token']
             headers = {"Authorization":"Bearer "+bearer_token}
             return api_utils.response({"user": user_response, 
@@ -330,9 +331,10 @@ class Login(APIView):
 
         serializer = serializers.UserRegisterSerializer(user)
         if serializer.is_valid:
+            is_web = request.data.get('is_web', False)
             if user.is_active:
                 if user.check_password(password):
-                    access_token = helpers.get_access_token(user, password)
+                    access_token = helpers.get_access_token(user, password, is_web)
                     bearer_token = access_token['access_token']
                     headers = {"Authorization":"Bearer "+bearer_token}
                     return api_utils.response({"user": serializer.data,
@@ -1836,7 +1838,7 @@ class GoogleLogin(APIView):
                     access_token = helpers.convert_auth_to_access_token(auth_code, is_web)
                     
                     if access_token is not None:
-                        convert_token = helpers.convert_social_access_token(access_token)
+                        convert_token = helpers.convert_social_access_token(user, access_token, is_web)
                         bearer_token = convert_token['access_token']
                         headers = {"Authorization":"Bearer "+bearer_token}
                         return api_utils.response({"res":{"user": serializer.data,
@@ -1901,7 +1903,7 @@ class GoogleRegister(APIView):
              
             if access_token is not None:
                 try:
-                    convert_token = helpers.convert_social_access_token(access_token)
+                    convert_token = helpers.convert_social_access_token(user, access_token, is_web)
                 except:
                     return api_utils.response({}, status.HTTP_404_NOT_FOUND,
                                                   constants.GOOGLE_LOGIN_ERROR)
@@ -2007,7 +2009,7 @@ class GoogleRegisterExistingUser(APIView):
             
                     try:
                         user = backend.do_auth(token, user=authed_user)
-                        convert_token = helpers.convert_social_access_token(access_token)
+                        convert_token = helpers.convert_social_access_token(user, access_token, is_web)
 
                     except AuthAlreadyAssociated:
                         # You can't associate a social account with more than user

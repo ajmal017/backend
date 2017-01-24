@@ -17,6 +17,7 @@ import logging
 import copy
 from django.db.models import Sum
 import datetime
+from oauth2_provider.models import AccessToken
 
 
 def unique_filename(path, context):
@@ -38,8 +39,19 @@ def make_dictionary(question_value, answer_text_value, answer_metadata_value):
         'answer': [{'text': answer_text_value, 'metadata': answer_metadata_value}]}
     return dictionary_to_append
 
+def update_access_token_expiry(user, access_token, is_web):
+    if is_web is True:
+        logger = logging.getLogger('django.debug')
 
-def get_access_token(user, password):
+        expires = datetime.datetime.now() + datetime.timedelta(seconds=settings.WEB_ACCESS_TOKEN_EXPIRE_SECONDS)
+        access_tokens = AccessToken.objects.filter(user=user, token=access_token, expires__gt=expires)
+        if len(access_tokens) > 1:
+            logger.debug("More than one access token: " + str(access_token))
+        elif len(access_tokens) == 1:
+            logger.debug("Found one access token: " + str(access_token) + " expires: " + str(access_tokens[0].expires) + " new expires: " + str(expires))
+            AccessToken.objects.filter(id=access_tokens[0].id).update(expires=expires)
+
+def get_access_token(user, password, is_web=False):
     """
     :return: The json formatted data to be returned along with access_token
     """
@@ -50,12 +62,16 @@ def get_access_token(user, password):
     if not responseJSON.get('access_token'):
         logger = logging.getLogger('django.error')
         logger.error("Profiles: access_token: Access token failed for user with id: " + user.id)
+    else:
+        logger = logging.getLogger('django.debug')
+        logger.debug(responseJSON)
+        update_access_token_expiry(user, responseJSON.get('access_token'), is_web)
             
     return responseJSON
 
 
 
-def convert_social_access_token(access_token):
+def convert_social_access_token(user, access_token, is_web=False):
     """
      Return : Converted access token to application
     """
@@ -65,6 +81,10 @@ def convert_social_access_token(access_token):
     if not responseJSON.get('access_token'):
         logger = logging.getLogger('django.error')
         logger.error("Profiles: access_token: Access token failed for user with id: ")      
+    else:
+        logger = logging.getLogger('django.debug')
+        logger.debug(responseJSON)
+        update_access_token_expiry(user, responseJSON.get('access_token'), is_web)
     return responseJSON
 
 
