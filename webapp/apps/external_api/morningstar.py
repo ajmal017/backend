@@ -51,6 +51,8 @@ class MorningStarBackend(BaseFundBackend):
                 except core_models.Fund.DoesNotExist:
                     earlier_fund = None
                     does_exist = False
+                    fields['minimum_investment'] = 0
+                    fields['minimum_sip_investment'] = 0
                 for field in constants.FIELDS_FUND_API:
                     if field == constants.BENCHMARK:
                         benchmark_list_of_fund = fund.get(constants.API).get(constants.FUND_MAP[field])

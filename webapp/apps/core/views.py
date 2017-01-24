@@ -1535,7 +1535,7 @@ class GetInvestedFundReturn(APIView):
         invested_fund_return_new = copy.deepcopy(invested_fund_return)
         for index in range(4):
             for fund_object in invested_fund_return[index][constants.VALUE]:
-                if utils.find_if_not_eligible_for_display(fund_object, request.user):
+                if utils.find_if_not_eligible_for_display(fund_object, request.user, None):
                     invested_fund_return_new[index][constants.VALUE].remove(fund_object)
         return api_utils.response(invested_fund_return_new, status.HTTP_200_OK)
 
@@ -1561,14 +1561,17 @@ class GetInvestedFundReturn_v3(APIView):
             for portfolio_item in goal.portfolioitem_set.all(): #TODO subquery for valid foi
                 fund_order_item_count = models.FundOrderItem.objects.filter(portfolio_item=portfolio_item, is_verified=True, is_cancelled=False).count()
                 if fund_order_item_count > 0:
+                    fund_object = utils.get_fund_detail(portfolio_item)
+                    if utils.find_if_not_eligible_for_display(fund_object, request.user, portfolio_item):
+                        continue
                     if portfolio_item.fund.type_of_fund == 'E':
-                        equity_funds.append(utils.get_fund_detail(portfolio_item))
+                        equity_funds.append(fund_object)
                     elif portfolio_item.fund.type_of_fund == 'D':
-                        debt_funds.append(utils.get_fund_detail(portfolio_item))
+                        debt_funds.append(fund_object)
                     elif portfolio_item.fund.type_of_fund == 'T':
-                        elss_funds.append(utils.get_fund_detail(portfolio_item))
+                        elss_funds.append(fund_object)
                     elif portfolio_item.fund.type_of_fund == 'L':
-                        liquid_funds.append(utils.get_fund_detail(portfolio_item))
+                        liquid_funds.append(fund_object)
             
             invested_fund_return = [{"key": constants.EQUITY, "value": equity_funds},
                                     {"key": constants.DEBT, "value": debt_funds},
@@ -1576,16 +1579,10 @@ class GetInvestedFundReturn_v3(APIView):
                                     {"key": constants.LIQUID, "value": liquid_funds}
                                     ]
 
-            invested_fund_return_new = copy.deepcopy(invested_fund_return)
-            for index in range(4):
-                for fund_object in invested_fund_return[index][constants.VALUE]:
-                    if utils.find_if_not_eligible_for_display(fund_object, request.user):
-                        invested_fund_return_new[index][constants.VALUE].remove(fund_object)
-         
-            if len(invested_fund_return_new[0][constants.VALUE]) > 0  or len(invested_fund_return_new[1][constants.VALUE]) > 0 or len(invested_fund_return_new[2][constants.VALUE]) > 0 or len(invested_fund_return_new[3][constants.VALUE]) > 0:
+            if len(invested_fund_return[0][constants.VALUE]) > 0  or len(invested_fund_return[1][constants.VALUE]) > 0 or len(invested_fund_return[2][constants.VALUE]) > 0 or len(invested_fund_return[3][constants.VALUE]) > 0:
                 goal_data = {"goal_id": goal.id, "goal_name": goal.name, 
                              "investment_date": goal.portfolio.investment_date.strftime('%d-%m-%y'),
-                             "funds": invested_fund_return_new}
+                             "funds": invested_fund_return}
                 goal_fund_data.append(goal_data)
                                                       
         return api_utils.response(goal_fund_data, status.HTTP_200_OK)

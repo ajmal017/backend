@@ -3812,14 +3812,14 @@ def get_xirr_value_from_dashboard_response(dashboard_response):
     return dashboard_response[constants.PORTFOLIO_OVERVIEW][constants.CURRENT_VALUE][constants.GAIN_PERCENTAGE]
 
 
-def find_if_not_eligible_for_display(redeem_response, user):
+def find_if_not_eligible_for_display(redeem_response, user, portfolio_item):
     """
     :param redeem_response:
     :return:
     """
     if redeem_response['return_value'] == 0:
         return True
-    units_redeemed = models.FundRedeemItem.objects.filter(
+    units_redeemed = models.FundRedeemItem.objects.filter(portfolio_item=portfolio_item,
         portfolio_item__fund_id=redeem_response['fund_id'], portfolio_item__portfolio__user=user, is_verified=False,
         is_cancelled=False, is_all_units_redeemed=True,).aggregate(Sum('unit_redeemed'))['unit_redeemed__sum']
     if units_redeemed is not None:
