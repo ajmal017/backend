@@ -255,9 +255,9 @@ class SchemaFactSheet_Test(APISimpleTestCase):
         view = views.SchemaFactSheet.as_view()
         data={}
         user = User.objects.get(email='jp@gmail.com')
-        request = factory.get('http://10.97.11.86/v3.0/core/53/schema/fact-sheet/',data=data)
+        request = factory.get('http://10.97.11.86/v3.0/core/74/schema/fact-sheet/',data=data)
         force_authenticate(request, user=user)
-        response = view(request,'53')
+        response = view(request,'74')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["status_code"],200)
 

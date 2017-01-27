@@ -363,6 +363,8 @@ class InvestorInfo(TimeStampedModel):
                                   null=True, unique=True)
     applicant_name = models.CharField(max_length=512, blank=True, null=True)
     father_name = models.CharField(max_length=512, blank=True, null=True)
+    mother_name = models.CharField(max_length=512, blank=True, null=True)
+    maiden_name = models.CharField(max_length=512, blank=True, null=True)
     dob = models.DateField(_('dob'), blank=True, null=True)
     country_of_birth = models.CharField(_('country of birth'), max_length=254, blank=True, null=True)
     place_of_birth = models.CharField(_('place of birth'), max_length=254, blank=True, null=True)

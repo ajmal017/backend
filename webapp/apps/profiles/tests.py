@@ -6,7 +6,7 @@ from rest_framework.test import APITestCase, APIRequestFactory, force_authentica
 from profiles.models import User
 from profiles.views import UserInfo, Register, Login, ResetPassword,ContactInfo
 from core.views import AssessAnswer,AssessAnswer_v3, AssessAnswer_Unregistered_User_v3
-from profiles import models
+from profiles import models,views
 from django.conf import settings
 
 
@@ -85,12 +85,34 @@ class ContactInfo_v3Test(APISimpleTestCase):
         view = ContactInfo.as_view()
         data = {'communication_address_type': 1, 'permanent_address': {'pincode': 560076, 'address_line_2': 'Bttms', 'address_line_1': 'Bttms', 'city': 'Bangalore', 'state': 'KARNATAKA'}, 'communication_address': {'pincode': 560076, 'address_line_2': 'Bttm', 'address_line_1': 'Bttm', 'city': 'Bangalore', 'state': 'KARNATAKA'}, 'email': 'jp@gmail.com', 'address_are_equal': False, 'phone_number': '8762731203'}        
         user = models.User.objects.get(email='jp@gmail.com')
-        request = factory.post(settings.BASE_URL+reverse('api_urls:profiles_urls:investor-contact-info-add'),data=data,format='json')
+        request = factory.post(settings.BASE_URL+reverse('api_urls_v3:profiles_urls:investor-contact-info-add'),data=data,format='json')
         force_authenticate(request, user=user)
         response = view(request)
         self.assertEqual(response.status_code, 200)
         
+
+class InvestorInfo_v3Test(APISimpleTestCase):
+    allow_database_queries = True
+    def test(self):
+        factory = APIRequestFactory()
+        view = views.InvestorInfo.as_view()
+        data = {'political_exposure': 1, 'other_tax_payer': False, 'investor_status': 'Resident Individual', 'pan_number': 'ATLPJ7517R', 'dob': '1989-09-14', 'father_name': 'Joseph Pj', 'occupation_type': 'PRI', 'income': 6, 'country_of_birth': 'India', 'place_of_birth': 'Coorg', 'occupation_specific': '', 'applicant_name': 'JINESH PAUL PJ'}
+        user = models.User.objects.get(email='jp@gmail.com')
+        request = factory.post(settings.BASE_URL+reverse('api_urls_v3:profiles_urls:investor-info-add'),data=data,format='json')
+        force_authenticate(request, user=user)
+        response = view(request)
+        self.assertEqual(response.status_code, 200)      
         
-        
+class InvestorInfo_get_v3Test(APISimpleTestCase):
+    allow_database_queries = True
+    def test(self):
+        factory = APIRequestFactory()
+        view = views.InvestorInfo.as_view()
+        data = {}
+        user = models.User.objects.get(email='jp@gmail.com')
+        request = factory.get(settings.BASE_URL+reverse('api_urls_v3:profiles_urls:investor-info-get'),data=data,format='json')
+        force_authenticate(request, user=user)
+        response = view(request)
+        self.assertEqual(response.status_code, 200)           
 
 

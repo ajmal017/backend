@@ -932,6 +932,8 @@ class InvestorInfo(APIView):
                 "pan_number": None,
                 "applicant_name": None,
                 "father_name": None,
+                "mother_name":None,
+                "maiden_name":None,
                 "income": None,
                 "political_exposure": None,
                 "occupation_type": None,
