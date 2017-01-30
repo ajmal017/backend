@@ -240,7 +240,7 @@ class VersionInfo(APIView):
             version_id = request.GET.get('versionID', None)
             if version_id:
                 ver = float(version_id)
-                if ver >= 1.2:
+                if ver >= 2.0:
                     country_phone_code = external_utils.get_country_phone_code()
                     return api_utils.response({"status": "true","country_phone_code":country_phone_code}, status.HTTP_200_OK)
                 else:

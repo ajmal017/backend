@@ -50,6 +50,7 @@ THIRD_PARTY_APPS = [
     'django_smtp_ssl',
     'social.apps.django_app.default',
     'rest_framework_social_oauth2',
+    'corsheaders',
 ]
 
 LOCAL_APPS = [
@@ -64,6 +65,7 @@ INSTALLED_APPS = DJANGO_APPS + LOCAL_APPS + THIRD_PARTY_APPS
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -276,6 +278,12 @@ LOGGING = {
     },
 }
 
+CORS_ORIGIN_WHITELIST = (
+    'app.finaskus.com',
+    'localhost:8000',
+    'localhost',
+    'localhost:8080'
+)
 
 SERVER_EMAIL = 'askus@finaskus.com'
 

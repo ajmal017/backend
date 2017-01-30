@@ -522,7 +522,11 @@ class PortfolioItem(TimeStampedModel):
             fund_one_previous_date = fund_latest_nav_date - timedelta(days=2)
         else:
             fund_one_previous_date = fund_latest_nav_date - timedelta(days=1)
-        one_previous_nav = HistoricalFundData.objects.get(fund_id=self.fund, date=fund_one_previous_date).nav
+        
+        try:
+            one_previous_nav = HistoricalFundData.objects.get(fund_id=self.fund, date=fund_one_previous_date).nav
+        except:
+            one_previous_nav = fund_latest_nav
 
         # get nav on investment date(portfolios modified at is considered as investment date fr virtual dashboard)
         investment_date = self.portfolio.modified_at.date()

@@ -101,7 +101,11 @@ class FundsHelper(object):
             fund_one_previous_date = latest_fund_nav_date - timedelta(days=2)
         else:
             fund_one_previous_date = latest_fund_nav_date - timedelta(days=1)
-        one_previous_nav = models.HistoricalFundData.objects.get(fund_id=fund, date=fund_one_previous_date).nav
+        try:
+            one_previous_nav = models.HistoricalFundData.objects.get(fund_id=fund, date=fund_one_previous_date).nav
+        except:
+            one_previous_nav = latest_fund_data_nav
+            
         return latest_fund_data_nav, latest_fund_nav_date, one_previous_nav
     
     @staticmethod
