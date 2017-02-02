@@ -170,7 +170,7 @@ class GenerateKycPdf(View):
         if request.user.is_superuser:
             user = pr_models.User.objects.get(email=request.GET.get('email'))
             if is_investable(user) and user.signature != "":
-                output_file = kyc_pdf_generator.generate_kyc_pdf(user.id).split('/')[-1]
+                output_file = kyc_pdf_generator.generate_kyc_pdf_new(user.id).split('/')[-1]
                 prefix = 'webapp'
                 my_file_path = prefix + constants.STATIC + output_file
                 my_file = open(my_file_path, "rb")
