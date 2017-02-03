@@ -132,7 +132,7 @@ def nse_investor_info_generator(user_id, exch_backend):
         prefix = "webapp"  # prefix is needed to access the images from media directory.
 
     # the list of images to be embedded into the pdf follows
-    user_signature = prefix + user.signature.url if user.signature != "" else constants.DEFAULT_IMAGE  # signature_image location.
+    user_signature = prefix + user.signature.url if user.signature != "" else settings.SITE_BASE_URL + constants.DEFAULT_IMAGE  # signature_image location.
     list_of_embeddable_images = [user_signature, ]
 
     # list of individual image type/size (passport/signature) they are based on international standards.

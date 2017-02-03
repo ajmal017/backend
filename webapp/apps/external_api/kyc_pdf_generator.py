@@ -169,8 +169,13 @@ def generate_kyc_pdf_new(user_id):
         call(create_kyc.split())
 
         call((("rm %s") % kyc_temp_file_name).split())
-
-    prefix = ""  # prefix is needed to access the images from media directory.
+        
+    dummy_image_prefix = settings.SITE_BASE_URL
+    if settings.USING_S3:
+        prefix = ""  # prefix is needed to access the images from media directory.
+    else:
+        prefix = settings.SITE_BASE_URL
+        
     # the list of images to be embedded into the pdf follows
     list_of_embeddable_images = []
 
@@ -184,9 +189,8 @@ def generate_kyc_pdf_new(user_id):
     #  embedded onto
 
     images_count_each_page = []  # number of images on each of the target pages.
-
-    user_identity = prefix + user.identity_info_image.url if user.identity_info_image != "" else constants.DEFAULT_IMAGE  # identity_info image location.
-    user_signature = prefix + user.signature.url if user.signature != "" else constants.DEFAULT_IMAGE  # signature_image location.
+    user_identity = prefix + user.identity_info_image.url if user.identity_info_image != "" else dummy_image_prefix + constants.DEFAULT_IMAGE  # identity_info image location.
+    user_signature = prefix + user.signature.url if user.signature != "" else dummy_image_prefix + constants.DEFAULT_IMAGE  # signature_image location.
     list_of_embeddable_images.append(user_identity)
     image_sizes.append(constants.PASSPORT_SIZE)
     coords.append((510, 490))

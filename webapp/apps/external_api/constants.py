@@ -719,7 +719,7 @@ DEFAULT_NOMINEE_SIGNATURE = "webapp/static/images/dummy_nominee_signature.png"
 
 FORBIDDEN_ERROR = "access is forbidden."  # to prevent unauthorized access of private files.
 
-DEFAULT_IMAGE = "webapp/static/images/dummy_image.jpg"
+DEFAULT_IMAGE = "/static/images/dummy_image.jpg"
 
 
 TO_URL = 'http://bsestarmfdemo.bseindia.com/MFUploadService/MFUploadService.svc/Basic'
