@@ -273,3 +273,16 @@ class DashboardVersionTwo_Test(APISimpleTestCase):
         response = view(request)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["status_code"],200)
+        
+class FundsHistoricComparison_Test(APISimpleTestCase):
+    allow_database_queries = True
+    def test(self):
+        factory = APIRequestFactory()
+        view = views.FundsHistoricComparison.as_view()
+        data={'fund_id_list':["9","29"]}
+        user = User.objects.get(email='jp@gmail.com')
+        request = factory.post(settings.BASE_URL+reverse('api_urls_v3:core_urls:funds-historic-comparison'),data=data)
+        force_authenticate(request, user=user)
+        response = view(request)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["status_code"],200)

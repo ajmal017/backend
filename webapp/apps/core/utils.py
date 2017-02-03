@@ -1415,16 +1415,24 @@ def get_fund_historic_data(funds, start_date, end_date, send_normalized_data=Tru
     :param send_normalized_data: a flag to determine to send either normalized or simple data
     :return: three arrays - dates, historic data of fund on these dates, historic data of benchmark on these dates
     """
-    funds_historic_data, category_historic_data = [], []
+    funds_historic_data,category_historic_data = [], []
     date_list = [start_date + timedelta(days=num_of_days) for num_of_days in range((end_date - start_date).days + 1)
                  if (start_date + timedelta(num_of_days)).isoweekday() < 6]  # 6,7 is for saturday, sunday
     for fund in funds:
         funds_historic_data.append(
             {constants.ID: fund.fund_name, constants.VALUE: models.HistoricalFundData.objects.filter(
                 fund_id=fund, date__in=date_list).order_by(constants.DATE).values_list(constants.NAV, flat=True)})
-    index = models.Indices.objects.get(index_name=benchmark)
+    
+    index = models.Indices.objects.get(index_name=benchmark)   
+    if len(funds) > 0:
+        fund_type = funds[0].type_of_fund
+        if fund_type == constants.FUND_MAP['liquid']:
+            index = models.Indices.objects.get(index_name=fund.mapped_benchmark.index_name)
+        elif fund_type == constants.FUND_MAP['debt']:
+            index = models.Indices.objects.get(mstar_id=constants.DEBT_BENCHAMRK_MSTAR_ID)   
     index_historic_data = models.HistoricalIndexData.objects.filter(
-        index=index, date__in=date_list).order_by(constants.DATE).values_list(constants.NAV, flat=True)
+            index=index, date__in=date_list).order_by(constants.DATE).values_list(constants.NAV, flat=True)
+    
     if category is not None:
         category_historic_data = models.HistoricalCategoryData.objects.filter(
             category_code=category, date__in=date_list).order_by(constants.DATE).values_list(constants.NAV, flat=True)
@@ -1489,7 +1497,7 @@ def normalize_data(funds_value_list, index_value_list, category_value_list):
         for value in fund_value_list[constants.VALUE]:
             normalized_fund_value_list.append(round(value * normalization_value, 6))
         normalized_funds_value_list.append({constants.ID: fund_value_list[constants.ID],
-                                            constants.VALUE: normalized_fund_value_list})
+                                        constants.VALUE: normalized_fund_value_list})
     normalization_value = 100.00 / index_value_list[0]
     for index in range(len(index_value_list)):
         normalized_index_value_list.append(round(index_value_list[index] * normalization_value, 2))
