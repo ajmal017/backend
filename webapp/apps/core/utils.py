@@ -808,26 +808,26 @@ def get_funds_to_allocate_to_user(type, number_of_funds_by_sip, number_of_funds_
 
 def recommendedPortfolio_equity(fund_type,goal,number_of_funds=0):
     fund_objects = []
-    
-    risk_score = riskprofile_helper.RiskProfileHelper(goal.user).get_risk_profile()
-    duration = goal.duration
-    tenure = "tenure0" if duration == 0 else("tenure1" if duration > 0 and duration >=2  else(
-             "tenure2" if duration > 2 and duration <= 4 else ("tenure3" if duration > 4 and duration <= 6 else (
-             "tenure4" if duration > 6 and duration <= 9 else("tenure5" if duration > 9 and duration <= 14 else(
-             "tenure6"))))))
-    mid_cap_count = constants.NUMBER_OF_MID_CAP_FUNDS[tenure][risk_score][number_of_funds]
-    large_cap_count = number_of_funds - mid_cap_count
-    #mid_cap_count = constants.MAX_NUMBER_EQUITY_FUNDS - constants.MAX_NUMBER_EQUITY_FUNDS_LARGE
-    if large_cap_count > 0:
-        fund_object_cat1 = models.Fund.objects.filter(type_of_fund=constants.FUND_MAP[fund_type], 
-                                                             category_name=constants.FUND_CATEGORY_NAME_LARGE, is_enabled=True
-                                                             ).order_by('fund_rank')[:large_cap_count]
-        fund_objects.extend(fund_object_cat1)
-    if mid_cap_count > 0:        
-        fund_object_cat2 = models.Fund.objects.filter(type_of_fund=constants.FUND_MAP[fund_type], 
-                                                              category_name=constants.FUND_CATEGORY_NAME_MID, is_enabled=True
-                                                              ).order_by('fund_rank')[:mid_cap_count]
-        fund_objects.extend(fund_object_cat2)
+    if number_of_funds > 0:
+        risk_score = riskprofile_helper.RiskProfileHelper(goal.user).get_risk_profile()
+        duration = goal.duration
+        tenure = "tenure0" if duration == 0 else("tenure1" if duration > 0 and duration >=2  else(
+                 "tenure2" if duration > 2 and duration <= 4 else ("tenure3" if duration > 4 and duration <= 6 else (
+                 "tenure4" if duration > 6 and duration <= 9 else("tenure5" if duration > 9 and duration <= 14 else(
+                 "tenure6"))))))
+        mid_cap_count = constants.NUMBER_OF_MID_CAP_FUNDS[tenure][risk_score][number_of_funds]
+        large_cap_count = number_of_funds - mid_cap_count
+        #mid_cap_count = constants.MAX_NUMBER_EQUITY_FUNDS - constants.MAX_NUMBER_EQUITY_FUNDS_LARGE
+        if large_cap_count > 0:
+            fund_object_cat1 = models.Fund.objects.filter(type_of_fund=constants.FUND_MAP[fund_type], 
+                                                                 category_name=constants.FUND_CATEGORY_NAME_LARGE, is_enabled=True
+                                                                 ).order_by('fund_rank')[:large_cap_count]
+            fund_objects.extend(fund_object_cat1)
+        if mid_cap_count > 0:        
+            fund_object_cat2 = models.Fund.objects.filter(type_of_fund=constants.FUND_MAP[fund_type], 
+                                                                  category_name=constants.FUND_CATEGORY_NAME_MID, is_enabled=True
+                                                                  ).order_by('fund_rank')[:mid_cap_count]
+            fund_objects.extend(fund_object_cat2)
     
     return fund_objects
     
