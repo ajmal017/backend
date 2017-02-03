@@ -811,10 +811,10 @@ def recommendedPortfolio_equity(fund_type,goal,number_of_funds=0):
     
     risk_score = riskprofile_helper.RiskProfileHelper(goal.user).get_risk_profile()
     duration = goal.duration
-    tenure = "tenure1" if duration <= 2 else(
+    tenure = "tenure0" if duration == 0 else("tenure1" if duration > 0 and duration >=2  else(
              "tenure2" if duration > 2 and duration <= 4 else ("tenure3" if duration > 4 and duration <= 6 else (
              "tenure4" if duration > 6 and duration <= 9 else("tenure5" if duration > 9 and duration <= 14 else(
-             "tenure6")))))
+             "tenure6"))))))
     mid_cap_count = constants.NUMBER_OF_MID_CAP_FUNDS[tenure][risk_score][number_of_funds]
     large_cap_count = number_of_funds - mid_cap_count
     #mid_cap_count = constants.MAX_NUMBER_EQUITY_FUNDS - constants.MAX_NUMBER_EQUITY_FUNDS_LARGE
