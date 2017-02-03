@@ -1597,8 +1597,11 @@ def get_portfolio_overview(portfolio_items):
                 category_holding_percentage = getattr(category_portfolio_item.portfolio, category + '_percentage')
             total_return_value += category_return_value
             invested_value += category_sum_invested
-            gain_percentage = generate_xirr(category_return_value / category_sum_invested,
+            if category_sum_invested > 0:
+                gain_percentage = generate_xirr(category_return_value / category_sum_invested,
                                             (latest_date - category_portfolio_items[0].portfolio.modified_at.date()).days)
+            else:
+                gain_percentage = 0
             category_overview = {constants.NAME: category, constants.INVESTED: category_sum_invested,
                                  constants.GAIN: round(category_return_value, 2),
                                  constants.GAIN_PERCENTAGE: round(gain_percentage * 100),
