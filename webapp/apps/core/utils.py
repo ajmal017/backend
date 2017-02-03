@@ -11,6 +11,7 @@ from profiles import constants as profile_constants
 from webapp.apps import random_with_N_digits
 from payment import models as payment_models
 from core import funds_helper
+from core import riskprofile_helper
 
 from external_api import api
 from collections import OrderedDict, defaultdict
@@ -776,9 +777,9 @@ def get_funds_to_allocate_to_user(type, number_of_funds_by_sip, number_of_funds_
     fund_ids_updated = []
     number_of_funds = max(number_of_funds_by_lumpsum, number_of_funds_by_sip)
     if funds is None:
-        if type == constants.EQUITY and number_of_funds == constants.MAX_NUMBER_EQUITY_FUNDS:
+        if type == constants.EQUITY:
             
-            fund_objects = recommendedPortfolio_equity(type)
+            fund_objects = recommendedPortfolio_equity(type,goal,number_of_funds)
         else:
             fund_objects = models.Fund.objects.filter(type_of_fund=constants.FUND_MAP[type], is_enabled=True
                                            ).order_by('fund_rank')[:number_of_funds]
@@ -805,20 +806,28 @@ def get_funds_to_allocate_to_user(type, number_of_funds_by_sip, number_of_funds_
     funds_to_be_deleted.delete()
 
 
-def recommendedPortfolio_equity(fund_type):
+def recommendedPortfolio_equity(fund_type,goal,number_of_funds=0):
     fund_objects = []
     
-    mid_cap_count = constants.MAX_NUMBER_EQUITY_FUNDS - constants.MAX_NUMBER_EQUITY_FUNDS_LARGE
-    
-    fund_object_cat1 = models.Fund.objects.filter(type_of_fund=constants.FUND_MAP[fund_type], 
-                                                         category_name=constants.FUND_CATEGORY_NAME_LARGE, is_enabled=True
-                                                         ).order_by('fund_rank')[:constants.MAX_NUMBER_EQUITY_FUNDS_LARGE]
-    fund_objects.extend(fund_object_cat1)
-            
-    fund_object_cat2 = models.Fund.objects.filter(type_of_fund=constants.FUND_MAP[fund_type], 
-                                                          category_name=constants.FUND_CATEGORY_NAME_MID, is_enabled=True
-                                                          ).order_by('fund_rank')[:mid_cap_count]
-    fund_objects.extend(fund_object_cat2)
+    risk_score = riskprofile_helper.RiskProfileHelper(goal.user).get_risk_profile()
+    duration = goal.duration
+    tenure = "tenure1" if duration <= 2 else(
+             "tenure2" if duration > 2 and duration <= 4 else ("tenure3" if duration > 4 and duration <= 6 else (
+             "tenure4" if duration > 6 and duration <= 9 else("tenure5" if duration > 9 and duration <= 14 else(
+             "tenure6")))))
+    mid_cap_count = constants.NUMBER_OF_MID_CAP_FUNDS[tenure][risk_score][number_of_funds]
+    large_cap_count = number_of_funds - mid_cap_count
+    #mid_cap_count = constants.MAX_NUMBER_EQUITY_FUNDS - constants.MAX_NUMBER_EQUITY_FUNDS_LARGE
+    if large_cap_count > 0:
+        fund_object_cat1 = models.Fund.objects.filter(type_of_fund=constants.FUND_MAP[fund_type], 
+                                                             category_name=constants.FUND_CATEGORY_NAME_LARGE, is_enabled=True
+                                                             ).order_by('fund_rank')[:large_cap_count]
+        fund_objects.extend(fund_object_cat1)
+    if mid_cap_count > 0:        
+        fund_object_cat2 = models.Fund.objects.filter(type_of_fund=constants.FUND_MAP[fund_type], 
+                                                              category_name=constants.FUND_CATEGORY_NAME_MID, is_enabled=True
+                                                              ).order_by('fund_rank')[:mid_cap_count]
+        fund_objects.extend(fund_object_cat2)
     
     return fund_objects
     

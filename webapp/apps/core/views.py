@@ -1979,9 +1979,9 @@ class GetCategorySchemesForGoal(APIView):
         for category in constants.FUND_CATEGORY_LIST:
             if reset == category:
                 # serializes all categories of funds
-                if reset == constants.EQUITY and RANK_MAP[reset] == constants.MAX_NUMBER_EQUITY_FUNDS:
+                if reset == constants.EQUITY:
                     
-                    user_category_fund_list = utils.recommendedPortfolio_equity(reset)
+                    user_category_fund_list = utils.recommendedPortfolio_equity(reset,goal,RANK_MAP[reset])
                     
                 else:    
                     user_category_fund_list = models.Fund.objects.filter(
