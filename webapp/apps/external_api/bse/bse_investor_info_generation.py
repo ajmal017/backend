@@ -9,6 +9,7 @@ import os
 from datetime import datetime
 from subprocess import call
 import time
+from webapp.conf import settings
 
 
 def bse_investor_info_generator(user_id):
@@ -149,7 +150,7 @@ def bse_investor_info_generator(user_id):
     prefix = "webapp"  # prefix is needed to access the images from media directory.
 
     # the list of images to be embedded into the pdf follows
-    user_signature = user.signature.url if user.signature != "" else constants.DEFAULT_IMAGE  # signature_image location.
+    user_signature = user.signature.url if user.signature != "" else settings.SITE_BASE_URL + constants.DEFAULT_IMAGE  # signature_image location.
     list_of_embeddable_images = [user_signature, ]
 
     # list of individual image type/size (passport/signature) they are based on international standards.

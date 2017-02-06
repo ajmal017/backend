@@ -2,7 +2,7 @@ from django.db.models import Sum
 
 from fdfgen import forge_fdf
 from num2words import num2words
-
+from webapp.conf import settings
 from profiles import models, utils
 
 from .models import Pincode
@@ -157,8 +157,8 @@ def investor_info_generator(user_id):
 
     images_count_each_page = []  # number of images on each of the target pages.
 
-    nominee_signature = nominee.nominee_signature.url if nominee.nominee_signature != "" else cons.DEFAULT_IMAGE  # nominee signature image location.
-    user_signature = user.signature.url if user.signature != "" else cons.DEFAULT_IMAGE  # signature_image location.
+    nominee_signature = nominee.nominee_signature.url if nominee.nominee_signature != "" else settings.SITE_BASE_URL + cons.DEFAULT_IMAGE  # nominee signature image location.
+    user_signature = user.signature.url if user.signature != "" else settings.SITE_BASE_URL + cons.DEFAULT_IMAGE  # signature_image location.
     list_of_embeddable_images.extend([nominee_signature, user_signature])
     image_sizes.extend([cons.SIGNATURE_SIZE, cons.SIGNATURE_SIZE])
     coords.extend([(390.97, 205.89), (390.97, 23.32)])
