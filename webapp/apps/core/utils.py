@@ -2003,7 +2003,10 @@ def make_financial_goal_response(goal_map, total_equity_invested, total_debt_inv
         if goal_map[category][0]:
             for category_individual_goal in goal_map[category][0]:
                 goal_current_value = category_individual_goal.get(constants.CURRENT_VALUE)
-                progress = round(goal_current_value * 100 / category_individual_goal.get(constants.EXPECTD_VALUE), 1)
+                if category_individual_goal.get(constants.EXPECTD_VALUE) > 0:
+                    progress = round(goal_current_value * 100 / category_individual_goal.get(constants.EXPECTD_VALUE), 1)
+                else:
+                    progress = 0
                 
                 if category_individual_goal.get(constants.GOAL_ANSWERS).get(constants.GOAL_NAME):
                     goal_name = category_individual_goal.get(constants.GOAL_ANSWERS).get(constants.GOAL_NAME)
@@ -2053,15 +2056,15 @@ def make_xirr_calculations_for_dashboard(amount_invested_fund_map, api_type, is_
     # loop through all transactions of a user clubbed according to fund id and calculate fund gain for each fund
     # on basis of all fund gains and type calculate equity/debt/elss and portfolio gain
     for fund in amount_invested_fund_map:
-        latest_fund_data, fund_one_previous_nav = funds_helper.FundsHelper.calculate_latest_and_one_previous_nav(fund)
-        if latest_fund_data.day_end_date < date_for_portfolio:
-            date_for_portfolio = latest_fund_data.day_end_date
+        latest_fund_data_nav, latest_fund_data_nav_date, fund_one_previous_nav = funds_helper.FundsHelper.calculate_latest_and_one_previous_nav(fund)
+        if latest_fund_data_nav_date < date_for_portfolio:
+            date_for_portfolio = latest_fund_data_nav_date
         # utility to make an array required for xirr calculation for a single fund
         array_for_gain_cal, number_of_units, sum_invested_in_fund = make_array_for_gain_calculation(
             amount_invested_fund_map[fund])
         sum_invested_in_portfolio += sum_invested_in_fund
         array_for_portfolio_gain_calculation += array_for_gain_cal
-        fund_current_value = latest_fund_data.day_end_nav * number_of_units
+        fund_current_value = latest_fund_data_nav * number_of_units
         portfolio_total_value += fund_current_value
         portfolio_one_previous_day_value += fund_one_previous_nav * number_of_units
 

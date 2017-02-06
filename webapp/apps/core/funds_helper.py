@@ -81,6 +81,7 @@ class FundsHelper(object):
                 latest_fund_data_nav = latest_fund_data.day_end_nav
         else:
             latest_fund_nav_date = latest_fund_data.day_end_date
+            latest_fund_data_nav = latest_fund_data.day_end_nav
             
         return latest_fund_data_nav, latest_fund_nav_date
     
