@@ -1423,13 +1423,22 @@ def get_fund_historic_data(funds, start_date, end_date, send_normalized_data=Tru
             {constants.ID: fund.fund_name, constants.VALUE: models.HistoricalFundData.objects.filter(
                 fund_id=fund, date__in=date_list).order_by(constants.DATE).values_list(constants.NAV, flat=True)})
     
-    index = models.Indices.objects.get(index_name=benchmark)   
+       
     if len(funds) > 0:
         fund_type = funds[0].type_of_fund
         if fund_type == constants.FUND_MAP['liquid']:
-            index = models.Indices.objects.get(index_name=fund.mapped_benchmark.index_name)
+            try:
+                index = models.Indices.objects.get(index_name=fund.mapped_benchmark.index_name)
+            except:
+                index = models.Indices.objects.get(index_name=benchmark)
         elif fund_type == constants.FUND_MAP['debt']:
-            index = models.Indices.objects.get(mstar_id=constants.DEBT_BENCHAMRK_MSTAR_ID)   
+            try:
+                index = models.Indices.objects.get(mstar_id=constants.DEBT_BENCHMARK_MSTAR_ID)
+            except:
+                index = models.Indices.objects.get(index_name=benchmark)
+        else:
+            index = models.Indices.objects.get(index_name=benchmark)
+              
     index_historic_data = models.HistoricalIndexData.objects.filter(
             index=index, date__in=date_list).order_by(constants.DATE).values_list(constants.NAV, flat=True)
     

@@ -530,7 +530,7 @@ NUMBER_OF_MID_CAP_FUNDS = {
                            "tenure6":{"A":{1:1,2:1,3:2,4:3},"B":{1:1,2:1,3:2,4:3},"C":{1:1,2:2,3:3,4:4},"D":{1:1,2:2,3:3,4:4},"E":{1:1,2:2,3:3,4:4}}
                           }
 
-DEBT_BENCHAMRK_MSTAR_ID = 'FOUSA0907S'
+DEBT_BENCHMARK_MSTAR_ID = 'FOUSA0907S'
 
 
                           
