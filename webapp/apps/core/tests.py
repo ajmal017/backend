@@ -286,3 +286,16 @@ class FundsHistoricComparison_Test(APISimpleTestCase):
         response = view(request)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["status_code"],200)
+        
+class GoalRecommendedPortfolio_Test(APISimpleTestCase):
+    allow_database_queries = True
+    def test(self):
+        factory = APIRequestFactory()
+        view = views.GoalRecommendedPortfolio.as_view()
+        data={}
+        user = User.objects.get(email='jp@gmail.com')
+        request = factory.get(settings.BASE_URL+'/v3.0/core/portfolio/goal/retirement/recommended',data=data)
+        force_authenticate(request, user=user)
+        response = view(request,'retirement')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["status_code"],200)

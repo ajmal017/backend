@@ -811,7 +811,7 @@ def recommendedPortfolio_equity(fund_type,goal,number_of_funds=0):
     if number_of_funds > 0:
         risk_score = riskprofile_helper.RiskProfileHelper(goal.user).get_risk_profile()
         duration = goal.duration
-        tenure = "tenure0" if duration == 0 else("tenure1" if duration > 0 and duration >=2  else(
+        tenure = "tenure4" if duration == 0 else("tenure1" if duration > 0 and duration <=2  else(
                  "tenure2" if duration > 2 and duration <= 4 else ("tenure3" if duration > 4 and duration <= 6 else (
                  "tenure4" if duration > 6 and duration <= 9 else("tenure5" if duration > 9 and duration <= 14 else(
                  "tenure6"))))))
