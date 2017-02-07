@@ -35,6 +35,7 @@
 * Run `python manage.py loaddata  webapp/fixtures/questions.json webapp/fixtures/options.json  webapp/fixtures/question_assess.json  webapp/fixtures/option_assess.json
 webapp/fixtures/pincode_modified.json webapp/fixtures/ifsc_codes.json`
 * The above commands will load the static data like questions, options, pincode and ifsc details.
+* Setup one of the vendors(BES/NSE). Go to /admin/external_api/vendor/ and add vendors as `BSE` and `NSE`, make `BSE default`.
 * Follow instructions in funds_all_datapoints.py for setting up fresh funds or new funds.
 
 ## Environment keys and cron setup
