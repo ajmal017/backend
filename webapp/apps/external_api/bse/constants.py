@@ -526,11 +526,11 @@ SEMI_WALLPAPER_WIDTH = 15
 SEMI_WALLPAPER_HEIGHT = 12
 ORIGINAL_WIDTH = 2.54/96  # std pixels to cm conversion unit
 ORIGINAL_HEIGHT = 2.54/96  # std pixels to cm conversion unit
-DEFAULT_NOMINEE_SIGNATURE = "webapp/static/images/dummy_nominee_signature.png"
+DEFAULT_NOMINEE_SIGNATURE = "https://"+settings.SITE_API_BASE_URL +"/static/images/dummy_nominee_signature.png"
 
 FORBIDDEN_ERROR = "access is forbidden."  # to prevent unauthorized access of private files.
 
-DEFAULT_IMAGE = "/static/images/dummy_image.jpg"
+DEFAULT_IMAGE = "https://"+settings.SITE_API_BASE_URL +"/static/images/dummy_image.jpg"
 
 
 TO_URL = 'http://bsestarmfdemo.bseindia.com/MFUploadService/MFUploadService.svc/Basic'

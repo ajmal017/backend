@@ -139,7 +139,11 @@ def investor_info_generator(user_id):
 
     remove_command = "rm %s" % temp_file_name
 
-    prefix = "webapp"  # prefix is needed to access the images from media directory.
+    if settings.USING_S3:
+        prefix = ""  # prefix is needed to access the images from media directory.
+    else:
+        prefix = settings.SITE_BASE_URL  # prefix is needed to access the images from media directory.
+    
     exist = output_path + out_file_name
     investor_only = output_path + "investor_only" + timestamp + ".pdf"
     combined_pdf_path = output_path + "investor_form_final" + timestamp + ".pdf"
@@ -157,8 +161,8 @@ def investor_info_generator(user_id):
 
     images_count_each_page = []  # number of images on each of the target pages.
 
-    nominee_signature = nominee.nominee_signature.url if nominee.nominee_signature != "" else settings.SITE_BASE_URL + cons.DEFAULT_IMAGE  # nominee signature image location.
-    user_signature = user.signature.url if user.signature != "" else settings.SITE_BASE_URL + cons.DEFAULT_IMAGE  # signature_image location.
+    nominee_signature = prefix + nominee.nominee_signature.url if nominee.nominee_signature != "" else cons.DEFAULT_IMAGE  # nominee signature image location.
+    user_signature = prefix + user.signature.url if user.signature != "" else cons.DEFAULT_IMAGE  # signature_image location.
     list_of_embeddable_images.extend([nominee_signature, user_signature])
     image_sizes.extend([cons.SIGNATURE_SIZE, cons.SIGNATURE_SIZE])
     coords.extend([(390.97, 205.89), (390.97, 23.32)])
@@ -166,27 +170,27 @@ def investor_info_generator(user_id):
     images_count_each_page.extend([2])
 
     if investor.pan_image:
-        list_of_embeddable_images.append(investor.pan_image.url)
+        list_of_embeddable_images.append(prefix + investor.pan_image.url)
         image_sizes.append(cons.FIT_SIZE)
         coords.append((100, 270))
         target_pages.append(2)
         images_count_each_page.append(1)
 
     if investor_bank.bank_cheque_image:
-        list_of_embeddable_images.append(investor_bank.bank_cheque_image.url)
+        list_of_embeddable_images.append(prefix + investor_bank.bank_cheque_image.url)
         image_sizes.append(cons.FIT_SIZE)
         coords.append((100, 300))
         target_pages.append(4)
         images_count_each_page.append(1)
 
     if contact.front_image:
-        list_of_embeddable_images.append(contact.front_image.url)
+        list_of_embeddable_images.append(prefix + contact.front_image.url)
         image_sizes.append(cons.FIT_SIZE)
         coords.append((100, 400))
         target_pages.append(5)
 
     if contact.back_image:
-        list_of_embeddable_images.append(contact.back_image.url)
+        list_of_embeddable_images.append(prefix + contact.back_image.url)
         image_sizes.append(cons.FIT_SIZE)
         coords.append((100, 50))
         target_pages.append(5)
