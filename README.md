@@ -32,7 +32,7 @@
 
 ## Application setup: ##
 * Run `python manage.py shell < webapp/fixtures/database.py`
-* Run `python manage.py loaddata  webapp/fixtures/questions.json webapp/fixtures/options.json
+* Run `python manage.py loaddata  webapp/fixtures/questions.json webapp/fixtures/options.json  webapp/fixtures/question_assess.json  webapp/fixtures/option_assess.json
 webapp/fixtures/pincode_modified.json webapp/fixtures/ifsc_codes.json`
 * The above commands will load the static data like questions, options, pincode and ifsc details.
 * Follow instructions in funds_all_datapoints.py for setting up fresh funds or new funds.
